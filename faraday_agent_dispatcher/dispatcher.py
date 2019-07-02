@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import subprocess
 
 # TODO CONNECT INTERFACE
 
@@ -10,9 +10,7 @@ class Dispatcher:
 
         # Ask by API and Agent Token for WS token
 
-        # Turn on IPC
-
-        # Connect by WS
+        # Connect by WS, must be available to set receive handler
 
         pass
 
@@ -20,6 +18,7 @@ class Dispatcher:
         # This must be called from ws listener
 
         # Execute SH passed by config
+        subprocess.run()
 
         pass
 
