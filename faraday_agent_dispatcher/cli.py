@@ -4,16 +4,23 @@
 import sys
 import click
 
-from faraday_agent_dispatcher.dispatcher import run
+from faraday_agent_dispatcher.builder import DispatcherBuilder
+
 
 @click.command()
 def main(args=None):
     """Console script for faraday_dummy_agent."""
-    click.echo("Replace this message by putting your code into "
-               "faraday_dummy_agent.cli.main")
-    click.echo("See click documentation at http://click.pocoo.org/")
+    dispatcher_builder = DispatcherBuilder()
+    # Open config
 
-    run()
+    # Parse args
+
+    ### EXAMPLE
+    dispatcher_builder.faraday_url("")
+
+    dispatcher = dispatcher_builder.build()
+
+    dispatcher.connect()
 
     return 0
 
