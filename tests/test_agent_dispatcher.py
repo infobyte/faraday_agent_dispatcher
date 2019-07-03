@@ -13,7 +13,8 @@ from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.builder import DispatcherBuilder
 
 
-correct_config_dict = {
+def correct_config_dict():
+    return {
         "faraday_url": "localhost",
         "access_token": "valid_access_token"
     }
@@ -67,7 +68,7 @@ expected_history = ["Connected to websocket", "Received run request by websocket
 @pytest.mark.parametrize('use_dict', [True, False])
 def test_basic_built(config, use_dict):
     # Here fails except all needed parameters are set
-    config_dict = correct_config_dict
+    config_dict = correct_config_dict()
     for key in config["replace"].keys():
         config_dict[key] = config["replace"][key]
     for key in config["remove"]:
@@ -92,7 +93,7 @@ def test_basic_built(config, use_dict):
 
 def test_executor_connection():
     # Create basic executor and test function
-    dispatcher = DispatcherBuilder().config(correct_config_dict).build()
+    dispatcher = DispatcherBuilder().config(correct_config_dict()).build()
     dispatcher.run()
     assert dispatcher.get_output() == "I'm a testing executor"
     assert dispatcher.get_faraday_info() == full_data
@@ -101,7 +102,7 @@ def test_executor_connection():
 def test_ws_connection():
     # Create local dispatcher with localhost WS
     # localhost WS send
-    dispatcher = DispatcherBuilder().config(correct_config_dict).build()
+    dispatcher = DispatcherBuilder().config(correct_config_dict()).build()
     dispatcher.connect()
     # mock: ok + run
     assert dispatcher.history() == expected_history
