@@ -1,0 +1,8 @@
+import logging
+
+CONST_FARADAY_HOME_PATH = "."
+CONST_FARADAY_LOGS_PATH = "logs"
+
+USE_RFC = False
+
+LOGGING_LEVEL = logging.DEBUG
