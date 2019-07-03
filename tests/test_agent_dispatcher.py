@@ -3,6 +3,7 @@
 
 """Tests for `faraday_dummy_agent` package."""
 
+import os
 import pytest
 
 from click.testing import CliRunner
@@ -12,11 +13,43 @@ from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.builder import DispatcherBuilder
 
 
-def correct_config_dict():
-    return {
+correct_config_dict = {
         "faraday_url": "localhost",
-        "access_token": "valid_token"
+        "access_token": "valid_access_token"
     }
+
+host_data = {
+    "ip": "127.0.0.1",
+    "description": "test",
+    "hostnames": ["test.com", "test2.org"]
+}
+
+service_data = {
+    "name": "http",
+    "port": 80,
+    "protocol": "tcp",
+}
+
+vuln_data = {
+    'name': 'sql injection',
+    'desc': 'test',
+    'severity': 'high',
+    'type': 'Vulnerability',
+    'impact': {
+        'accountability': True,
+        'availability': False,
+    },
+    'refs': ['CVE-1234']
+}
+
+full_data = {
+    "hosts": [host_data],
+    "services": [service_data],
+    "vulns": [vuln_data]
+}
+
+expected_history = ["Connected to websocket", "Received run request by websocket", "Running executor", "Sending " + str(full_data)]
+
 
 @pytest.mark.parametrize('config',
                          [{"remove": ["faraday_url"],
@@ -34,7 +67,7 @@ def correct_config_dict():
 @pytest.mark.parametrize('use_dict', [True, False])
 def test_basic_built(config, use_dict):
     # Here fails except all needed parameters are set
-    config_dict = correct_config_dict()
+    config_dict = correct_config_dict
     for key in config["replace"].keys():
         config_dict[key] = config["replace"][key]
     for key in config["remove"]:
@@ -52,32 +85,23 @@ def test_basic_built(config, use_dict):
             d_builder.build()
     else:
         assert isinstance(d_builder.build(), Dispatcher)
-
-
-def test_ws_connection():
-    dispatcher = DispatcherBuilder()\
-        .config(correct_config_dict())\
-        .build()
-    dispatcher.connect()
-    dispatcher.run()
-    dispatcher.send()
-    # Create local dispatcher with localhost WS
-    # localhost WS send
-    pass
+        assert os.getenv("FARADAY_URL") == config_dict["faraday_url"]
+        assert os.getenv("AGENT_API_TOKEN") == "valid_api_token"
+        assert os.getenv("AGENT_WS_TOKEN") == "valid_ws_token"
 
 
 def test_executor_connection():
     # Create basic executor and test function
-    pass
+    dispatcher = DispatcherBuilder().config(correct_config_dict).build()
+    dispatcher.run()
+    assert dispatcher.get_output() == "I'm a testing executor"
+    assert dispatcher.get_faraday_info() == full_data
 
 
-def test_command_line_interface():
-    """Test the CLI."""
-    return
-    runner = CliRunner()
-    result = runner.invoke(cli.main)
-    assert result.exit_code == 0
-    assert 'faraday_agent_dispatcher.cli.main' in result.output
-    help_result = runner.invoke(cli.main, ['--help'])
-    assert help_result.exit_code == 0
-    assert '--help  Show this message and exit.' in help_result.output
+def test_ws_connection():
+    # Create local dispatcher with localhost WS
+    # localhost WS send
+    dispatcher = DispatcherBuilder().config(correct_config_dict).build()
+    dispatcher.connect()
+    # mock: ok + run
+    assert dispatcher.history() == expected_history
