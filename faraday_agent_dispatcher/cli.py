@@ -6,6 +6,10 @@ import click
 
 from faraday_agent_dispatcher.builder import DispatcherBuilder
 
+default_config = {
+        "faraday_url": "http://localhost:5985",
+        "access_token": "da84edfd-5caa-4215-b496-02e24dd5b581"
+    }
 
 @click.command()
 def main(args=None):
@@ -13,10 +17,9 @@ def main(args=None):
     dispatcher_builder = DispatcherBuilder()
     # Open config
 
-    # Parse args
+    dispatcher_builder.config(default_config)
 
-    ### EXAMPLE
-    dispatcher_builder.faraday_url("")
+    # Parse args
 
     dispatcher = dispatcher_builder.build()
 
