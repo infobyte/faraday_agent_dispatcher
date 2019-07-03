@@ -4,6 +4,7 @@ from faraday_agent_dispatcher.dispatcher import Dispatcher
 import requests
 from urllib.parse import urljoin
 
+
 class DispatcherBuilder:
 
     def __init__(self):
