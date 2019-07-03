@@ -18,7 +18,7 @@ class Dispatcher:
         # This must be called from ws listener
 
         # Execute SH passed by config
-        subprocess.run()
+        # subprocess.run()
 
         pass
 
