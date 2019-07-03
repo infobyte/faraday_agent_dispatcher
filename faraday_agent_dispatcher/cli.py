@@ -11,6 +11,7 @@ default_config = {
         "access_token": "da84edfd-5caa-4215-b496-02e24dd5b581"
     }
 
+
 @click.command()
 def main(args=None):
     """Console script for faraday_dummy_agent."""
