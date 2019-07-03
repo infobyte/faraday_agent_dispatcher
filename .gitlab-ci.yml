@@ -1,0 +1,28 @@
+variables:
+    TZ: "America/New_York"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+
+stages:
+    - testing
+
+test:
+    image: python:3
+    stage: testing
+    coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
+    script:
+        - pip install virtualenv
+        - virtualenv faraday_venv
+        - source faraday_venv/bin/activate
+        - pip install pytest pytest-cov
+        - pip install -r requirements_dev.txt
+        - python setup.py install
+        - mkdir run_from
+        - cd run_from && pytest ../tests --capture=sys -v --cov=../faraday_agent_dispatcher --color=yes --disable-warnings
+    artifacts:
+        when: on_failure
+        paths:
+            - dist/*

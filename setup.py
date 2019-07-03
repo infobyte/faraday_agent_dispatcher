@@ -13,7 +13,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = ['Click>=6.0', ]
 
-setup_requirements = ['pytest-runner', 'faradaysec']
+setup_requirements = ['pytest-runner', 'click', 'requests', 'syslog_rfc5424_formatter']
 
 test_requirements = ['pytest', ]
 
