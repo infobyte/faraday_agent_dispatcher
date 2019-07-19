@@ -7,8 +7,11 @@ import click
 from faraday_agent_dispatcher.builder import DispatcherBuilder
 
 default_config = {
-        "faraday_url": "http://localhost:5985",
-        "access_token": "da84edfd-5caa-4215-b496-02e24dd5b581"
+        "faraday_url": "http://localhost",
+        "faraday_port": "5985",
+        "registration_token": u'da84edfd-5caa-4215-b496-02e24dd5b581',
+        "workspace": "w1",
+        "executor_filename": "./samples/scratchpy.sh"
     }
 
 
@@ -24,7 +27,9 @@ def main(args=None):
 
     dispatcher = dispatcher_builder.build()
 
-    dispatcher.connect()
+    # TODO dispatcher.connect()
+
+    dispatcher.run()
 
     return 0
 
