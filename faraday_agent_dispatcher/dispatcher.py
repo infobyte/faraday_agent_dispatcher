@@ -81,8 +81,9 @@ class Dispatcher:
     def rnd_fifo_name():
         import string
         from random import choice
-        allchar = string.ascii_letters + string.digits
-        return "".join(choice(allchar) for _ in range(10))
+        chars = string.ascii_letters + string.digits
+        name = "".join(choice(chars) for _ in range(10))
+        return f"/tmp/{name}"
 
     async def process_output(self, process):
         pass
