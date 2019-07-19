@@ -16,7 +16,7 @@ from faraday_agent_dispatcher.builder import DispatcherBuilder
 def correct_config_dict():
     return {
         "faraday_url": "localhost",
-        "access_token": "valid_access_token"
+        "registration_token": "valid_registration_token"
     }
 
 host_data = {
@@ -56,11 +56,11 @@ expected_history = ["Connected to websocket", "Received run request by websocket
                          [{"remove": ["faraday_url"],
                            "replace": {},
                            "expected_exception": ValueError},
-                          {"remove": ["access_token"],
+                          {"remove": ["registration_token"],
                            "replace": {},
                            "expected_exception": ValueError},
                           {"remove": [],
-                           "replace": {"access_token": "invalid_token"},
+                           "replace": {"registration_token": "invalid_token"},
                            "expected_exception": SyntaxError},
                           {"remove": [],
                            "replace": {}}
@@ -79,8 +79,8 @@ def test_basic_built(config, use_dict):
     else:
         if "faraday_url" in config_dict:
             d_builder.faraday_url(config_dict["faraday_url"])
-        if "access_token" in config_dict:
-            d_builder.access_token(config_dict["access_token"])
+        if "registration_token" in config_dict:
+            d_builder.registration_token(config_dict["registration_token"])
     if "expected_exception" in config:
         with pytest.raises(config["expected_exception"]):
             d_builder.build()
