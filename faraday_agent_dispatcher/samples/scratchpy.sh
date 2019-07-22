@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-python ./samples/scratch.py
+python ./samples/scratch2.py

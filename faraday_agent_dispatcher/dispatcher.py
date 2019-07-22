@@ -7,9 +7,21 @@ import json
 from aiohttp import ClientSession
 import asyncio
 import websockets
+import aiofiles
 
 import os
 # TODO CONNECT INTERFACE
+
+
+class Bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 class Dispatcher:
@@ -64,14 +76,19 @@ class Dispatcher:
 
         await self.run()  # This line can we called from outside (in main)
 
+    async def disconnect(self):
+        await self.__websocket.close()
+
     # V2
     async def run(self):
-        data = await self.__websocket.recv()
+        # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
+        # data = await self.__websocket.recv()
         # TODO Control data
         fifo_name = Dispatcher.rnd_fifo_name()
         Dispatcher.create_fifo(fifo_name)
         process = await self.create_process()
-        tasks = [self.process_output(process), self.process_err(process), self.process_data(fifo_name), self.run()]
+        tasks = [self.process_output(process), self.process_err(process), self.process_data(fifo_name),]
+                 #self.run()]
         await asyncio.gather(*tasks)
 
     @staticmethod
@@ -79,6 +96,7 @@ class Dispatcher:
         if os.path.exists(fifo_name):
             os.remove(fifo_name)
         os.mkfifo(fifo_name)
+        os.environ["FIFO_NAME"] = fifo_name
 
     @staticmethod
     def rnd_fifo_name():
@@ -89,17 +107,26 @@ class Dispatcher:
         return f"/tmp/{name}"
 
     async def process_output(self, process):
-        pass
+        for i in range(3):
+            line = await process.stdout.readline()
+            line = line.decode('utf-8')
+            print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
 
     async def process_err(self, process):
-        pass
+        for i in range(3):
+            line = await process.stderr.readline()
+            line = line.decode('utf-8')
+            print(f"{Bcolors.FAIL}{line}{Bcolors.ENDC}")
 
     async def process_data(self, fifo_name):
-        pass
+        async with aiofiles.open(fifo_name, "r") as fifo_file:
+            for i in range(3):
+                line = await fifo_file.readline()
+                print(f"{Bcolors.OKGREEN}{line}{Bcolors.ENDC}")
 
     async def create_process(self):
         process = await asyncio.create_subprocess_shell(
-            self.__command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            self.__executor_filename, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         return process
 
