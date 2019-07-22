@@ -27,7 +27,10 @@ async def dispatch():
 
     await dispatcher.connect()
 
-    await dispatcher.run()
+    # await dispatcher.run()
+
+    print("WARN DISPATCHER ENDED")
+    await dispatcher.disconnect()
 
     return 0
 
