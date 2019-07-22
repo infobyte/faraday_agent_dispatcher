@@ -10,7 +10,10 @@ twine==1.12.1
 click==7.0
 requests==2.22.0
 syslog_rfc5424_formatter==1.1.1
+
 websockets==8.0
+aiofiles==0.4.0
+aiohttp==3.0.4
 
 pytest==3.8.2
 pytest-runner==4.2
