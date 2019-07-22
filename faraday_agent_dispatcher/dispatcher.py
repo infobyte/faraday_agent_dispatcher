@@ -77,6 +77,7 @@ class Dispatcher:
         await self.run()  # This line can we called from outside (in main)
 
     async def disconnect(self):
+        await self.__session.close()
         await self.__websocket.close()
 
     # V2
