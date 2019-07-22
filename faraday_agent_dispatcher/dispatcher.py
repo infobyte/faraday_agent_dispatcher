@@ -14,7 +14,7 @@ import os
 
 class Dispatcher:
 
-    def __init__(self, url, workspace, agent_token, executor_filename, api_port=5985, websocket_port=9000):
+    def __init__(self, url, workspace, agent_token, executor_filename, api_port="5985", websocket_port="9000"):
         self.__url = url
         self.__api_port = api_port
         self.__websocket_port = websocket_port
@@ -29,18 +29,21 @@ class Dispatcher:
     def __get_url(self, port):
         return f"{self.__url}:{port}"
 
-    def __api_url(self):
-        return self.__get_url(self.__api_port)
+    def __api_url(self, secure=False):
+        prefix = "https://" if secure else "http://"
+        return f"{prefix}{self.__get_url(self.__api_port)}"
 
-    def __websocket_url(self):
-        return self.__get_url(self.__websocket_port)
+    def __websocket_url(self, secure=False):
+        prefix = "wss://" if secure else "ws://"
+        return f"{prefix}{self.__get_url(self.__websocket_port)}"
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
         headers = {"Authorization": f"Agent {self.__agent_token}"}
-        websocket_token_response = await self.__session.post(f'http://{self.__api_url()}/_api/v2/'
-                                                             f'agent_websocket_token/',
-                                                             headers=headers)
+        d = f'{self.__api_url()}/_api/v2/agent_websocket_token/'
+        websocket_token_response = await self.__session.post(
+            f'{self.__api_url()}/_api/v2/agent_websocket_token/',
+            headers=headers)
 
         websocket_token_json = await websocket_token_response.json()  # TODO ERRORS
         self.__websocket_token = websocket_token_json["token"]

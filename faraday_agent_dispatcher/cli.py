@@ -3,21 +3,19 @@
 """Console script for faraday_dummy_agent."""
 import sys
 import click
+import asyncio
 
 from faraday_agent_dispatcher.builder import DispatcherBuilder
 
 default_config = {
-        "faraday_url": "http://localhost",
-        "faraday_port": "5985",
-        "registration_token": u'da84edfd-5caa-4215-b496-02e24dd5b581',
+        "faraday_host": "localhost",
+        "registration_token": u'EjBeK312VRRkr4zys2DMe2lRn',
         "workspace": "w1",
         "executor_filename": "./samples/scratchpy.sh"
     }
 
 
-@click.command()
-def main(args=None):
-    """Console script for faraday_dummy_agent."""
+async def dispatch():
     dispatcher_builder = DispatcherBuilder()
     # Open config
 
@@ -27,12 +25,16 @@ def main(args=None):
 
     dispatcher = dispatcher_builder.build()
 
-    # TODO dispatcher.connect()
+    await dispatcher.connect()
 
-    dispatcher.run()
+    await dispatcher.run()
 
     return 0
 
+async def main(args=None):
+    res = await asyncio.gather(dispatch())
+    return res
 
 if __name__ == "__main__":
-    sys.exit(main())  # pragma: no cover
+    r = asyncio.run(main())
+    sys.exit(r)  # pragma: no cover

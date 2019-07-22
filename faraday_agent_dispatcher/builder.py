@@ -9,14 +9,16 @@ class DispatcherBuilder:
 
     def __init__(self):
         self.config_map_function = {
-            "faraday_url": self.faraday_url,
-            "faraday_port": self.faraday_port,
+            "faraday_host": self.faraday_host,
+            "api_port": self.api_port,
+            "websocket_port": self.websocket_port,
             "workspace": self.faraday_workspace,
             "registration_token": self.registration_token,
             "executor_filename": self.executor_filename
         }
-        self.__faraday_url = "localhost"
-        self.__faraday_port = "5985"
+        self.__faraday_host = "localhost"
+        self.__api_port = "5985"
+        self.__websocket_port = "9000"
         self.__workspace = None
         self.__registration_token = None
         self.__executor_filename = None
@@ -30,12 +32,16 @@ class DispatcherBuilder:
                 print("Key " + key + "not supported")
         return self
 
-    def faraday_url(self, url):
-        self.__faraday_url = url
+    def faraday_host(self, host):
+        self.__faraday_host = host
         return self
 
-    def faraday_port(self, port):
-        self.__faraday_port = port
+    def api_port(self, port):
+        self.__api_port = port
+        return self
+
+    def websocket_port(self, port):
+        self.__websocket_port = port
         return self
 
     def faraday_workspace(self, workspace):
@@ -50,8 +56,9 @@ class DispatcherBuilder:
         self.__executor_filename = executor_filename
         return self
 
-    def __full_url(self):
-        return self.__faraday_url + ":" + str(self.__faraday_port)
+    def __full_url(self, secure = False):
+        prefix = "https://" if secure else "http://"
+        return f"{prefix}{self.__faraday_host}:{self.__api_port}"
 
     def build(self):
         # Control fields
@@ -63,9 +70,10 @@ class DispatcherBuilder:
 
         # Instantiate Dispatcher
 
-        return Dispatcher(self.__full_url(),
+        return Dispatcher(self.__faraday_host,
                           self.__workspace,
                           token_response.json()['token'],
                           self.__executor_filename,
-                          self.__registration_token)
+                          self.__api_port,
+                          self.__websocket_port)
 
