@@ -10,8 +10,8 @@ import websockets
 import aiofiles
 
 import os
-# TODO CONNECT INTERFACE
 
+import faraday_agent_dispatcher.logger as logging
 
 class Bcolors:
     HEADER = '\033[95m'
@@ -23,6 +23,9 @@ class Bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+logger = logging.get_logger()
+
+LOG = False
 
 class Dispatcher:
 
@@ -110,12 +113,16 @@ class Dispatcher:
         for i in range(3):
             line = await process.stdout.readline()
             line = line.decode('utf-8')
+            if LOG:
+                logger.debug(f"Output line: {line}")
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
 
     async def process_err(self, process):
         for i in range(3):
             line = await process.stderr.readline()
             line = line.decode('utf-8')
+            if LOG:
+                logger.info(f"Error line: {line}")
             print(f"{Bcolors.FAIL}{line}{Bcolors.ENDC}")
 
     async def process_data(self, fifo_name):
@@ -123,6 +130,8 @@ class Dispatcher:
             for i in range(3):
                 line = await fifo_file.readline()
                 print(f"{Bcolors.OKGREEN}{line}{Bcolors.ENDC}")
+                if LOG:
+                    logger.debug(f"Data line: {line}")
 
     async def create_process(self, fifo_name):
         process = await asyncio.create_subprocess_exec(
@@ -130,33 +139,7 @@ class Dispatcher:
         )
         return process
 
-    # V1
-    async def old_run(self):
-        # This must be called from ws listener
-        async def pp(prefix, text):
-            if len(text) > 0:
-                print(prefix + text)
-
-        # Execute SH passed by config
-        import time
-        import subprocess
-        result = subprocess.Popen(self.__executor_filename, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        while result.returncode is None:
-            await pp("OUT", str(result.stdout.read().decode('utf-8')))
-            await pp("ERR", str(result.stderr.read().decode('utf-8')))
-            localtime = time.localtime()
-            resultt = time.strftime("%I:%M:%S %p", localtime)
-            print(resultt)
-            result.poll()
-            time.sleep(0.01)
-        await pp("OUT", str(result.stdout.read().decode('utf-8')))
-        await pp("ERR", str(result.stderr.read().decode('utf-8')))
-
-    def ipc_callback(self):
-        # Parse
-        self.old_send()
-
-    def old_send(self):
+    async def send(self):
         # Any time can be called by IPC
 
         # Send by API and Agent Token the info
