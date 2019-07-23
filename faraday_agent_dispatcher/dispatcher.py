@@ -11,21 +11,13 @@ import aiofiles
 
 import os
 
+from faraday_agent_dispatcher.executor_helper import process_output, process_data, process_error
 import faraday_agent_dispatcher.logger as logging
-
-class Bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 logger = logging.get_logger()
 
 LOG = False
+
 
 class Dispatcher:
 
@@ -77,23 +69,23 @@ class Dispatcher:
 
             self.__websocket = websocket
 
-        await self.run()  # This line can we called from outside (in main)
+            await self.run_await()  # This line can we called from outside (in main)
 
     async def disconnect(self):
         await self.__session.close()
         await self.__websocket.close()
 
     # V2
-    async def run(self):
+    async def run_await(self):
         # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
-        # data = await self.__websocket.recv()
+        data = await self.__websocket.recv()
         # TODO Control data
         fifo_name = Dispatcher.rnd_fifo_name()
         Dispatcher.create_fifo(fifo_name)
         process = await self.create_process(fifo_name)
-        tasks = [self.process_output(process), self.process_err(process), self.process_data(fifo_name),]
-                 #self.run()]
+        tasks = [process_output(process), process_error(process), process_data(fifo_name), self.run_await()]
         await asyncio.gather(*tasks)
+        await process.communicate()
 
     @staticmethod
     def create_fifo(fifo_name):
@@ -109,33 +101,11 @@ class Dispatcher:
         name = "".join(choice(chars) for _ in range(10))
         return f"/tmp/{name}"
 
-    async def process_output(self, process):
-        for i in range(3):
-            line = await process.stdout.readline()
-            line = line.decode('utf-8')
-            if LOG:
-                logger.debug(f"Output line: {line}")
-            print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
-
-    async def process_err(self, process):
-        for i in range(3):
-            line = await process.stderr.readline()
-            line = line.decode('utf-8')
-            if LOG:
-                logger.info(f"Error line: {line}")
-            print(f"{Bcolors.FAIL}{line}{Bcolors.ENDC}")
-
-    async def process_data(self, fifo_name):
-        async with aiofiles.open(fifo_name, "r") as fifo_file:
-            for i in range(3):
-                line = await fifo_file.readline()
-                print(f"{Bcolors.OKGREEN}{line}{Bcolors.ENDC}")
-                if LOG:
-                    logger.debug(f"Data line: {line}")
-
     async def create_process(self, fifo_name):
-        process = await asyncio.create_subprocess_exec(
-            self.__executor_filename, fifo_name, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        new_env = os.environ.copy()
+        new_env["FIFO_NAME"] = fifo_name
+        process = await asyncio.create_subprocess_shell(
+            self.__executor_filename, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=new_env
         )
         return process
 
