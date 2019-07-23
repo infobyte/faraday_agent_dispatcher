@@ -11,7 +11,8 @@ default_config = {
         "faraday_host": "localhost",
         "registration_token": u'QTlA75R1RNG33utzdlgpOcrJo',
         "workspace": "w1",
-        "executor_filename": "./samples/scratchpy.sh"
+        #"executor_filename": "./samples/scratchpy.sh",
+        "executor_filename": "python ./samples/scratch2.py"
     }
 
 
@@ -34,10 +35,12 @@ async def dispatch():
 
     return 0
 
+
 async def main(args=None):
     res = await asyncio.gather(dispatch())
     return res
 
 if __name__ == "__main__":
     r = asyncio.run(main())
+    print(5)
     sys.exit(r)  # pragma: no cover

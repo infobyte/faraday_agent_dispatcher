@@ -5,4 +5,4 @@ CONST_FARADAY_LOGS_PATH = "logs"
 
 USE_RFC = False
 
-LOGGING_LEVEL = logging.DEBUG
+LOGGING_LEVEL = logging.ERROR
