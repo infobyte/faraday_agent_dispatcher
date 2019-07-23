@@ -1,4 +1,6 @@
 import aiofiles
+import json
+from json import JSONDecodeError
 
 from faraday_agent_dispatcher import logger as logging
 
@@ -66,7 +68,11 @@ async def process_data(fifo_name):
         return next_line
 
     def fifo_processing(line):
-        print(f"{Bcolors.OKGREEN}{line}{Bcolors.ENDC}")
+        try:
+            a = json.loads(line)
+            print(f"{Bcolors.OKGREEN}{line} {a['Esto']}{Bcolors.ENDC}")
+        except JSONDecodeError as e:
+            print("TODO CLOSE FIFO")
 
     def log(line):
         logger.debug(f"FIFO line: {line}")

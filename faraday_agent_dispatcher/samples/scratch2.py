@@ -12,6 +12,8 @@ if __name__ == '__main__':
             time.sleep(random.choice([i * 0.1 for i in range(8,10)]))
             print("Esto va a stoerr", file=sys.stderr)
             time.sleep(random.choice([i * 0.1 for i in range(5,7)]))
+            print("{\"Esto\": \"va a fifo\"", file=fifo_file)
+            time.sleep(random.choice([i * 0.1 for i in range(1,3)]))
             print("{\"Esto\": \"va a fifo\"}", file=fifo_file)
             time.sleep(random.choice([i * 0.1 for i in range(1,3)]))
             fifo_file.flush()
