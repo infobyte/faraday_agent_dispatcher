@@ -9,7 +9,7 @@ from faraday_agent_dispatcher.builder import DispatcherBuilder
 
 default_config = {
         "faraday_host": "localhost",
-        "registration_token": u'EjBeK312VRRkr4zys2DMe2lRn',
+        "registration_token": u'QTlA75R1RNG33utzdlgpOcrJo',
         "workspace": "w1",
         "executor_filename": "./samples/scratchpy.sh"
     }
