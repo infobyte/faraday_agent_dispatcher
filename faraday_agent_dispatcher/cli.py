@@ -6,21 +6,13 @@ import click
 import asyncio
 
 from faraday_agent_dispatcher.builder import DispatcherBuilder
-
-default_config = {
-        "faraday_host": "localhost",
-        "registration_token": u'QTlA75R1RNG33utzdlgpOcrJo',
-        "workspace": "w1",
-        #"executor_filename": "./samples/scratchpy.sh",
-        "executor_filename": "python ./samples/scratch2.py"
-    }
-
+from faraday_agent_dispatcher.config import instance as config
 
 async def dispatch():
     dispatcher_builder = DispatcherBuilder()
     # Open config
 
-    dispatcher_builder.config(default_config)
+    dispatcher_builder.config(config.get_all())
 
     # Parse args
 
