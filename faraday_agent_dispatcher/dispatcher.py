@@ -11,7 +11,7 @@ import aiofiles
 
 import os
 
-from faraday_agent_dispatcher.executor_helper import process_output, process_data, process_error
+from faraday_agent_dispatcher.executor_helper import FIFOLineProcessor, StdErrLineProcessor, StdOutLineProcessor
 import faraday_agent_dispatcher.logger as logging
 
 logger = logging.get_logger()
@@ -83,9 +83,14 @@ class Dispatcher:
         fifo_name = Dispatcher.rnd_fifo_name()
         Dispatcher.create_fifo(fifo_name)
         process = await self.create_process(fifo_name)
-        tasks = [process_output(process), process_error(process), process_data(fifo_name), self.run_await()]
-        await asyncio.gather(*tasks)
-        await process.communicate()
+        async with aiofiles.open(fifo_name, "r") as fifo_file:
+            tasks = [StdOutLineProcessor(process).process_f(),
+                     StdErrLineProcessor(process).process_f(),
+                     FIFOLineProcessor(fifo_file).process_f(),
+                     self.run_await()]
+
+            await asyncio.gather(*tasks)
+            await process.communicate()
 
     @staticmethod
     def create_fifo(fifo_name):
