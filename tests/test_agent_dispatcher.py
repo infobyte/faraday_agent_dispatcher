@@ -15,9 +15,14 @@ from faraday_agent_dispatcher.builder import DispatcherBuilder
 
 def correct_config_dict():
     return {
-        "faraday_url": "localhost",
-        "registration_token": "valid_registration_token"
+        "faraday_host": "localhost",
+        "api_port": "5968",
+        "websocket_port": "9000",
+        "workspace": "faraday_workspace",
+        "registration_token": "valid_registration_token",
+        "executor_filename": "test_executor"
     }
+
 
 host_data = {
     "ip": "127.0.0.1",
@@ -52,16 +57,53 @@ full_data = {
 expected_history = ["Connected to websocket", "Received run request by websocket", "Running executor", "Sending " + str(full_data)]
 
 
+class ToBeDefinedError(Exception):
+    pass
+
+
 @pytest.mark.parametrize('config',
-                         [{"remove": ["faraday_url"],
+                         [{"remove": ["faraday_host"],
                            "replace": {},
                            "expected_exception": ValueError},
+                          {"remove": ["api_port"],
+                           "replace": {}},
+                          {"remove": [],
+                           "replace": {"api_port": "Not a port number"},
+                           "expected_exception": ValueError},
+                          {"remove": [],
+                           "replace": {"api_port": "5897"},
+                           "expected_exception": ToBeDefinedError},
+                          # One must try to connect to another faraday and succeed, the other fails
+                          {"remove": [],
+                           "replace": {"api_port": "5900"},
+                           "expected_exception": ToBeDefinedError},
+                          {"remove": ["websocket_port"],
+                           "replace": {}},
+                          {"remove": [],
+                           "replace": {"websocket_port": "Not a port number"},
+                           "expected_exception": ValueError},
+                          {"remove": [],
+                           "replace": {"websocket_port": "9001"},
+                           "expected_exception": ToBeDefinedError},
+                          # One must try to connect to another faraday and succeed, the other fails
+                          {"remove": [],
+                           "replace": {"websocket_port": "9002"},
+                           "expected_exception": ToBeDefinedError},
+                          {"remove": ["workspace"],
+                           "replace": {},
+                           "expected_exception": ValueError},
+                          {"remove": [],
+                           "replace": {"workspace": "9002"},
+                           "expected_exception": ToBeDefinedError},  # Try to connect and fails
                           {"remove": ["registration_token"],
                            "replace": {},
                            "expected_exception": ValueError},
                           {"remove": [],
                            "replace": {"registration_token": "invalid_token"},
                            "expected_exception": SyntaxError},
+                          {"remove": ["executor_filename"],
+                           "replace": {},
+                           "expected_exception": ValueError},
                           {"remove": [],
                            "replace": {}}
                           ])
@@ -77,16 +119,23 @@ def test_basic_built(config, use_dict):
     if use_dict:
         d_builder.config(config_dict)
     else:
-        if "faraday_url" in config_dict:
-            d_builder.faraday_url(config_dict["faraday_url"])
+        if "faraday_host" in config_dict:
+            d_builder.faraday_host(config_dict["faraday_host"])
+        if "api_port" in config_dict:
+            d_builder.api_port(config_dict["api_port"])
+        if "websocket_port" in config_dict:
+            d_builder.websocket_port(config_dict["websocket_port"])
+        if "workspace" in config_dict:
+            d_builder.faraday_workspace(config_dict["workspace"])
         if "registration_token" in config_dict:
             d_builder.registration_token(config_dict["registration_token"])
+        if "executor_filename" in config_dict:
+            d_builder.executor_filename(config_dict["executor_filename"])
     if "expected_exception" in config:
         with pytest.raises(config["expected_exception"]):
             d_builder.build()
     else:
         assert isinstance(d_builder.build(), Dispatcher)
-        assert os.getenv("FARADAY_URL") == config_dict["faraday_url"]
         assert os.getenv("AGENT_API_TOKEN") == "valid_api_token"
         assert os.getenv("AGENT_WS_TOKEN") == "valid_ws_token"
 
