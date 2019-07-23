@@ -87,7 +87,7 @@ class Dispatcher:
         # TODO Control data
         fifo_name = Dispatcher.rnd_fifo_name()
         Dispatcher.create_fifo(fifo_name)
-        process = await self.create_process()
+        process = await self.create_process(fifo_name)
         tasks = [self.process_output(process), self.process_err(process), self.process_data(fifo_name),]
                  #self.run()]
         await asyncio.gather(*tasks)
@@ -97,7 +97,6 @@ class Dispatcher:
         if os.path.exists(fifo_name):
             os.remove(fifo_name)
         os.mkfifo(fifo_name)
-        os.environ["FIFO_NAME"] = fifo_name
 
     @staticmethod
     def rnd_fifo_name():
@@ -125,9 +124,9 @@ class Dispatcher:
                 line = await fifo_file.readline()
                 print(f"{Bcolors.OKGREEN}{line}{Bcolors.ENDC}")
 
-    async def create_process(self):
-        process = await asyncio.create_subprocess_shell(
-            self.__executor_filename, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    async def create_process(self, fifo_name):
+        process = await asyncio.create_subprocess_exec(
+            self.__executor_filename, fifo_name, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         return process
 

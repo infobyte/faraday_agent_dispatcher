@@ -1,11 +1,11 @@
-import os
 import sys
 import time
 import random
 
 if __name__ == '__main__':
 
-    fifo_name = os.getenv("FIFO_NAME", "NULL")
+    args = sys.argv[1:]
+    fifo_name = args[0]
     with open(fifo_name, "w") as fifo_file:
         for _ in range(10):
             print("Esto va a stdout")
