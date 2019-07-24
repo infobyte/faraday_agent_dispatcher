@@ -24,7 +24,7 @@ from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.builder import DispatcherBuilder
 from faraday_agent_dispatcher.config import instance as config
 
-async def dispatch():
+async def main():
     dispatcher_builder = DispatcherBuilder()
     # Open config
 
@@ -47,11 +47,10 @@ async def dispatch():
     return 0
 
 
-async def main(args=None):
-    res = await asyncio.gather(dispatch())
-    return res
+def main_sync():
+    r = asyncio.run(main())
+    sys.exit(r)  # pragma: no cover
+
 
 if __name__ == "__main__":
-    r = asyncio.run(main())
-    print(5)
-    sys.exit(r)  # pragma: no cover
+    main_sync()
