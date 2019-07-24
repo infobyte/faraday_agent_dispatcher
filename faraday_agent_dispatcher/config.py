@@ -2,34 +2,30 @@ import configparser
 
 import logging
 
+import aiofiles
+
 CONST_FARADAY_HOME_PATH = "."
 CONST_FARADAY_LOGS_PATH = "logs"
+CONST_CONFIG = f"{CONST_FARADAY_HOME_PATH}/static/config.ini"
 
 USE_RFC = False
 
 LOGGING_LEVEL = logging.ERROR
 
-
-class Configuration:
-
-    def __init__(self):
-        self.values = configparser.ConfigParser()
-        self.values.read(self.path())
-        asas = 4
-
-    def path(self):
-        return f"{CONST_FARADAY_HOME_PATH}/static/config.ini"
-
-    def get(self, field):
-        return self.values["VALUES"][field]
-
-    def set(self, field, value):
-        self.values["VALUES"][field] = value
-        with open(self.path(), 'w') as configfile:
-            self.values.write(configfile)
-
-    def get_all(self):
-        return self.values["VALUES"]
+instance = configparser.ConfigParser()
+instance.read(CONST_CONFIG)
 
 
-instance = Configuration()
+async def async_save_config(filename=CONST_CONFIG):
+    async with aiofiles.open(filename, 'w') as configfile:
+        await instance.write(configfile)
+
+
+def save_config(filename=CONST_CONFIG):
+    with open(filename, 'w') as configfile:
+        instance.write(configfile)
+
+
+TOKENS_SECTION = "tokens"
+SERVER_SECTION = "server"
+EXECUTOR_SECTION = "executor"

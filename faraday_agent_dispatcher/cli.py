@@ -5,6 +5,7 @@ import sys
 import click
 import asyncio
 
+from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.builder import DispatcherBuilder
 from faraday_agent_dispatcher.config import instance as config
 
@@ -12,11 +13,14 @@ async def dispatch():
     dispatcher_builder = DispatcherBuilder()
     # Open config
 
-    dispatcher_builder.config(config.get_all())
+    #dispatcher_builder.config(config)
+    #dispatcher_builder.registration_token(config["tokens"]["registration"])
+    #dispatcher_builder.faraday_workspace("w1")
+    #dispatcher = dispatcher_builder.build()
 
     # Parse args
 
-    dispatcher = dispatcher_builder.build()
+    dispatcher = Dispatcher()
 
     await dispatcher.connect()
 
