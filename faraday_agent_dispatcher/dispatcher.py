@@ -70,7 +70,8 @@ class Dispatcher:
             f'{self.__api_url()}/_api/v2/agent_websocket_token/',
             headers=headers)
 
-        websocket_token_json = await websocket_token_response.json()  # TODO ERRORS
+        websocket_token_response.raise_for_status()
+        websocket_token_json = await websocket_token_response.json()
         self.__websocket_token = websocket_token_json["token"]
 
     async def connect(self):
@@ -85,6 +86,7 @@ class Dispatcher:
             token_response = await self.__session.post(token_registration_url,
                                                        json={'token': registration_token, 'name': "TEST"})
             # todo control token is jsonable
+            await token_response.raise_for_status()
             token = await token_response.json()
             self.__agent_token = token["token"]
             config.set(TOKENS_SECTION, "agent", self.__agent_token)
