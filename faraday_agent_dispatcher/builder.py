@@ -70,10 +70,11 @@ class DispatcherBuilder:
 
         # Instantiate Dispatcher
 
-        return Dispatcher(self.__faraday_host,
-                          self.__workspace,
-                          token_response.json()['token'],
-                          self.__executor_filename,
-                          self.__api_port,
-                          self.__websocket_port)
+        a =5
+        # return Dispatcher(self.__faraday_host,
+        #                   self.__workspace,
+        #                   token_response.json()['token'],
+        #                   self.__executor_filename,
+        #                   self.__api_port,
+        #                   self.__websocket_port)
 

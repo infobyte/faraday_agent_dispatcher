@@ -14,6 +14,9 @@ import os
 from faraday_agent_dispatcher.executor_helper import FIFOLineProcessor, StdErrLineProcessor, StdOutLineProcessor
 import faraday_agent_dispatcher.logger as logging
 
+from faraday_agent_dispatcher.config import instance as config, \
+    EXECUTOR_SECTION, SERVER_SECTION, TOKENS_SECTION, save_config
+
 logger = logging.get_logger()
 
 LOG = False
@@ -21,20 +24,19 @@ LOG = False
 
 class Dispatcher:
 
-    def __init__(self, url, workspace, agent_token, executor_filename, api_port="5985", websocket_port="9000"):
-        self.__url = url
-        self.__api_port = api_port
-        self.__websocket_port = websocket_port
-        self.__workspace = workspace
-        self.__agent_token = agent_token
-        self.__executor_filename = executor_filename
+    def __init__(self):
+        self.__host = config.get(SERVER_SECTION, "host")
+        self.__api_port = config.get(SERVER_SECTION, "api_port")
+        self.__websocket_port = config.get(SERVER_SECTION, "websocket_port")
+        self.__workspace = config.get(SERVER_SECTION, "workspace")
+        self.__agent_token = config[TOKENS_SECTION].get("agent", None)
+        self.__executor_cmd = config.get(EXECUTOR_SECTION, "cmd")
         self.__session = ClientSession()
-        self.__websocket = None
         self.__websocket_token = None
-        self.__command = None
+        self.__websocket = None
 
     def __get_url(self, port):
-        return f"{self.__url}:{port}"
+        return f"{self.__host}:{port}"
 
     def __api_url(self, secure=False):
         prefix = "https://" if secure else "http://"
@@ -56,6 +58,22 @@ class Dispatcher:
         self.__websocket_token = websocket_token_json["token"]
 
     async def connect(self):
+
+        # REFACTORING
+        if self.__agent_token is None:
+            registration_token = self.__agent_token = config.get(TOKENS_SECTION, "registration")
+            if registration_token is None:
+                # TODO RAISE CORRECT
+                raise RuntimeError
+            token_registration_url = f"{self.__api_url()}/_api/v2/ws/{self.__workspace}/agent_registration/"
+            token_response = await self.__session.post(token_registration_url,
+                                                       json={'token': registration_token, 'name': "TEST"})
+            # todo control token is jsonable
+            token = await token_response.json()
+            self.__agent_token = token["token"]
+            config.set(TOKENS_SECTION, "agent", self.__agent_token)
+            save_config()
+
         # I'm built so I can connect
         if self.__websocket_token is None:
             await self.reset_websocket_token()
@@ -110,7 +128,7 @@ class Dispatcher:
         new_env = os.environ.copy()
         new_env["FIFO_NAME"] = fifo_name
         process = await asyncio.create_subprocess_shell(
-            self.__executor_filename, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=new_env
+            self.__executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=new_env
         )
         return process
 
@@ -118,9 +136,7 @@ class Dispatcher:
         # Any time can be called by IPC
 
         # Send by API and Agent Token the info
-        url = urljoin(self.__url, "_api/v2/ws/"+ self.__workspace +"/hosts/")
+        url = urljoin(self.__api_url(), "_api/v2/ws/"+ self.__workspace +"/hosts/")
 
-        aa = requests.get(url, headers={"token": self.__token})
-        aaa = requests.get(url, headers={"token": self.a})
         pass
 
