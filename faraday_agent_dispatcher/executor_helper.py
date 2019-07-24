@@ -98,6 +98,7 @@ class StdErrLineProcessor(FileLineProcessor):
         logger.debug(f"Error line: {line}")
 
 
+from faraday_agent_dispatcher.config import instance as config
 class FIFOLineProcessor(FileLineProcessor):
 
     def __init__(self, fifo_file, session: ClientSession):
@@ -110,14 +111,15 @@ class FIFOLineProcessor(FileLineProcessor):
         return line[:-1]
 
     def post_url(self):
-        from faraday_agent_dispatcher.config import instance as config
-        return f"http://{config.get('server','host')}:{config.get('server','api_port')}/_api/v2/ws/w1/bulk_create"
+        return f"http://{config.get('server','host')}:{config.get('server','api_port')}/_api/v2/ws/" \
+            f"{config.get('server','workspace')}/bulk_create/"
 
     async def processing(self, line):
         try:
             a = json.loads(line)
             print(f"{Bcolors.OKGREEN}{line}{Bcolors.ENDC}")
-            await self.__session.post(self.post_url(), data=a)
+            headers=[("authorization", "agent {}".format(config.get("tokens", "agent")))]
+            await self.__session.post(self.post_url(), json=a, headers=headers)
 
         except JSONDecodeError as e:
             print(f"{Bcolors.WARNING}Not json line{Bcolors.ENDC}")
