@@ -53,6 +53,7 @@ if __name__ == '__main__':
             host_data_ = host_data.copy()
             host_data_['ip'] = host_data_['ip'].format(j)
             host_data_['vulnerabilities'] = [vuln_data]
-            print(json.dumps(host_data_), file=fifo_file)
+            data = dict(hosts=[host_data_])
+            print(json.dumps(data), file=fifo_file)
             time.sleep(random.choice([i * 0.1 for i in range(1,3)]))
             fifo_file.flush()
