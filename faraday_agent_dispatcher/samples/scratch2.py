@@ -18,17 +18,41 @@ import time
 import random
 import os
 
+
+host_data = {
+    "ip": "192.168.0.{}",
+    "description": "test",
+    "hostnames": ["test.com", "test2.org"]
+}
+
+vuln_data = {
+    'name': 'sql injection',
+    'desc': 'test',
+    'severity': 'high',
+    'type': 'Vulnerability',
+    'impact': {
+        'accountability': True,
+        'availability': False,
+    },
+    'refs': ['CVE-1234']
+}
+import json
+
 if __name__ == '__main__':
 
     fifo_name = os.environ["FIFO_NAME"]
     with open(fifo_name, "w") as fifo_file:
-        for _ in range(10):
+        for j in range(10):
             print("Esto va a stdout")
             time.sleep(random.choice([i * 0.1 for i in range(8,10)]))
             print("Esto va a stoerr", file=sys.stderr)
             time.sleep(random.choice([i * 0.1 for i in range(5,7)]))
-            print("{\"Esto\": \"va a fifo\"", file=fifo_file)
-            time.sleep(random.choice([i * 0.1 for i in range(1,3)]))
-            print("{\"Esto\": \"va a fifo\"}", file=fifo_file)
+            #print("{\"Esto\": \"va a fifo\"", file=fifo_file)
+            #time.sleep(random.choice([i * 0.1 for i in range(1,3)]))
+
+            host_data_ = host_data.copy()
+            host_data_['ip'] = host_data_['ip'].format(j)
+            host_data_['vulnerabilities'] = [vuln_data]
+            print(json.dumps(host_data_), file=fifo_file)
             time.sleep(random.choice([i * 0.1 for i in range(1,3)]))
             fifo_file.flush()
