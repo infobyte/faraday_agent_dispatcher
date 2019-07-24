@@ -13,14 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
 import logging
-
 import configparser
-
 import aiofiles
 
-CONST_FARADAY_HOME_PATH = "."
-CONST_FARADAY_LOGS_PATH = "logs"
+CONST_FARADAY_HOME_PATH = os.path.dirname(__file__)
+CONST_FARADAY_LOGS_PATH = os.path.join(os.path.dirname(__file__), "logs")
 CONST_CONFIG = f"{CONST_FARADAY_HOME_PATH}/static/config.ini"
 
 USE_RFC = False
