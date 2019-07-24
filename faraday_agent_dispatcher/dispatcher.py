@@ -120,7 +120,7 @@ class Dispatcher:
         async with aiofiles.open(fifo_name, "r") as fifo_file:
             tasks = [StdOutLineProcessor(process).process_f(),
                      StdErrLineProcessor(process).process_f(),
-                     FIFOLineProcessor(fifo_file).process_f(),
+                     FIFOLineProcessor(fifo_file, self.__session).process_f(),
                      self.run_await()]
 
             await asyncio.gather(*tasks)

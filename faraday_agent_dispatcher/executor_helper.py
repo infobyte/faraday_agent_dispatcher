@@ -18,6 +18,8 @@ from json import JSONDecodeError
 
 from faraday_agent_dispatcher import logger as logging
 
+from aiohttp import ClientSession
+
 logger = logging.get_logger()
 
 class Bcolors:
@@ -35,7 +37,7 @@ async def _process_lines(line_getter, process_f, logger_f, name):
     while True:
         line = await line_getter()
         if line != "":
-            process_f(line)
+            await process_f(line)
             logger_f(line)
         else:
             break
@@ -50,7 +52,7 @@ class FileLineProcessor:
     def log(self, line):
         raise RuntimeError("Must be implemented")
 
-    def processing(self, line):
+    async def processing(self, line):
         raise RuntimeError("Must be implemented")
 
     async def next_line(self):
@@ -71,7 +73,7 @@ class StdOutLineProcessor(FileLineProcessor):
         line = line.decode('utf-8')
         return line[:-1]
 
-    def processing(self, line):
+    async def processing(self, line):
         print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
 
     def log(self, line):
@@ -89,7 +91,7 @@ class StdErrLineProcessor(FileLineProcessor):
         line = line.decode('utf-8')
         return line[:-1]
 
-    def processing(self, line):
+    async def processing(self, line):
         print(f"{Bcolors.FAIL}{line}{Bcolors.ENDC}")
 
     def log(self, line):
@@ -98,18 +100,25 @@ class StdErrLineProcessor(FileLineProcessor):
 
 class FIFOLineProcessor(FileLineProcessor):
 
-    def __init__(self, fifo_file):
+    def __init__(self, fifo_file, session: ClientSession):
         super().__init__("FIFO")
         self.fifo_file = fifo_file
+        self.__session = session
 
     async def next_line(self):
         line = await self.fifo_file.readline()
         return line[:-1]
 
-    def processing(self, line):
+    def post_url(self):
+        from faraday_agent_dispatcher.config import instance as config
+        return f"http://{config.get('server','host')}:{config.get('server','api_port')}/_api/v2/ws/w1/bulk_create"
+
+    async def processing(self, line):
         try:
             a = json.loads(line)
-            print(f"{Bcolors.OKGREEN}{line} {a['Esto']}{Bcolors.ENDC}")
+            print(f"{Bcolors.OKGREEN}{line}{Bcolors.ENDC}")
+            await self.__session.post(self.post_url(), data=a)
+
         except JSONDecodeError as e:
             print(f"{Bcolors.WARNING}Not json line{Bcolors.ENDC}")
             self.fifo_file.close()
