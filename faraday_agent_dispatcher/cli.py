@@ -47,6 +47,10 @@ async def main():
     return 0
 
 
-if __name__ == "__main__":
+def main_sync():
     r = asyncio.run(main())
     sys.exit(r)  # pragma: no cover
+
+
+if __name__ == "__main__":
+    main_sync()
