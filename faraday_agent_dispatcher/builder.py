@@ -67,6 +67,7 @@ class DispatcherBuilder:
         token_registration_url = urljoin(self.__full_url(), "_api/v2/ws/"+ self.__workspace +"/agent_registration/")
 
         token_response = requests.post(token_registration_url, json={'token': self.__registration_token, 'name': "TEST"})
+        token_response.raise_for_status()
 
         # Instantiate Dispatcher
 
