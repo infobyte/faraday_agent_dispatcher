@@ -17,6 +17,7 @@ import sys
 import time
 import random
 import os
+import json
 
 
 host_data = {
@@ -36,7 +37,6 @@ vuln_data = {
     },
     'refs': ['CVE-1234']
 }
-import json
 
 if __name__ == '__main__':
 
