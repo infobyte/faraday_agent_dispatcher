@@ -122,7 +122,7 @@ class FIFOLineProcessor(FileLineProcessor):
             await self.__session.post(self.post_url(), json=a, headers=headers)
 
         except JSONDecodeError as e:
-            print(f"{Bcolors.WARNING}Not json line{Bcolors.ENDC}")
+            print(f"{Bcolors.WARNING}JSON Parsing error: {e}{Bcolors.ENDC}")
             self.fifo_file.close()
 
     def log(self, line):
