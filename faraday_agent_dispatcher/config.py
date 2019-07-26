@@ -24,7 +24,7 @@ CONST_CONFIG = f"{CONST_FARADAY_HOME_PATH}/static/config.ini"
 
 USE_RFC = False
 
-LOGGING_LEVEL = logging.ERROR
+LOGGING_LEVEL = logging.DEBUG
 
 instance = configparser.ConfigParser()
 instance.read(CONST_CONFIG)
