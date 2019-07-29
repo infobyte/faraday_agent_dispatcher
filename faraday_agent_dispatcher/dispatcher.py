@@ -107,14 +107,18 @@ class Dispatcher:
 
     # V2
     async def run_await(self):
-        # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
-        data = await self.__websocket.recv()
+        while True:
+            # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
+            data = await self.__websocket.recv()
+            asyncio.create_task(self.run_once())
+
+    async def run_once(self):
         # TODO Control data
         logger.info("Running executor")
         process = await self.create_process()
         tasks = [StdOutLineProcessor(process, self.__session).process_f(),
                  StdErrLineProcessor(process).process_f(),
-                 self.run_await()]
+                 ]
 
         await asyncio.gather(*tasks)
         await process.communicate()
