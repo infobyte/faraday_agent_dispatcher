@@ -105,9 +105,6 @@ class Dispatcher:
 
             await self.run_await()  # This line can we called from outside (in main)
 
-    async def disconnect(self):
-        await self.__websocket.close()
-
     # V2
     async def run_await(self):
         # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
