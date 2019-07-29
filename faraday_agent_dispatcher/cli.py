@@ -23,6 +23,7 @@ import asyncio
 from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.builder import DispatcherBuilder
 from faraday_agent_dispatcher.config import instance as config
+from aiohttp import ClientSession
 
 async def main():
     dispatcher_builder = DispatcherBuilder()
@@ -35,9 +36,9 @@ async def main():
 
     # Parse args
 
-    dispatcher = Dispatcher()
-
-    await dispatcher.connect()
+    async with ClientSession(raise_for_status=True) as session:
+        dispatcher = Dispatcher(session)
+        await dispatcher.connect()
 
     # await dispatcher.run()
 
