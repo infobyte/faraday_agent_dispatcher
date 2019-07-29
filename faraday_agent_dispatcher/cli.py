@@ -49,7 +49,10 @@ async def main():
 
 
 def main_sync():
-    r = asyncio.run(main())
+    try:
+        r = asyncio.run(main())
+    except KeyboardInterrupt:
+        sys.exit(0)
     sys.exit(r)  # pragma: no cover
 
 
