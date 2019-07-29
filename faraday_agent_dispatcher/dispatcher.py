@@ -125,13 +125,3 @@ class Dispatcher:
             self.__executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         return process
-
-    # Deprecated
-    async def send(self):
-        # Any time can be called by IPC
-
-        # Send by API and Agent Token the info
-        url = urljoin(self.__api_url(), "_api/v2/ws/"+ self.__workspace +"/hosts/")
-
-        pass
-
