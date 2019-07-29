@@ -15,7 +15,10 @@
 
 import os
 import json
+import sys
 import subprocess
+
+import asyncio
 
 host_data = {
     "ip": "AWS - ",
@@ -27,6 +30,9 @@ level_map = {
     "Level 2" : "high",
     "Level 1" : "med",
 }
+
+END = False
+MIN = 5
 
 def get_check(control_str: str):
     a = control_str.split(']')
@@ -48,17 +54,47 @@ def vuln_parse(json_str :str):
     vuln['policy_violations'] = [f"{get_check(dic['Control'])}:{dic['Control ID']}"]
     return vuln
 
-if __name__ == '__main__':
 
-    command = [os.path.expanduser('~/tools/prowler/prowler'), '-b', '-M', 'json', '-c', 'check310,check312']
-    prowler_cmd = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = prowler_cmd.communicate()
-    parts=out.decode('utf-8').split('\n')
-    parts=list(filter(len,parts))
+REGION = None
+
+
+def process_bytes_line(line):
+    parts = line.decode('utf-8').split('\n')
+    parts = list(filter(len, parts))
+    global REGION
     if len(parts):
-        host_data_ = host_data.copy()
-        first = json.loads(parts[0])
-        host_data_['ip'] = f"{host_data_['ip']}{first['Region']}"
-        host_data_['vulnerabilities'] = list(filter(lambda v: v is not None, [vuln_parse(part) for part in parts]))
-        data = dict(hosts=[host_data_])
-        print(json.dumps(data))
+        if REGION is None:
+            REGION = json.loads(parts[0])["Region"]
+        return list(filter(lambda v: v is not None, [vuln_parse(part) for part in parts]))
+
+
+async def main():
+
+    command = f"{os.path.expanduser('~/tools/prowler/prowler')} -b -M json"
+    prowler_cmd = await asyncio.create_subprocess_shell(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    to_send_vulns = []
+    end = False
+    while not end:
+        line = await prowler_cmd.stdout.readline()
+        if len(line) > 0:
+            to_send_vulns.extend(process_bytes_line(line))
+        else:
+            end = True
+
+        if len(to_send_vulns) >= MIN or (end and len(to_send_vulns) > 0):
+            host_data_ = host_data.copy()
+            host_data_['ip'] = f"{host_data_['ip']}{REGION}"
+            host_data_['vulnerabilities'] = to_send_vulns
+            data = dict(hosts=[host_data_])
+            print(json.dumps(data))
+            to_send_vulns = []
+
+
+def main_sync():
+    r = asyncio.run(main())
+    sys.exit(r)  # pragma: no cover
+
+
+if __name__ == "__main__":
+    main_sync()
+
