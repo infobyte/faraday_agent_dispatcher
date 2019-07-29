@@ -123,25 +123,9 @@ class Dispatcher:
         await asyncio.gather(*tasks)
         await process.communicate()
 
-    @staticmethod
-    def create_fifo(fifo_name):
-        if os.path.exists(fifo_name):
-            os.remove(fifo_name)
-        os.mkfifo(fifo_name)
-
-    @staticmethod
-    def rnd_fifo_name():
-        import string
-        from random import choice
-        chars = string.ascii_letters + string.digits
-        name = "".join(choice(chars) for _ in range(10))
-        return f"/tmp/{name}"
-
     async def create_process(self):
-        new_env = os.environ.copy()
-        # new_env["FIFO_NAME"] = fifo_name, old fifo name passed by env, now as example
         process = await asyncio.create_subprocess_shell(
-            self.__executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=new_env
+            self.__executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         return process
 
