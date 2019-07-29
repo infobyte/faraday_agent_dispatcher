@@ -122,6 +122,12 @@ class Dispatcher:
 
         await asyncio.gather(*tasks)
         await process.communicate()
+        assert process.returncode is not None
+        if process.returncode == 0:
+            logger.info("Executor finished succesfully")
+        else:
+            logger.warning(
+                f"Executor finished with exit code {process.returncode}")
 
     async def create_process(self):
         process = await asyncio.create_subprocess_shell(
