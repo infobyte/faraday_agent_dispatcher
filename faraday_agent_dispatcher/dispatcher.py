@@ -50,7 +50,6 @@ class Dispatcher:
         self.__agent_token = config[TOKENS_SECTION].get("agent", None)
         self.__executor_cmd = config.get(EXECUTOR_SECTION, "cmd")
         self.__session = session
-        self.__websocket_token = None
         self.__websocket = None
 
     def __get_url(self, port):
@@ -73,7 +72,7 @@ class Dispatcher:
             headers=headers)
 
         websocket_token_json = await websocket_token_response.json()
-        self.__websocket_token = websocket_token_json["token"]
+        return websocket_token_json["token"]
 
     async def connect(self):
 
@@ -92,15 +91,13 @@ class Dispatcher:
             config.set(TOKENS_SECTION, "agent", self.__agent_token)
             save_config()
 
-        # I'm built so I can connect
-        if self.__websocket_token is None:
-            await self.reset_websocket_token()
+        websocket_token = await self.reset_websocket_token()
 
         async with websockets.connect(self.__websocket_url()) as websocket:
             await websocket.send(json.dumps({
                 'action': 'JOIN_AGENT',
                 'workspace': self.__workspace,
-                'token': self.__websocket_token,
+                'token': websocket_token,
             }))
 
             self.__websocket = websocket
