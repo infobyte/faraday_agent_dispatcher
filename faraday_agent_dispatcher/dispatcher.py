@@ -100,6 +100,7 @@ class Dispatcher:
                 'token': websocket_token,
             }))
 
+            logger.info("Connection to Faraday server succeeded")
             self.__websocket = websocket
 
             await self.run_await()  # This line can we called from outside (in main)
@@ -112,6 +113,7 @@ class Dispatcher:
         # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
         data = await self.__websocket.recv()
         # TODO Control data
+        logger.info("Running executor")
         process = await self.create_process()
         tasks = [StdOutLineProcessor(process, self.__session).process_f(),
                  StdErrLineProcessor(process).process_f(),
