@@ -51,16 +51,14 @@ def vuln_parse(json_str :str):
 if __name__ == '__main__':
 
     command = [os.path.expanduser('~/tools/prowler/prowler'), '-b', '-M', 'json', '-c', 'check310,check312']
-    fifo_name = os.environ["FIFO_NAME"]
-    with open(fifo_name, "w") as fifo_file:
-        prowler_cmd = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = prowler_cmd.communicate()
-        parts=out.decode('utf-8').split('\n')
-        parts=list(filter(len,parts))
-        if len(parts):
-            host_data_ = host_data.copy()
-            first = json.loads(parts[0])
-            host_data_['ip'] = f"{host_data_['ip']}{first['Region']}"
-            host_data_['vulnerabilities'] = list(filter(lambda v: v is not None, [vuln_parse(part) for part in parts]))
-            data = dict(hosts=[host_data_])
-            print(json.dumps(data), file=fifo_file)
+    prowler_cmd = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = prowler_cmd.communicate()
+    parts=out.decode('utf-8').split('\n')
+    parts=list(filter(len,parts))
+    if len(parts):
+        host_data_ = host_data.copy()
+        first = json.loads(parts[0])
+        host_data_['ip'] = f"{host_data_['ip']}{first['Region']}"
+        host_data_['vulnerabilities'] = list(filter(lambda v: v is not None, [vuln_parse(part) for part in parts]))
+        data = dict(hosts=[host_data_])
+        print(json.dumps(data))

@@ -114,17 +114,13 @@ class Dispatcher:
         # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
         data = await self.__websocket.recv()
         # TODO Control data
-        fifo_name = Dispatcher.rnd_fifo_name()
-        Dispatcher.create_fifo(fifo_name)
-        process = await self.create_process(fifo_name)
-        async with aiofiles.open(fifo_name, "r") as fifo_file:
-            tasks = [StdOutLineProcessor(process).process_f(),
-                     StdErrLineProcessor(process).process_f(),
-                     FIFOLineProcessor(fifo_file, self.__session).process_f(),
-                     self.run_await()]
+        process = await self.create_process()
+        tasks = [StdOutLineProcessor(process, self.__session).process_f(),
+                 StdErrLineProcessor(process).process_f(),
+                 self.run_await()]
 
-            await asyncio.gather(*tasks)
-            await process.communicate()
+        await asyncio.gather(*tasks)
+        await process.communicate()
 
     @staticmethod
     def create_fifo(fifo_name):
@@ -140,14 +136,15 @@ class Dispatcher:
         name = "".join(choice(chars) for _ in range(10))
         return f"/tmp/{name}"
 
-    async def create_process(self, fifo_name):
+    async def create_process(self):
         new_env = os.environ.copy()
-        new_env["FIFO_NAME"] = fifo_name
+        # new_env["FIFO_NAME"] = fifo_name, old fifo name passed by env, now as example
         process = await asyncio.create_subprocess_shell(
             self.__executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=new_env
         )
         return process
 
+    # Deprecated
     async def send(self):
         # Any time can be called by IPC
 
