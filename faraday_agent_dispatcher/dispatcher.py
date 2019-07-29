@@ -20,7 +20,6 @@ from urllib.parse import urljoin
 
 import json
 
-from aiohttp import ClientSession
 import asyncio
 import websockets
 import aiofiles
@@ -43,14 +42,14 @@ LOG = False
 
 class Dispatcher:
 
-    def __init__(self):
+    def __init__(self, session):
         self.__host = config.get(SERVER_SECTION, "host")
         self.__api_port = config.get(SERVER_SECTION, "api_port")
         self.__websocket_port = config.get(SERVER_SECTION, "websocket_port")
         self.__workspace = config.get(SERVER_SECTION, "workspace")
         self.__agent_token = config[TOKENS_SECTION].get("agent", None)
         self.__executor_cmd = config.get(EXECUTOR_SECTION, "cmd")
-        self.__session = ClientSession(raise_for_status=True)
+        self.__session = session
         self.__websocket_token = None
         self.__websocket = None
 
@@ -109,7 +108,6 @@ class Dispatcher:
             await self.run_await()  # This line can we called from outside (in main)
 
     async def disconnect(self):
-        await self.__session.close()
         await self.__websocket.close()
 
     # V2
