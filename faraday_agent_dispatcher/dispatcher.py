@@ -27,7 +27,10 @@ import aiofiles
 
 import os
 
-from faraday_agent_dispatcher.executor_helper import FIFOLineProcessor, StdErrLineProcessor, StdOutLineProcessor
+from faraday_agent_dispatcher.executor_helper import (
+    StdErrLineProcessor,
+    StdOutLineProcessor,
+)
 import faraday_agent_dispatcher.logger as logging
 
 from faraday_agent_dispatcher.config import instance as config, \
