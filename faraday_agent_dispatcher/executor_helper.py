@@ -79,6 +79,9 @@ class StdOutLineProcessor(FileLineProcessor):
                f"{config.get('server', 'workspace')}/bulk_create/"
 
     async def processing(self, line):
+        if not line.strip():
+            # Ignore blank lines
+            return
         try:
             a = json.loads(line)
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
