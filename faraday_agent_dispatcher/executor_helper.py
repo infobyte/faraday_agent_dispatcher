@@ -108,33 +108,3 @@ class StdErrLineProcessor(FileLineProcessor):
 
     def log(self, line):
         logger.debug(f"Error line: {line}")
-
-# Old Fifo Processor
-# class FIFOLineProcessor(FileLineProcessor):
-#
-#     def __init__(self, fifo_file, session: ClientSession):
-#         super().__init__("FIFO")
-#         self.fifo_file = fifo_file
-#         self.__session = session
-#
-#     async def next_line(self):
-#         line = await self.fifo_file.readline()
-#         return line[:-1]
-#
-#     def post_url(self):
-#         return f"http://{config.get('server','host')}:{config.get('server','api_port')}/_api/v2/ws/" \
-#             f"{config.get('server','workspace')}/bulk_create/"
-#
-#     async def processing(self, line):
-#         try:
-#             a = json.loads(line)
-#             print(f"{Bcolors.OKGREEN}{line}{Bcolors.ENDC}")
-#             headers=[("authorization", "agent {}".format(config.get("tokens", "agent")))]
-#             await self.__session.post(self.post_url(), json=a, headers=headers)
-#
-#         except JSONDecodeError as e:
-#             print(f"{Bcolors.WARNING}JSON Parsing error: {e}{Bcolors.ENDC}")
-#             self.fifo_file.close()
-#
-#     def log(self, line):
-#         logger.debug(f"FIFO line: {line}")
