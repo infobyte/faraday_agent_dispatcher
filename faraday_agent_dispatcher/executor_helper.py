@@ -20,6 +20,7 @@ from faraday_agent_dispatcher import logger as logging
 from faraday_agent_dispatcher.config import instance as config
 
 from aiohttp import ClientSession
+from aiohttp.client_exceptions import ClientResponseError
 
 logger = logging.get_logger()
 
@@ -86,9 +87,23 @@ class StdOutLineProcessor(FileLineProcessor):
             a = json.loads(line)
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
             headers = [("authorization", "agent {}".format(config.get("tokens", "agent")))]
-            await self.__session.post(self.post_url(), json=a, headers=headers)
+
+            res = await self.__session.post(
+                self.post_url(),
+                json=a,
+                headers=headers,
+                raise_for_status=False,
+            )
+            if res.status == 400:
+                logger.error(
+                    f"Invalid data supplied by the executor to the bulk create "
+                    f"endpoint. Server responded: {await res.text()}"
+                    )
+            else:
+                await res.raise_for_status()
 
         except JSONDecodeError as e:
+            logger.error(f"JSON Parsing error: {e}")
             print(f"{Bcolors.WARNING}JSON Parsing error: {e}{Bcolors.ENDC}")
 
     def log(self, line):
