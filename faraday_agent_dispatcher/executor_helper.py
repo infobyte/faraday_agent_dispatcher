@@ -100,7 +100,7 @@ class StdOutLineProcessor(FileLineProcessor):
                     f"endpoint. Server responded: {await res.text()}"
                     )
             else:
-                await res.raise_for_status()
+                res.raise_for_status()
 
         except JSONDecodeError as e:
             logger.error(f"JSON Parsing error: {e}")
