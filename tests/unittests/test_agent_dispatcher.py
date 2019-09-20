@@ -100,3 +100,14 @@ def test_basic_built(config_changes_dict):
     else:
         Dispatcher(None, config_file_path)
 
+
+def test_register():
+    pass
+
+
+def test_connect():
+    pass
+
+
+def test_run_once():
+    pass

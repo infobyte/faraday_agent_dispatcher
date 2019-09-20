@@ -33,6 +33,7 @@ async def main(config_file):
 
     async with ClientSession(raise_for_status=True) as session:
         dispatcher = Dispatcher(session, config_file)
+        await dispatcher.register()
         await dispatcher.connect()
 
     return 0
