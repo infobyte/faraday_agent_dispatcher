@@ -69,6 +69,7 @@ class Dispatcher:
         self.__agent_name = config.get(EXECUTOR_SECTION, "agent_name")
         self.__session = session
         self.__websocket = None
+        self.__websocket_token = None
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
@@ -81,7 +82,7 @@ class Dispatcher:
         websocket_token_json = await websocket_token_response.json()
         return websocket_token_json["token"]
 
-    async def connect(self):
+    async def register(self):
 
         if self.__agent_token is None:
             registration_token = self.__agent_token = config.get(TOKENS_SECTION, "registration")
@@ -100,13 +101,15 @@ class Dispatcher:
             config.set(TOKENS_SECTION, "agent", self.__agent_token)
             save_config()
 
-        websocket_token = await self.reset_websocket_token()
+        self.__websocket_token = await self.reset_websocket_token()
+
+    async def connect(self):
 
         async with websockets.connect(websocket_url(self.__host, self.__websocket_port)) as websocket:
             await websocket.send(json.dumps({
                 'action': 'JOIN_AGENT',
                 'workspace': self.__workspace,
-                'token': websocket_token,
+                'token': self.__websocket_token,
             }))
 
             logger.info("Connection to Faraday server succeeded")
@@ -120,7 +123,7 @@ class Dispatcher:
             data = await self.__websocket.recv()
             asyncio.create_task(self.run_once(data))
 
-    async def run_once(self, data):
+    async def run_once(self, data=None):
         # TODO Control data
         logger.info("Running executor")
         process = await self.create_process()
