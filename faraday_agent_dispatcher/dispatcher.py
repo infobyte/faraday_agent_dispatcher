@@ -20,8 +20,16 @@ import json
 import asyncio
 import websockets
 
+from faraday_agent_dispatcher.config import reset_config
 from faraday_agent_dispatcher.executor_helper import StdErrLineProcessor, StdOutLineProcessor
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
+from faraday_agent_dispatcher.utils.control_values_utils import (
+    control_int,
+    control_str,
+    control_host,
+    control_registration_token,
+    control_agent_token
+)
 import faraday_agent_dispatcher.logger as logging
 
 from faraday_agent_dispatcher.config import instance as config, \
@@ -32,8 +40,26 @@ logger = logging.get_logger()
 
 class Dispatcher:
 
-    def __init__(self, session):
-        logger.error([[opt for opt in config[sect]] for sect in config])
+    __control_dict = {
+        SERVER_SECTION: {
+            "host": control_host,
+            "api_port": control_int,
+            "websocket_port": control_int,
+            "workspace": control_str
+        },
+        TOKENS_SECTION: {
+            "registration": control_registration_token,
+            "agent": control_agent_token
+        },
+        EXECUTOR_SECTION: {
+            "cmd": control_str,
+            "agent_name": control_str
+        }
+    }
+
+    def __init__(self, session, config_path):
+        reset_config(filepath=config_path)
+        self.control_config()
         self.__host = config.get(SERVER_SECTION, "host")
         self.__api_port = config.get(SERVER_SECTION, "api_port")
         self.__websocket_port = config.get(SERVER_SECTION, "websocket_port")
@@ -116,3 +142,9 @@ class Dispatcher:
             self.__executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         return process
+
+    def control_config(self):
+        for section in self.__control_dict:
+            for option in self.__control_dict[section]:
+                value = config.get(section, option) if option in config[section] else None
+                self.__control_dict[section][option](option, value)

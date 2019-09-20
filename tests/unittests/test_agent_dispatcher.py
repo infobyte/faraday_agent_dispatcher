@@ -18,137 +18,85 @@
 
 """Tests for `faraday_dummy_agent` package."""
 
-import os
 import pytest
 
-from click.testing import CliRunner
-
-from faraday_agent_dispatcher import cli
 from faraday_agent_dispatcher.dispatcher import Dispatcher
+from faraday_agent_dispatcher.config import (
+    reset_config,
+    save_config,
+    instance as configuration,
+    SERVER_SECTION,
+    TOKENS_SECTION,
+    EXECUTOR_SECTION
+)
+
+from tests.utils.text_utils import fuzzy_string
 
 
-def correct_config_dict():
-    return {
-        "faraday_host": "localhost",
-        "api_port": "5968",
-        "websocket_port": "9000",
-        "workspace": "faraday_workspace",
-        "registration_token": "valid_registration_token",
-        "executor_filename": "test_executor"
-    }
-
-
-host_data = {
-    "ip": "127.0.0.1",
-    "description": "test",
-    "hostnames": ["test.com", "test2.org"]
-}
-
-service_data = {
-    "name": "http",
-    "port": 80,
-    "protocol": "tcp",
-}
-
-vuln_data = {
-    'name': 'sql injection',
-    'desc': 'test',
-    'severity': 'high',
-    'type': 'Vulnerability',
-    'impact': {
-        'accountability': True,
-        'availability': False,
-    },
-    'refs': ['CVE-1234']
-}
-
-full_data = {
-    "hosts": [host_data],
-    "services": [service_data],
-    "vulns": [vuln_data]
-}
-
-expected_history = ["Connected to websocket", "Received run request by websocket", "Running executor", "Sending " + str(full_data)]
-
-
-class ToBeDefinedError(Exception):
-    pass
-
-
-@pytest.mark.parametrize('config',
-                         [{"remove": ["faraday_host"],
-                           "replace": {},
+@pytest.mark.parametrize('config_changes_dict',
+                         [{"remove": {SERVER_SECTION: ["host"]},
+                           "replace": {}},  # None error as default value
+                          {"remove": {SERVER_SECTION: ["api_port"]},
+                           "replace": {}},  # None error as default value
+                          {"remove": {},
+                           "replace": {SERVER_SECTION: {"api_port": "Not a port number"}},
                            "expected_exception": ValueError},
-                          {"remove": ["api_port"],
+                          {"remove": {},
+                           "replace": {SERVER_SECTION: {"api_port": "6000"}}},  # None error as parse int
+                          {"remove": {SERVER_SECTION: ["websocket_port"]},
                            "replace": {}},
-                          {"remove": [],
-                           "replace": {"api_port": "Not a port number"},
+                          {"remove": {},
+                           "replace": {SERVER_SECTION: {"websocket_port": "Not a port number"}},
                            "expected_exception": ValueError},
-                          {"remove": [],
-                           "replace": {"api_port": "5897"},
-                           "expected_exception": ToBeDefinedError},
-                          # One must try to connect to another faraday and succeed, the other fails
-                          {"remove": [],
-                           "replace": {"api_port": "5900"},
-                           "expected_exception": ToBeDefinedError},
-                          {"remove": ["websocket_port"],
-                           "replace": {}},
-                          {"remove": [],
-                           "replace": {"websocket_port": "Not a port number"},
-                           "expected_exception": ValueError},
-                          {"remove": [],
-                           "replace": {"websocket_port": "9001"},
-                           "expected_exception": ToBeDefinedError},
-                          # One must try to connect to another faraday and succeed, the other fails
-                          {"remove": [],
-                           "replace": {"websocket_port": "9002"},
-                           "expected_exception": ToBeDefinedError},
-                          {"remove": ["workspace"],
+                          {"remove": {},
+                           "replace": {SERVER_SECTION: {"websocket_port": "9001"}}},   # None error as parse int
+                          {"remove": {SERVER_SECTION: ["workspace"]},
                            "replace": {},
                            "expected_exception": ValueError},
-                          {"remove": [],
-                           "replace": {"workspace": "9002"},
-                           "expected_exception": ToBeDefinedError},  # Try to connect and fails
-                          {"remove": ["registration_token"],
+                          {"remove": {TOKENS_SECTION: ["registration"]},
                            "replace": {},
                            "expected_exception": ValueError},
-                          {"remove": [],
-                           "replace": {"registration_token": "invalid_token"},
-                           "expected_exception": SyntaxError},
-                          {"remove": ["executor_filename"],
+                          {"remove": {},
+                           "replace": {TOKENS_SECTION: {"registration": "invalid_token"}},
+                           "expected_exception": ValueError},
+                          {"remove": {},
+                           "replace": {TOKENS_SECTION: {"registration": "   46aasdje446aasdje446aa"}},
+                           "expected_exception": ValueError},
+                          {"remove": {},
+                           "replace": {TOKENS_SECTION: {"registration": "QWE46aasdje446aasdje446aa"}}},
+                          {"remove": {},
+                           "replace": {TOKENS_SECTION: {"agent": "invalid_token"}},
+                           "expected_exception": ValueError},
+                          {"remove": {},
+                           "replace": {TOKENS_SECTION: {
+                               "agent": "   46aasdje446aasdje446aa46aasdje446aasdje446aa46aasdje446aasdje"
+                                }},
+                           "expected_exception": ValueError},
+                          {"remove": {},
+                           "replace": {TOKENS_SECTION: {
+                               "agent": "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446"}}},
+                          {"remove": {EXECUTOR_SECTION: ["cmd"]},
                            "replace": {},
                            "expected_exception": ValueError},
-                          {"remove": [],
+                          {"remove": {EXECUTOR_SECTION: ["agent_name"]},
+                           "replace": {},
+                           "expected_exception": ValueError},
+                          {"remove": {},
                            "replace": {}}
                           ])
-@pytest.mark.parametrize('use_dict', [True, False])
-def test_basic_built(config, use_dict):
-    # Here fails except all needed parameters are set
-    config_dict = correct_config_dict()
-    for key in config["replace"].keys():
-        config_dict[key] = config["replace"][key]
-    for key in config["remove"]:
-        del config_dict[key]
-    d_builder = None
-    if use_dict:
-        d_builder.config(config_dict)
+def test_basic_built(config_changes_dict):
+    reset_config(use_default=True)
+    for section in config_changes_dict["replace"]:
+        for option in config_changes_dict["replace"][section]:
+            configuration.set(section, option, config_changes_dict["replace"][section][option])
+    for section in config_changes_dict["remove"]:
+        for option in config_changes_dict["remove"][section]:
+            configuration.remove_option(section, option)
+    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
+    save_config(config_file_path)
+    if "expected_exception" in config_changes_dict:
+        with pytest.raises(config_changes_dict["expected_exception"]):
+            Dispatcher(None, config_file_path)
     else:
-        if "faraday_host" in config_dict:
-            d_builder.faraday_host(config_dict["faraday_host"])
-        if "api_port" in config_dict:
-            d_builder.api_port(config_dict["api_port"])
-        if "websocket_port" in config_dict:
-            d_builder.websocket_port(config_dict["websocket_port"])
-        if "workspace" in config_dict:
-            d_builder.faraday_workspace(config_dict["workspace"])
-        if "registration_token" in config_dict:
-            d_builder.registration_token(config_dict["registration_token"])
-        if "executor_filename" in config_dict:
-            d_builder.executor_filename(config_dict["executor_filename"])
-    if "expected_exception" in config:
-        with pytest.raises(config["expected_exception"]):
-            d_builder.build()
-    else:
-        assert isinstance(d_builder.build(), Dispatcher)
-        assert os.getenv("AGENT_API_TOKEN") == "valid_api_token"
-        assert os.getenv("AGENT_WS_TOKEN") == "valid_ws_token"
+        Dispatcher(None, config_file_path)
+

@@ -20,7 +20,9 @@ import aiofiles
 
 CONST_FARADAY_HOME_PATH = os.path.dirname(__file__)
 CONST_FARADAY_LOGS_PATH = os.path.join(CONST_FARADAY_HOME_PATH, "logs")
-CONFIG = {"default": f"{CONST_FARADAY_HOME_PATH}/static/config.ini"}
+CONFIG = {"default": f"{CONST_FARADAY_HOME_PATH}/static/config.ini",
+          "instance": None,
+          }
 
 USE_RFC = False
 
@@ -29,29 +31,34 @@ LOGGING_LEVEL = logging.DEBUG
 instance = configparser.ConfigParser()
 
 
-def reset_config(filename=None, reset_default=False):
-    if filename is None:
-        filename = CONFIG["default"]
-    if reset_default:
-        CONFIG["default"] = filename
+def reset_config(filepath=None, use_default=False):
+    if use_default:
+        filepath = CONFIG["default"]
+    else:
+        CONFIG["instance"] = filepath
     instance.clear()
-    instance.read(filename)
+    instance.read(filepath)
 
 
-reset_config()
+reset_config(CONFIG["default"])
 
 
-def save_config(filename=None):
-    if filename is None:
-        filename = CONFIG["default"]
-    with open(filename, 'w') as configfile:
+def save_config(filepath=None):
+
+    if filepath is None:
+        filepath = CONFIG["instance"]
+    if filepath == CONFIG["default"]:
+        raise ValueError("Can't override default config")
+    with open(filepath, 'w') as configfile:
         instance.write(configfile)
 
 
-async def async_save_config(filename=None):
-    if filename is None:
-        filename = CONFIG["default"]
-    async with aiofiles.open(filename, 'w') as configfile:
+async def async_save_config(filepath=None):
+    if filepath is None:
+        filepath = CONFIG["instance"]
+    if filepath == CONFIG["default"]:
+        raise ValueError("Can't override default config")
+    async with aiofiles.open(filepath, 'w') as configfile:
         await instance.write(configfile)
 
 
