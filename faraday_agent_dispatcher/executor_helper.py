@@ -18,21 +18,13 @@ from json import JSONDecodeError
 
 from faraday_agent_dispatcher import logger as logging
 from faraday_agent_dispatcher.config import instance as config
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
+from faraday_agent_dispatcher.utils.url_utils import api_url
 
 from aiohttp import ClientSession
-from aiohttp.client_exceptions import ClientResponseError
 
 logger = logging.get_logger()
 
-class Bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 class FileLineProcessor:
 
@@ -47,8 +39,8 @@ class FileLineProcessor:
                 break
         print(f"{Bcolors.WARNING}{name} sent empty data, {Bcolors.ENDC}")
 
-    def __init__(self, disp):
-        self.disp = disp
+    def __init__(self, name):
+        self.name = name
 
     def log(self, line):
         raise RuntimeError("Must be implemented")
@@ -60,7 +52,7 @@ class FileLineProcessor:
         raise RuntimeError("Must be implemented")
 
     async def process_f(self):
-        return await FileLineProcessor._process_lines(self.next_line, self.processing, self.log, self.disp)
+        return await FileLineProcessor._process_lines(self.next_line, self.processing, self.log, self.name)
 
 
 class StdOutLineProcessor(FileLineProcessor):
@@ -75,22 +67,24 @@ class StdOutLineProcessor(FileLineProcessor):
         line = line.decode('utf-8')
         return line[:-1]
 
-    def post_url(self):
-        return f"http://{config.get('server', 'host')}:{config.get('server', 'api_port')}/_api/v2/ws/" \
-               f"{config.get('server', 'workspace')}/bulk_create/"
+    @staticmethod
+    def post_url():
+        host = config.get('server', 'host')
+        port = config.get('server', 'api_port')
+        return api_url(host, port, postfix=f"/_api/v2/ws/{config.get('server', 'workspace')}/bulk_create/")
 
     async def processing(self, line):
         if not line.strip():
             # Ignore blank lines
             return
         try:
-            a = json.loads(line)
+            loaded_json = json.loads(line)
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
             headers = [("authorization", "agent {}".format(config.get("tokens", "agent")))]
 
             res = await self.__session.post(
                 self.post_url(),
-                json=a,
+                json=loaded_json,
                 headers=headers,
                 raise_for_status=False,
             )
