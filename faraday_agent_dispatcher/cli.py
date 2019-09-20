@@ -21,21 +21,14 @@ import click
 import asyncio
 import traceback
 
+from aiohttp import ClientSession
+
 from faraday_agent_dispatcher.dispatcher import Dispatcher
-from faraday_agent_dispatcher.builder import DispatcherBuilder
 from faraday_agent_dispatcher.config import reset_config
 import faraday_agent_dispatcher.logger as logging
-from aiohttp import ClientSession
 
 
 async def main():
-    dispatcher_builder = DispatcherBuilder()
-    # Open config
-
-    #dispatcher_builder.config(config)
-    #dispatcher_builder.registration_token(config["tokens"]["registration"])
-    #dispatcher_builder.faraday_workspace("w1")
-    #dispatcher = dispatcher_builder.build()
 
     # Parse args
 
@@ -50,7 +43,6 @@ async def main():
 @click.option("--config-file", default=None,help="Path to config ini file")
 @click.option("--logs-folder", default="~", help="Path to logger folder")
 def main_sync(config_file, logs_folder):
-    #import pdb; pdb.set_trace()
     reset_config(config_file, reset_default=True)
     logging.reset_logger(logs_folder)
     logger = logging.get_logger()

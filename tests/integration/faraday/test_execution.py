@@ -56,7 +56,6 @@ def test_execute_agent():
     config.set(EXECUTOR_SECTION, "agent_name", AGENT_NAME)
     config.set(EXECUTOR_SECTION, "cmd", "python ./basic_executor.py")
     save_config(CONFIG_DIR)
-    # TODO SET AGENT NAME FUZZY RANDOM
 
     # Init dispatcher!
     command = ['dispatcher', f'--config-file={CONFIG_DIR}', f'--logs-folder={LOGGER_DIR}']

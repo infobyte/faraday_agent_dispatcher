@@ -15,14 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import requests
-from urllib.parse import urljoin
-
 import json
 
 import asyncio
 import websockets
-import aiofiles
 
 from faraday_agent_dispatcher.executor_helper import StdErrLineProcessor, StdOutLineProcessor
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
@@ -53,7 +49,7 @@ class Dispatcher:
         headers = {"Authorization": f"Agent {self.__agent_token}"}
         logger.info(f"headers:{headers}")
         websocket_token_response = await self.__session.post(
-            api_url(self.__host, self.__api_port,postfix='/_api/v2/agent_websocket_token/'),
+            api_url(self.__host, self.__api_port, postfix='/_api/v2/agent_websocket_token/'),
             headers=headers)
 
         websocket_token_json = await websocket_token_response.json()
@@ -92,14 +88,13 @@ class Dispatcher:
 
             await self.run_await()  # This line can we called from outside (in main)
 
-    # V2
     async def run_await(self):
         while True:
             # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
             data = await self.__websocket.recv()
-            asyncio.create_task(self.run_once())
+            asyncio.create_task(self.run_once(data))
 
-    async def run_once(self):
+    async def run_once(self, data):
         # TODO Control data
         logger.info("Running executor")
         process = await self.create_process()
@@ -111,7 +106,7 @@ class Dispatcher:
         await process.communicate()
         assert process.returncode is not None
         if process.returncode == 0:
-            logger.info("Executor finished succesfully")
+            logger.info("Executor finished successfully")
         else:
             logger.warning(
                 f"Executor finished with exit code {process.returncode}")

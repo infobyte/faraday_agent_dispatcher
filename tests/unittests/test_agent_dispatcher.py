@@ -25,7 +25,6 @@ from click.testing import CliRunner
 
 from faraday_agent_dispatcher import cli
 from faraday_agent_dispatcher.dispatcher import Dispatcher
-from faraday_agent_dispatcher.builder import DispatcherBuilder
 
 
 def correct_config_dict():
@@ -130,7 +129,7 @@ def test_basic_built(config, use_dict):
         config_dict[key] = config["replace"][key]
     for key in config["remove"]:
         del config_dict[key]
-    d_builder = DispatcherBuilder()
+    d_builder = None
     if use_dict:
         d_builder.config(config_dict)
     else:
@@ -153,20 +152,3 @@ def test_basic_built(config, use_dict):
         assert isinstance(d_builder.build(), Dispatcher)
         assert os.getenv("AGENT_API_TOKEN") == "valid_api_token"
         assert os.getenv("AGENT_WS_TOKEN") == "valid_ws_token"
-
-
-def test_executor_connection():
-    # Create basic executor and test function
-    dispatcher = DispatcherBuilder().config(correct_config_dict()).build()
-    dispatcher.run()
-    assert dispatcher.get_output() == "I'm a testing executor"
-    assert dispatcher.get_faraday_info() == full_data
-
-
-def test_ws_connection():
-    # Create local dispatcher with localhost WS
-    # localhost WS send
-    dispatcher = DispatcherBuilder().config(correct_config_dict()).build()
-    dispatcher.connect()
-    # mock: ok + run
-    assert dispatcher.history() == expected_history
