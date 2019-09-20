@@ -22,9 +22,9 @@ from faraday_agent_dispatcher import config
 
 from syslog_rfc5424_formatter import RFC5424Formatter
 
-LOG_FILE = os.path.expanduser(os.path.join(
-    config.CONST_FARADAY_HOME_PATH,
-    config.CONST_FARADAY_LOGS_PATH, 'faraday-dispatcher.log'))
+
+def log_file():
+    return os.path.expanduser(os.path.join(config.CONST_FARADAY_LOGS_PATH, 'faraday-dispatcher.log'))
 
 MAX_LOG_FILE_SIZE = 5 * 1024 * 1024     # 5 MB
 MAX_LOG_FILE_BACKUP_COUNT = 5
@@ -59,7 +59,7 @@ def setup_console_logging(formatter):
 def setup_file_logging(formatter):
     create_logging_path()
     file_handler = logging.handlers.RotatingFileHandler(
-        LOG_FILE, maxBytes=MAX_LOG_FILE_SIZE, backupCount=MAX_LOG_FILE_BACKUP_COUNT)
+        log_file(), maxBytes=MAX_LOG_FILE_SIZE, backupCount=MAX_LOG_FILE_BACKUP_COUNT)
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)
     add_handler(file_handler)
@@ -96,9 +96,13 @@ def set_logging_level(level):
 
 def create_logging_path():
     try:
-        os.makedirs(os.path.dirname(LOG_FILE))
+        os.makedirs(os.path.dirname(log_file()))
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
 
-setup_logging()
+
+def reset_logger(logger_folder = None):
+    if logger_folder is not None:
+        config.CONST_FARADAY_LOGS_PATH = logger_folder
+    setup_logging()

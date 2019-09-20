@@ -1,13 +1,28 @@
 variables:
     TZ: "America/New_York"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    APT_CACHE_DIR: "$CI_PROJECT_DIR/apt-cache"
+    POSTGRES_DB: custom_db
+    POSTGRES_USER: custom_user
+    POSTGRES_PASSWORD: custom_pass
+    FARADAY_USER: custom_user
+    FARADAY_PASSWORD: custom_pass
+    FARADAY_EMAIL: test@test.com
 
 cache:
   paths:
-    - .cache/pip
+    - "$CI_PROJECT_DIR/.cache/pip"
+    - "$CI_PROJECT_DIR/apt-cache"
+
+
+before_script:
+    - mkdir -pv $APT_CACHE_DIR
 
 stages:
     - testing
+
+services:
+    - postgres:latest
 
 test:
     image: python:3
@@ -21,8 +36,41 @@ test:
         - pip install -r requirements_dev.txt
         - python setup.py install
         - mkdir run_from
-        - cd run_from && pytest ../tests --capture=sys -v --cov=../faraday_agent_dispatcher --color=yes --disable-warnings
+        - cd run_from && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --color=yes --disable-warnings
     artifacts:
         when: on_failure
         paths:
             - dist/*
+
+integration_faraday_white:
+    image: python:3
+    stage: testing
+    script:
+        - pip install virtualenv
+        - virtualenv faraday_venv
+        - source faraday_venv/bin/activate
+        - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
+        - cd faraday && git checkout white3/dev && python3 setup.py install
+        - mkdir -p ~/.faraday/config
+        - cp tests/data/server.ini ~/.faraday/config
+        - python3 ../tests/config/psql_config.py
+        - faraday-manage create-tables
+        - faraday-manage create-superuser --username $FARADAY_USER --password $FARADAY_PASSWORD --email $FARADAY_EMAIL
+        - faraday-server &
+        - deactivate
+        - cd ..
+        - virtualenv faraday_disp_venv
+        - source faraday_disp_venv/bin/activate
+        - pip install pytest pytest-cov
+        - pip install -r requirements_dev.txt
+        - python setup.py install
+        - mkdir run_from
+        - cp tests/data/basic_executor.py ./run_from
+        - cd run_from && mkdir logs && pytest ../tests/integration --capture=sys -v --color=yes --disable-warnings --cov=../faraday_agent_dispatcher
+    artifacts:
+        when: on_failure
+        paths:
+            - ~/.faraday/logs/*
+            - logs/*
+            - run_from/logs/*
+        expire_in: 7 days
