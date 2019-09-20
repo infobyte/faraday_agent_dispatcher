@@ -24,16 +24,15 @@ import traceback
 from aiohttp import ClientSession
 
 from faraday_agent_dispatcher.dispatcher import Dispatcher
-from faraday_agent_dispatcher.config import reset_config
 import faraday_agent_dispatcher.logger as logging
 
 
-async def main():
+async def main(config_file):
 
     # Parse args
 
     async with ClientSession(raise_for_status=True) as session:
-        dispatcher = Dispatcher(session)
+        dispatcher = Dispatcher(session, config_file)
         await dispatcher.connect()
 
     return 0
@@ -43,11 +42,10 @@ async def main():
 @click.option("--config-file", default=None,help="Path to config ini file")
 @click.option("--logs-folder", default="~", help="Path to logger folder")
 def main_sync(config_file, logs_folder):
-    reset_config(config_file, reset_default=True)
     logging.reset_logger(logs_folder)
     logger = logging.get_logger()
     try:
-        r = asyncio.run(main())
+        r = asyncio.run(main(config_file))
     except KeyboardInterrupt:
         sys.exit(0)
     except Exception as e:
