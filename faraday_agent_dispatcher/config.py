@@ -19,25 +19,40 @@ import configparser
 import aiofiles
 
 CONST_FARADAY_HOME_PATH = os.path.dirname(__file__)
-CONST_FARADAY_LOGS_PATH = os.path.join(os.path.dirname(__file__), "logs")
-CONST_CONFIG = f"{CONST_FARADAY_HOME_PATH}/static/config.ini"
+CONST_FARADAY_LOGS_PATH = os.path.join(CONST_FARADAY_HOME_PATH, "logs")
+CONFIG = {"default": f"{CONST_FARADAY_HOME_PATH}/static/config.ini"}
 
 USE_RFC = False
 
 LOGGING_LEVEL = logging.DEBUG
 
 instance = configparser.ConfigParser()
-instance.read(CONST_CONFIG)
 
 
-async def async_save_config(filename=CONST_CONFIG):
-    async with aiofiles.open(filename, 'w') as configfile:
-        await instance.write(configfile)
+def reset_config(filename=None, reset_default=False):
+    if filename is None:
+        filename = CONFIG["default"]
+    if reset_default:
+        CONFIG["default"] = filename
+    instance.clear()
+    instance.read(filename)
 
 
-def save_config(filename=CONST_CONFIG):
+reset_config()
+
+
+def save_config(filename=None):
+    if filename is None:
+        filename = CONFIG["default"]
     with open(filename, 'w') as configfile:
         instance.write(configfile)
+
+
+async def async_save_config(filename=None):
+    if filename is None:
+        filename = CONFIG["default"]
+    async with aiofiles.open(filename, 'w') as configfile:
+        await instance.write(configfile)
 
 
 TOKENS_SECTION = "tokens"

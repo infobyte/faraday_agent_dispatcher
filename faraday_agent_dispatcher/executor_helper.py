@@ -96,14 +96,14 @@ class StdOutLineProcessor(FileLineProcessor):
             )
             if res.status == 400:
                 logger.error(
-                    f"Invalid data supplied by the executor to the bulk create "
-                    f"endpoint. Server responded: {await res.text()}"
+                    "Invalid data supplied by the executor to the bulk create "
+                    "endpoint. Server responded: {}".format(await res.text())
                     )
             else:
                 res.raise_for_status()
 
         except JSONDecodeError as e:
-            logger.error(f"JSON Parsing error: {e}")
+            logger.error("JSON Parsing error: {}".format(e))
             print(f"{Bcolors.WARNING}JSON Parsing error: {e}{Bcolors.ENDC}")
 
     def log(self, line):
