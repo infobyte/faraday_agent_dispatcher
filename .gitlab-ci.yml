@@ -41,6 +41,9 @@ test:
         when: on_failure
         paths:
             - dist/*
+    except:
+      variables:
+        - $INTEGRATION
 
 integration_faraday_white:
     image: python:3
