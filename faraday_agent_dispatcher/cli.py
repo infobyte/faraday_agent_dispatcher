@@ -19,11 +19,14 @@
 import sys
 import click
 import asyncio
+import traceback
 
 from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.builder import DispatcherBuilder
-from faraday_agent_dispatcher.config import instance as config
+from faraday_agent_dispatcher.config import reset_config
+import faraday_agent_dispatcher.logger as logging
 from aiohttp import ClientSession
+
 
 async def main():
     dispatcher_builder = DispatcherBuilder()
@@ -43,13 +46,23 @@ async def main():
     return 0
 
 
-def main_sync():
+@click.command("dispatcher")
+@click.option("--config-file", default=None,help="Path to config ini file")
+@click.option("--logs-folder", default="~", help="Path to logger folder")
+def main_sync(config_file, logs_folder):
+    #import pdb; pdb.set_trace()
+    reset_config(config_file, reset_default=True)
+    logging.reset_logger(logs_folder)
+    logger = logging.get_logger()
     try:
         r = asyncio.run(main())
     except KeyboardInterrupt:
         sys.exit(0)
+    except Exception as e:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        logger.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
     sys.exit(r)  # pragma: no cover
 
 
 if __name__ == "__main__":
-    main_sync()
+    main_sync(None)

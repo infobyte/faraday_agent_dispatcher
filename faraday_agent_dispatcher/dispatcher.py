@@ -24,12 +24,8 @@ import asyncio
 import websockets
 import aiofiles
 
-import os
-
-from faraday_agent_dispatcher.executor_helper import (
-    StdErrLineProcessor,
-    StdOutLineProcessor,
-)
+from faraday_agent_dispatcher.executor_helper import StdErrLineProcessor, StdOutLineProcessor
+from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
 import faraday_agent_dispatcher.logger as logging
 
 from faraday_agent_dispatcher.config import instance as config, \
@@ -37,12 +33,11 @@ from faraday_agent_dispatcher.config import instance as config, \
 
 logger = logging.get_logger()
 
-LOG = False
-
 
 class Dispatcher:
 
     def __init__(self, session):
+        logger.error([[opt for opt in config[sect]] for sect in config])
         self.__host = config.get(SERVER_SECTION, "host")
         self.__api_port = config.get(SERVER_SECTION, "api_port")
         self.__websocket_port = config.get(SERVER_SECTION, "websocket_port")
@@ -52,23 +47,12 @@ class Dispatcher:
         self.__session = session
         self.__websocket = None
 
-    def __get_url(self, port):
-        return f"{self.__host}:{port}"
-
-    def __api_url(self, secure=False):
-        prefix = "https://" if secure else "http://"
-        return f"{prefix}{self.__get_url(self.__api_port)}"
-
-    def __websocket_url(self, secure=False):
-        prefix = "wss://" if secure else "ws://"
-        return f"{prefix}{self.__get_url(self.__websocket_port)}"
-
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
         headers = {"Authorization": f"Agent {self.__agent_token}"}
-        d = f'{self.__api_url()}/_api/v2/agent_websocket_token/'
+        logger.info(f"headers:{headers}")
         websocket_token_response = await self.__session.post(
-            f'{self.__api_url()}/_api/v2/agent_websocket_token/',
+            api_url(self.__host, self.__api_port,postfix='/_api/v2/agent_websocket_token/'),
             headers=headers)
 
         websocket_token_json = await websocket_token_response.json()
@@ -76,13 +60,15 @@ class Dispatcher:
 
     async def connect(self):
 
-        # REFACTORING
         if self.__agent_token is None:
             registration_token = self.__agent_token = config.get(TOKENS_SECTION, "registration")
             if registration_token is None:
                 # TODO RAISE CORRECT
                 raise RuntimeError
-            token_registration_url = f"{self.__api_url()}/_api/v2/ws/{self.__workspace}/agent_registration/"
+            token_registration_url = api_url(self.__host,
+                                             self.__api_port,
+                                             postfix=f"/_api/v2/ws/{self.__workspace}/agent_registration/")
+            logger.info(f"token_registration_url: {token_registration_url}")
             token_response = await self.__session.post(token_registration_url,
                                                        json={'token': registration_token, 'name': "TEST"})
             # todo control token is jsonable
@@ -93,7 +79,7 @@ class Dispatcher:
 
         websocket_token = await self.reset_websocket_token()
 
-        async with websockets.connect(self.__websocket_url()) as websocket:
+        async with websockets.connect(websocket_url(self.__host, self.__websocket_port)) as websocket:
             await websocket.send(json.dumps({
                 'action': 'JOIN_AGENT',
                 'workspace': self.__workspace,
