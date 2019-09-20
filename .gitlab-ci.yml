@@ -20,6 +20,7 @@ before_script:
 
 stages:
     - testing
+    - post_testing
 
 services:
     - postgres:latest
@@ -47,7 +48,7 @@ test:
 
 integration_faraday_white:
     image: python:3
-    stage: testing
+    stage: post_testing
     script:
         - pip install virtualenv
         - virtualenv faraday_venv
