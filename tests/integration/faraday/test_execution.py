@@ -34,7 +34,7 @@ agent_ok_status_keys_set = {'create_date',
                             'status',
                             'update_date'}
 
-agent_ok_status_dict = {'creator': None, 'name': 'TEST', 'is_online': True, 'active': True, 'status': 'online'}
+agent_ok_status_dict = {'creator': None, 'name': AGENT_NAME, 'is_online': True, 'active': True, 'status': 'online'}
 
 
 def test_execute_agent():
@@ -53,6 +53,7 @@ def test_execute_agent():
     config.set(TOKENS_SECTION, "registration", token)
     config.remove_option(TOKENS_SECTION, "agent")
     config.set(SERVER_SECTION, "workspace", WORKSPACE)
+    config.set(EXECUTOR_SECTION, "agent_name", AGENT_NAME)
     config.set(EXECUTOR_SECTION, "cmd", "python ./basic_executor.py")
     save_config(CONFIG_DIR)
     # TODO SET AGENT NAME FUZZY RANDOM

@@ -44,6 +44,7 @@ class Dispatcher:
         self.__workspace = config.get(SERVER_SECTION, "workspace")
         self.__agent_token = config[TOKENS_SECTION].get("agent", None)
         self.__executor_cmd = config.get(EXECUTOR_SECTION, "cmd")
+        self.__agent_name = config.get(EXECUTOR_SECTION, "agent_name")
         self.__session = session
         self.__websocket = None
 
@@ -70,7 +71,7 @@ class Dispatcher:
                                              postfix=f"/_api/v2/ws/{self.__workspace}/agent_registration/")
             logger.info(f"token_registration_url: {token_registration_url}")
             token_response = await self.__session.post(token_registration_url,
-                                                       json={'token': registration_token, 'name': "TEST"})
+                                                       json={'token': registration_token, 'name': self.__agent_name})
             # todo control token is jsonable
             token = await token_response.json()
             self.__agent_token = token["token"]
