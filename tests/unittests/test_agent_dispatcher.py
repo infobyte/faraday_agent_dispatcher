@@ -31,6 +31,7 @@ from faraday_agent_dispatcher.config import (
 )
 
 from tests.utils.text_utils import fuzzy_string
+from tests.utils.test_faraday_server import h_cli
 
 
 @pytest.mark.parametrize('config_changes_dict',
@@ -101,13 +102,12 @@ def test_basic_built(config_changes_dict):
         Dispatcher(None, config_file_path)
 
 
-def test_register():
-    pass
-
-
-def test_connect():
-    pass
-
+async def test_hello(h_cli):
+    from faraday_agent_dispatcher.utils.url_utils import api_url
+    resp = await h_cli.post("/_api/v2/ws/workspace/agent_registration/")
+    assert resp.status == 201
+    text = await resp.text()
+    assert 'TODO' in text
 
 def test_run_once():
     pass
