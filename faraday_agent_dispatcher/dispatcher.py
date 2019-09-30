@@ -57,7 +57,7 @@ class Dispatcher:
         }
     }
 
-    def __init__(self, session, config_path):
+    def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
         self.control_config()
         self.__host = config.get(SERVER_SECTION, "host")

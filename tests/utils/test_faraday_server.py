@@ -1,12 +1,21 @@
 import pytest
 from aiohttp import web
+from aiohttp.web_request import Request
+from urllib.parse import parse_qs
+import json
 
 
-async def agent_registration(request):
-    token = 0 #request.pop('token')
-    if True or token != "theToken":
-        web.HTTPUnauthorized()
-    return web.HTTPCreated(text="TODO") #TODO 201 Correct data
+def get_agent_registration(registration_token, agent_token):
+    async def agent_registration(request: Request):
+        data = await request.text()
+        data = json.loads(data)
+        if 'token' not in data or data['token'] != registration_token:
+            return web.HTTPUnauthorized()
+        response_dict = {"name": data["name"],
+                         "token": agent_token,
+                         "id": 1}
+        return web.HTTPCreated(text=json.dumps(response_dict), headers={'content-type': 'application/json'})
+    return agent_registration
 
 
 async def agent_websocket_token(request: web.Request):
@@ -83,12 +92,32 @@ async def bulk_create(request):
         logger.error("Error parsing hosts CSV (%s)", e)
         abort(400, "Error parsing hosts CSV (%s)" % e)
 
+
 @pytest.fixture
-async def h_cli(aiohttp_client, aiohttp_server, loop):
+async def config(aiohttp_client, aiohttp_server, loop):
+    config = FaradayConfig()
+    await config.generate_client(aiohttp_client, aiohttp_server)
+    return config
+
+
+async def h_cli(aiohttp_client, aiohttp_server, workspace, registration_token, agent_token):
     app = web.Application()
-    app.router.add_post("/_api/v2/ws/workspace/agent_registration/", agent_registration)
+    app.router.add_post(f"/_api/v2/ws/{workspace}/agent_registration/", get_agent_registration(registration_token, agent_token))
     app.router.add_post('/_api/v2/agent_websocket_token/', agent_websocket_token)  # headers = headers)
-    app.router.add_post("/_api/v2/ws/workspace/bulk_create/", bulk_create)
+    app.router.add_post(f"/_api/v2/ws/{workspace}/bulk_create/", bulk_create)
     server = await aiohttp_server(app)#, port=5600)
     client = await aiohttp_client(server)
     return client
+
+
+class FaradayConfig:
+    def __init__(self):
+        from .text_utils import fuzzy_string
+        self.workspace = fuzzy_string(8)
+        self.registration_token = fuzzy_string(25)
+        self.agent_token = fuzzy_string(64)
+        self.client = None
+
+    async def generate_client(self, aiohttp_client, aiohttp_server):
+        self.client = await h_cli(aiohttp_client, aiohttp_server, self.workspace, self.registration_token,
+                                  self.agent_token)

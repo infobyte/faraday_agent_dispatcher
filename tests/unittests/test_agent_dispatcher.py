@@ -20,6 +20,8 @@
 
 import pytest
 
+from aiohttp.test_utils import TestClient
+
 from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.config import (
     reset_config,
@@ -31,8 +33,7 @@ from faraday_agent_dispatcher.config import (
 )
 
 from tests.utils.text_utils import fuzzy_string
-from tests.utils.test_faraday_server import h_cli
-
+from tests.utils.test_faraday_server import FaradayConfig, config
 
 @pytest.mark.parametrize('config_changes_dict',
                          [{"remove": {SERVER_SECTION: ["host"]},
@@ -86,7 +87,7 @@ from tests.utils.test_faraday_server import h_cli
                            "replace": {}}
                           ])
 def test_basic_built(config_changes_dict):
-    reset_config(use_default=True)
+    reset_config()
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
             configuration.set(section, option, config_changes_dict["replace"][section][option])
@@ -102,12 +103,24 @@ def test_basic_built(config_changes_dict):
         Dispatcher(None, config_file_path)
 
 
-async def test_hello(h_cli):
-    from faraday_agent_dispatcher.utils.url_utils import api_url
-    resp = await h_cli.post("/_api/v2/ws/workspace/agent_registration/")
-    assert resp.status == 201
+async def test_hello(config: FaradayConfig):
+    data = {"token": 'sarasa', 'name': 'new_agent'}
+    resp = await config.client.post("/_api/v2/ws/workspace/agent_registration/", data=data)
+    assert resp.status == 404
     text = await resp.text()
-    assert 'TODO' in text
+
+
+async def test_start_and_register(config: FaradayConfig):
+    reset_config()
+    configuration.set(SERVER_SECTION, "api_port", str(config.client.port))
+    configuration.set(SERVER_SECTION, "host", config.client.host)
+    configuration.set(SERVER_SECTION, "workspace", config.workspace)
+    configuration.set(TOKENS_SECTION, "registration", config.registration_token)
+    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
+    save_config(config_file_path)
+    dispatcher = Dispatcher(config.client.session, config_file_path)
+    await dispatcher.register()
+
 
 def test_run_once():
     pass
