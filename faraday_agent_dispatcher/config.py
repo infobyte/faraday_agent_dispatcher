@@ -31,8 +31,8 @@ LOGGING_LEVEL = logging.DEBUG
 instance = configparser.ConfigParser()
 
 
-def reset_config(filepath=None, use_default=False):
-    if use_default:
+def reset_config(filepath=None):
+    if filepath is None:
         filepath = CONFIG["default"]
     else:
         CONFIG["instance"] = filepath
@@ -40,24 +40,27 @@ def reset_config(filepath=None, use_default=False):
     instance.read(filepath)
 
 
-reset_config(CONFIG["default"])
+reset_config()
 
 
-def save_config(filepath=None):
-
+def check_filepath(filepath: str = None) -> str:
     if filepath is None:
+        if CONFIG["instance"] is None:
+            raise ValueError("Filepath needed to save")
         filepath = CONFIG["instance"]
     if filepath == CONFIG["default"]:
         raise ValueError("Can't override default config")
+    return filepath
+
+
+def save_config(filepath=None):
+    filepath = check_filepath(filepath)
     with open(filepath, 'w') as configfile:
         instance.write(configfile)
 
 
 async def async_save_config(filepath=None):
-    if filepath is None:
-        filepath = CONFIG["instance"]
-    if filepath == CONFIG["default"]:
-        raise ValueError("Can't override default config")
+    filepath = check_filepath(filepath)
     async with aiofiles.open(filepath, 'w') as configfile:
         await instance.write(configfile)
 
