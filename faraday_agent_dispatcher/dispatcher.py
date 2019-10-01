@@ -60,23 +60,23 @@ class Dispatcher:
     def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
         self.control_config()
-        self.__host = config.get(SERVER_SECTION, "host")
-        self.__api_port = config.get(SERVER_SECTION, "api_port")
-        self.__websocket_port = config.get(SERVER_SECTION, "websocket_port")
-        self.__workspace = config.get(SERVER_SECTION, "workspace")
-        self.__agent_token = config[TOKENS_SECTION].get("agent", None)
-        self.__executor_cmd = config.get(EXECUTOR_SECTION, "cmd")
-        self.__agent_name = config.get(EXECUTOR_SECTION, "agent_name")
-        self.__session = session
-        self.__websocket = None
-        self.__websocket_token = None
+        self.host = config.get(SERVER_SECTION, "host")
+        self.api_port = config.get(SERVER_SECTION, "api_port")
+        self.websocket_port = config.get(SERVER_SECTION, "websocket_port")
+        self.workspace = config.get(SERVER_SECTION, "workspace")
+        self.agent_token = config[TOKENS_SECTION].get("agent", None)
+        self.executor_cmd = config.get(EXECUTOR_SECTION, "cmd")
+        self.agent_name = config.get(EXECUTOR_SECTION, "agent_name")
+        self.session = session
+        self.websocket = None
+        self.websocket_token = None
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
-        headers = {"Authorization": f"Agent {self.__agent_token}"}
+        headers = {"Authorization": f"Agent {self.agent_token}"}
         logger.info(f"headers:{headers}")
-        websocket_token_response = await self.__session.post(
-            api_url(self.__host, self.__api_port, postfix='/_api/v2/agent_websocket_token/'),
+        websocket_token_response = await self.session.post(
+            api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/'),
             headers=headers)
 
         websocket_token_json = await websocket_token_response.json()
@@ -84,50 +84,50 @@ class Dispatcher:
 
     async def register(self):
 
-        if self.__agent_token is None:
-            registration_token = self.__agent_token = config.get(TOKENS_SECTION, "registration")
+        if self.agent_token is None:
+            registration_token = self.agent_token = config.get(TOKENS_SECTION, "registration")
             if registration_token is None:
                 # TODO RAISE CORRECT
                 raise RuntimeError
-            token_registration_url = api_url(self.__host,
-                                             self.__api_port,
-                                             postfix=f"/_api/v2/ws/{self.__workspace}/agent_registration/")
+            token_registration_url = api_url(self.host,
+                                             self.api_port,
+                                             postfix=f"/_api/v2/ws/{self.workspace}/agent_registration/")
             logger.info(f"token_registration_url: {token_registration_url}")
-            token_response = await self.__session.post(token_registration_url,
-                                                       json={'token': registration_token, 'name': self.__agent_name})
+            token_response = await self.session.post(token_registration_url,
+                                                     json={'token': registration_token, 'name': self.agent_name})
             # todo control token is jsonable
             token = await token_response.json()
-            self.__agent_token = token["token"]
-            config.set(TOKENS_SECTION, "agent", self.__agent_token)
+            self.agent_token = token["token"]
+            config.set(TOKENS_SECTION, "agent", self.agent_token)
             save_config()
 
-        self.__websocket_token = await self.reset_websocket_token()
+        self.websocket_token = await self.reset_websocket_token()
 
     async def connect(self):
 
-        async with websockets.connect(websocket_url(self.__host, self.__websocket_port)) as websocket:
+        async with websockets.connect(websocket_url(self.host, self.websocket_port)) as websocket:
             await websocket.send(json.dumps({
                 'action': 'JOIN_AGENT',
-                'workspace': self.__workspace,
-                'token': self.__websocket_token,
+                'workspace': self.workspace,
+                'token': self.websocket_token,
             }))
 
             logger.info("Connection to Faraday server succeeded")
-            self.__websocket = websocket
+            self.websocket = websocket
 
             await self.run_await()  # This line can we called from outside (in main)
 
     async def run_await(self):
         while True:
             # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
-            data = await self.__websocket.recv()
+            data = await self.websocket.recv()
             asyncio.create_task(self.run_once(data))
 
     async def run_once(self, data=None):
         # TODO Control data
         logger.info("Running executor")
         process = await self.create_process()
-        tasks = [StdOutLineProcessor(process, self.__session).process_f(),
+        tasks = [StdOutLineProcessor(process, self.session).process_f(),
                  StdErrLineProcessor(process).process_f(),
                  ]
 
@@ -142,7 +142,7 @@ class Dispatcher:
 
     async def create_process(self):
         process = await asyncio.create_subprocess_shell(
-            self.__executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            self.executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         return process
 

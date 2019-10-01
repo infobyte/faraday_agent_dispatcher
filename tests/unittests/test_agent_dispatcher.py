@@ -20,7 +20,7 @@
 
 import pytest
 
-from aiohttp.test_utils import TestClient
+from itsdangerous import TimestampSigner
 
 from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.config import (
@@ -118,8 +118,14 @@ async def test_start_and_register(config: FaradayConfig):
     configuration.set(TOKENS_SECTION, "registration", config.registration_token)
     config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
     save_config(config_file_path)
+
     dispatcher = Dispatcher(config.client.session, config_file_path)
     await dispatcher.register()
+
+    assert dispatcher.agent_token == config.agent_token
+    signer = TimestampSigner(config.app_config['SECRET_KEY'], salt="websocket_agent")
+    agent_id = int(signer.unsign(dispatcher.websocket_token).decode('utf-8'))
+    assert config.agent_id == agent_id
 
 
 def test_run_once():
