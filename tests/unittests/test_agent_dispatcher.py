@@ -18,6 +18,7 @@
 
 """Tests for `faraday_dummy_agent` package."""
 
+import os
 import pytest
 
 from itsdangerous import TimestampSigner
@@ -33,7 +34,7 @@ from faraday_agent_dispatcher.config import (
 )
 
 from tests.utils.text_utils import fuzzy_string
-from tests.utils.test_faraday_server import FaradayConfig, config
+from tests.utils.test_faraday_server import FaradayTestConfig, test_config
 
 @pytest.mark.parametrize('config_changes_dict',
                          [{"remove": {SERVER_SECTION: ["host"]},
@@ -103,30 +104,63 @@ def test_basic_built(config_changes_dict):
         Dispatcher(None, config_file_path)
 
 
-async def test_hello(config: FaradayConfig):
-    data = {"token": 'sarasa', 'name': 'new_agent'}
-    resp = await config.client.post("/_api/v2/ws/workspace/agent_registration/", data=data)
-    assert resp.status == 404
-    text = await resp.text()
-
-
-async def test_start_and_register(config: FaradayConfig):
+async def test_start_and_register(test_config: FaradayTestConfig):
+    # Config
     reset_config()
-    configuration.set(SERVER_SECTION, "api_port", str(config.client.port))
-    configuration.set(SERVER_SECTION, "host", config.client.host)
-    configuration.set(SERVER_SECTION, "workspace", config.workspace)
-    configuration.set(TOKENS_SECTION, "registration", config.registration_token)
+    configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
+    configuration.set(SERVER_SECTION, "host", test_config.client.host)
+    configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
+    configuration.set(TOKENS_SECTION, "registration", test_config.registration_token)
     config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
     save_config(config_file_path)
 
-    dispatcher = Dispatcher(config.client.session, config_file_path)
+    # Init and register it
+    dispatcher = Dispatcher(test_config.client.session, config_file_path)
     await dispatcher.register()
 
-    assert dispatcher.agent_token == config.agent_token
-    signer = TimestampSigner(config.app_config['SECRET_KEY'], salt="websocket_agent")
+    # Control tokens
+    assert dispatcher.agent_token == test_config.agent_token
+
+    signer = TimestampSigner(test_config.app_config['SECRET_KEY'], salt="websocket_agent")
     agent_id = int(signer.unsign(dispatcher.websocket_token).decode('utf-8'))
-    assert config.agent_id == agent_id
+    assert test_config.agent_id == agent_id
+
+    os.remove(config_file_path)
 
 
-def test_run_once():
-    pass
+@pytest.mark.skip
+def test_websocket(test_config: FaradayTestConfig):
+    text = fuzzy_string(15)
+    file = f"/tmp/{fuzzy_string(8)}.txt"
+    configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
+    configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
+    configuration.set(SERVER_SECTION, "websocket_port", str(test_config.websocket_port))
+    configuration.set(SERVER_SECTION, "host", test_config.client.host)
+    configuration.set(EXECUTOR_SECTION, "cmd", f"echo {text} > {file}")
+    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
+    save_config(config_file_path)
+
+    dispatcher = Dispatcher(test_config.client.session, config_file_path)
+    dispatcher.connect()
+    test_config.run_agent_to_websocket() ## HERE SEND BY WS THE RUN COMMAND
+
+    with open(file, 'rt') as f:
+        assert text in f.readline()
+
+async def test_run_once(test_config: FaradayTestConfig):
+    # Config
+    reset_config()
+    configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
+    configuration.set(SERVER_SECTION, "host", test_config.client.host)
+    configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
+    configuration.set(TOKENS_SECTION, "registration", test_config.registration_token)
+    configuration.set(TOKENS_SECTION, "agent", test_config.agent_token)
+    configuration.set(EXECUTOR_SECTION, "cmd", "python ../data/basic_executor.py")
+    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
+    save_config(config_file_path)
+
+    # Init and register it
+    dispatcher = Dispatcher(test_config.client.session, config_file_path)
+    await dispatcher.run_once()
+
+    os.remove(config_file_path)
