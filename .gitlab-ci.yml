@@ -90,7 +90,7 @@ integration_faraday_2:
     image: python:3
     stage: post_testing
     script:
-        - apt-get install -y -o dir::cache::archives="$APT_CACHE_DIR" python2-pip python2-dev
+        - apt-get install -y -o dir::cache::archives="$APT_CACHE_DIR" python-pip python-dev
         - pip install virtualenv
         - virtualenv -p python2 faraday_venv
         - source faraday_venv/bin/activate
