@@ -57,6 +57,8 @@ integration_faraday_white:
         - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
         - cd faraday && git checkout $FARADAY_REF && python3 setup.py install
         - mkdir -p ~/.faraday/config
+        - mkdir -p ~/.faraday/doc
+        - echo "${FARADAY_LICENSE_TAR_GZ}" | base64 -d | tar -C ~/.faraday/doc -xvzf -
         - cp tests/data/server.ini ~/.faraday/config
         - python3 ../tests/config/psql_config.py
         - faraday-manage create-tables
