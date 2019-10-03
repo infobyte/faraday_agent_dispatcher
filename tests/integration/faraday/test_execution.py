@@ -14,7 +14,7 @@ import time
 HOST = config.get(SERVER_SECTION, "host")
 API_PORT = config.get(SERVER_SECTION, "api_port")
 WS_PORT = config.get(SERVER_SECTION, "websocket_port")
-WORKSPACE = fuzzy_string(6)
+WORKSPACE = fuzzy_string(6).lower()  # TODO FIX WHEN FARADAY ACCEPTS CAPITAL FIRST LETTER
 AGENT_NAME = fuzzy_string(6)
 
 USER = os.getenv("FARADAY_USER")
