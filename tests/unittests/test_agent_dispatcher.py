@@ -34,7 +34,7 @@ from faraday_agent_dispatcher.config import (
 )
 
 from tests.utils.text_utils import fuzzy_string
-from tests.utils.test_faraday_server import FaradayTestConfig, test_config
+from tests.utils.testing_faraday_server import FaradayTestConfig, test_config
 
 @pytest.mark.parametrize('config_changes_dict',
                          [{"remove": {SERVER_SECTION: ["host"]},
@@ -147,7 +147,16 @@ def test_websocket(test_config: FaradayTestConfig):
     with open(file, 'rt') as f:
         assert text in f.readline()
 
-async def test_run_once(test_config: FaradayTestConfig):
+
+@pytest.mark.parametrize('options',
+                         [["out json"],
+                          ["out bad_json"],
+                          ["out str"],
+                          ["err"],
+                          ["fails"],
+                          ["err", "fails"],
+                          ])
+async def test_run_once(test_config: FaradayTestConfig, options):
     # Config
     reset_config()
     configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
@@ -155,7 +164,9 @@ async def test_run_once(test_config: FaradayTestConfig):
     configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
     configuration.set(TOKENS_SECTION, "registration", test_config.registration_token)
     configuration.set(TOKENS_SECTION, "agent", test_config.agent_token)
-    configuration.set(EXECUTOR_SECTION, "cmd", "python ../data/basic_executor.py")
+    configuration.set(EXECUTOR_SECTION, "cmd", " --".join(["python ../data/basic_executor.py"] + options))
+    print(" --".join(["python ../data/basic_executor.py"] + options))
+    # TODO TEST CLOSE ON FIRST /n
     config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
     save_config(config_file_path)
 
