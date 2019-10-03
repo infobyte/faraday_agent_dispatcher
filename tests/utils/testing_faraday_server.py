@@ -6,12 +6,12 @@ from aiohttp.web_request import Request
 from itsdangerous import TimestampSigner
 from queue import Queue
 
+from tests.data.basic_executor import host_data, vuln_data
+from tests.utils.text_utils import fuzzy_string
 from tests.utils.websocket_server import start_websockets_faraday_server
-
 
 class FaradayTestConfig:
     def __init__(self):
-        from .text_utils import fuzzy_string
         self.workspace = fuzzy_string(8)
         self.registration_token = fuzzy_string(25)
         self.agent_token = fuzzy_string(64)
@@ -90,10 +90,11 @@ def get_bulk_create(test_config: FaradayTestConfig):
 
         if not test_config.workspace in request.url.path:
             web.HTTPNotFound()
-        from tests.data.basic_executor import host_data, vuln_data
         _host_data = host_data.copy()
         _host_data["vulnerabilities"] = [vuln_data.copy()]
         data = json.loads((await request.read()).decode())
+        if "ip" not in data["hosts"][0]:
+            return web.HTTPBadRequest()
         assert _host_data == data["hosts"][0]
         return web.HTTPCreated()
 

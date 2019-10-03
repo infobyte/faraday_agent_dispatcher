@@ -43,13 +43,13 @@ class FileLineProcessor:
         self.name = name
 
     def log(self, line):
-        raise RuntimeError("Must be implemented")
+        raise NotImplementedError("Must be implemented")
 
     async def processing(self, line):
-        raise RuntimeError("Must be implemented")
+        raise NotImplementedError("Must be implemented")
 
     async def next_line(self):
-        raise RuntimeError("Must be implemented")
+        raise NotImplementedError("Must be implemented")
 
     async def process_f(self):
         return await FileLineProcessor._process_lines(self.next_line, self.processing, self.log, self.name)
@@ -74,9 +74,6 @@ class StdOutLineProcessor(FileLineProcessor):
         return api_url(host, port, postfix=f"/_api/v2/ws/{config.get('server', 'workspace')}/bulk_create/")
 
     async def processing(self, line):
-        if not line.strip():
-            # Ignore blank lines
-            return
         try:
             loaded_json = json.loads(line)
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")

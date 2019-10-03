@@ -16,7 +16,6 @@
 import os
 import logging
 import configparser
-import aiofiles
 
 CONST_FARADAY_HOME_PATH = os.path.dirname(__file__)
 CONST_FARADAY_LOGS_PATH = os.path.join(CONST_FARADAY_HOME_PATH, "logs")
@@ -34,6 +33,7 @@ instance = configparser.ConfigParser()
 def reset_config(filepath=None):
     if filepath is None:
         filepath = CONFIG["default"]
+        CONFIG["instance"] = None
     else:
         CONFIG["instance"] = filepath
     instance.clear()
@@ -57,12 +57,6 @@ def save_config(filepath=None):
     filepath = check_filepath(filepath)
     with open(filepath, 'w') as configfile:
         instance.write(configfile)
-
-
-async def async_save_config(filepath=None):
-    filepath = check_filepath(filepath)
-    async with aiofiles.open(filepath, 'w') as configfile:
-        await instance.write(configfile)
 
 
 TOKENS_SECTION = "tokens"
