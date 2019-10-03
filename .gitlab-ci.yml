@@ -46,12 +46,13 @@ unit_tests:
     except:
       variables:
         - $INTEGRATION
-        - $INTEGRATION2
 
 integration_faraday:
     image: python:3
     stage: post_testing
     script:
+        - apt-get update && apt-get install
+        - apt-get install libsasl2-dev python libldap2-dev libssl-dev
         - pip install virtualenv
         - virtualenv faraday_venv
         - source faraday_venv/bin/activate
@@ -82,45 +83,3 @@ integration_faraday:
             - logs/*
             - run_from/logs/*
         expire_in: 7 days
-    except:
-      variables:
-        - $INTEGRATION2
-
-integration_faraday_2:
-    image: python:3
-    stage: post_testing
-    script:
-        - apt-get install -y -o dir::cache::archives="$APT_CACHE_DIR" python2 python-dev
-        - pip install virtualenv
-        - virtualenv -p python2 faraday_venv
-        - source faraday_venv/bin/activate
-        - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
-        - cd faraday && git checkout $FARADAY_REF && python2 setup.py install
-        - mkdir -p ~/.faraday/config
-        - mkdir -p ~/.faraday/doc
-        - echo "${FARADAY_LICENSE_TAR_GZ}" | base64 -d | tar -C ~/.faraday/doc -xvzf -
-        - cp tests/data/server.ini ~/.faraday/config
-        - python2 ../tests/config/psql_config.py
-        - faraday-manage create-tables
-        - faraday-manage create-superuser --username $FARADAY_USER --password $FARADAY_PASSWORD --email $FARADAY_EMAIL
-        - faraday-server &
-        - deactivate
-        - cd ..
-        - virtualenv faraday_disp_venv
-        - source faraday_disp_venv/bin/activate
-        - pip install pytest pytest-cov
-        - pip install -r requirements_dev.txt
-        - python setup.py install
-        - mkdir run_from
-        - cp tests/data/basic_executor.py ./run_from
-        - cd run_from && mkdir logs && pytest ../tests/integration --capture=sys -v --color=yes --disable-warnings --cov=../faraday_agent_dispatcher
-    artifacts:
-        when: on_failure
-        paths:
-            - ~/.faraday/logs/*
-            - logs/*
-            - run_from/logs/*
-        expire_in: 7 days
-    only:
-      variables:
-        - $INTEGRATION2
