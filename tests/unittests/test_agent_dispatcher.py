@@ -34,7 +34,8 @@ from faraday_agent_dispatcher.config import (
 )
 
 from tests.utils.text_utils import fuzzy_string
-from tests.utils.testing_faraday_server import FaradayTestConfig, test_config
+from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, tmp_config
+
 
 @pytest.mark.parametrize('config_changes_dict',
                          [{"remove": {SERVER_SECTION: ["host"]},
@@ -87,35 +88,30 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config
                           {"remove": {},
                            "replace": {}}
                           ])
-def test_basic_built(config_changes_dict):
-    reset_config()
+def test_basic_built(tmp_config, config_changes_dict):
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
             configuration.set(section, option, config_changes_dict["replace"][section][option])
     for section in config_changes_dict["remove"]:
         for option in config_changes_dict["remove"][section]:
             configuration.remove_option(section, option)
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
-    save_config(config_file_path)
+    tmp_config.save()
     if "expected_exception" in config_changes_dict:
         with pytest.raises(config_changes_dict["expected_exception"]):
-            Dispatcher(None, config_file_path)
+            Dispatcher(None, tmp_config.config_file_path)
     else:
-        Dispatcher(None, config_file_path)
+        Dispatcher(None, tmp_config.config_file_path)
 
-
-async def test_start_and_register(test_config: FaradayTestConfig):
+async def test_start_and_register(test_config: FaradayTestConfig, tmp_config):
     # Config
-    reset_config()
     configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
     configuration.set(SERVER_SECTION, "host", test_config.client.host)
     configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
     configuration.set(TOKENS_SECTION, "registration", test_config.registration_token)
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
-    save_config(config_file_path)
+    tmp_config.save()
 
     # Init and register it
-    dispatcher = Dispatcher(test_config.client.session, config_file_path)
+    dispatcher = Dispatcher(test_config.client.session, tmp_config.config_file_path)
     await dispatcher.register()
 
     # Control tokens
@@ -125,11 +121,24 @@ async def test_start_and_register(test_config: FaradayTestConfig):
     agent_id = int(signer.unsign(dispatcher.websocket_token).decode('utf-8'))
     assert test_config.agent_id == agent_id
 
-    os.remove(config_file_path)
+
+async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_config):
+    # Config
+    configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
+    configuration.set(SERVER_SECTION, "host", test_config.client.host)
+    configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
+    configuration.set(TOKENS_SECTION, "registration", "NotOk"*5)
+    tmp_config.save()
+
+    # Init and register it
+    dispatcher = Dispatcher(test_config.client.session, tmp_config.config_file_path)
+
+    with pytest.raises(AssertionError):
+        await dispatcher.register()
 
 
 @pytest.mark.skip
-def test_websocket(test_config: FaradayTestConfig):
+def test_websocket(test_config: FaradayTestConfig, tmp_config):
     text = fuzzy_string(15)
     file = f"/tmp/{fuzzy_string(8)}.txt"
     configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
@@ -137,10 +146,9 @@ def test_websocket(test_config: FaradayTestConfig):
     configuration.set(SERVER_SECTION, "websocket_port", str(test_config.websocket_port))
     configuration.set(SERVER_SECTION, "host", test_config.client.host)
     configuration.set(EXECUTOR_SECTION, "cmd", f"echo {text} > {file}")
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
-    save_config(config_file_path)
+    tmp_config.save()
 
-    dispatcher = Dispatcher(test_config.client.session, config_file_path)
+    dispatcher = Dispatcher(test_config.client.session, tmp_config.config_file_path)
     dispatcher.connect()
     test_config.run_agent_to_websocket() ## HERE SEND BY WS THE RUN COMMAND
 
@@ -150,15 +158,18 @@ def test_websocket(test_config: FaradayTestConfig):
 
 @pytest.mark.parametrize('options',
                          [["out json"],
+                          ["out json", "count 5"],
+                          ["out json", "count 5", "spare"],
+                          ["out json", "spaced_before"],
+                          ["out json", "spaced_middle", "count 5", "spare"],
                           ["out bad_json"],
                           ["out str"],
                           ["err"],
                           ["fails"],
                           ["err", "fails"],
                           ])
-async def test_run_once(test_config: FaradayTestConfig, options):
+async def test_run_once(test_config: FaradayTestConfig, tmp_config, options):
     # Config
-    reset_config()
     configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
     configuration.set(SERVER_SECTION, "host", test_config.client.host)
     configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
@@ -166,12 +177,10 @@ async def test_run_once(test_config: FaradayTestConfig, options):
     configuration.set(TOKENS_SECTION, "agent", test_config.agent_token)
     configuration.set(EXECUTOR_SECTION, "cmd", " --".join(["python ../data/basic_executor.py"] + options))
     print(" --".join(["python ../data/basic_executor.py"] + options))
-    # TODO TEST CLOSE ON FIRST /n
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
-    save_config(config_file_path)
+    tmp_config.save()
 
     # Init and register it
-    dispatcher = Dispatcher(test_config.client.session, config_file_path)
+    dispatcher = Dispatcher(test_config.client.session, tmp_config.config_file_path)
     await dispatcher.run_once()
 
-    os.remove(config_file_path)
+    # TODO Check each case, how acts logs ? /n

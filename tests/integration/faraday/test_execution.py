@@ -54,7 +54,7 @@ def test_execute_agent():
     config.remove_option(TOKENS_SECTION, "agent")
     config.set(SERVER_SECTION, "workspace", WORKSPACE)
     config.set(EXECUTOR_SECTION, "agent_name", AGENT_NAME)
-    config.set(EXECUTOR_SECTION, "cmd", "python ./basic_executor.py")
+    config.set(EXECUTOR_SECTION, "cmd", "python ./basic_executor.py --out json")
     save_config(CONFIG_DIR)
 
     # Init dispatcher!
@@ -69,12 +69,10 @@ def test_execute_agent():
     assert len(res_data) == 1, p.communicate(timeout=0.1)
     agent = res_data[0]
     if agent_ok_status_keys_set != set(agent.keys()):
-        # TODO logger NOT SAME SET
+        print("Keys set from agent endpoint differ from expected ones, checking if its a superset")
         assert agent_ok_status_keys_set.issubset(set(agent.keys()))
     for key in agent_ok_status_dict:
         assert agent[key] == agent_ok_status_dict[key], [agent, agent_ok_status_dict]
-
-    # TODO SET PAUSE AND CHECK
 
     # Run executor!
     res = session.post(api_url(HOST, API_PORT, postfix=f'/_api/v2/ws/{WORKSPACE}/agents/{agent["id"]}/run/'),

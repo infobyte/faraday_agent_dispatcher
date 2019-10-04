@@ -86,16 +86,14 @@ class Dispatcher:
 
         if self.agent_token is None:
             registration_token = self.agent_token = config.get(TOKENS_SECTION, "registration")
-            if registration_token is None:
-                # TODO RAISE CORRECT
-                raise RuntimeError
+            assert registration_token is not None, "The registration token is mandatory"
             token_registration_url = api_url(self.host,
                                              self.api_port,
                                              postfix=f"/_api/v2/ws/{self.workspace}/agent_registration/")
             logger.info(f"token_registration_url: {token_registration_url}")
             token_response = await self.session.post(token_registration_url,
                                                      json={'token': registration_token, 'name': self.agent_name})
-            # todo control token is jsonable
+            assert token_response.status == 201
             token = await token_response.json()
             self.agent_token = token["token"]
             config.set(TOKENS_SECTION, "agent", self.agent_token)
