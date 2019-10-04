@@ -41,6 +41,10 @@ if __name__ == '__main__':
     parser.add_argument('--out', action='store', help='if set prints by stdout')
     parser.add_argument('--err', action='store_true', help='if set prints by stderr')
     parser.add_argument('--fails', action='store_true', help='if true fails')
+    parser.add_argument('--spaced_before', action='store_true', help='if set prints by stdout')
+    parser.add_argument('--spare', action='store_true', help='if set prints by stdout')
+    parser.add_argument('--spaced_middle', action='store_true', help='if set prints by stdout')
+    parser.add_argument('--count', action='store', default=1, help='if set prints by stdout')
     args = parser.parse_args()
 
     if args.out:
@@ -48,7 +52,10 @@ if __name__ == '__main__':
         host_data_['vulnerabilities'] = [vuln_data]
         data = dict(hosts=[host_data_])
         if args.out == "json":
-            print(f"{json.dumps(data)}")
+            prefix = '\n' if args.spaced_before else ''
+            suffix = '\n' if args.spaced_middle else ''
+            suffix += ('\n' if args.spare else '').join([''] + [json.dumps(data) for _ in range(int(args.count) - 1)])
+            print(f"{prefix}{json.dumps(data)}{suffix}")
         elif args.out == "str":
             print("NO JSON OUTPUT")
         elif args.out == "bad_json":

@@ -1,4 +1,5 @@
 import json
+import os
 import pytest
 import random
 from aiohttp import web
@@ -6,9 +7,12 @@ from aiohttp.web_request import Request
 from itsdangerous import TimestampSigner
 from queue import Queue
 
+from faraday_agent_dispatcher.config import save_config, reset_config
+
 from tests.data.basic_executor import host_data, vuln_data
 from tests.utils.text_utils import fuzzy_string
 from tests.utils.websocket_server import start_websockets_faraday_server
+
 
 class FaradayTestConfig:
     def __init__(self):
@@ -48,20 +52,26 @@ def get_agent_registration(test_config: FaradayTestConfig):
     return agent_registration
 
 
+def verify_token(test_config, request):
+    if test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] not in request.headers:
+        return web.HTTPUnauthorized()
+    header = request.headers[test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER']]
+    try:
+        (auth_type, token) = header.split(None, 1)
+    except ValueError:
+        return web.HTTPUnauthorized()
+    auth_type = auth_type.lower()
+    if auth_type != 'agent':
+        return web.HTTPUnauthorized()
+    if token != test_config.agent_token:
+        return web.HTTPForbidden()
+
+
 def get_agent_websocket_token(test_config: FaradayTestConfig):
     async def agent_websocket_token(request: web.Request):
-        if test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] not in request.headers:
-            return web.HTTPUnauthorized()
-        header = request.headers[test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER']]
-        try:
-            (auth_type, token) = header.split(None, 1)
-        except ValueError:
-            return web.HTTPUnauthorized()
-        auth_type = auth_type.lower()
-        if auth_type != 'agent':
-            return web.HTTPUnauthorized()
-        if token != test_config.agent_token:
-            return web.HTTPForbidden()
+        error = verify_token(test_config, request)
+        if error:
+            return error
 
         ########## Sing and send
         signer = TimestampSigner(test_config.app_config['SECRET_KEY'], salt="websocket_agent")
@@ -74,21 +84,11 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
 
 def get_bulk_create(test_config: FaradayTestConfig):
     async def bulk_create(request):
-        # TODO check
-        if test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] not in request.headers:
-            return web.HTTPUnauthorized()
-        header = request.headers[test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER']]
-        try:
-            (auth_type, token) = header.split(None, 1)
-        except ValueError:
-            return web.HTTPUnauthorized()
-        auth_type = auth_type.lower()
-        if auth_type != 'agent':
-            return web.HTTPUnauthorized()
-        if token != test_config.agent_token:
-            return web.HTTPForbidden()
+        error = verify_token(test_config, request)
+        if error:
+            return error
 
-        if not test_config.workspace in request.url.path:
+        if test_config.workspace not in request.url.path:
             web.HTTPNotFound()
         _host_data = host_data.copy()
         _host_data["vulnerabilities"] = [vuln_data.copy()]
@@ -106,6 +106,20 @@ async def test_config(aiohttp_client, aiohttp_server, loop):
     config = FaradayTestConfig()
     await config.generate_client(aiohttp_client, aiohttp_server)
     return config
+
+
+@pytest.fixture
+def tmp_config():
+    class TmpConfig:
+        config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
+
+        def save(self):
+            save_config(self.config_file_path)
+
+    reset_config()
+    config = TmpConfig()
+    yield config
+    os.remove(config.config_file_path)
 
 
 async def aiohttp_faraday_client(aiohttp_client, aiohttp_server, test_config: FaradayTestConfig):
