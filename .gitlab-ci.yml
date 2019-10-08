@@ -38,6 +38,7 @@ unit_tests:
         - pip install -r requirements_dev.txt
         - python setup.py install
         - mkdir run_from
+        - cp tests/data/basic_executor.py ./run_from
         - cd run_from && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --color=yes --disable-warnings
     artifacts:
         when: on_failure
