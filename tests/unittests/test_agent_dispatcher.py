@@ -18,8 +18,10 @@
 
 """Tests for `faraday_dummy_agent` package."""
 
+import json
 import os
 import pytest
+import sys
 
 from itsdangerous import TimestampSigner
 
@@ -34,7 +36,9 @@ from faraday_agent_dispatcher.config import (
 )
 
 from tests.utils.text_utils import fuzzy_string
-from tests.utils.test_faraday_server import FaradayTestConfig, test_config
+from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, tmp_custom_config, tmp_default_config, \
+    test_logger_handler
+
 
 @pytest.mark.parametrize('config_changes_dict',
                          [{"remove": {SERVER_SECTION: ["host"]},
@@ -52,7 +56,7 @@ from tests.utils.test_faraday_server import FaradayTestConfig, test_config
                            "replace": {SERVER_SECTION: {"websocket_port": "Not a port number"}},
                            "expected_exception": ValueError},
                           {"remove": {},
-                           "replace": {SERVER_SECTION: {"websocket_port": "9001"}}},   # None error as parse int
+                           "replace": {SERVER_SECTION: {"websocket_port": "9001"}}},  # None error as parse int
                           {"remove": {SERVER_SECTION: ["workspace"]},
                            "replace": {},
                            "expected_exception": ValueError},
@@ -73,7 +77,7 @@ from tests.utils.test_faraday_server import FaradayTestConfig, test_config
                           {"remove": {},
                            "replace": {TOKENS_SECTION: {
                                "agent": "   46aasdje446aasdje446aa46aasdje446aasdje446aa46aasdje446aasdje"
-                                }},
+                           }},
                            "expected_exception": ValueError},
                           {"remove": {},
                            "replace": {TOKENS_SECTION: {
@@ -87,35 +91,31 @@ from tests.utils.test_faraday_server import FaradayTestConfig, test_config
                           {"remove": {},
                            "replace": {}}
                           ])
-def test_basic_built(config_changes_dict):
-    reset_config()
+def test_basic_built(tmp_custom_config, config_changes_dict):
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
             configuration.set(section, option, config_changes_dict["replace"][section][option])
     for section in config_changes_dict["remove"]:
         for option in config_changes_dict["remove"][section]:
             configuration.remove_option(section, option)
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
-    save_config(config_file_path)
+    tmp_custom_config.save()
     if "expected_exception" in config_changes_dict:
         with pytest.raises(config_changes_dict["expected_exception"]):
-            Dispatcher(None, config_file_path)
+            Dispatcher(None, tmp_custom_config.config_file_path)
     else:
-        Dispatcher(None, config_file_path)
+        Dispatcher(None, tmp_custom_config.config_file_path)
 
 
-async def test_start_and_register(test_config: FaradayTestConfig):
+async def test_start_and_register(test_config: FaradayTestConfig, tmp_default_config):
     # Config
-    reset_config()
     configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
     configuration.set(SERVER_SECTION, "host", test_config.client.host)
     configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
     configuration.set(TOKENS_SECTION, "registration", test_config.registration_token)
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
-    save_config(config_file_path)
+    tmp_default_config.save()
 
     # Init and register it
-    dispatcher = Dispatcher(test_config.client.session, config_file_path)
+    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
     await dispatcher.register()
 
     # Control tokens
@@ -125,11 +125,24 @@ async def test_start_and_register(test_config: FaradayTestConfig):
     agent_id = int(signer.unsign(dispatcher.websocket_token).decode('utf-8'))
     assert test_config.agent_id == agent_id
 
-    os.remove(config_file_path)
+
+async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default_config):
+    # Config
+    configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
+    configuration.set(SERVER_SECTION, "host", test_config.client.host)
+    configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
+    configuration.set(TOKENS_SECTION, "registration", "NotOk" * 5)
+    tmp_default_config.save()
+
+    # Init and register it
+    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
+
+    with pytest.raises(AssertionError):
+        await dispatcher.register()
 
 
 @pytest.mark.skip
-def test_websocket(test_config: FaradayTestConfig):
+def test_websocket(test_config: FaradayTestConfig, tmp_config):
     text = fuzzy_string(15)
     file = f"/tmp/{fuzzy_string(8)}.txt"
     configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
@@ -137,30 +150,140 @@ def test_websocket(test_config: FaradayTestConfig):
     configuration.set(SERVER_SECTION, "websocket_port", str(test_config.websocket_port))
     configuration.set(SERVER_SECTION, "host", test_config.client.host)
     configuration.set(EXECUTOR_SECTION, "cmd", f"echo {text} > {file}")
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
-    save_config(config_file_path)
+    tmp_config.save()
 
-    dispatcher = Dispatcher(test_config.client.session, config_file_path)
+    dispatcher = Dispatcher(test_config.client.session, tmp_config.config_file_path)
     dispatcher.connect()
-    test_config.run_agent_to_websocket() ## HERE SEND BY WS THE RUN COMMAND
+    test_config.run_agent_to_websocket()  ## HERE SEND BY WS THE RUN COMMAND
 
     with open(file, 'rt') as f:
         assert text in f.readline()
 
-async def test_run_once(test_config: FaradayTestConfig):
+
+@pytest.mark.parametrize('executor_options',
+                         [
+                             {
+                                 "data": {"agent_id": 1},
+                                 "args": [],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Data not contains action to do"},
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "CUT", "agent_id": 1},
+                                 "args": [],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Action unrecognized"},
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Data sent to bulk create"},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json", "count 5"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "ERROR", "msg": "JSON Parsing error: Extra data"},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json", "count 5", "spare"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Data sent to bulk create", "min_count": 5},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json", "spaced_before"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json", "spaced_middle", "count 5", "spare"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 1},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out bad_json"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "ERROR",
+                                      "msg": "Invalid data supplied by the executor to the bulk create endpoint. Server responded: "},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out str"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "ERROR", "msg": "JSON Parsing error: Expecting value"},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["err"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "DEBUG", "msg": "Print by stderr"},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["fails"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "WARNING", "msg": "Executor finished with exit code 1"},
+                                 ]
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["err", "fails"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "DEBUG", "msg": "Print by stderr"},
+                                     {"levelname": "WARNING", "msg": "Executor finished with exit code 1"},
+                                 ]
+                             },
+                         ])
+async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler, executor_options):
     # Config
-    reset_config()
     configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
     configuration.set(SERVER_SECTION, "host", test_config.client.host)
     configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
     configuration.set(TOKENS_SECTION, "registration", test_config.registration_token)
     configuration.set(TOKENS_SECTION, "agent", test_config.agent_token)
-    configuration.set(EXECUTOR_SECTION, "cmd", "python ../data/basic_executor.py")
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
-    save_config(config_file_path)
+    configuration.set(EXECUTOR_SECTION, "cmd", " --".join(["python ./basic_executor.py"] +
+                                                          executor_options["args"]))
+    tmp_default_config.save()
 
     # Init and register it
-    dispatcher = Dispatcher(test_config.client.session, config_file_path)
-    await dispatcher.run_once()
-
-    os.remove(config_file_path)
+    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
+    await dispatcher.run_once(json.dumps(executor_options["data"]))
+    history = test_logger_handler.history
+    for l in executor_options["logs"]:
+        min_count = 1 if "min_count" not in l else l["min_count"]
+        max_count = sys.maxsize if "max_count" not in l else l["max_count"]
+        assert max_count >= \
+            len(list(filter(lambda x: x.levelname == l["levelname"] and l["msg"] in x.message, history))) >= \
+            min_count

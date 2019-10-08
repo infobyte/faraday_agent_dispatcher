@@ -52,7 +52,7 @@ def main_sync(config_file, logs_folder):
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         logger.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
-    sys.exit(r)  # pragma: no cover
+        sys.exit(1)  # pragma: no cover
 
 
 if __name__ == "__main__":
