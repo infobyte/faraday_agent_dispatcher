@@ -19,8 +19,8 @@ import configparser
 
 CONST_FARADAY_HOME_PATH = os.path.dirname(__file__)
 CONST_FARADAY_LOGS_PATH = os.path.join(CONST_FARADAY_HOME_PATH, "logs")
-CONFIG = {"default": f"{CONST_FARADAY_HOME_PATH}/static/config.ini",
-          "instance": None,
+CONFIG = {"default": f"{CONST_FARADAY_HOME_PATH}/static/default_config.ini",
+          "instance": f"{CONST_FARADAY_HOME_PATH}/static/config.ini",
           }
 
 USE_RFC = False
@@ -31,30 +31,25 @@ instance = configparser.ConfigParser()
 
 
 def reset_config(filepath=None):
-    if filepath is None:
-        filepath = CONFIG["default"]
-        CONFIG["instance"] = None
-    else:
-        CONFIG["instance"] = filepath
     instance.clear()
-    instance.read(filepath)
+    if filepath is None: # FILEPATH CANT BE READ
+        instance.read(CONFIG["default"])
+    else:
+        instance.read(filepath)
 
 
 reset_config()
 
 
-def check_filepath(filepath: str = None) -> str:
+def check_filepath(filepath: str = None):
     if filepath is None:
-        if CONFIG["instance"] is None:
-            raise ValueError("Filepath needed to save")
-        filepath = CONFIG["instance"]
+        raise ValueError("Filepath needed to save")
     if filepath == CONFIG["default"]:
         raise ValueError("Can't override default config")
-    return filepath
 
 
 def save_config(filepath=None):
-    filepath = check_filepath(filepath)
+    check_filepath(filepath)
     with open(filepath, 'w') as configfile:
         instance.write(configfile)
 

@@ -5,9 +5,13 @@ import random
 from aiohttp import web
 from aiohttp.web_request import Request
 from itsdangerous import TimestampSigner
+import logging
+from logging import StreamHandler
+from faraday_agent_dispatcher.logger import get_logger
 from queue import Queue
 
 from faraday_agent_dispatcher.config import save_config, reset_config
+from faraday_agent_dispatcher.config import CONFIG
 
 from tests.data.basic_executor import host_data, vuln_data
 from tests.utils.text_utils import fuzzy_string
@@ -108,15 +112,23 @@ async def test_config(aiohttp_client, aiohttp_server, loop):
     return config
 
 
+class TmpConfig:
+    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
+
+    def save(self):
+        save_config(self.config_file_path)
+
+
 @pytest.fixture
-def tmp_config():
-    class TmpConfig:
-        config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
-
-        def save(self):
-            save_config(self.config_file_path)
-
+def tmp_default_config():
     reset_config()
+    config = TmpConfig()
+    yield config
+    os.remove(config.config_file_path)
+
+@pytest.fixture
+def tmp_custom_config(config=None):
+    reset_config(CONFIG["instance"])
     config = TmpConfig()
     yield config
     os.remove(config.config_file_path)
@@ -131,3 +143,27 @@ async def aiohttp_faraday_client(aiohttp_client, aiohttp_server, test_config: Fa
     server = await aiohttp_server(app)
     client = await aiohttp_client(server)
     return client
+
+
+class TestLoggerHandler(StreamHandler):
+
+    def __init__(self):
+        super().__init__()
+        self.history = []
+
+    def emit(self, record):
+        self.history.append(record)
+
+
+@pytest.fixture
+def test_logger_handler():
+    logger_handler = TestLoggerHandler()
+    logger = get_logger()
+    logger_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s {%(threadName)s} [%(filename)s:%(lineno)s - %(funcName)s()]  %(message)s')
+    from faraday_agent_dispatcher.logger import set_logging_level
+    logger_handler.setFormatter(formatter)
+    logger.addHandler(logger_handler)
+    yield logger_handler
+    logger.removeHandler(logger_handler)
