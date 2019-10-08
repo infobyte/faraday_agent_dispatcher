@@ -77,6 +77,7 @@ def get_logger(obj=None):
      for non-class loggings."""
     if obj is None:
         logger = logging.getLogger(ROOT_LOGGER)
+        logger.setLevel(config.LOGGING_LEVEL)
     elif isinstance(obj, str):
         if obj != ROOT_LOGGER:
             logger = logging.getLogger(u'{}.{}'.format(ROOT_LOGGER, obj))
