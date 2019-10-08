@@ -19,6 +19,7 @@ import json
 
 import asyncio
 import websockets
+from aiohttp.client_exceptions import ClientResponseError
 
 from faraday_agent_dispatcher.config import reset_config
 from faraday_agent_dispatcher.executor_helper import StdErrLineProcessor, StdOutLineProcessor
@@ -60,6 +61,7 @@ class Dispatcher:
     def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
         self.control_config()
+        self.config_path = config_path
         self.host = config.get(SERVER_SECTION, "host")
         self.api_port = config.get(SERVER_SECTION, "api_port")
         self.websocket_port = config.get(SERVER_SECTION, "websocket_port")
@@ -91,17 +93,28 @@ class Dispatcher:
                                              self.api_port,
                                              postfix=f"/_api/v2/ws/{self.workspace}/agent_registration/")
             logger.info(f"token_registration_url: {token_registration_url}")
-            token_response = await self.session.post(token_registration_url,
-                                                     json={'token': registration_token, 'name': self.agent_name})
-            assert token_response.status == 201
-            token = await token_response.json()
-            self.agent_token = token["token"]
-            config.set(TOKENS_SECTION, "agent", self.agent_token)
-            save_config()
+            try:
+                token_response = await self.session.post(token_registration_url,
+                                                         json={'token': registration_token, 'name': self.agent_name})
+                assert token_response.status == 201
+                token = await token_response.json()
+                self.agent_token = token["token"]
+                config.set(TOKENS_SECTION, "agent", self.agent_token)
+                save_config(self.config_path)
+            except ClientResponseError as e:
+                if e.status == 404:
+                    logger.info(f"404 HTTP ERROR received: Workspace not found")
+                    return
+                else:
+                    logger.info(f"Unexpected error: {e}")
+                    raise e
 
         self.websocket_token = await self.reset_websocket_token()
 
     async def connect(self):
+
+        if not self.websocket_token:
+            return
 
         async with websockets.connect(websocket_url(self.host, self.websocket_port)) as websocket:
             await websocket.send(json.dumps({
@@ -121,22 +134,30 @@ class Dispatcher:
             data = await self.websocket.recv()
             asyncio.create_task(self.run_once(data))
 
-    async def run_once(self, data=None):
+    async def run_once(self, data:str= None):
         # TODO Control data
-        logger.info("Running executor")
-        process = await self.create_process()
-        tasks = [StdOutLineProcessor(process, self.session).process_f(),
-                 StdErrLineProcessor(process).process_f(),
-                 ]
+        logger.info('Running executor with data: %s'.format(data))
+        data_dict = json.loads(data)
+        if "action" in data_dict:
+            if data_dict["action"] == "RUN":
+                process = await self.create_process()
+                tasks = [StdOutLineProcessor(process, self.session).process_f(),
+                         StdErrLineProcessor(process).process_f(),
+                         ]
 
-        await asyncio.gather(*tasks)
-        await process.communicate()
-        assert process.returncode is not None
-        if process.returncode == 0:
-            logger.info("Executor finished successfully")
+                await asyncio.gather(*tasks)
+                await process.communicate()
+                assert process.returncode is not None
+                if process.returncode == 0:
+                    logger.info("Executor finished successfully")
+                else:
+                    logger.warning(
+                        f"Executor finished with exit code {process.returncode}")
+            else:
+                logger.info("Action unrecognized")
+
         else:
-            logger.warning(
-                f"Executor finished with exit code {process.returncode}")
+            logger.info("Data not contains action to do")
 
     async def create_process(self):
         process = await asyncio.create_subprocess_shell(

@@ -91,6 +91,8 @@ class StdOutLineProcessor(FileLineProcessor):
                     "endpoint. Server responded: {}".format(await res.text())
                     )
             else:
+                if res.status == 201:
+                    logger.info("Data sent to bulk create")
                 res.raise_for_status()
 
         except JSONDecodeError as e:
