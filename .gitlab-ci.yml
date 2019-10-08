@@ -8,7 +8,7 @@ variables:
     FARADAY_USER: custom_user
     FARADAY_PASSWORD: custom_pass
     FARADAY_EMAIL: test@test.com
-    FARADAY_REF: white3/dev
+    FARADAY_REF: white/dev
 
 cache:
   paths:
