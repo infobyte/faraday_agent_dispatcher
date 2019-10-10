@@ -47,6 +47,7 @@ unit_tests:
     except:
       variables:
         - $INTEGRATION
+        - $CI_COMMIT_REF_NAME =~ /^.*ci.*$/
 
 integration_faraday:
     image: python:3
@@ -61,6 +62,7 @@ integration_faraday:
         - cd faraday && git checkout $FARADAY_REF && python3 setup.py install
         - mkdir -p ~/.faraday/config
         - mkdir -p ~/.faraday/doc
+        - mkdir -p ~/.faraday/logs
         - echo "${FARADAY_LICENSE_TAR_GZ}" | base64 -d | tar -C ~/.faraday/doc -xvzf -
         - cp tests/data/server.ini ~/.faraday/config
         - python3 ../tests/config/psql_config.py
@@ -77,10 +79,10 @@ integration_faraday:
         - mkdir run_from
         - cp tests/data/basic_executor.py ./run_from
         - cd run_from && mkdir logs && pytest ../tests/integration --capture=sys -v --color=yes --disable-warnings --cov=../faraday_agent_dispatcher
+    after_script:
+        - cp ~/.faraday/logs/*.log run_from/logs/
     artifacts:
-        when: on_failure
+        when: always
         paths:
-            - ~/.faraday/logs/*
-            - logs/*
             - run_from/logs/*
         expire_in: 7 days
