@@ -1,5 +1,4 @@
-from faraday_agent_dispatcher.config import instance as config, \
-    EXECUTOR_SECTION, SERVER_SECTION, TOKENS_SECTION, save_config
+from faraday_agent_dispatcher.config import instance as config, save_config, Sections
 
 from faraday_agent_dispatcher.utils.url_utils import api_url
 
@@ -11,9 +10,9 @@ from requests import Session
 import subprocess
 import time
 
-HOST = config.get(SERVER_SECTION, "host")
-API_PORT = config.get(SERVER_SECTION, "api_port")
-WS_PORT = config.get(SERVER_SECTION, "websocket_port")
+HOST = config.get(Sections.SERVER, "host")
+API_PORT = config.get(Sections.SERVER, "api_port")
+WS_PORT = config.get(Sections.SERVER, "websocket_port")
 WORKSPACE = fuzzy_string(6).lower()  # TODO FIX WHEN FARADAY ACCEPTS CAPITAL FIRST LETTER
 AGENT_NAME = fuzzy_string(6)
 
@@ -50,11 +49,11 @@ def test_execute_agent():
     token = res.json()['token']
 
     # Config set up
-    config.set(TOKENS_SECTION, "registration", token)
-    config.remove_option(TOKENS_SECTION, "agent")
-    config.set(SERVER_SECTION, "workspace", WORKSPACE)
-    config.set(EXECUTOR_SECTION, "agent_name", AGENT_NAME)
-    config.set(EXECUTOR_SECTION, "cmd", "python ./basic_executor.py --out json")
+    config.set(Sections.TOKENS, "registration", token)
+    config.remove_option(Sections.TOKENS, "agent")
+    config.set(Sections.SERVER, "workspace", WORKSPACE)
+    config.set(Sections.EXECUTOR, "agent_name", AGENT_NAME)
+    config.set(Sections.EXECUTOR, "cmd", "python ./basic_executor.py --out json")
     save_config(CONFIG_DIR)
 
     # Init dispatcher!

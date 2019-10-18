@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
 import sys
 import json
 import argparse
@@ -46,8 +47,8 @@ if __name__ == '__main__':
     parser.add_argument('--spaced_middle', action='store_true', help='if set prints by stdout')
     parser.add_argument('--count', action='store', default=1, help='if set prints by stdout')
     args = parser.parse_args()
-
-    if args.out:
+    omit_everything = os.getenv("DO_NOTHING", None)
+    if args.out and omit_everything is None:
         host_data_ = host_data.copy()
         host_data_['vulnerabilities'] = [vuln_data]
         data = dict(hosts=[host_data_])
@@ -61,6 +62,8 @@ if __name__ == '__main__':
         elif args.out == "bad_json":
             del data["hosts"][0]["ip"]
             print(f"{json.dumps(data)}")
+    else:
+        print(omit_everything, file=sys.stderr)
 
     if args.err:
         print("Print by stderr", file=sys.stderr)

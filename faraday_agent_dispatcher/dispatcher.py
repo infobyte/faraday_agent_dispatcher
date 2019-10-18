@@ -33,42 +33,43 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
 )
 import faraday_agent_dispatcher.logger as logging
 
-from faraday_agent_dispatcher.config import instance as config, \
-    EXECUTOR_SECTION, SERVER_SECTION, TOKENS_SECTION, save_config
+from faraday_agent_dispatcher.config import instance as config, Sections, save_config
 
 logger = logging.get_logger()
+logging.setup_logging()
 
 
 class Dispatcher:
 
     __control_dict = {
-        SERVER_SECTION: {
+        Sections.SERVER: {
             "host": control_host,
             "api_port": control_int,
             "websocket_port": control_int,
             "workspace": control_str
         },
-        TOKENS_SECTION: {
+        Sections.TOKENS: {
             "registration": control_registration_token,
             "agent": control_agent_token
         },
-        EXECUTOR_SECTION: {
+        Sections.EXECUTOR: {
             "cmd": control_str,
             "agent_name": control_str
-        }
+        },
+
     }
 
     def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
         self.control_config()
         self.config_path = config_path
-        self.host = config.get(SERVER_SECTION, "host")
-        self.api_port = config.get(SERVER_SECTION, "api_port")
-        self.websocket_port = config.get(SERVER_SECTION, "websocket_port")
-        self.workspace = config.get(SERVER_SECTION, "workspace")
-        self.agent_token = config[TOKENS_SECTION].get("agent", None)
-        self.executor_cmd = config.get(EXECUTOR_SECTION, "cmd")
-        self.agent_name = config.get(EXECUTOR_SECTION, "agent_name")
+        self.host = config.get(Sections.SERVER, "host")
+        self.api_port = config.get(Sections.SERVER, "api_port")
+        self.websocket_port = config.get(Sections.SERVER, "websocket_port")
+        self.workspace = config.get(Sections.SERVER, "workspace")
+        self.agent_token = config[Sections.TOKENS].get("agent", None)
+        self.executor_cmd = config.get(Sections.EXECUTOR, "cmd")
+        self.agent_name = config.get(Sections.EXECUTOR, "agent_name")
         self.session = session
         self.websocket = None
         self.websocket_token = None
@@ -87,7 +88,7 @@ class Dispatcher:
     async def register(self):
 
         if self.agent_token is None:
-            registration_token = self.agent_token = config.get(TOKENS_SECTION, "registration")
+            registration_token = self.agent_token = config.get(Sections.TOKENS, "registration")
             assert registration_token is not None, "The registration token is mandatory"
             token_registration_url = api_url(self.host,
                                              self.api_port,
@@ -99,7 +100,7 @@ class Dispatcher:
                 assert token_response.status == 201
                 token = await token_response.json()
                 self.agent_token = token["token"]
-                config.set(TOKENS_SECTION, "agent", self.agent_token)
+                config.set(Sections.TOKENS, "agent", self.agent_token)
                 save_config(self.config_path)
             except ClientResponseError as e:
                 if e.status == 404:
@@ -135,33 +136,83 @@ class Dispatcher:
             asyncio.create_task(self.run_once(data))
 
     async def run_once(self, data:str= None):
-        # TODO Control data
-        logger.info('Running executor with data: %s'.format(data))
+        logger.info('Parsing data: {}'.format(data))
         data_dict = json.loads(data)
         if "action" in data_dict:
             if data_dict["action"] == "RUN":
-                process = await self.create_process()
-                tasks = [StdOutLineProcessor(process, self.session).process_f(),
-                         StdErrLineProcessor(process).process_f(),
-                         ]
+                params = config.options(Sections.PARAMS).copy()
+                passed_params = data_dict['args']
+                [params.remove(param) for param in config.defaults()]
+                # mandatoy_params_not_passed = [
+                #    not any([
+                #        param in passed_param  # The param is not there
+                #        for param in params                                                     # For all parameters
+                #    ])
+                #    for passed_param in passed_params  # For all parameter passed
+                #]
+                #assert not any(mandatoy_params_not_passed)
 
-                await asyncio.gather(*tasks)
-                await process.communicate()
-                assert process.returncode is not None
-                if process.returncode == 0:
-                    logger.info("Executor finished successfully")
-                else:
-                    logger.warning(
-                        f"Executor finished with exit code {process.returncode}")
+                all_accepted = all(
+                    [
+                     any([
+                        param in passed_param           # Control any available param
+                        for param in params             # was passed
+                        ])
+                     for passed_param in passed_params  # For all passed params
+                    ])
+                if not all_accepted:
+                    logger.error("Unexpected argument passed")
+                mandatory_full = all(
+                    [
+                     config.get(Sections.PARAMS, param) != "True"  # All params is not mandatory
+                     or any([
+                        param in passed_param for passed_param in passed_params  # Or was passed
+                        ])
+                     for param in params
+                    ]
+                )
+                if not mandatory_full:
+                    logger.error("Mandatory argument not passed")
+
+                if mandatory_full and all_accepted:
+                    logger.info('Running executor')
+                    process = await self.create_process(data_dict["args"])
+                    tasks = [StdOutLineProcessor(process, self.session).process_f(),
+                             StdErrLineProcessor(process).process_f(),
+                             ]
+
+                    await asyncio.gather(*tasks)
+                    await process.communicate()
+                    assert process.returncode is not None
+                    if process.returncode == 0:
+                        logger.info("Executor finished successfully")
+                    else:
+                        logger.warning(
+                            f"Executor finished with exit code {process.returncode}")
             else:
                 logger.info("Action unrecognized")
 
         else:
             logger.info("Data not contains action to do")
 
-    async def create_process(self):
+    async def create_process(self, args):
+        if args is None:
+            cmd = self.executor_cmd
+        elif isinstance(args, str):
+            logger.warning("Args from data received is a string")
+            cmd = self.executor_cmd + " --" + args
+        elif isinstance(args, list):
+            cmd = " --".join([self.executor_cmd] + args)
+        else:
+            logger.error("Args from data received has a not supported type")
+            raise ValueError("Args from data received has a not supported type")
+        import os
+        env = os.environ.copy()
+        for varenv in config.options(Sections.VARENVS):
+            if varenv not in config.defaults():
+                env[varenv.upper()] = config.get(Sections.VARENVS,varenv)
         process = await asyncio.create_subprocess_shell(
-            self.executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env
         )
         return process
 

@@ -54,6 +54,10 @@ def save_config(filepath=None):
         instance.write(configfile)
 
 
-TOKENS_SECTION = "tokens"
-SERVER_SECTION = "server"
-EXECUTOR_SECTION = "executor"
+class Sections:
+    TOKENS = "tokens"
+    SERVER = "server"
+    EXECUTOR = "executor"
+    VARENVS = "varenvs"
+    PARAMS = "params"
+
