@@ -9,6 +9,7 @@ variables:
     FARADAY_PASSWORD: custom_pass
     FARADAY_EMAIL: test@test.com
     FARADAY_REF: white/dev
+    EXECUTOR_DIR: ./basic_executor.py
 
 cache:
   paths:
