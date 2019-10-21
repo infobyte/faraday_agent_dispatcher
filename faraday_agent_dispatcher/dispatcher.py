@@ -136,7 +136,7 @@ class Dispatcher:
 
     async def run_once(self, data:str= None):
         # TODO Control data
-        logger.info('Running executor with data: %s'.format(data))
+        logger.info('Running executor with data: %s', data)
         data_dict = json.loads(data)
         if "action" in data_dict:
             if data_dict["action"] == "RUN":
