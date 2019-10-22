@@ -112,6 +112,7 @@ async def test_start_and_register(test_config: FaradayTestConfig, tmp_default_co
     configuration.set(SERVER_SECTION, "host", test_config.client.host)
     configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
     configuration.set(TOKENS_SECTION, "registration", test_config.registration_token)
+    configuration.set(EXECUTOR_SECTION, "cmd", 'exit 1')
     tmp_default_config.save()
 
     # Init and register it
@@ -132,6 +133,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
     configuration.set(SERVER_SECTION, "host", test_config.client.host)
     configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
     configuration.set(TOKENS_SECTION, "registration", "NotOk" * 5)
+    configuration.set(EXECUTOR_SECTION, "cmd", 'exit 1')
     tmp_default_config.save()
 
     # Init and register it

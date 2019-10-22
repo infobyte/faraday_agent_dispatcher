@@ -8,7 +8,7 @@ def control_int(field_name,value):
 
 def control_str(field_name, value):
     if not isinstance(value, str):
-        raise ValueError(f"{field_name} must be an string")
+        raise ValueError(f"{field_name} must be a string")
 
 
 def control_host(field_name, value):

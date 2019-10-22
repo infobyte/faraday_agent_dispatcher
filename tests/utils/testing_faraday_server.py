@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import pytest
 import random
 from aiohttp import web
@@ -10,8 +11,11 @@ from logging import StreamHandler
 from faraday_agent_dispatcher.logger import get_logger
 from queue import Queue
 
-from faraday_agent_dispatcher.config import save_config, reset_config
-from faraday_agent_dispatcher.config import CONFIG
+from faraday_agent_dispatcher.config import (
+    EXAMPLE_CONFIG_FILENAME,
+    save_config,
+    reset_config,
+)
 
 from tests.data.basic_executor import host_data, vuln_data
 from tests.utils.text_utils import fuzzy_string
@@ -121,15 +125,17 @@ class TmpConfig:
 
 @pytest.fixture
 def tmp_default_config():
-    reset_config()
     config = TmpConfig()
+    shutil.copyfile(EXAMPLE_CONFIG_FILENAME, config.config_file_path)
+    reset_config(config.config_file_path)
     yield config
     os.remove(config.config_file_path)
 
 @pytest.fixture
 def tmp_custom_config(config=None):
-    reset_config(CONFIG["instance"])
     config = TmpConfig()
+    shutil.copyfile(EXAMPLE_CONFIG_FILENAME, config.config_file_path)
+    reset_config(config.config_file_path)
     yield config
     os.remove(config.config_file_path)
 
