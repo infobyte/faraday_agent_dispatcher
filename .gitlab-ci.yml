@@ -54,7 +54,7 @@ integration_faraday:
     stage: post_testing
     script:
         - apt-get update && apt-get install
-        - apt-get install libsasl2-dev python libldap2-dev libssl-dev
+        - apt-get install -y libsasl2-dev python libldap2-dev libssl-dev
         - pip install virtualenv
         - virtualenv faraday_venv
         - source faraday_venv/bin/activate
