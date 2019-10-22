@@ -37,7 +37,6 @@ unit_tests:
         - pip install pytest pytest-cov pytest-aiohttp
         - python setup.py install
         - mkdir run_from
-        - cp tests/data/basic_executor.py ./run_from
         - cd run_from && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --color=yes --disable-warnings
     artifacts:
         when: on_failure
@@ -75,7 +74,6 @@ integration_faraday:
         - pip install pytest pytest-cov
         - python setup.py install
         - mkdir run_from
-        - cp tests/data/basic_executor.py ./run_from
         - cd run_from && mkdir logs && pytest ../tests/integration --capture=sys -v --color=yes --disable-warnings --cov=../faraday_agent_dispatcher
     after_script:
         - cp ~/.faraday/logs/*.log run_from/logs/

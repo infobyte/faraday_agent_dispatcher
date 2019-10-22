@@ -7,6 +7,7 @@ from tests.data.basic_executor import host_data, vuln_data
 from tests.utils.text_utils import fuzzy_string
 
 import os
+from pathlib import Path
 from requests import Session
 import subprocess
 import time
@@ -55,6 +56,15 @@ def test_execute_agent():
     config.set(SERVER_SECTION, "workspace", WORKSPACE)
     config.set(EXECUTOR_SECTION, "agent_name", AGENT_NAME)
     config.set(EXECUTOR_SECTION, "cmd", "python ./basic_executor.py --out json")
+    path_to_basic_executor = (
+        Path(__file__).parent.parent.parent /
+        'data' / 'basic_executor.py'
+    )
+    config.set(
+        EXECUTOR_SECTION,
+        "cmd",
+        f"python {path_to_basic_executor} --out json"
+    )
     save_config(CONFIG_DIR)
 
     # Init dispatcher!
