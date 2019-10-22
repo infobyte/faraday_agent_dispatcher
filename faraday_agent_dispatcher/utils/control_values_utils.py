@@ -17,7 +17,8 @@ def control_host(field_name, value):
 
 def control_registration_token(field_name, value):
     if value is None:
-        raise ValueError(f"{field_name} is obligatory")
+        raise ValueError(f'"{field_name}" option is required in the configuration '
+                         f"file")
     control_token(field_name, 25, value)
 
 
