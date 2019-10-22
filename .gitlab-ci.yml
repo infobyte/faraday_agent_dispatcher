@@ -35,7 +35,6 @@ unit_tests:
         - virtualenv faraday_venv
         - source faraday_venv/bin/activate
         - pip install pytest pytest-cov pytest-aiohttp
-        - pip install -r requirements_dev.txt
         - python setup.py install
         - mkdir run_from
         - cp tests/data/basic_executor.py ./run_from
