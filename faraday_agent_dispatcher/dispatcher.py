@@ -136,7 +136,7 @@ class Dispatcher:
             asyncio.create_task(self.run_once(data))
 
     async def run_once(self, data:str= None):
-        logger.info('Parsing data: {}'.format(data))
+        logger.info('Parsing data: %s', data)
         data_dict = json.loads(data)
         if "action" in data_dict:
             if data_dict["action"] == "RUN":
