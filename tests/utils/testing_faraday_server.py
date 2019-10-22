@@ -3,6 +3,7 @@ import os
 import shutil
 import pytest
 import random
+import pathlib
 from aiohttp import web
 from aiohttp.web_request import Request
 from itsdangerous import TimestampSigner
@@ -134,7 +135,11 @@ def tmp_default_config():
 @pytest.fixture
 def tmp_custom_config(config=None):
     config = TmpConfig()
-    shutil.copyfile(EXAMPLE_CONFIG_FILENAME, config.config_file_path)
+    ini_path = (
+        pathlib.Path(__file__).parent.parent /
+        'data' / 'test_config.ini'
+    )
+    shutil.copyfile(ini_path, config.config_file_path)
     reset_config(config.config_file_path)
     yield config
     os.remove(config.config_file_path)
