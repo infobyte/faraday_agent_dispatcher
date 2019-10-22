@@ -103,7 +103,7 @@ class Dispatcher:
                 save_config(self.config_path)
             except ClientResponseError as e:
                 if e.status == 404:
-                    logger.info(f"404 HTTP ERROR received: Workspace not found")
+                    logger.info(f'404 HTTP ERROR received: Workspace "{self.workspace}" not found')
                     return
                 else:
                     logger.info(f"Unexpected error: {e}")

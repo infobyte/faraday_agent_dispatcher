@@ -16,7 +16,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """Console script for faraday_dummy_agent."""
+import os
 import sys
+import shutil
+
 import click
 import asyncio
 import traceback
@@ -25,23 +28,30 @@ from aiohttp import ClientSession
 
 from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
-from faraday_agent_dispatcher.config import CONFIG
+from faraday_agent_dispatcher import config
 import faraday_agent_dispatcher.logger as logging
+
+logger = logging.get_logger()
 
 
 async def main(config_file):
 
-    # Parse args
+    if config_file is None and not os.path.exists(config.CONFIG_FILENAME):
+        logger.info("Config file doesn't exist. Creating a new one")
+        os.makedirs(config.CONFIG_PATH, exist_ok=True)
+        shutil.copyfile(config.EXAMPLE_CONFIG_FILENAME, config.CONFIG_FILENAME)
+        logger.info(f"Config file at {config.CONFIG_FILENAME} created")
+    config_file = config_file or config.CONFIG_FILENAME
+    config.reset_config(config_file)
 
     async with ClientSession(raise_for_status=True) as session:
-        config_filename = config_file or CONFIG['default']
         try:
             dispatcher = Dispatcher(session, config_file)
         except ValueError as ex:
             print(f'{Bcolors.FAIL}Error configuring dispatcher: '
                   f'{Bcolors.BOLD}{str(ex)}{Bcolors.ENDC}')
             print(f'Try checking your config file located at {Bcolors.BOLD}'
-                  f'{config_filename}{Bcolors.ENDC}')
+                  f'{config.CONFIG_FILENAME}{Bcolors.ENDC}')
             return 1
         await dispatcher.register()
         await dispatcher.connect()
@@ -50,7 +60,7 @@ async def main(config_file):
 
 
 @click.command("dispatcher")
-@click.option("--config-file", default=None,help="Path to config ini file")
+@click.option("--config-file", default=None, help="Path to config ini file")
 @click.option("--logs-folder", default="~", help="Path to logger folder")
 def main_sync(config_file, logs_folder):
     logging.reset_logger(logs_folder)

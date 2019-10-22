@@ -16,12 +16,19 @@
 import os
 import logging
 import configparser
+from pathlib import Path
 
-CONST_FARADAY_HOME_PATH = os.path.dirname(__file__)
-CONST_FARADAY_LOGS_PATH = os.path.join(CONST_FARADAY_HOME_PATH, "logs")
-CONFIG = {"default": f"{CONST_FARADAY_HOME_PATH}/static/default_config.ini",
-          "instance": f"{CONST_FARADAY_HOME_PATH}/static/config.ini",
-          }
+try:
+    FARADAY_PATH = Path(os.environ['FARADAY_HOME'])
+except KeyError:
+    FARADAY_PATH = Path('~').expanduser() / '.faraday'
+
+
+LOGS_PATH = FARADAY_PATH / 'logs'
+CONFIG_PATH = FARADAY_PATH / 'config'
+CONFIG_FILENAME = CONFIG_PATH / 'dispatcher.ini'
+
+EXAMPLE_CONFIG_FILENAME = Path(__file__).parent.parent / 'example_config.ini'
 
 USE_RFC = False
 
@@ -30,22 +37,17 @@ LOGGING_LEVEL = logging.DEBUG
 instance = configparser.ConfigParser()
 
 
-def reset_config(filepath=None):
+def reset_config(filepath):
     instance.clear()
-    if filepath is None: # FILEPATH CANT BE READ
-        instance.read(CONFIG["default"])
-    else:
-        instance.read(filepath)
-
-
-reset_config()
+    if not instance.read(filepath):
+        raise ValueError(f'Unable to read config file located at {filepath}')
 
 
 def check_filepath(filepath: str = None):
     if filepath is None:
-        raise ValueError("Filepath needed to save")
-    if filepath == CONFIG["default"]:
-        raise ValueError("Can't override default config")
+        raise ValueError("Filepath needs to save")
+    if filepath == EXAMPLE_CONFIG_FILENAME:
+        raise ValueError("Can't override sample config")
 
 
 def save_config(filepath=None):
