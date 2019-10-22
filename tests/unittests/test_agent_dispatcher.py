@@ -23,6 +23,7 @@ import os
 import pytest
 import sys
 
+from pathlib import Path
 from itsdangerous import TimestampSigner
 
 from faraday_agent_dispatcher.dispatcher import Dispatcher
@@ -275,8 +276,12 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
     configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
     configuration.set(TOKENS_SECTION, "registration", test_config.registration_token)
     configuration.set(TOKENS_SECTION, "agent", test_config.agent_token)
-    configuration.set(EXECUTOR_SECTION, "cmd", " --".join(["python ./basic_executor.py"] +
-                                                          executor_options["args"]))
+    path_to_basic_executor = (
+        Path(__file__).parent.parent /
+        'data' / 'basic_executor.py'
+    )
+    args = ' --'.join([''] + executor_options['args'])
+    configuration.set(EXECUTOR_SECTION, "cmd", f"python {path_to_basic_executor} {args}")
     tmp_default_config.save()
 
     # Init and register it
