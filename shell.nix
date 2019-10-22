@@ -1,7 +1,7 @@
 with (import <nixpkgs> {});
   mkShell {
-    buildInputs = (with python37Packages;
-      [virtualenv
+    buildInputs = (with python3Packages;
+      [virtualenv cryptography
       ]);
     shellHook = ''
       unset SOURCE_DATE_EPOCH  # Required to make pip work
@@ -17,7 +17,7 @@ with (import <nixpkgs> {});
         virtualenv --system-site-packages $VENV_PATH
         source $VENV_PATH/bin/activate
         python setup.py develop
-        pip install -r requirements_dev.txt
+        # pip install -r requirements_dev.txt
       }
 
       if [[ -d $VENV_PATH ]]; then
