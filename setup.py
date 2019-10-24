@@ -29,7 +29,7 @@ with open('HISTORY.rst') as history_file:
 requirements = ['Click>=6.0', 'websockets', 'aiofiles', 'aiohttp<4.0.0', 'requests',
                 'syslog_rfc5424_formatter', 'itsdangerous', 'autobahn', 'twisted']
 
-setup_requirements = ['pytest-runner', 'click']
+setup_requirements = ['pytest-runner', 'click', 'setuptools_scm']
 
 test_requirements = ['pytest', 'pytest-aiohttp']
 
@@ -60,6 +60,7 @@ setup(
     keywords='',
     name='faraday_agent_dispatcher',
     packages=find_packages(include=['faraday_agent_dispatcher', 'faraday_agent_dispatcher.*']),
+    use_scm_version=False,
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
