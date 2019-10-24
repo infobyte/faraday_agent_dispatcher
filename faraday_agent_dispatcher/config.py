@@ -28,7 +28,7 @@ LOGS_PATH = FARADAY_PATH / 'logs'
 CONFIG_PATH = FARADAY_PATH / 'config'
 CONFIG_FILENAME = CONFIG_PATH / 'dispatcher.ini'
 
-EXAMPLE_CONFIG_FILENAME = Path(__file__).parent.parent / 'example_config.ini'
+EXAMPLE_CONFIG_FILENAME = Path(__file__).parent / 'example_config.ini'
 
 USE_RFC = False
 
