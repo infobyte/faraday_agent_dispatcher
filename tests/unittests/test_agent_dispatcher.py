@@ -23,6 +23,7 @@ import os
 import pytest
 import sys
 
+from pathlib import Path
 from itsdangerous import TimestampSigner
 
 from faraday_agent_dispatcher.dispatcher import Dispatcher
@@ -110,6 +111,7 @@ async def test_start_and_register(test_config: FaradayTestConfig, tmp_default_co
     configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
     configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
+    configuration.set(Sections.EXECUTOR, "cmd", 'exit 1')
     tmp_default_config.save()
 
     # Init and register it
@@ -130,6 +132,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
     configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
     configuration.set(Sections.TOKENS, "registration", "NotOk" * 5)
+    configuration.set(Sections.EXECUTOR, "cmd", 'exit 1')
     tmp_default_config.save()
 
     # Init and register it
@@ -288,15 +291,16 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                          ])
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler, executor_options):
     # Config
-
-    executor_path = "../data/basic_executor.py" if "EXECUTOR_DIR" not in os.environ else os.environ["EXECUTOR_DIR"]
-
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
     configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
-    configuration.set(Sections.EXECUTOR, "cmd", "python {}".format(executor_path))
+    path_to_basic_executor = (
+            Path(__file__).parent.parent /
+            'data' / 'basic_executor.py'
+    )
+    configuration.set(Sections.EXECUTOR, "cmd", "python {}".format(path_to_basic_executor))
     configuration.set(Sections.PARAMS, "out", "True")
     [configuration.set(Sections.PARAMS, param, "False") for param in [
             "count", "spare", "spaced_before", "spaced_middle", "err", "fails"]]
