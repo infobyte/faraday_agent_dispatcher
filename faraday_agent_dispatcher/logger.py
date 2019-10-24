@@ -24,7 +24,7 @@ from syslog_rfc5424_formatter import RFC5424Formatter
 
 
 def log_file():
-    return os.path.expanduser(os.path.join(config.CONST_FARADAY_LOGS_PATH, 'faraday-dispatcher.log'))
+    return os.path.expanduser(os.path.join(config.LOGS_PATH, 'faraday-dispatcher.log'))
 
 MAX_LOG_FILE_SIZE = 5 * 1024 * 1024     # 5 MB
 MAX_LOG_FILE_BACKUP_COUNT = 5
