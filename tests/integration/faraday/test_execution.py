@@ -1,4 +1,5 @@
-from faraday_agent_dispatcher.config import instance as config, save_config, Sections
+from faraday_agent_dispatcher.config import instance as config, reset_config, Sections,\
+    save_config, EXAMPLE_CONFIG_FILENAME
 
 from faraday_agent_dispatcher.utils.url_utils import api_url
 
@@ -11,6 +12,7 @@ from requests import Session
 import subprocess
 import time
 
+reset_config(EXAMPLE_CONFIG_FILENAME)
 HOST = config.get(Sections.SERVER, "host")
 API_PORT = config.get(Sections.SERVER, "api_port")
 WS_PORT = config.get(Sections.SERVER, "websocket_port")

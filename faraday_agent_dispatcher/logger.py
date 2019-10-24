@@ -105,5 +105,5 @@ def create_logging_path():
 
 def reset_logger(logger_folder = None):
     if logger_folder is not None:
-        config.CONST_FARADAY_LOGS_PATH = logger_folder
+        config.LOGS_PATH = logger_folder
     setup_logging()
