@@ -85,15 +85,13 @@ class StdOutLineProcessor(FileLineProcessor):
                 headers=headers,
                 raise_for_status=False,
             )
-            if res.status // 100 >= 4:
+            if res.status == 201:
+                logger.info("Data sent to bulk create")
+            else:
                 logger.error(
                     "Invalid data supplied by the executor to the bulk create "
-                    "endpoint. Server responded: {}".format(await res.text())
+                    "endpoint. Server responded: {} {}".format(res.status, await res.text())
                     )
-            else:
-                if res.status == 201:
-                    logger.info("Data sent to bulk create")
-                res.raise_for_status()
 
         except JSONDecodeError as e:
             logger.error("JSON Parsing error: {}".format(e))
