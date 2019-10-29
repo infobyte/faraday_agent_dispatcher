@@ -268,12 +268,35 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                      {"levelname": "WARNING", "msg": "Executor finished with exit code 1"},
                                  ]
                              },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "ERROR",
+                                      "msg": "Invalid data supplied by the executor to the bulk create endpoint. Server responded: "},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "workspace": "error500"
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "ERROR",
+                                      "msg": "Invalid data supplied by the executor to the bulk create endpoint. Server responded: "},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "workspace": "error429"
+                             },
                          ])
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler, executor_options):
     # Config
+    workspace = test_config.workspace if "workspace" not in executor_options else executor_options["workspace"]
     configuration.set(SERVER_SECTION, "api_port", str(test_config.client.port))
     configuration.set(SERVER_SECTION, "host", test_config.client.host)
-    configuration.set(SERVER_SECTION, "workspace", test_config.workspace)
+    configuration.set(SERVER_SECTION, "workspace", workspace)
     configuration.set(TOKENS_SECTION, "registration", test_config.registration_token)
     configuration.set(TOKENS_SECTION, "agent", test_config.agent_token)
     path_to_basic_executor = (
