@@ -97,8 +97,13 @@ def get_bulk_create(test_config: FaradayTestConfig):
         if error:
             return error
 
+        if "error500" in request.url.path:
+            return web.HTTPInternalServerError()
+        if "error429" in request.url.path:
+            return web.HTTPTooManyRequests()
+
         if test_config.workspace not in request.url.path:
-            web.HTTPNotFound()
+            return web.HTTPNotFound()
         _host_data = host_data.copy()
         _host_data["vulnerabilities"] = [vuln_data.copy()]
         data = json.loads((await request.read()).decode())
@@ -151,6 +156,8 @@ async def aiohttp_faraday_client(aiohttp_client, aiohttp_server, test_config: Fa
                         get_agent_registration(test_config))
     app.router.add_post('/_api/v2/agent_websocket_token/', get_agent_websocket_token(test_config))
     app.router.add_post(f"/_api/v2/ws/{test_config.workspace}/bulk_create/", get_bulk_create(test_config))
+    app.router.add_post(f"/_api/v2/ws/error500/bulk_create/", get_bulk_create(test_config))
+    app.router.add_post(f"/_api/v2/ws/error429/bulk_create/", get_bulk_create(test_config))
     server = await aiohttp_server(app)
     client = await aiohttp_client(server)
     return client

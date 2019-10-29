@@ -85,7 +85,7 @@ class StdOutLineProcessor(FileLineProcessor):
                 headers=headers,
                 raise_for_status=False,
             )
-            if res.status == 400:
+            if res.status // 100 >= 4:
                 logger.error(
                     "Invalid data supplied by the executor to the bulk create "
                     "endpoint. Server responded: {}".format(await res.text())
