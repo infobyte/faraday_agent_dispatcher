@@ -47,7 +47,7 @@ run.
 
 # Creating your own executors
 
-An executor is a script that prints out single-line JSON data to stdout.
+An executor is a script that prints out **single-line** JSON data to stdout.
 Remember that if you print any other data to stdout, the dispatcher will
 trigger an error. If you want to print debugging or logging information you
 should use stderr for that.
@@ -55,15 +55,13 @@ should use stderr for that.
 Every line written to stdout by the executor will be decoded by the dispatcher
 and sent to Faraday using the Bulk Create endpoint. Therefore, the JSON you
 print must have the schema that the endpoint requires (this schema is detailed
-[below](#bulk-create)). Otherwise, the dispatcher will complain because you
-supplied invalid data to it.
+[below](#bulk-create-json-format)). Otherwise, the dispatcher will complain
+because you supplied invalid data to it.
 
 If you want to debug your executor, the simplest way to do it is by running it
 directly instead of with the Dispatcher. Since the executor just prints JSON
 data to stdout, you will be able to see all information it wants to send to
 Faraday, but without actually sending it.
-
-<a id="bulk-create"></a>
 
 # Bulk Create JSON format
 
