@@ -18,7 +18,14 @@
 
 """The setup script."""
 
+import sys
 from setuptools import setup, find_packages
+
+if sys.version_info.major < 3 or sys.version_info.minor < 7:
+    print("Python >=3.7 is required to run the dispatcher.")
+    print("Install a newer Python version to proceed")
+    sys.exit(1)
+
 
 with open('README.md') as readme_file:
     readme = readme_file.read()
@@ -37,34 +44,32 @@ setup(
     author="Eric Horvat",
     author_email='erich@infobytesec.com',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     description="Faraday agent dispatcher to communicate an agent to faraday",
     entry_points={
         'console_scripts': [
-            'dispatcher=faraday_agent_dispatcher.cli:main_sync',
+            'faraday-dispatcher=faraday_agent_dispatcher.cli:main_sync',
         ],
     },
     install_requires=requirements,
     license="GNU General Public License v3",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
-    keywords='',
+    keywords='faraday integration',
     name='faraday_agent_dispatcher',
     packages=find_packages(include=['faraday_agent_dispatcher', 'faraday_agent_dispatcher.*']),
     use_scm_version=False,
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/EricHorvat/faraday_agent_dispatcher',
-    version='0.1.0',
+    url='https://github.com/infobyte/faraday_agent_dispatcher',
+    version='0.1',
     zip_safe=False,
 )
