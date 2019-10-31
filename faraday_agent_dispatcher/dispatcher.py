@@ -76,7 +76,6 @@ class Dispatcher:
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
         headers = {"Authorization": f"Agent {self.agent_token}"}
-        logger.info(f"headers:{headers}")
         websocket_token_response = await self.session.post(
             api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/'),
             headers=headers)
