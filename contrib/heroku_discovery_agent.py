@@ -17,7 +17,10 @@
     heroku discovery faraday agent
     ~~~~~~~~~
 
-    simple agent to load host and service data from heroku to faraday
+    Simple agent to load host and service data from heroku to faraday.
+
+    This requires having the "heroku" command in your machine, and
+    being logged in with your account.
 
 """
 
