@@ -18,7 +18,14 @@
 
 """The setup script."""
 
+import sys
 from setuptools import setup, find_packages
+
+if sys.version_info.major < 3 or sys.version_info.minor < 7:
+    print("Python >=3.7 is required to run the dispatcher.")
+    print("Install a newer Python version to proceed")
+    sys.exit(1)
+
 
 with open('README.md') as readme_file:
     readme = readme_file.read()
@@ -42,10 +49,8 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     description="Faraday agent dispatcher to communicate an agent to faraday",
     entry_points={
