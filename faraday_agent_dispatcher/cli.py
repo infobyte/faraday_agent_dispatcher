@@ -59,11 +59,11 @@ async def main(config_file):
     return 0
 
 
-@click.command("dispatcher")
-@click.option("--config-file", default=None, help="Path to config ini file")
-@click.option("--logs-folder", default="~", help="Path to logger folder")
-def main_sync(config_file, logs_folder):
-    logging.reset_logger(logs_folder)
+@click.command("faraday-dispatcher")
+@click.option("-c", "--config-file", default=None, help="Path to config ini file")
+@click.option("--logdir", default="~", help="Path to logger directory")
+def main_sync(config_file, logdir):
+    logging.reset_logger(logdir)
     logger = logging.get_logger()
     try:
         exit_code = asyncio.run(main(config_file))
