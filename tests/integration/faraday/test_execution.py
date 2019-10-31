@@ -69,7 +69,7 @@ def test_execute_agent():
     save_config(CONFIG_DIR)
 
     # Init dispatcher!
-    command = ['dispatcher', f'--config-file={CONFIG_DIR}', f'--logs-folder={LOGGER_DIR}']
+    command = ['faraday-dispatcher', f'--config-file={CONFIG_DIR}', f'--logs-folder={LOGGER_DIR}']
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     time.sleep(2)  # If fails check time
 
