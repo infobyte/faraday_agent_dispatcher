@@ -287,10 +287,32 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                      {"levelname": "ERROR", "msg": "Unexpected argument passed"},
                                  ]
                              },
-
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "ERROR",
+                                      "msg": "Invalid data supplied by the executor to the bulk create endpoint. Server responded: "},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "workspace": "error500"
+                             },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "ERROR",
+                                      "msg": "Invalid data supplied by the executor to the bulk create endpoint. Server responded: "},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "workspace": "error429"
+                             },
                          ])
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler, executor_options):
     # Config
+    workspace = test_config.workspace if "workspace" not in executor_options else executor_options["workspace"]
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
