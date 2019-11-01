@@ -1,6 +1,6 @@
 Faraday Agents Dispatcher helps user develop integrations with
-[Faraday][faraday] written in any language. For more information, check [this
-blogpost][blogpost] or continue reading.
+[Faraday][faraday] written in any language. <!-- For more information, check [this
+blogpost][blogpost] or continue reading. -->
 
 [faraday]: https://github.com/infobyte/faraday/
 [blogpost]: https://medium.com/faraday
