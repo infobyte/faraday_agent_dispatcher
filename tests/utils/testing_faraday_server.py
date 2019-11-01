@@ -9,7 +9,7 @@ from aiohttp.web_request import Request
 from itsdangerous import TimestampSigner
 import logging
 from logging import StreamHandler
-from faraday_agent_dispatcher.logger import get_logger
+from faraday_agent_dispatcher.logger import get_logger, reset_logger
 from queue import Queue
 
 from faraday_agent_dispatcher.config import (
@@ -173,7 +173,12 @@ class TestLoggerHandler(StreamHandler):
         self.history.append(record)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def test_logger_folder():
+    reset_logger("./logs")
+
+
+@pytest.fixture()
 def test_logger_handler():
     logger_handler = TestLoggerHandler()
     logger = get_logger()

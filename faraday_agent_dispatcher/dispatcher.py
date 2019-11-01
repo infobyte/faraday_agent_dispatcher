@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
 import json
 
 import asyncio
@@ -142,14 +143,6 @@ class Dispatcher:
                 params = config.options(Sections.PARAMS).copy()
                 passed_params = data_dict['args'] if 'args' in data_dict else {}
                 [params.remove(param) for param in config.defaults()]
-                # mandatoy_params_not_passed = [
-                #    not any([
-                #        param in passed_param  # The param is not there
-                #        for param in params                                                     # For all parameters
-                #    ])
-                #    for passed_param in passed_params  # For all parameter passed
-                #]
-                #assert not any(mandatoy_params_not_passed)
 
                 all_accepted = all(
                     [
@@ -195,23 +188,18 @@ class Dispatcher:
             logger.info("Data not contains action to do")
 
     async def create_process(self, args):
-        if args is None:
-            cmd = self.executor_cmd
-        elif isinstance(args, str):
-            logger.warning("Args from data received is a string")
-            cmd = self.executor_cmd + " --" + args
-        elif isinstance(args, list):
-            cmd = " --".join([self.executor_cmd] + args)
+        env = os.environ.copy()
+        if isinstance(args, dict):
+            for k in args:
+                env[k.upper()] = str(args[k])
         else:
             logger.error("Args from data received has a not supported type")
             raise ValueError("Args from data received has a not supported type")
-        import os
-        env = os.environ.copy()
         for varenv in config.options(Sections.VARENVS):
             if varenv not in config.defaults():
                 env[varenv.upper()] = config.get(Sections.VARENVS,varenv)
         process = await asyncio.create_subprocess_shell(
-            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env
+            self.executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env
         )
         return process
 
