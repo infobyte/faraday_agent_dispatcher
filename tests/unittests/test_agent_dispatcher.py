@@ -43,16 +43,19 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
 
 @pytest.mark.parametrize('config_changes_dict',
                          [{"remove": {SERVER_SECTION: ["host"]},
-                           "replace": {}},  # None error as default value
+                           "replace": {},
+                           "expected_exception": ValueError},
                           {"remove": {SERVER_SECTION: ["api_port"]},
-                           "replace": {}},  # None error as default value
+                           "replace": {},
+                           "expected_exception": ValueError},
                           {"remove": {},
                            "replace": {SERVER_SECTION: {"api_port": "Not a port number"}},
                            "expected_exception": ValueError},
                           {"remove": {},
                            "replace": {SERVER_SECTION: {"api_port": "6000"}}},  # None error as parse int
                           {"remove": {SERVER_SECTION: ["websocket_port"]},
-                           "replace": {}},
+                           "replace": {},
+                           "expected_exception": ValueError},
                           {"remove": {},
                            "replace": {SERVER_SECTION: {"websocket_port": "Not a port number"}},
                            "expected_exception": ValueError},
