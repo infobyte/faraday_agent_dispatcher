@@ -38,15 +38,17 @@ unit_tests:
         - pip install pytest pytest-cov pytest-aiohttp
         - python setup.py install
         - mkdir run_from
-        - cd run_from && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --color=yes --disable-warnings
+        - cd run_from && mkdir logs && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --color=yes --disable-warnings
     artifacts:
-        when: on_failure
-        paths:
-            - dist/*
+      when: on_failure
+      paths:
+        - dist/*
+        - run_from/logs/*
+      expire_in: 7 days
     except:
       variables:
         - $INTEGRATION
-        - $CI_COMMIT_REF_NAME =~ /^.*ci.*$/
+        - $CI_COMMIT_REF_NAME =~ /^.*ci-int.*$/
 
 integration_faraday:
     image: python:3

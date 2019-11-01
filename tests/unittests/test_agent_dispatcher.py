@@ -36,21 +36,24 @@ from faraday_agent_dispatcher.config import (
 
 from tests.utils.text_utils import fuzzy_string
 from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, tmp_custom_config, tmp_default_config, \
-    test_logger_handler
+    test_logger_handler, test_logger_folder
 
 
 @pytest.mark.parametrize('config_changes_dict',
                          [{"remove": {Sections.SERVER: ["host"]},
-                           "replace": {}},  # None error as default value
+                           "replace": {},
+                           "expected_exception": ValueError},
                           {"remove": {Sections.SERVER: ["api_port"]},
-                           "replace": {}},  # None error as default value
+                           "replace": {},
+                           "expected_exception": ValueError},
                           {"remove": {},
                            "replace": {Sections.SERVER: {"api_port": "Not a port number"}},
                            "expected_exception": ValueError},
                           {"remove": {},
                            "replace": {Sections.SERVER: {"api_port": "6000"}}},  # None error as parse int
                           {"remove": {Sections.SERVER: ["websocket_port"]},
-                           "replace": {}},
+                           "replace": {},
+                           "expected_exception": ValueError},
                           {"remove": {},
                            "replace": {Sections.SERVER: {"websocket_port": "Not a port number"}},
                            "expected_exception": ValueError},
@@ -177,7 +180,7 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 2
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out json"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create"},
@@ -185,7 +188,7 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 3
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out json", "count 5"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json", "count": "5"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR", "msg": "JSON Parsing error: Extra data"},
@@ -193,7 +196,8 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 4
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out json", "count 5", "spare"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json", "count": "5",
+                                                                                   "spare": "T"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "min_count": 5},
@@ -201,15 +205,15 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 5
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out json", "spaced_before"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json", "spaced_before":"T"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
                                  ]
                              },
                              {  # 6
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out json", "spaced_middle",
-                                                                                   "count 5", "spare"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json", "spaced_middle": "T",
+                                                                                   "count": "5", "spare": "T"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 1},
@@ -217,7 +221,7 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 7
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out bad_json"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "bad_json"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR",
@@ -227,7 +231,7 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 8
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out str"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "str"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR", "msg": "JSON Parsing error: Expecting value"},
@@ -235,7 +239,7 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 9
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out none", "err"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "none", "err": "T"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "DEBUG", "msg": "Print by stderr"},
@@ -243,14 +247,14 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 10
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out none", "fails"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "none", "fails": "T"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "WARNING", "msg": "Executor finished with exit code 1"},
                                  ]
                              },
                              {  # 11
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out none", "err", "fails"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "none", "err": "T", "fails": "T"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "DEBUG", "msg": "Print by stderr"},
@@ -258,17 +262,17 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 12
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out json"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
                                  ],
-                                 "varenvs": {"DO_NOTHING": "True"}
+                                 "varenvs": {"DO_NOTHING": "True"},
                              },
                              {  # 13
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["err", "fails"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"err": "T", "fails": "T"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
                                       "min_count": 0},
@@ -276,7 +280,7 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {  # 14
-                                 "data": {"action": "RUN", "agent_id": 1, "args": ["out json", "WTF"]},
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json", "WTF": "T"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
                                       "min_count": 0},
@@ -288,8 +292,7 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ]
                              },
                              {
-                                 "data": {"action": "RUN", "agent_id": 1},
-                                 "args": ["out json"],
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR",
@@ -299,8 +302,7 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  "workspace": "error500"
                              },
                              {
-                                 "data": {"action": "RUN", "agent_id": 1},
-                                 "args": ["out json"],
+                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR",
@@ -310,12 +312,13 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  "workspace": "error429"
                              },
                          ])
-async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler, executor_options):
+async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
+                        test_logger_folder, executor_options):
     # Config
     workspace = test_config.workspace if "workspace" not in executor_options else executor_options["workspace"]
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.SERVER, "workspace", test_config.workspace)
+    configuration.set(Sections.SERVER, "workspace", workspace)
     configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
     path_to_basic_executor = (
