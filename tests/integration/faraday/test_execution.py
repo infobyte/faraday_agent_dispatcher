@@ -97,7 +97,10 @@ def test_execute_agent():
     assert host_dict["total_rows"] == 1
     host = host_dict["rows"][0]["value"]
     for key in host_data:
-        assert host[key] == host_data[key]
+        if key == "hostnames":
+            assert set(host[key]) == set(host_data[key])
+        else:
+            assert host[key] == host_data[key]
     assert host["vulns"] == 1
 
     res = session.get(api_url(HOST, API_PORT, postfix=f'/_api/v2/ws/{WORKSPACE}/vulns'))

@@ -140,7 +140,7 @@ class Dispatcher:
         if "action" in data_dict:
             if data_dict["action"] == "RUN":
                 params = config.options(Sections.PARAMS).copy()
-                passed_params = data_dict['args']
+                passed_params = data_dict['args'] if 'args' in data_dict else {}
                 [params.remove(param) for param in config.defaults()]
                 # mandatoy_params_not_passed = [
                 #    not any([
@@ -175,7 +175,7 @@ class Dispatcher:
 
                 if mandatory_full and all_accepted:
                     logger.info('Running executor')
-                    process = await self.create_process(data_dict["args"])
+                    process = await self.create_process(passed_params)
                     tasks = [StdOutLineProcessor(process, self.session).process_f(),
                              StdErrLineProcessor(process).process_f(),
                              ]
