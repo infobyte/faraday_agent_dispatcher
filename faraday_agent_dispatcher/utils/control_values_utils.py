@@ -1,5 +1,7 @@
 
 def control_int(field_name,value):
+    if value is None:
+        raise ValueError(f"Trying to parse {field_name} with None value and should be an int")
     try:
         int(value)
     except ValueError:
