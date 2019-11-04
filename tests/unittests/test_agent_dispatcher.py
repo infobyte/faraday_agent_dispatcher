@@ -293,6 +293,17 @@ def test_websocket(test_config: FaradayTestConfig, tmp_config):
                                  ],
                                  "workspace": "error429"
                              },
+                             {
+                                 "data": {"action": "RUN", "agent_id": 1},
+                                 "args": ["out json"],
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "ERROR", "msg": "ValueError raised processing stdout, try with "
+                                                                   "bigger limiting size in config"},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "max_size": "1"
+                             },
                          ])
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler, executor_options):
     # Config
@@ -308,6 +319,10 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
     )
     args = ' --'.join([''] + executor_options['args'])
     configuration.set(EXECUTOR_SECTION, "cmd", f"python {path_to_basic_executor} {args}")
+
+    max_size = str(64 * 1024) if "max_size" not in executor_options else executor_options["max_size"]
+    configuration.set(EXECUTOR_SECTION, "max_size", max_size)
+
     tmp_default_config.save()
 
     # Init and register it

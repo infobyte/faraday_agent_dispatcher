@@ -160,7 +160,11 @@ class Dispatcher:
 
     async def create_process(self):
         process = await asyncio.create_subprocess_shell(
-            self.executor_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            self.executor_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            limit=int(config[EXECUTOR_SECTION].get("max_size", 64 * 1024))
+            # If the config is not set, use async.io default
         )
         return process
 
