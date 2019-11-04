@@ -1,6 +1,6 @@
 Faraday Agents Dispatcher helps user develop integrations with
-[Faraday][faraday] written in any language. For more information, check [this
-blogpost][blogpost] or continue reading.
+[Faraday][faraday] written in any language. <!-- For more information, check [this
+blogpost][blogpost] or continue reading. -->
 
 [faraday]: https://github.com/infobyte/faraday/
 [blogpost]: https://medium.com/faraday
@@ -92,7 +92,7 @@ created executors. Here is a short description of each one:
 * `brainfuck.sh`: A proof-of-concept to demonstrate you can create
   an executor in any programming language, including [Brainfuck][brainfuck]!
 
-[contrib]: TODO
+[contrib]: https://github.com/infobyte/faraday_agent_dispatcher/tree/master/contrib
 [brainfuck]: https://en.wikipedia.org/wiki/Brainfuck
 [prowler]: https://github.com/toniblyx/prowler
 [responder]: https://github.com/lgandx/Responder
