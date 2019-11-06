@@ -31,12 +31,15 @@ class FileLineProcessor:
     @staticmethod
     async def _process_lines(line_getter, process_f, logger_f, name):
         while True:
-            line = await line_getter()
-            if line != "":
-                await process_f(line)
-                logger_f(line)
-            else:
-                break
+            try:
+                line = await line_getter()
+                if line != "":
+                    await process_f(line)
+                    logger_f(line)
+                else:
+                    break
+            except ValueError:
+                logger.error("ValueError raised processing {}, try with bigger limiting size in config".format(name))
         print(f"{Bcolors.WARNING}{name} sent empty data, {Bcolors.ENDC}")
 
     def __init__(self, name):
