@@ -20,7 +20,6 @@ from faraday_agent_dispatcher.config import (
 
 from tests.data.basic_executor import host_data, vuln_data
 from tests.utils.text_utils import fuzzy_string
-from tests.utils.websocket_server import start_websockets_faraday_server
 
 
 class FaradayTestConfig:
@@ -45,7 +44,6 @@ class FaradayTestConfig:
 
     async def generate_client(self, aiohttp_client, aiohttp_server):
         self.client = await aiohttp_faraday_client(aiohttp_client, aiohttp_server, self)
-        start_websockets_faraday_server(self)
 
 
 def get_agent_registration(test_config: FaradayTestConfig):
@@ -180,7 +178,6 @@ def test_logger_handler():
     logger_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s {%(threadName)s} [%(filename)s:%(lineno)s - %(funcName)s()]  %(message)s')
-    from faraday_agent_dispatcher.logger import set_logging_level
     logger_handler.setFormatter(formatter)
     logger.addHandler(logger_handler)
     yield logger_handler
