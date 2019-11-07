@@ -161,6 +161,13 @@ class Dispatcher:
                     ])
                 if not all_accepted:
                     logger.error("Unexpected argument passed")
+                    await out_f(
+                        json.dumps({
+                            "action": "RUN_STATUS",
+                            "running": False,
+                            "message": f"Running executor from agent {self.agent_name}" + "Mandatory argument not passed"
+                        })
+                    )
                 mandatory_full = all(
                     [
                      config.get(Sections.PARAMS, param) != "True"  # All params is not mandatory
@@ -172,22 +179,49 @@ class Dispatcher:
                 )
                 if not mandatory_full:
                     logger.error("Mandatory argument not passed")
+                    await out_f(
+                        json.dumps({
+                            "action": "RUN_STATUS",
+                            "running": False,
+                            "message": f"Running executor from agent {self.agent_name}" + "Mandatory argument not passed"
+                        })
+                    )
 
                 if mandatory_full and all_accepted:
+                    running_msg = f"Running executor from agent {self.agent_name}"
                     logger.info('Running executor')
+
                     process = await self.create_process(passed_params)
                     tasks = [StdOutLineProcessor(process, self.session).process_f(),
                              StdErrLineProcessor(process).process_f(),
                              ]
-
+                    await out_f(
+                        json.dumps({
+                            "action": "RUN_STATUS",
+                            "running": True,
+                            "message": running_msg
+                        })
+                    )
                     await asyncio.gather(*tasks)
                     await process.communicate()
                     assert process.returncode is not None
                     if process.returncode == 0:
                         logger.info("Executor finished successfully")
+                        await out_f(
+                            json.dumps({
+                                "action": "RUN_STATUS",
+                                "successful": True,
+                                "message": "Executor finished successfully"
+                            }))
                     else:
                         logger.warning(
                             f"Executor finished with exit code {process.returncode}")
+                        await out_f(
+                            json.dumps({
+                                "action": "RUN_STATUS",
+                                "successful": False,
+                                "message": "Executor failed"
+                            }))
             else:
                 logger.info("Unrecognized action")
                 await out_f(json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"}))
