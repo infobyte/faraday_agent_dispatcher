@@ -165,7 +165,7 @@ class Dispatcher:
                         json.dumps({
                             "action": "RUN_STATUS",
                             "running": False,
-                            "message": f"Running executor from agent {self.agent_name}" + "Mandatory argument not passed"
+                            "message": f"Unexpected argument(s) passed to {self.agent_name} agent"
                         })
                     )
                 mandatory_full = all(
@@ -183,12 +183,12 @@ class Dispatcher:
                         json.dumps({
                             "action": "RUN_STATUS",
                             "running": False,
-                            "message": f"Running executor from agent {self.agent_name}" + "Mandatory argument not passed"
+                            "message": f"Mandatory argument(s) not passed to {self.agent_name} agent"
                         })
                     )
 
                 if mandatory_full and all_accepted:
-                    running_msg = f"Running executor from agent {self.agent_name}"
+                    running_msg = f"Running executor from {self.agent_name} agent"
                     logger.info('Running executor')
 
                     process = await self.create_process(passed_params)
