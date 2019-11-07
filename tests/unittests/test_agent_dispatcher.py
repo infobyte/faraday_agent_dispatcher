@@ -151,12 +151,18 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "data": {"agent_id": 1},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Data not contains action to do"},
+                                 ],
+                                 "ws_responses": [
+                                     {"error": "'action' key is mandatory in this websocket connection"}
                                  ]
                              },
                              {  # 1
                                  "data": {"action": "CUT", "agent_id": 1},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Action unrecognized"},
+                                 ],
+                                 "ws_responses": [
+                                     {"error": "Unrecognized action"}
                                  ]
                              },
                              {  # 2
@@ -165,6 +171,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create"},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 3
@@ -173,6 +184,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR", "msg": "JSON Parsing error: Extra data"},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 4
@@ -182,6 +198,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "min_count": 5},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 5
@@ -189,6 +210,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 6
@@ -198,6 +224,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 1},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 7
@@ -208,6 +239,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                       "msg": "Invalid data supplied by the executor to the bulk create endpoint. "
                                              "Server responded: "},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 8
@@ -216,6 +252,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR", "msg": "JSON Parsing error: Expecting value"},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 9
@@ -224,6 +265,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "DEBUG", "msg": "Print by stderr"},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 10
@@ -231,6 +277,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "WARNING", "msg": "Executor finished with exit code 1"},
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 11
@@ -239,6 +290,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "DEBUG", "msg": "Print by stderr"},
                                      {"levelname": "WARNING", "msg": "Executor finished with exit code 1"},
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                      "successful": True,
+                                      "message": "Running executor"}
                                  ]
                              },
                              {  # 12
@@ -257,6 +313,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "ERROR", "msg": "Mandatory argument not passed"},
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                                "successful": True,
+                                                "message": "Running executor"}
                                  ]
                              },
                              {  # 14
@@ -269,6 +330,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "INFO", "msg": "Executor finished successfully", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "ERROR", "msg": "Unexpected argument passed"},
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                      "successful": True,
+                                      "message": "Running executor"}
                                  ]
                              },
                              {
@@ -279,7 +345,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                       "msg": "Invalid data supplied by the executor to the bulk create endpoint. Server responded: "},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
                                  ],
-                                 "workspace": "error500"
+                                 "workspace": "error500",
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                      "successful": True,
+                                      "message": "Running executor"}
+                                 ]
                              },
                              {
                                  "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
@@ -289,7 +360,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                       "msg": "Invalid data supplied by the executor to the bulk create endpoint. Server responded: "},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
                                  ],
-                                 "workspace": "error429"
+                                 "workspace": "error429",
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                      "successful": True,
+                                      "message": "Running executor"}
+                                 ]
                              },
                              {
                                  "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
@@ -299,7 +375,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                                                    "bigger limiting size in config"},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
                                  ],
-                                 "max_size": "1"
+                                 "max_size": "1",
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                      "successful": True,
+                                      "message": "Running executor"}
+                                 ]
                              },
                          ])
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
@@ -328,13 +409,24 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
 
     tmp_default_config.save()
 
+    async def eq(msg):
+        import json
+        msg_ = json.loads(msg)
+        assert msg_ in executor_options["ws_responses"]
+        executor_options["ws_responses"].remove(msg_)
+
     # Init and register it
     dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
-    await dispatcher.run_once(json.dumps(executor_options["data"]))
+    await dispatcher.run_once(json.dumps(executor_options["data"]), eq)
     history = test_logger_handler.history
+    assert len(executor_options["ws_responses"]) == 0
     for l in executor_options["logs"]:
         min_count = 1 if "min_count" not in l else l["min_count"]
         max_count = sys.maxsize if "max_count" not in l else l["max_count"]
         assert max_count >= \
             len(list(filter(lambda x: x.levelname == l["levelname"] and l["msg"] in x.message, history))) >= \
             min_count, l["msg"]
+
+
+async def test_connect():
+    pass  # TODO

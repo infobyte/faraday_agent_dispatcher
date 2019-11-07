@@ -112,22 +112,28 @@ class Dispatcher:
 
         self.websocket_token = await self.reset_websocket_token()
 
-    async def connect(self):
+    async def connect(self, out_func=None):
 
         if not self.websocket_token:
             return
 
-        async with websockets.connect(websocket_url(self.host, self.websocket_port)) as websocket:
-            await websocket.send(json.dumps({
-                'action': 'JOIN_AGENT',
-                'workspace': self.workspace,
-                'token': self.websocket_token,
-            }))
+        connected_data = json.dumps({
+                    'action': 'JOIN_AGENT',
+                    'workspace': self.workspace,
+                    'token': self.websocket_token,
+                })
 
-            logger.info("Connection to Faraday server succeeded")
-            self.websocket = websocket
+        if out_func is None:
 
-            await self.run_await()  # This line can we called from outside (in main)
+            async with websockets.connect(websocket_url(self.host, self.websocket_port)) as websocket:
+                await websocket.send(connected_data)
+
+                logger.info("Connection to Faraday server succeeded")
+                self.websocket = websocket
+
+                await self.run_await()  # This line can we called from outside (in main)
+        else:
+            await out_func(connected_data)
 
     async def run_await(self):
         while True:
@@ -135,7 +141,8 @@ class Dispatcher:
             data = await self.websocket.recv()
             asyncio.create_task(self.run_once(data))
 
-    async def run_once(self, data:str= None):
+    async def run_once(self, data:str= None, out_f=None):
+        out_f = out_f if out_f is not None else self.websocket.send
         logger.info('Parsing data: %s', data)
         data_dict = json.loads(data)
         if "action" in data_dict:
@@ -183,9 +190,9 @@ class Dispatcher:
                             f"Executor finished with exit code {process.returncode}")
             else:
                 logger.info("Action unrecognized")
-
         else:
             logger.info("Data not contains action to do")
+            await out_f("INVALID COMMAND")
 
     async def create_process(self, args):
         env = os.environ.copy()
