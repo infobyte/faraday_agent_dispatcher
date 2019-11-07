@@ -159,10 +159,10 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                              {  # 1
                                  "data": {"action": "CUT", "agent_id": 1},
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Action unrecognized"},
+                                     {"levelname": "INFO", "msg": "Unrecognized action"},
                                  ],
                                  "ws_responses": [
-                                     {"error": "Unrecognized action"}
+                                     {"CUT_RESPONSE": "Error: Unrecognized action"}
                                  ]
                              },
                              {  # 2
@@ -285,7 +285,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 11
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "none", "err": "T", "fails": "T"}},
+                                 "data": {
+                                     "action": "RUN",
+                                     "agent_id": 1,
+                                     "args": {"out": "none", "err": "T", "fails": "T"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "DEBUG", "msg": "Print by stderr"},
@@ -342,7 +346,8 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR",
-                                      "msg": "Invalid data supplied by the executor to the bulk create endpoint. Server responded: "},
+                                      "msg": "Invalid data supplied by the executor to the bulk create endpoint. "
+                                             "Server responded: "},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
                                  ],
                                  "workspace": "error500",
@@ -357,7 +362,8 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR",
-                                      "msg": "Invalid data supplied by the executor to the bulk create endpoint. Server responded: "},
+                                      "msg": "Invalid data supplied by the executor to the bulk create endpoint. "
+                                             "Server responded: "},
                                      {"levelname": "INFO", "msg": "Executor finished successfully"}
                                  ],
                                  "workspace": "error429",
