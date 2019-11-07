@@ -145,26 +145,6 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
         await dispatcher.register()
 
 
-@pytest.mark.skip
-def test_websocket(test_config: FaradayTestConfig, tmp_config):
-    #TODO WATCH OUT WHEN SKIP'LL BE FIXED
-    text = fuzzy_string(15)
-    file = f"/tmp/{fuzzy_string(8)}.txt"
-    configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
-    configuration.set(Sections.SERVER, "workspace", test_config.workspace)
-    configuration.set(Sections.SERVER, "websocket_port", str(test_config.websocket_port))
-    configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.EXECUTOR, "cmd", f"echo {text} > {file}")
-    tmp_config.save()
-
-    dispatcher = Dispatcher(test_config.client.session, tmp_config.config_file_path)
-    dispatcher.connect()
-    test_config.run_agent_to_websocket()  ## HERE SEND BY WS THE RUN COMMAND
-
-    with open(file, 'rt') as f:
-        assert text in f.readline()
-
-
 @pytest.mark.parametrize('executor_options',
                          [
                              {  # 0
