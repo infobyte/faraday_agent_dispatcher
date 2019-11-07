@@ -189,10 +189,11 @@ class Dispatcher:
                         logger.warning(
                             f"Executor finished with exit code {process.returncode}")
             else:
-                logger.info("Action unrecognized")
+                logger.info("Unrecognized action")
+                await out_f(json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"}))
         else:
             logger.info("Data not contains action to do")
-            await out_f("INVALID COMMAND")
+            await out_f(json.dumps({"error": "'action' key is mandatory in this websocket connection"}))
 
     async def create_process(self, args):
         env = os.environ.copy()
