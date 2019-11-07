@@ -184,8 +184,30 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      }
                                  ]
                              },
+                             {  # 2
+                                 "data": {"action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}},
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Data sent to bulk create"},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {
+                                         "action": "RUN_STATUS",
+                                         "running": True,
+                                         "message": "Running executor from unnamed_agent agent"
+                                     }, {
+                                         "action": "RUN_STATUS",
+                                         "successful": True,
+                                         "message": "Executor finished successfully"
+                                     }
+                                 ]
+                             },
                              {  # 3
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json", "count": "5"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "args": {"out": "json", "count": "5"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR", "msg": "JSON Parsing error: Extra data"},
@@ -204,8 +226,10 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 4
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json", "count": "5",
-                                                                                   "spare": "T"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "args": {"out": "json", "count": "5", "spare": "T"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "min_count": 5},
@@ -227,6 +251,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "data": {
                                      "action": "RUN",
                                      "agent_id": 1,
+                                     "executor": "ex1",
                                      "args": {"out": "json", "spaced_before": "T"}
                                  },
                                  "logs": [
@@ -246,8 +271,10 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 6
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json", "spaced_middle": "T",
-                                                                                   "count": "5", "spare": "T"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "args": {"out": "json", "spaced_middle": "T", "count": "5", "spare": "T"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 1},
@@ -266,7 +293,9 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 7
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "bad_json"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "bad_json"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR",
@@ -287,7 +316,9 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 8
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "str"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "str"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR", "msg": "JSON Parsing error: Expecting value"},
@@ -306,7 +337,10 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 9
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "none", "err": "T"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "args": {"out": "none", "err": "T"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "DEBUG", "msg": "Print by stderr"},
@@ -325,7 +359,10 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 10
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "none", "fails": "T"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "args": {"out": "none", "fails": "T"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "WARNING", "msg": "Executor finished with exit code 1"},
@@ -346,6 +383,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "data": {
                                      "action": "RUN",
                                      "agent_id": 1,
+                                     "executor": "ex1",
                                      "args": {"out": "none", "err": "T", "fails": "T"}
                                  },
                                  "logs": [
@@ -366,7 +404,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 12
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
+                                 "data": {
+                                     "action": "RUN",
+                                     "agent_id": 1,
+                                     "executor": "ex1",
+                                     "args": {"out": "json"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 0,
@@ -387,7 +430,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 13
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"err": "T", "fails": "T"}},
+                                 "data": {
+                                     "action": "RUN",
+                                     "agent_id": 1,
+                                     "executor": "ex1",
+                                     "args": {"err": "T", "fails": "T"},
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
                                       "min_count": 0},
@@ -402,7 +450,10 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 14
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json", "WTF": "T"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "args": {"out": "json", "WTF": "T"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
                                       "min_count": 0},
@@ -419,7 +470,9 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 15
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR",
@@ -441,7 +494,9 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 16
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}
+                                 },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR",
@@ -463,7 +518,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 17
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
+                                 "data": {"action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor"},
                                      {"levelname": "ERROR", "msg": "ValueError raised processing stdout, try with "
@@ -481,6 +536,46 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                          "successful": True,
                                          "message": "Executor finished successfully"
                                      }
+                                 ]
+                             },
+                             {  # 18
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1,
+                                     "args": {"out": "json", "WTF": "T"}
+                                 },
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
+                                      "min_count": 0},
+                                     {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 0,
+                                      "min_count": 0},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully", "max_count": 0,
+                                      "min_count": 0},
+                                     {"levelname": "ERROR", "msg": "Unexpected argument passed"},
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                      "running": False,
+                                      "message": "No executor selected"}
+                                 ]
+                             },
+                             {  # 19
+                                 "data": {
+                                     "action": "RUN", "agent_id": 1, "executor": "NOT_4N_CORRECT_EXECUTOR",
+                                     "args": {"out": "json", "WTF": "T"}
+                                 },
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
+                                      "min_count": 0},
+                                     {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 0,
+                                      "min_count": 0},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully", "max_count": 0,
+                                      "min_count": 0},
+                                     {"levelname": "ERROR", "msg": "Unexpected argument passed"},
+                                 ],
+                                 "ws_responses": [
+                                     {"action": "RUN_STATUS",
+                                      "running": False,
+                                      "message": "The selected executor not exists"}
                                  ]
                              },
                          ])
