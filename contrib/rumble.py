@@ -56,7 +56,7 @@ def convert_rumble_assets(assets: list):
             service_name_parts = []
             data_keys = ["protocol", "service.product", "service.family", "service.vendor", "service.version", "banner"]
             service_data = asset["services"][service]
-            print("\t" + " ,".join(service_data.keys()), file=sys.stderr)
+            
             for dk in data_keys:
                 if dk in service_data:
                     service_name_parts.append(service_data[dk])
