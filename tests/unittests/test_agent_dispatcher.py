@@ -545,12 +545,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                       "min_count": 0},
                                      {"levelname": "INFO", "msg": "Executor finished successfully", "max_count": 0,
                                       "min_count": 0},
-                                     {"levelname": "ERROR", "msg": "Unexpected argument passed"},
+                                     {"levelname": "ERROR", "msg": "No executor selected"},
                                  ],
                                  "ws_responses": [
                                      {"action": "RUN_STATUS",
                                       "running": False,
-                                      "message": "No executor selected"}
+                                      "message": "No executor selected to unnamed_agent agent"}
                                  ]
                              },
                              {  # 19
@@ -565,12 +565,13 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                       "min_count": 0},
                                      {"levelname": "INFO", "msg": "Executor finished successfully", "max_count": 0,
                                       "min_count": 0},
-                                     {"levelname": "ERROR", "msg": "Unexpected argument passed"},
+                                     {"levelname": "ERROR", "msg": "The selected executor not exists"},
                                  ],
                                  "ws_responses": [
                                      {"action": "RUN_STATUS",
                                       "running": False,
-                                      "message": "The selected executor not exists"}
+                                      "message": "The selected executor NOT_4N_CORRECT_EXECUTOR not exists in "
+                                                 "unnamed_agent agent"}
                                  ]
                              },
                          ])
