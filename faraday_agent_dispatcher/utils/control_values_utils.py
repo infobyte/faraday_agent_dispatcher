@@ -1,11 +1,15 @@
-import json
-def control_int(field_name,value):
-    if value is None:
-        raise ValueError(f"Trying to parse {field_name} with None value and should be an int")
-    try:
-        int(value)
-    except ValueError:
-        raise ValueError(f"Trying to parse {field_name} with value {value} and should be an int")
+def control_int(nullable=False):
+    def control(field_name, value):
+        if value is None and nullable:
+            return
+        if value is None:
+            raise ValueError(f"Trying to parse {field_name} with None value and should be an int")
+        try:
+            int(value)
+        except ValueError:
+            raise ValueError(f"Trying to parse {field_name} with value {value} and should be an int")
+
+    return control
 
 
 def control_str(field_name, value):

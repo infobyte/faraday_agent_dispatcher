@@ -47,8 +47,8 @@ class Dispatcher:
     __control_dict = {
         Sections.SERVER: {
             "host": control_host,
-            "api_port": control_int,
-            "websocket_port": control_int,
+            "api_port": control_int(),
+            "websocket_port": control_int(),
             "workspace": control_str
         },
         Sections.TOKENS: {
