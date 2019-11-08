@@ -198,12 +198,13 @@ class Dispatcher:
                     for passed_param in passed_params   # For all passed params
                 ])
             if not all_accepted:
-                logger.error("Unexpected argument passed")
+                logger.error("Unexpected argument passed to {} executor".format(executor.name))
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
                         "running": False,
-                        "message": f"Unexpected argument(s) passed to {self.agent_name} agent"
+                        "message": f"Unexpected argument(s) passed to {executor.name} executor from {self.agent_name} "
+                                   f"agent"
                     })
                 )
             mandatory_full = all(
@@ -216,18 +217,19 @@ class Dispatcher:
                 ]
             )
             if not mandatory_full:
-                logger.error("Mandatory argument not passed")
+                logger.error("Mandatory argument not passed to {} executor".format(executor.name))
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
                         "running": False,
-                        "message": f"Mandatory argument(s) not passed to {self.agent_name} agent"
+                        "message": f"Mandatory argument(s) not passed to {executor.name} executor from "
+                                   f"{self.agent_name} agent"
                     })
                 )
 
             if mandatory_full and all_accepted:
-                running_msg = f"Running executor from {self.agent_name} agent"
-                logger.info('Running executor')
+                running_msg = f"Running {executor.name} executor from {self.agent_name} agent"
+                logger.info("Running {} executor".format(executor.name))
 
                 process = await self.create_process(executor, passed_params)
                 tasks = [StdOutLineProcessor(process, self.session).process_f(),
@@ -244,21 +246,21 @@ class Dispatcher:
                 await process.communicate()
                 assert process.returncode is not None
                 if process.returncode == 0:
-                    logger.info("Executor finished successfully")
+                    logger.info("Executor {} finished successfully".format(executor.name))
                     await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
                             "successful": True,
-                            "message": "Executor finished successfully"
+                            "message": f"Executor {executor.name} from {self.agent_name} finished successfully"
                         }))
                 else:
                     logger.warning(
-                        f"Executor finished with exit code {process.returncode}")
+                        f"Executor {executor.name} finished with exit code {process.returncode}")
                     await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
                             "successful": False,
-                            "message": "Executor failed"
+                            "message": f"Executor {executor.name} from {self.agent_name} failed"
                         }))
 
     async def create_process(self, executor: Executor, args):
