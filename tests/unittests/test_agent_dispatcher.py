@@ -108,6 +108,8 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
 def test_basic_built(tmp_custom_config, config_changes_dict):
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
+            if section not in configuration:
+                configuration.add_section(section)
             configuration.set(section, option, config_changes_dict["replace"][section][option])
     for section in config_changes_dict["remove"]:
         for option in config_changes_dict["remove"][section]:
