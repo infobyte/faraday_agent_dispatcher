@@ -118,13 +118,15 @@ class Dispatcher:
 
     async def connect(self, out_func=None):
 
-        if not self.websocket_token:
+        if not self.websocket_token and not out_func:
             return
 
         connected_data = json.dumps({
                     'action': 'JOIN_AGENT',
                     'workspace': self.workspace,
                     'token': self.websocket_token,
+                    'executors': [{"executor_name": executor.name, "args": executor.params}
+                                  for executor in self.executors.values()]
                 })
 
         if out_func is None:
