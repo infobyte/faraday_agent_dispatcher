@@ -145,95 +145,121 @@ class Dispatcher:
             data = await self.websocket.recv()
             asyncio.create_task(self.run_once(data))
 
-    async def run_once(self, data:str= None, out_f=None):
-        out_f = out_f if out_f is not None else self.websocket.send
+    async def run_once(self, data:str= None, out_func=None):
+        out_func = out_func if out_func is not None else self.websocket.send
         logger.info('Parsing data: %s', data)
         data_dict = json.loads(data)
-        if "action" in data_dict:
-            if data_dict["action"] == "RUN":
-                params = config.options(Sections.PARAMS).copy()
-                passed_params = data_dict['args'] if 'args' in data_dict else {}
-                [params.remove(param) for param in config.defaults()]
+        if "action" not in data_dict:
+            logger.info("Data not contains action to do")
+            await out_func(json.dumps({"error": "'action' key is mandatory in this websocket connection"}))
+            return
 
-                all_accepted = all(
-                    [
-                     any([
+        if data_dict["action"] not in ["RUN"]:  # ONLY SUPPORTED COMMAND FOR NOW
+            logger.info("Unrecognized action")
+            await out_func(json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"}))
+            return
+
+        if data_dict["action"] == "RUN":
+            if "executor" not in data_dict:
+                logger.error("No executor selected")
+                await out_func(
+                    json.dumps({
+                        "action": "RUN_STATUS",
+                        "running": False,
+                        "message": f"No executor selected to {self.agent_name} agent"
+                    })
+                )
+
+            if data_dict["executor"] not in self.executors:
+                logger.error("The selected executor not exists")
+                await out_func(
+                    json.dumps({
+                        "action": "RUN_STATUS",
+                        "running": False,
+                        "message": f"The selected executor {data_dict['executor']} not exists in {self.agent_name} "
+                                   f"agent"
+                    })
+                )
+
+            executor = self.executors[data_dict["executor"]]
+
+            params = list(executor.params.keys()).copy()
+            passed_params = data_dict['args'] if 'args' in data_dict else {}
+            [params.remove(param) for param in config.defaults()]
+
+            all_accepted = all(
+                [
+                    any([
                         param in passed_param           # Control any available param
                         for param in params             # was passed
                         ])
-                     for passed_param in passed_params  # For all passed params
-                    ])
-                if not all_accepted:
-                    logger.error("Unexpected argument passed")
-                    await out_f(
-                        json.dumps({
-                            "action": "RUN_STATUS",
-                            "running": False,
-                            "message": f"Unexpected argument(s) passed to {self.agent_name} agent"
-                        })
-                    )
-                mandatory_full = all(
-                    [
-                     config.get(Sections.PARAMS, param) != "True"  # All params is not mandatory
-                     or any([
+                    for passed_param in passed_params   # For all passed params
+                ])
+            if not all_accepted:
+                logger.error("Unexpected argument passed")
+                await out_func(
+                    json.dumps({
+                        "action": "RUN_STATUS",
+                        "running": False,
+                        "message": f"Unexpected argument(s) passed to {self.agent_name} agent"
+                    })
+                )
+            mandatory_full = all(
+                [
+                    not executor.params[param]  # All params is not mandatory
+                    or any([
                         param in passed_param for passed_param in passed_params  # Or was passed
                         ])
-                     for param in params
-                    ]
+                    for param in params
+                ]
+            )
+            if not mandatory_full:
+                logger.error("Mandatory argument not passed")
+                await out_func(
+                    json.dumps({
+                        "action": "RUN_STATUS",
+                        "running": False,
+                        "message": f"Mandatory argument(s) not passed to {self.agent_name} agent"
+                    })
                 )
-                if not mandatory_full:
-                    logger.error("Mandatory argument not passed")
-                    await out_f(
+
+            if mandatory_full and all_accepted:
+                running_msg = f"Running executor from {self.agent_name} agent"
+                logger.info('Running executor')
+
+                process = await self.create_process(executor, passed_params)
+                tasks = [StdOutLineProcessor(process, self.session).process_f(),
+                         StdErrLineProcessor(process).process_f(),
+                         ]
+                await out_func(
+                    json.dumps({
+                        "action": "RUN_STATUS",
+                        "running": True,
+                        "message": running_msg
+                    })
+                )
+                await asyncio.gather(*tasks)
+                await process.communicate()
+                assert process.returncode is not None
+                if process.returncode == 0:
+                    logger.info("Executor finished successfully")
+                    await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
-                            "running": False,
-                            "message": f"Mandatory argument(s) not passed to {self.agent_name} agent"
-                        })
-                    )
-
-                if mandatory_full and all_accepted:
-                    running_msg = f"Running executor from {self.agent_name} agent"
-                    logger.info('Running executor')
-
-                    process = await self.create_process(passed_params)
-                    tasks = [StdOutLineProcessor(process, self.session).process_f(),
-                             StdErrLineProcessor(process).process_f(),
-                             ]
-                    await out_f(
+                            "successful": True,
+                            "message": "Executor finished successfully"
+                        }))
+                else:
+                    logger.warning(
+                        f"Executor finished with exit code {process.returncode}")
+                    await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
-                            "running": True,
-                            "message": running_msg
-                        })
-                    )
-                    await asyncio.gather(*tasks)
-                    await process.communicate()
-                    assert process.returncode is not None
-                    if process.returncode == 0:
-                        logger.info("Executor finished successfully")
-                        await out_f(
-                            json.dumps({
-                                "action": "RUN_STATUS",
-                                "successful": True,
-                                "message": "Executor finished successfully"
-                            }))
-                    else:
-                        logger.warning(
-                            f"Executor finished with exit code {process.returncode}")
-                        await out_f(
-                            json.dumps({
-                                "action": "RUN_STATUS",
-                                "successful": False,
-                                "message": "Executor failed"
-                            }))
-            else:
-                logger.info("Unrecognized action")
-                await out_f(json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"}))
-        else:
-            logger.info("Data not contains action to do")
-            await out_f(json.dumps({"error": "'action' key is mandatory in this websocket connection"}))
+                            "successful": False,
+                            "message": "Executor failed"
+                        }))
 
-    async def create_process(self, args):
+    async def create_process(self, executor: Executor, args):
         env = os.environ.copy()
         if isinstance(args, dict):
             for k in args:
@@ -241,15 +267,14 @@ class Dispatcher:
         else:
             logger.error("Args from data received has a not supported type")
             raise ValueError("Args from data received has a not supported type")
-        for varenv in config.options(Sections.VARENVS):
-            if varenv not in config.defaults():
-                env[varenv.upper()] = config.get(Sections.VARENVS,varenv)
+        for varenv, value in executor.varenvs.items():
+            env[varenv.upper()] = value
         process = await asyncio.create_subprocess_shell(
-            self.executor_cmd,
+            executor.cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=env,
-            limit=int(config[Sections.EXECUTOR].get("max_size", 64 * 1024))
+            limit=executor.max_size
             # If the config is not set, use async.io default
         )
         return process

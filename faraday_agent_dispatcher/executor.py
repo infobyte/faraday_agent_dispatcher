@@ -21,7 +21,7 @@ class Executor:
         params_section = Sections.EXECUTOR_PARAMS.format(name)
         varenvs_section = Sections.EXECUTOR_VARENVS.format(name)
         self.cmd = config.get(executor_section, "cmd")
-        self.max_size = config[executor_section].get("max_size", 64 * 1024)
+        self.max_size = int(config[executor_section].get("max_size", 64 * 1024))
         self.params = dict(config[params_section]) if params_section in config else {}
         self.params = {key: value.lower() in ["t", "true"] for key, value in self.params.items()}
         self.varenvs = dict(config[varenvs_section]) if varenvs_section in config else {}
