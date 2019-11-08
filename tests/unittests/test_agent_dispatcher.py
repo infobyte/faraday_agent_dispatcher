@@ -182,19 +182,19 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                              {  # 2
                                  "data": {"action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}},
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create"},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -204,19 +204,19 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "json", "count": "5"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "ERROR", "msg": "JSON Parsing error: Extra data"},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -226,19 +226,19 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "json", "count": "5", "spare": "T"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "min_count": 5},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -250,18 +250,18 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "json", "spaced_before": "T"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -271,19 +271,19 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "json", "spaced_middle": "T", "count": "5", "spare": "T"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 1},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -292,21 +292,21 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "bad_json"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "ERROR",
                                       "msg": "Invalid data supplied by the executor to the bulk create endpoint. "
                                              "Server responded: "},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -315,19 +315,19 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "str"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "ERROR", "msg": "JSON Parsing error: Expecting value"},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -337,19 +337,19 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "none", "err": "T"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "DEBUG", "msg": "Print by stderr"},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -359,18 +359,18 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "none", "fails": "T"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
-                                     {"levelname": "WARNING", "msg": "Executor finished with exit code 1"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
+                                     {"levelname": "WARNING", "msg": "Executor ex1 finished with exit code 1"},
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": False,
-                                         "message": "Executor failed"
+                                         "message": "Executor ex1 from unnamed_agent failed"
                                      }
                                  ]
                              },
@@ -382,19 +382,19 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "none", "err": "T", "fails": "T"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "DEBUG", "msg": "Print by stderr"},
-                                     {"levelname": "WARNING", "msg": "Executor finished with exit code 1"},
+                                     {"levelname": "WARNING", "msg": "Executor ex1 finished with exit code 1"},
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": False,
-                                         "message": "Executor failed"
+                                         "message": "Executor ex1 from unnamed_agent failed"
                                      }
                                  ]
                              },
@@ -406,21 +406,21 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "json"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 0,
                                       "min_count": 0},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "varenvs": {"DO_NOTHING": "True"},
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -432,7 +432,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"err": "T", "fails": "T"},
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
+                                     {"levelname": "INFO", "msg": "Running ex1 executor", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "ERROR", "msg": "Mandatory argument not passed"},
                                  ],
@@ -440,7 +440,8 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {
                                          "action": "RUN_STATUS",
                                          "running": False,
-                                         "message": "Mandatory argument(s) not passed to unnamed_agent agent"
+                                         "message": "Mandatory argument(s) not passed to ex1 executor from "
+                                                    "unnamed_agent agent"
                                      }
                                  ]
                              },
@@ -450,18 +451,19 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "json", "WTF": "T"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
+                                     {"levelname": "INFO", "msg": "Running ex1 executor", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 0,
                                       "min_count": 0},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully", "max_count": 0,
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "ERROR", "msg": "Unexpected argument passed"},
                                  ],
                                  "ws_responses": [
                                      {"action": "RUN_STATUS",
                                       "running": False,
-                                      "message": "Unexpected argument(s) passed to unnamed_agent agent"}
+                                      "message": "Unexpected argument(s) passed to ex1 executor from unnamed_agent "
+                                                 "agent"}
                                  ]
                              },
                              {  # 15
@@ -469,22 +471,22 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "ERROR",
                                       "msg": "Invalid data supplied by the executor to the bulk create endpoint. "
                                              "Server responded: "},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "workspace": "error500",
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -493,43 +495,43 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "ERROR",
                                       "msg": "Invalid data supplied by the executor to the bulk create endpoint. "
                                              "Server responded: "},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "workspace": "error429",
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
                              {  # 17
                                  "data": {"action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}},
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "ERROR", "msg": "ValueError raised processing stdout, try with "
                                                                    "bigger limiting size in config"},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
                                  ],
                                  "max_size": "1",
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
@@ -539,11 +541,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "json"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
+                                     {"levelname": "INFO", "msg": "Running ex1 executor", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 0,
                                       "min_count": 0},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully", "max_count": 0,
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "ERROR", "msg": "No executor selected"},
                                  ],
@@ -559,11 +561,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      "args": {"out": "json"}
                                  },
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
+                                     {"levelname": "INFO", "msg": "Running ex1 executor", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create", "max_count": 0,
                                       "min_count": 0},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully", "max_count": 0,
+                                     {"levelname": "INFO", "msg": "Executor ex1 finished successfully", "max_count": 0,
                                       "min_count": 0},
                                      {"levelname": "ERROR", "msg": "The selected executor not exists"},
                                  ],
@@ -577,19 +579,19 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                              {  # 20
                                  "data": {"action": "RUN", "agent_id": 1, "executor": "ex2", "args": {"out": "json"}},
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Running ex2 executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create"},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor ex2 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
                                          "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
+                                         "message": "Running ex2 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "successful": True,
-                                         "message": "Executor finished successfully"
+                                         "message": "Executor ex2 from unnamed_agent finished successfully"
                                      }
                                  ],
                                  "extra": ["ex2"]
