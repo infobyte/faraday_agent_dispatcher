@@ -169,6 +169,7 @@ class Dispatcher:
                         "message": f"No executor selected to {self.agent_name} agent"
                     })
                 )
+                return
 
             if data_dict["executor"] not in self.executors:
                 logger.error("The selected executor not exists")
@@ -180,6 +181,7 @@ class Dispatcher:
                                    f"agent"
                     })
                 )
+                return 
 
             executor = self.executors[data_dict["executor"]]
 
