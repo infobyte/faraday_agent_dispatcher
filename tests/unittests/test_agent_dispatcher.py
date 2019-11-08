@@ -128,7 +128,7 @@ async def test_start_and_register(test_config: FaradayTestConfig, tmp_default_co
     configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
     configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
-    configuration.set(Sections.EXECUTOR_DATA, "cmd", 'exit 1')
+    configuration.set(Sections.EXECUTOR_DATA.format("ex1"), "cmd", 'exit 1')
     tmp_default_config.save()
 
     # Init and register it
@@ -149,7 +149,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
     configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
     configuration.set(Sections.TOKENS, "registration", "NotOk" * 5)
-    configuration.set(Sections.EXECUTOR, "cmd", 'exit 1')
+    configuration.set(Sections.EXECUTOR_DATA.format("ex1"), "cmd", 'exit 1')
     tmp_default_config.save()
 
     # Init and register it
@@ -177,25 +177,6 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ],
                                  "ws_responses": [
                                      {"CUT_RESPONSE": "Error: Unrecognized action"}
-                                 ]
-                             },
-                             {  # 2
-                                 "data": {"action": "RUN", "agent_id": 1, "args": {"out": "json"}},
-                                 "logs": [
-                                     {"levelname": "INFO", "msg": "Running executor"},
-                                     {"levelname": "INFO", "msg": "Data sent to bulk create"},
-                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
-                                 ],
-                                 "ws_responses": [
-                                     {
-                                         "action": "RUN_STATUS",
-                                         "running": True,
-                                         "message": "Running executor from unnamed_agent agent"
-                                     }, {
-                                         "action": "RUN_STATUS",
-                                         "successful": True,
-                                         "message": "Executor finished successfully"
-                                     }
                                  ]
                              },
                              {  # 2
@@ -555,7 +536,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                              {  # 18
                                  "data": {
                                      "action": "RUN", "agent_id": 1,
-                                     "args": {"out": "json", "WTF": "T"}
+                                     "args": {"out": "json"}
                                  },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
@@ -575,7 +556,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                              {  # 19
                                  "data": {
                                      "action": "RUN", "agent_id": 1, "executor": "NOT_4N_CORRECT_EXECUTOR",
-                                     "args": {"out": "json", "WTF": "T"}
+                                     "args": {"out": "json"}
                                  },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running executor", "max_count": 0,
@@ -606,16 +587,19 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
             Path(__file__).parent.parent /
             'data' / 'basic_executor.py'
     )
-    configuration.set(Sections.EXECUTOR, "cmd", "python {}".format(path_to_basic_executor))
-    configuration.set(Sections.PARAMS, "out", "True")
-    [configuration.set(Sections.PARAMS, param, "False") for param in [
+    executor_section = Sections.EXECUTOR_DATA.format("ex1")
+    params_section = Sections.EXECUTOR_PARAMS.format("ex1")
+    varenvs_section = Sections.EXECUTOR_VARENVS.format("ex1")
+    configuration.set(executor_section, "cmd", "python {}".format(path_to_basic_executor))
+    configuration.set(params_section, "out", "True")
+    [configuration.set(params_section, param, "False") for param in [
             "count", "spare", "spaced_before", "spaced_middle", "err", "fails"]]
     if "varenvs" in executor_options:
         for varenv in executor_options["varenvs"]:
-            configuration.set(Sections.VARENVS, varenv, executor_options["varenvs"][varenv])
+            configuration.set(varenvs_section, varenv, executor_options["varenvs"][varenv])
 
     max_size = str(64 * 1024) if "max_size" not in executor_options else executor_options["max_size"]
-    configuration.set(Sections.EXECUTOR, "max_size", max_size)
+    configuration.set(executor_section, "max_size", max_size)
 
     tmp_default_config.save()
 
