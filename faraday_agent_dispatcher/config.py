@@ -59,7 +59,7 @@ def save_config(filepath=None):
 class Sections:
     TOKENS = "tokens"
     SERVER = "server"
-    EXECUTOR = "executor"
-    VARENVS = "varenvs"
-    PARAMS = "params"
-
+    AGENT = "agent"
+    EXECUTOR_VARENVS = "{}_varenvs"
+    EXECUTOR_PARAMS = "{}_params"
+    EXECUTOR_DATA = "{}"

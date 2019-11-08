@@ -1,4 +1,4 @@
-
+import json
 def control_int(field_name,value):
     if value is None:
         raise ValueError(f"Trying to parse {field_name} with None value and should be an int")
@@ -15,6 +15,16 @@ def control_str(field_name, value):
 
 def control_host(field_name, value):
     control_str(field_name, value)
+
+
+def control_list(field_name, value):
+    if not isinstance(value, str) or not isinstance(value.split(","),list):
+         raise ValueError(f"Trying to parse {field_name} with value {value} and should be a list")
+
+
+def control_bool(field_name, value):
+    if value.lower() not in ["true", "false", "t", "f"]:
+        raise ValueError(f"Trying to parse {field_name} with value {value} and should be a bool")
 
 
 def control_registration_token(field_name, value):

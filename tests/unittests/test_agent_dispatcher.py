@@ -84,10 +84,22 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                           {"remove": {},
                            "replace": {Sections.TOKENS: {
                                "agent": "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446"}}},
-                          {"remove": {Sections.EXECUTOR: ["cmd"]},
+                          {"remove": {Sections.EXECUTOR_DATA.format("ex1"): ["cmd"]},
                            "replace": {},
                            "expected_exception": ValueError},
-                          {"remove": {Sections.EXECUTOR: ["agent_name"]},
+                          {"remove": {},
+                           "replace": {Sections.EXECUTOR_DATA.format("ex1"): {"max_size": "ASDASD"}},
+                           "expected_exception": ValueError},
+                          {"remove": {},
+                           "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "ASDASD"}},
+                           "expected_exception": ValueError},
+                          {"remove": {},
+                           "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "5"}},
+                           "expected_exception": ValueError},
+                          {"remove": {},
+                           "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "True"}}
+                           },
+                          {"remove": {Sections.AGENT: ["agent_name"]},
                            "replace": {},
                            "expected_exception": ValueError},
                           {"remove": {},
@@ -114,7 +126,7 @@ async def test_start_and_register(test_config: FaradayTestConfig, tmp_default_co
     configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
     configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
-    configuration.set(Sections.EXECUTOR, "cmd", 'exit 1')
+    configuration.set(Sections.EXECUTOR_DATA, "cmd", 'exit 1')
     tmp_default_config.save()
 
     # Init and register it
@@ -623,5 +635,56 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
             min_count, l["msg"]
 
 
-async def test_connect():
-    pass  # TODO
+async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
+                       test_logger_folder):
+    configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
+    configuration.set(Sections.SERVER, "host", test_config.client.host)
+    configuration.set(Sections.SERVER, "workspace", test_config.workspace)
+    configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
+    configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
+    path_to_basic_executor = (
+            Path(__file__).parent.parent /
+            'data' / 'basic_executor.py'
+    )
+    configuration.set(Sections.EXECUTOR, "cmd", "python {}".format(path_to_basic_executor))
+    configuration.set(Sections.EXECUTOR, "executors", "[ex1,ex2,ex3]")
+    configuration.set(Sections.PARAMS, "out", "True")
+    [configuration.set(Sections.PARAMS, param, "False") for param in [
+            "count", "spare", "spaced_before", "spaced_middle", "err", "fails"]]
+    tmp_default_config.save()
+    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
+
+    ws_responses = [{
+                    'action': 'JOIN_AGENT',
+                    'workspace': test_config.workspace,
+                    'token': None,
+                    'executors': [
+                        {
+                            "executor_name": "ex1",
+                            "args": {
+                                "param1": True,
+                                "param2": False
+                            }
+                        },
+                        {
+                            "executor_name": "ex2",
+                            "args": {
+                                "param3": False,
+                                "param4": False
+                            }
+                        },
+                        {
+                            "executor_name": "ex3",
+                            "args": {}
+                        }
+                    ]
+                }]
+
+    async def ws_messages_checker(msg):
+        msg_ = json.loads(msg)
+        assert msg_ in ws_responses
+        ws_responses.remove(msg_)
+
+    await dispatcher.connect(ws_messages_checker)
+
+    assert len(ws_responses) == 0
