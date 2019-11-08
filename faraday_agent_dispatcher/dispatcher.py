@@ -30,11 +30,13 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_str,
     control_host,
     control_registration_token,
-    control_agent_token
+    control_agent_token,
+    control_list
 )
 import faraday_agent_dispatcher.logger as logging
 
 from faraday_agent_dispatcher.config import instance as config, Sections, save_config
+from faraday_agent_dispatcher.executor import Executor
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -53,11 +55,10 @@ class Dispatcher:
             "registration": control_registration_token,
             "agent": control_agent_token
         },
-        Sections.EXECUTOR: {
-            "cmd": control_str,
-            "agent_name": control_str
+        Sections.AGENT: {
+            "agent_name": control_str,
+            "executors": control_list
         },
-
     }
 
     def __init__(self, session, config_path=None):
@@ -69,11 +70,14 @@ class Dispatcher:
         self.websocket_port = config.get(Sections.SERVER, "websocket_port")
         self.workspace = config.get(Sections.SERVER, "workspace")
         self.agent_token = config[Sections.TOKENS].get("agent", None)
-        self.executor_cmd = config.get(Sections.EXECUTOR, "cmd")
-        self.agent_name = config.get(Sections.EXECUTOR, "agent_name")
+        self.agent_name = config.get(Sections.AGENT, "agent_name")
         self.session = session
         self.websocket = None
         self.websocket_token = None
+        self.executors = {
+            executor_name:
+                Executor(executor_name, config) for executor_name in config[Sections.AGENT].get("executors", []).split(",")
+        }
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
