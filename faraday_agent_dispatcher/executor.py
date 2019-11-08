@@ -10,7 +10,7 @@ class Executor:
     __control_dict = {
         Sections.EXECUTOR_DATA: {
            "cmd": control_str,
-           "max_size": control_int
+           "max_size": control_int(True)
         }
     }
 
@@ -25,7 +25,6 @@ class Executor:
         self.params = dict(config[params_section]) if params_section in config else {}
         self.params = {key: value.lower() in ["t", "true"] for key, value in self.params.items()}
         self.varenvs = dict(config[varenvs_section]) if varenvs_section in config else {}
-
 
     def control_config(self, name, config):
         for section in self.__control_dict:

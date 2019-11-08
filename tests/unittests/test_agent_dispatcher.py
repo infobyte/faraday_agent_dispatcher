@@ -663,11 +663,20 @@ async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_
             Path(__file__).parent.parent /
             'data' / 'basic_executor.py'
     )
-    configuration.set(Sections.EXECUTOR, "cmd", "python {}".format(path_to_basic_executor))
-    configuration.set(Sections.EXECUTOR, "executors", "[ex1,ex2,ex3]")
-    configuration.set(Sections.PARAMS, "out", "True")
-    [configuration.set(Sections.PARAMS, param, "False") for param in [
-            "count", "spare", "spaced_before", "spaced_middle", "err", "fails"]]
+    configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3")
+
+    for executor_name in ["ex1","ex2","ex3"]:
+        executor_section = Sections.EXECUTOR_DATA.format(executor_name)
+        params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
+        for section in [executor_section, params_section]:
+            if section not in configuration:
+                configuration.add_section(section)
+        configuration.set(executor_section, "cmd", "python {}".format(path_to_basic_executor))
+
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param1", "True")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param2", "False")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex2"), "param3", "False")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex2"), "param4", "False")
     tmp_default_config.save()
     dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
 
