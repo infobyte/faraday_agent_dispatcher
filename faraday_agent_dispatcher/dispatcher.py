@@ -181,7 +181,7 @@ class Dispatcher:
                                    f"agent"
                     })
                 )
-                return 
+                return
 
             executor = self.executors[data_dict["executor"]]
 

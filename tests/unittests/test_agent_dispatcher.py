@@ -574,6 +574,26 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                                  "unnamed_agent agent"}
                                  ]
                              },
+                             {  # 20
+                                 "data": {"action": "RUN", "agent_id": 1, "executor": "ex2", "args": {"out": "json"}},
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Running executor"},
+                                     {"levelname": "INFO", "msg": "Data sent to bulk create"},
+                                     {"levelname": "INFO", "msg": "Executor finished successfully"}
+                                 ],
+                                 "ws_responses": [
+                                     {
+                                         "action": "RUN_STATUS",
+                                         "running": True,
+                                         "message": "Running executor from unnamed_agent agent"
+                                     }, {
+                                         "action": "RUN_STATUS",
+                                         "successful": True,
+                                         "message": "Executor finished successfully"
+                                     }
+                                 ],
+                                 "extra": ["ex2"]
+                             },
                          ])
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
                         test_logger_folder, executor_options):
@@ -588,19 +608,26 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
             Path(__file__).parent.parent /
             'data' / 'basic_executor.py'
     )
-    executor_section = Sections.EXECUTOR_DATA.format("ex1")
-    params_section = Sections.EXECUTOR_PARAMS.format("ex1")
-    varenvs_section = Sections.EXECUTOR_VARENVS.format("ex1")
-    configuration.set(executor_section, "cmd", "python {}".format(path_to_basic_executor))
-    configuration.set(params_section, "out", "True")
-    [configuration.set(params_section, param, "False") for param in [
-            "count", "spare", "spaced_before", "spaced_middle", "err", "fails"]]
-    if "varenvs" in executor_options:
-        for varenv in executor_options["varenvs"]:
-            configuration.set(varenvs_section, varenv, executor_options["varenvs"][varenv])
+    executor_names = ["ex1"] + ([] if "extra" not in executor_options else executor_options["extra"])
+    configuration.set(Sections.AGENT, "executors", ",".join(executor_names))
+    for executor_name in executor_names:
+        executor_section = Sections.EXECUTOR_DATA.format(executor_name)
+        params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
+        varenvs_section = Sections.EXECUTOR_VARENVS.format(executor_name)
+        for section in [executor_section, params_section, varenvs_section]:
+            if section not in configuration:
+                configuration.add_section(section)
 
-    max_size = str(64 * 1024) if "max_size" not in executor_options else executor_options["max_size"]
-    configuration.set(executor_section, "max_size", max_size)
+        configuration.set(executor_section, "cmd", "python {}".format(path_to_basic_executor))
+        configuration.set(params_section, "out", "True")
+        [configuration.set(params_section, param, "False") for param in [
+            "count", "spare", "spaced_before", "spaced_middle", "err", "fails"]]
+        if "varenvs" in executor_options:
+            for varenv in executor_options["varenvs"]:
+                configuration.set(varenvs_section, varenv, executor_options["varenvs"][varenv])
+
+        max_size = str(64 * 1024) if "max_size" not in executor_options else executor_options["max_size"]
+        configuration.set(executor_section, "max_size", max_size)
 
     tmp_default_config.save()
 
@@ -622,6 +649,7 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
             min_count, l["msg"]
 
 
+# TODO CHECK BUILT REPEATED NAME
 async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
                        test_logger_folder):
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
