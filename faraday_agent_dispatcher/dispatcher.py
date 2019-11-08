@@ -57,7 +57,7 @@ class Dispatcher:
         },
         Sections.AGENT: {
             "agent_name": control_str,
-            "executors": control_list
+            "executors": control_list(can_repeat=False)
         },
     }
 

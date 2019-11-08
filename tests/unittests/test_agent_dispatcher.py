@@ -103,6 +103,10 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "replace": {},
                            "expected_exception": ValueError},
                           {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": "ex1,ex1"}},
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {},
                            "replace": {}}
                           ])
 def test_basic_built(tmp_custom_config, config_changes_dict):
@@ -651,7 +655,6 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
             min_count, l["msg"]
 
 
-# TODO CHECK BUILT REPEATED NAME
 async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
                        test_logger_folder):
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))

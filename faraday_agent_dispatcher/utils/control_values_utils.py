@@ -21,9 +21,16 @@ def control_host(field_name, value):
     control_str(field_name, value)
 
 
-def control_list(field_name, value):
-    if not isinstance(value, str) or not isinstance(value.split(","),list):
-         raise ValueError(f"Trying to parse {field_name} with value {value} and should be a list")
+
+def control_list(can_repeat=True):
+    def control(field_name, value):
+        if not isinstance(value, str):
+            raise ValueError(f"Trying to parse {field_name} with value {value} and should be a list")
+        listt = value.split(",")
+        if len(listt) != len(set(listt)):
+            raise ValueError(f"Trying to parse {field_name} with value {value} and contains repeated values")
+
+    return control
 
 
 def control_bool(field_name, value):
