@@ -31,7 +31,7 @@ try:
     from nessrest import ness6rest
     from faraday_plugins.plugins.manager import PluginsManager
 except KeyError:
-    print("You must set the enviroment variables NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD,"
+    print("You must set the environment variables NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD,"
           "NESSUS_SCANTARGET.\nNESSUS_SCANTEMPLATE is optional and the default 'basic'"
           "which defaults to 'basic'",
           file=sys.stderr)
