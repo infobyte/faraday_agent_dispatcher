@@ -178,6 +178,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "executor_name": data_dict['executor'],
                         "running": False,
                         "message": f"The selected executor {data_dict['executor']} not exists in {self.agent_name} "
                                    f"agent"
@@ -204,6 +205,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "executor_name": executor.name,
                         "running": False,
                         "message": f"Unexpected argument(s) passed to {executor.name} executor from {self.agent_name} "
                                    f"agent"
@@ -223,6 +225,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "executor_name": executor.name,
                         "running": False,
                         "message": f"Mandatory argument(s) not passed to {executor.name} executor from "
                                    f"{self.agent_name} agent"
@@ -240,6 +243,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "executor_name": executor.name,
                         "running": True,
                         "message": running_msg
                     })
@@ -252,6 +256,7 @@ class Dispatcher:
                     await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
+                            "executor_name": executor.name,
                             "successful": True,
                             "message": f"Executor {executor.name} from {self.agent_name} finished successfully"
                         }))
@@ -261,6 +266,7 @@ class Dispatcher:
                     await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
+                            "executor_name": executor.name,
                             "successful": False,
                             "message": f"Executor {executor.name} from {self.agent_name} failed"
                         }))
