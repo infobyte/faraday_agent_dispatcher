@@ -193,10 +193,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -215,10 +217,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -237,10 +241,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -260,10 +266,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -282,10 +290,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -305,10 +315,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -326,10 +338,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -348,10 +362,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -369,10 +385,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": False,
                                          "message": "Executor ex1 from unnamed_agent failed"
                                      }
@@ -393,10 +411,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": False,
                                          "message": "Executor ex1 from unnamed_agent failed"
                                      }
@@ -419,10 +439,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -443,6 +465,7 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": False,
                                          "message": "Mandatory argument(s) not passed to ex1 executor from "
                                                     "unnamed_agent agent"
@@ -464,10 +487,13 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "ERROR", "msg": "Unexpected argument passed"},
                                  ],
                                  "ws_responses": [
-                                     {"action": "RUN_STATUS",
-                                      "running": False,
-                                      "message": "Unexpected argument(s) passed to ex1 executor from unnamed_agent "
-                                                 "agent"}
+                                     {
+                                         "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
+                                         "running": False,
+                                         "message": "Unexpected argument(s) passed to ex1 executor from unnamed_agent "
+                                                    "agent"
+                                     }
                                  ]
                              },
                              {  # 15
@@ -485,10 +511,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -509,10 +537,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -530,10 +560,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex1",
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -554,9 +586,11 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "ERROR", "msg": "No executor selected"},
                                  ],
                                  "ws_responses": [
-                                     {"action": "RUN_STATUS",
-                                      "running": False,
-                                      "message": "No executor selected to unnamed_agent agent"}
+                                     {
+                                         "action": "RUN_STATUS",
+                                         "running": False,
+                                         "message": "No executor selected to unnamed_agent agent"
+                                     }
                                  ]
                              },
                              {  # 19
@@ -574,10 +608,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                      {"levelname": "ERROR", "msg": "The selected executor not exists"},
                                  ],
                                  "ws_responses": [
-                                     {"action": "RUN_STATUS",
-                                      "running": False,
-                                      "message": "The selected executor NOT_4N_CORRECT_EXECUTOR not exists in "
-                                                 "unnamed_agent agent"}
+                                     {
+                                         "action": "RUN_STATUS",
+                                         "executor_name": "NOT_4N_CORRECT_EXECUTOR",
+                                         "running": False,
+                                         "message": "The selected executor NOT_4N_CORRECT_EXECUTOR not exists in "
+                                                    "unnamed_agent agent"}
                                  ]
                              },
                              {  # 20
@@ -590,10 +626,12 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex2",
                                          "running": True,
                                          "message": "Running ex2 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
+                                         "executor_name": "ex2",
                                          "successful": True,
                                          "message": "Executor ex2 from unnamed_agent finished successfully"
                                      }
