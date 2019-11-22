@@ -34,6 +34,14 @@ import faraday_agent_dispatcher.logger as logging
 logger = logging.get_logger()
 
 
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+
+@click.group(context_settings=CONTEXT_SETTINGS)
+def cli():
+    pass
+
+
 async def main(config_file):
 
     if config_file is None and not os.path.exists(config.CONFIG_FILENAME):
@@ -59,10 +67,10 @@ async def main(config_file):
     return 0
 
 
-@click.command("faraday-dispatcher")
+@click.command(help="faraday-dispatcher run")
 @click.option("-c", "--config-file", default=None, help="Path to config ini file")
 @click.option("--logdir", default="~", help="Path to logger directory")
-def main_sync(config_file, logdir):
+def run(config_file, logdir):
     logging.reset_logger(logdir)
     logger = logging.get_logger()
     try:
@@ -76,9 +84,9 @@ def main_sync(config_file, logdir):
     sys.exit(exit_code)
 
 
-@click.command("faraday-dispatcher")
+@click.command(help="faraday-dispatcher config_wizard")
 @click.option("-c", "--config-file", default=None, help="Path to config ini file")
-def register(config_file):
+def config_wizard(config_file):
     value = click.prompt("Enter 1", type=int)
     if value is not 1:
         sys.exit(1)
@@ -87,5 +95,9 @@ def register(config_file):
         sys.exit(2)
 
 
-if __name__ == "__main__":
-    main_sync(None)
+cli.add_command(config_wizard)
+cli.add_command(run)
+
+if __name__ == '__main__':
+
+    cli()
