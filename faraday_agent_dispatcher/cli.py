@@ -76,5 +76,16 @@ def main_sync(config_file, logdir):
     sys.exit(exit_code)
 
 
+@click.command("faraday-dispatcher")
+@click.option("-c", "--config-file", default=None, help="Path to config ini file")
+def register(config_file):
+    value = click.prompt("Enter 1", type=int)
+    if value is not 1:
+        sys.exit(1)
+    value = click.prompt("Enter 1")
+    if value is not "1":
+        sys.exit(2)
+
+
 if __name__ == "__main__":
     main_sync(None)
