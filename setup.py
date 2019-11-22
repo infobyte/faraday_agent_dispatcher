@@ -55,7 +55,7 @@ setup(
     description="Faraday agent dispatcher to communicate an agent to faraday",
     entry_points={
         'console_scripts': [
-            'faraday-dispatcher=faraday_agent_dispatcher.cli:main_sync',
+            'faraday-dispatcher=faraday_agent_dispatcher.cli:cli',
         ],
     },
     install_requires=requirements,
