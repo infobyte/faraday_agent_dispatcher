@@ -30,6 +30,8 @@ class Executor:
     def control_config(self, name, config):
         if " " in name:
             raise ValueError(f"Executor names can't contains space character, passed name: {name}")
+        if Sections.EXECUTOR_DATA.format(name) not in config:
+            raise ValueError(f"{name} is an executor name but there is no proper section")
 
         for section in self.__control_dict:
             for option in self.__control_dict[section]:

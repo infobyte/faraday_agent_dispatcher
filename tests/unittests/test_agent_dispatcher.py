@@ -123,6 +123,10 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "expected_exception": ValueError
                            },
                           {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": "ex1,ex8"}},
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {},
                            "replace": {}}
                           ])
 def test_basic_built(tmp_custom_config, config_changes_dict):
