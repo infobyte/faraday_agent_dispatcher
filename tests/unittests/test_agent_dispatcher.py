@@ -25,7 +25,6 @@ import sys
 
 from pathlib import Path
 from itsdangerous import TimestampSigner
-from configparser import DuplicateSectionError
 
 from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.config import (
