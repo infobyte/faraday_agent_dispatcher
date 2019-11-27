@@ -107,6 +107,22 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "expected_exception": ValueError
                            },
                           {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": "ex1, ex2"}},
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": "ex1,ex2 "}},
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": " ex1,ex2"}},
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": " ex1, ex2 , ex3"}},
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": "ex1,ex 1"}},
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {},
                            "replace": {}}
                           ])
 def test_basic_built(tmp_custom_config, config_changes_dict):
@@ -617,26 +633,26 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 20
-                                 "data": {"action": "RUN", "agent_id": 1, "executor": "ex2", "args": {"out": "json"}},
+                                 "data": {"action": "RUN", "agent_id": 1, "executor": "add_ex1", "args": {"out": "json"}},
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running ex2 executor"},
+                                     {"levelname": "INFO", "msg": "Running add_ex1 executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create"},
-                                     {"levelname": "INFO", "msg": "Executor ex2 finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor add_ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
-                                         "executor_name": "ex2",
+                                         "executor_name": "add_ex1",
                                          "running": True,
-                                         "message": "Running ex2 executor from unnamed_agent agent"
+                                         "message": "Running add_ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
-                                         "executor_name": "ex2",
+                                         "executor_name": "add_ex1",
                                          "successful": True,
-                                         "message": "Executor ex2 from unnamed_agent finished successfully"
+                                         "message": "Executor add_ex1 from unnamed_agent finished successfully"
                                      }
                                  ],
-                                 "extra": ["ex2"]
+                                 "extra": ["add_ex1"]
                              },
                          ])
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
