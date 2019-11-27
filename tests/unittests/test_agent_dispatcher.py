@@ -106,6 +106,18 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "replace": {Sections.AGENT: {"executors": "ex1,ex1"}},
                            "expected_exception": ValueError
                            },
+                          {"remove": {Sections.AGENT: ["section"]},
+                           "replace": {},
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {Sections.TOKENS: ["section"]},
+                           "replace": {},
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {Sections.SERVER: ["section"]},
+                           "replace": {},
+                           "expected_exception": ValueError
+                           },
                           {"remove": {},
                            "replace": {}}
                           ])
@@ -116,8 +128,11 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                 configuration.add_section(section)
             configuration.set(section, option, config_changes_dict["replace"][section][option])
     for section in config_changes_dict["remove"]:
-        for option in config_changes_dict["remove"][section]:
-            configuration.remove_option(section, option)
+        if "section" in config_changes_dict["remove"][section]:
+            configuration.remove_section(section)
+        else:
+            for option in config_changes_dict["remove"][section]:
+                configuration.remove_option(section, option)
     tmp_custom_config.save()
     if "expected_exception" in config_changes_dict:
         with pytest.raises(config_changes_dict["expected_exception"]):
