@@ -280,7 +280,7 @@ class Dispatcher:
             logger.error("Args from data received has a not supported type")
             raise ValueError("Args from data received has a not supported type")
         for varenv, value in executor.varenvs.items():
-            env[varenv.upper()] = value
+            env[f"EXECUTOR_CONFIG_{varenv.upper()}"] = value
         process = await asyncio.create_subprocess_shell(
             executor.cmd,
             stdout=asyncio.subprocess.PIPE,
