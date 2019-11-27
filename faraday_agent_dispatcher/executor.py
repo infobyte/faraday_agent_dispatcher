@@ -14,7 +14,8 @@ class Executor:
         }
     }
 
-    def __init__(self, name, config):
+    def __init__(self, name: str, config):
+        name = name.strip()
         self.control_config(name, config)
         self.name = name
         executor_section = Sections.EXECUTOR_DATA.format(name)
@@ -27,6 +28,11 @@ class Executor:
         self.varenvs = dict(config[varenvs_section]) if varenvs_section in config else {}
 
     def control_config(self, name, config):
+        if " " in name:
+            raise ValueError(f"Executor names can't contains space character, passed name: {name}")
+        if Sections.EXECUTOR_DATA.format(name) not in config:
+            raise ValueError(f"{name} is an executor name but there is no proper section")
+
         for section in self.__control_dict:
             for option in self.__control_dict[section]:
                 value = config.get(section.format(name), option) if option in config[section.format(name)] else None
