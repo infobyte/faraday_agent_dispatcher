@@ -51,7 +51,7 @@ if __name__ == '__main__':
     spaced_before = os.getenv("SPACED_BEFORE") is not None
     spaced_middle = os.getenv("SPACED_MIDDLE") is not None
     spare = os.getenv("SPARE") is not None
-    omit_everything = os.getenv("DO_NOTHING", None)
+    omit_everything = os.getenv("EXECUTOR_CONFIG_DO_NOTHING", None)
     if out and omit_everything is None:
         host_data_ = host_data.copy()
         host_data_['vulnerabilities'] = [vuln_data]
