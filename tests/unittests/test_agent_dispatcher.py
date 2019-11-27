@@ -107,6 +107,11 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "expected_exception": ValueError
                            },
                           {"remove": {},
+                           "replace": {},
+                           "duplicate_exception": True,
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {},
                            "replace": {Sections.AGENT: {"executors": "ex1, ex2"}},
                            },
                           {"remove": {},
@@ -140,6 +145,12 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
             configuration.remove_option(section, option)
     tmp_custom_config.save()
     if "expected_exception" in config_changes_dict:
+        if "duplicate_exception" in config_changes_dict and config_changes_dict["duplicate_exception"]:
+            with open(tmp_custom_config.config_file_path, "r") as file:
+                content = file.read()
+            with open(tmp_custom_config.config_file_path, "w") as file:
+                file.write(content)
+                file.write(content)
         with pytest.raises(config_changes_dict["expected_exception"]):
             Dispatcher(None, tmp_custom_config.config_file_path)
     else:
