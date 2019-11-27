@@ -294,5 +294,9 @@ class Dispatcher:
     def control_config(self):
         for section in self.__control_dict:
             for option in self.__control_dict[section]:
+                # if section not in config:
+                #     err = f"Section {section} is an mandatory section in the config" # TODO "run config cmd"
+                #     logger.error(err)
+                #     raise ValueError(err)
                 value = config.get(section, option) if option in config[section] else None
                 self.__control_dict[section][option](option, value)
