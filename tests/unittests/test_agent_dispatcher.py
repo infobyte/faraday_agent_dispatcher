@@ -116,6 +116,9 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "replace": {Sections.AGENT: {"executors": " ex1,ex2"}},
                            },
                           {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": " ex1, ex2 , ex3"}},
+                           },
+                          {"remove": {},
                            "replace": {Sections.AGENT: {"executors": "ex1,ex 1"}},
                            "expected_exception": ValueError
                            },
