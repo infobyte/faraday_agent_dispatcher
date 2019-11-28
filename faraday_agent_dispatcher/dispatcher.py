@@ -275,12 +275,12 @@ class Dispatcher:
         env = os.environ.copy()
         if isinstance(args, dict):
             for k in args:
-                env[k.upper()] = str(args[k])
+                env[f"EXECUTOR_CONFIG_{k.upper()}"] = str(args[k])
         else:
             logger.error("Args from data received has a not supported type")
             raise ValueError("Args from data received has a not supported type")
         for varenv, value in executor.varenvs.items():
-            env[f"EXECUTOR_CONFIG_{varenv.upper()}"] = value
+            env[f"{varenv.upper()}"] = value
         process = await asyncio.create_subprocess_shell(
             executor.cmd,
             stdout=asyncio.subprocess.PIPE,
