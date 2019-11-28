@@ -36,22 +36,15 @@ vuln_data = {
     'refs': ['CVE-1234']
 }
 
-import argparse  # TODO REMOVE WHEN FARADAY SENDS ARGS
-
 if __name__ == '__main__':
-    ##### TODO REMOVE WHEN FARADAY SENDS ARGS
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--out', action='store', help='if set prints by stdout')
-    args = parser.parse_args()
-    ##### TODO REMOVE WHEN FARADAY SENDS ARGS
-    out = os.getenv("OUT", args.out or None)
-    count = os.getenv("COUNT", 1)
-    err = os.getenv("ERR") is not None
-    fails = os.getenv("FAILS") is not None
-    spaced_before = os.getenv("SPACED_BEFORE") is not None
-    spaced_middle = os.getenv("SPACED_MIDDLE") is not None
-    spare = os.getenv("SPARE") is not None
-    omit_everything = os.getenv("EXECUTOR_CONFIG_DO_NOTHING", None)
+    out = os.getenv("EXECUTOR_CONFIG_OUT")
+    count = os.getenv("EXECUTOR_CONFIG_COUNT", 1)
+    err = os.getenv("EXECUTOR_CONFIG_ERR") is not None
+    fails = os.getenv("EXECUTOR_CONFIG_FAILS") is not None
+    spaced_before = os.getenv("EXECUTOR_CONFIG_SPACED_BEFORE") is not None
+    spaced_middle = os.getenv("EXECUTOR_CONFIG_SPACED_MIDDLE") is not None
+    spare = os.getenv("EXECUTOR_CONFIG_SPARE") is not None
+    omit_everything = os.getenv("DO_NOTHING", None)
     if out and omit_everything is None:
         host_data_ = host_data.copy()
         host_data_['vulnerabilities'] = [vuln_data]
