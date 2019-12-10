@@ -166,6 +166,7 @@ class TestLoggerHandler(StreamHandler):
     def __init__(self):
         super().__init__()
         self.history = []
+        self.name = "TEST_HANDLER"
 
     def emit(self, record):
         self.history.append(record)
