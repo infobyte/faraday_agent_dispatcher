@@ -1,71 +1,125 @@
-# -*- coding: utf-8 -*-
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-"""
-    Nessus Scan ETL agent
-    ~~~~~~~~~
-
-    dependencies faraday_plugins, nessrest
-
-"""
-import sys
+#!/usr/bin/env python
 import os
+import re
+import sys
+import time
+import requests
 
-try:
-    NESSUS_URL = os.environ["NESSUS_URL"]
-    NESSUS_USERNAME = os.environ["NESSUS_USERNAME"]
-    NESSUS_PASSWORD = os.environ["NESSUS_PASSWORD"]
-    NESSUS_SCANTARGET = os.environ["NESSUS_SCANTARGET"]
-    from nessrest import ness6rest
-    from faraday_plugins.plugins.manager import PluginsManager
-except KeyError:
-    print("You must set the environment variables NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD,"
-          "NESSUS_SCANTARGET.\nNESSUS_SCANTEMPLATE is optional and the default 'basic'"
-          "which defaults to 'basic'",
-          file=sys.stderr)
-    sys.exit()
-except ImportError:
-    print("There are missing dependencies. Run:\npip install nessrest faraday_plugins")
-    sys.exit()
+from faraday_plugins.plugins.manager import PluginsManager
+
+def nessus_login(url, user, password):
+    payload = {'username': user, 'password': password}
+    try:
+        ret = requests.post(url + '/session', payload, verify=False).json()
+        token = ret['token']
+        x_token = get_x_api_token(url, token)
+    except Exception as e:
+        token = None
+        x_token = None
+
+    return token, x_token
+
+def nessus_templates(url, token, x_token = '', target = '', policy = 'basic'):
+    headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token}
+    try:
+        payload = { }
+        r = requests.get(url + '/editor/scan/templates', json=payload, headers=headers, verify=False).json()
+        return { t['name']: t['uuid'] for t in r['templates']}
+    except Exception as e:
+        print (e)
+
+    return
 
 
-class RedirectOutput():
-    """ context manager for redirecting output """
-    def __enter__(self):
-        sys.stdout = sys.stderr
-    def __exit__(self, type, value, traceback):
-        sys.stdout = sys.__stdout__
+def nessus_add_target(url, token, x_token = '', target = '', template = 'basic', name = 'nessus_scan'):
+    headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token}
+    templates = nessus_templates(url, token, x_token)
+    try:
+        payload = { 'uuid': '{}'.format(templates[template]), 'settings': { 'name': '{}'.format(name), 'enabled': True, 'text_targets': target, 'agent_group_id': [] }}
+        r = requests.post(url + '/scans', json=payload, headers=headers, verify=False).json()
+        return r['scan']['id']
+    except Exception as e:
+        print (e)
+
+
+def nessus_scan_run(url, scan_id, token, x_token = '', target = 'basic', policies=''):
+    headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token }
+    try:
+        s = requests.post(url + '/scans/{scan_id}/launch'.format(scan_id=scan_id), headers=headers, verify=False).json()
+        print ('scan', s)
+        scan_uuid = s['scan_uuid']
+
+        read = { 'read': False }
+        s = requests.get(url + '/scans/{scan_id}'.format(scan_id=scan_id), headers=headers, verify=False)
+        #print("scans ", s.json())
+        status = s.json()['info']['status']
+        while status == 'running':
+            #print("scan status", status)
+            time.sleep(5)
+            s = requests.get(url + '/scans/{scan_id}'.format(scan_id=scan_id), headers=headers, verify=False)
+            #print("scan status check ", s)
+            status = s.json()['info']['status']
+        #print("scan status", status)
+    except Exception as e:
+        print (e)
+
+def nessus_scan_export(url, scan_id, token, x_token = '', target = ''):
+    headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token}
+    try:
+        r = requests.post(url + '/scans/{scan_id}/export?limit=2500'.format(scan_id=scan_id), data={'format': 'nessus'}, headers=headers, verify=False).json()
+
+        if r['token']:
+            s = requests.get(url + '/tokens/{token}/status'.format(token = r['token']), verify=False).json()
+            status = s['status']
+            while status != 'ready':
+                print ('export status ', status)
+                s = requests.get(url + '/tokens/{token}/status'.format(token = r['token']), verify=False).json()
+                #print("export status check ", s)
+                status = s['status']
+            print ('export status ', status)
+            r = requests.get(url + '/tokens/{token}/download'.format(token = r['token']), allow_redirects=True, verify=False)
+            #open('nessus_scan', 'wb').write(r.content)
+            return r.content
+    except Exception as e:
+        print (e)
+
+def get_x_api_token(url, token):
+    x_token = None
+    headers = {'X-Cookie': 'token={}'.format(token)} 
+    pattern = r"\{key:\"getApiToken\",value:function\(\)\{return\"([a-zA-Z0-9]*-[a-zA-Z0-9]*-[a-zA-Z0-9]*-[a-zA-Z0-9]*-[a-zA-Z0-9]*)\"\}"
+    try:
+        r = requests.get(url + '/nessus6.js', headers=headers, verify=False)
+        content = str(r.content)
+        matched = re.search(pattern, str(r.content))
+        if matched:
+            x_token = matched.group(1)
+            #print("x-token " , x_token, file=sys.stderr)
+        #else:
+        #    #print("Nothing matched")
+    except Exception as e:
+        print (e)
+
+    return x_token
+
 
 def main():
     """ main function """
+    scan_file = ''
+    NESSUS_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_NAME", 'my_scan')
+    NESSUS_URL = os.getenv("EXECUTOR_CONFIG_NESSUS_URL") #  https://nessus:port
+    NESSUS_USERNAME = os.getenv("EXECUTOR_CONFIG_NESSUS_USERNAME")
+    NESSUS_PASSWORD = os.getenv("EXECUTOR_CONFIG_NESSUS_PASSWORD")
+    NESSUS_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_TARGET") #  ip, domain, range
+    NESSUS_SCAN_TEMPLATE = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_TEMPLATE", "basic") #  name field
+    
+    token, x_token = nessus_login(NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD)
+    scan_id = nessus_add_target(NESSUS_URL, token, x_token, NESSUS_SCAN_TARGET, NESSUS_SCAN_TEMPLATE,NESSUS_SCAN_NAME)
+    if token:
+        nessus_scan_run(NESSUS_URL, scan_id, token, x_token)
+        scan_file = nessus_scan_export(NESSUS_URL, scan_id, token, x_token)
 
-    with RedirectOutput():
-        scanner = ness6rest.Scanner(url=NESSUS_URL, login=NESSUS_USERNAME,
-                                    password=NESSUS_PASSWORD, insecure=True)
-
-        scantemplate = os.getenv("NESSUS_SCANTEMPLATE", "basic")
-        scanner.scan_add(targets=NESSUS_SCANTARGET, template=scantemplate, name="Faraday Agent Scan")
-        print("Starting scan")
-        scanner.scan_run()
-
-        #This blocks execution until the scan stops running
-        scanner._scan_status()
-
-        plugin = PluginsManager().get_plugin("nessus")
-        plugin.parseOutputString(scanner.download_scan(export_format="nessus"))
-
+    plugin = PluginsManager().get_plugin("nessus")
+    plugin.parseOutputString(scan_file)
     print(plugin.get_json())
 
 if __name__ == '__main__':
