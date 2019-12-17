@@ -2,6 +2,7 @@
 Usage
 =====
 
-To use dummy_faraday_agent in a project::
+To use faraday_agent_dispatcher in a project::
 
-    import dummy_faraday_agent
+    import faraday_agent_dispatcher
+

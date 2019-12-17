@@ -1,5 +1,5 @@
-from faraday_agent_dispatcher.config import instance as config, reset_config, \
-    EXECUTOR_SECTION, SERVER_SECTION, TOKENS_SECTION, save_config, EXAMPLE_CONFIG_FILENAME
+from faraday_agent_dispatcher.config import instance as config, reset_config, Sections,\
+    save_config, EXAMPLE_CONFIG_FILENAME
 
 from faraday_agent_dispatcher.utils.url_utils import api_url
 
@@ -13,11 +13,12 @@ import subprocess
 import time
 
 reset_config(EXAMPLE_CONFIG_FILENAME)
-HOST = config.get(SERVER_SECTION, "host")
-API_PORT = config.get(SERVER_SECTION, "api_port")
-WS_PORT = config.get(SERVER_SECTION, "websocket_port")
+HOST = config.get(Sections.SERVER, "host")
+API_PORT = config.get(Sections.SERVER, "api_port")
+WS_PORT = config.get(Sections.SERVER, "websocket_port")
 WORKSPACE = fuzzy_string(6).lower()  # TODO FIX WHEN FARADAY ACCEPTS CAPITAL FIRST LETTER
 AGENT_NAME = fuzzy_string(6)
+EXECUTOR_NAME = fuzzy_string(6)
 
 USER = os.getenv("FARADAY_USER")
 EMAIL = os.getenv("FARADAY_EMAIL")
@@ -52,20 +53,31 @@ def test_execute_agent():
     token = res.json()['token']
 
     # Config set up
-    config.set(TOKENS_SECTION, "registration", token)
-    config.remove_option(TOKENS_SECTION, "agent")
-    config.set(SERVER_SECTION, "workspace", WORKSPACE)
-    config.set(EXECUTOR_SECTION, "agent_name", AGENT_NAME)
-    config.set(EXECUTOR_SECTION, "cmd", "python ./basic_executor.py --out json")
+    config.set(Sections.TOKENS, "registration", token)
+    config.remove_option(Sections.TOKENS, "agent")
+    config.set(Sections.SERVER, "workspace", WORKSPACE)
+    config.set(Sections.AGENT, "agent_name", AGENT_NAME)
+    config.set(Sections.AGENT, "executors", EXECUTOR_NAME)
     path_to_basic_executor = (
         Path(__file__).parent.parent.parent /
         'data' / 'basic_executor.py'
     )
+    executor_section = Sections.EXECUTOR_DATA.format(EXECUTOR_NAME)
+    params_section = Sections.EXECUTOR_PARAMS.format(EXECUTOR_NAME)
+    for section in [executor_section, params_section]:
+        if section not in config:
+            config.add_section(section)
+
     config.set(
-        EXECUTOR_SECTION,
+        Sections.EXECUTOR_DATA.format(EXECUTOR_NAME),
         "cmd",
-        f"python {path_to_basic_executor} --out json"
+        f"python {path_to_basic_executor}"
     )
+
+    config.set(params_section, "out", "True")
+    [config.set(params_section, param, "False") for param in [
+        "count", "spare", "spaced_before", "spaced_middle", "err", "fails"]]
+
     save_config(CONFIG_DIR)
 
     # Init dispatcher!
@@ -79,6 +91,7 @@ def test_execute_agent():
     res_data = res.json()
     assert len(res_data) == 1, p.communicate(timeout=0.1)
     agent = res_data[0]
+    agent_id = agent["id"]
     if agent_ok_status_keys_set != set(agent.keys()):
         print("Keys set from agent endpoint differ from expected ones, checking if its a superset")
         assert agent_ok_status_keys_set.issubset(set(agent.keys()))
@@ -87,17 +100,27 @@ def test_execute_agent():
 
     # Run executor!
     res = session.post(api_url(HOST, API_PORT, postfix=f'/_api/v2/ws/{WORKSPACE}/agents/{agent["id"]}/run/'),
-                       data={'csrf_token': session_res.json()['csrf_token']})
+                       json={
+                           'csrf_token': session_res.json()['csrf_token'],
+                           'executorData': {
+                               "agent_id": agent_id,
+                               "executor": EXECUTOR_NAME,
+                               "args": {"out": "json"}
+                           }
+                       })
     assert res.status_code == 200, res.text
     time.sleep(2)  # If fails check time
 
     # Test results
     res = session.get(api_url(HOST, API_PORT, postfix=f'/_api/v2/ws/{WORKSPACE}/hosts'))
     host_dict = res.json()
-    assert host_dict["total_rows"] == 1
+    assert host_dict["total_rows"] == 1, (res.text, host_dict)
     host = host_dict["rows"][0]["value"]
     for key in host_data:
-        assert host[key] == host_data[key]
+        if key == "hostnames":
+            assert set(host[key]) == set(host_data[key])
+        else:
+            assert host[key] == host_data[key]
     assert host["vulns"] == 1
 
     res = session.get(api_url(HOST, API_PORT, postfix=f'/_api/v2/ws/{WORKSPACE}/vulns'))

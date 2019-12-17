@@ -17,6 +17,7 @@ import os
 import logging
 import configparser
 from pathlib import Path
+from configparser import DuplicateSectionError
 
 try:
     FARADAY_PATH = Path(os.environ['FARADAY_HOME'])
@@ -39,8 +40,11 @@ instance = configparser.ConfigParser()
 
 def reset_config(filepath):
     instance.clear()
-    if not instance.read(filepath):
-        raise ValueError(f'Unable to read config file located at {filepath}')
+    try:
+        if not instance.read(filepath):
+            raise ValueError(f'Unable to read config file located at {filepath}')
+    except DuplicateSectionError as e:
+        raise ValueError(f'The config in {filepath} contains duplicated sections')
 
 
 def check_filepath(filepath: str = None):
@@ -56,6 +60,10 @@ def save_config(filepath=None):
         instance.write(configfile)
 
 
-TOKENS_SECTION = "tokens"
-SERVER_SECTION = "server"
-EXECUTOR_SECTION = "executor"
+class Sections:
+    TOKENS = "tokens"
+    SERVER = "server"
+    AGENT = "agent"
+    EXECUTOR_VARENVS = "{}_varenvs"
+    EXECUTOR_PARAMS = "{}_params"
+    EXECUTOR_DATA = "{}"
