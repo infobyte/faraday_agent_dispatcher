@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=dummy_faraday_agent
+set SPHINXPROJ=faraday_agent_dispatcher
 
 if "%1" == "" goto help
 

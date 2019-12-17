@@ -1,4 +1,4 @@
-Welcome to dummy_faraday_agent's documentation!
+Welcome to faraday_agent_dispatcher's documentation!
 ======================================
 
 .. toctree::
