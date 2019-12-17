@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
 import sys
 import json
-import argparse
 
 
 host_data = {
@@ -37,32 +37,32 @@ vuln_data = {
 }
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--out', action='store', help='if set prints by stdout')
-    parser.add_argument('--err', action='store_true', help='if set prints by stderr')
-    parser.add_argument('--fails', action='store_true', help='if true fails')
-    parser.add_argument('--spaced_before', action='store_true', help='if set prints by stdout')
-    parser.add_argument('--spare', action='store_true', help='if set prints by stdout')
-    parser.add_argument('--spaced_middle', action='store_true', help='if set prints by stdout')
-    parser.add_argument('--count', action='store', default=1, help='if set prints by stdout')
-    args = parser.parse_args()
-
-    if args.out:
+    out = os.getenv("EXECUTOR_CONFIG_OUT")
+    count = os.getenv("EXECUTOR_CONFIG_COUNT", 1)
+    err = os.getenv("EXECUTOR_CONFIG_ERR") is not None
+    fails = os.getenv("EXECUTOR_CONFIG_FAILS") is not None
+    spaced_before = os.getenv("EXECUTOR_CONFIG_SPACED_BEFORE") is not None
+    spaced_middle = os.getenv("EXECUTOR_CONFIG_SPACED_MIDDLE") is not None
+    spare = os.getenv("EXECUTOR_CONFIG_SPARE") is not None
+    omit_everything = os.getenv("DO_NOTHING", None)
+    if out and omit_everything is None:
         host_data_ = host_data.copy()
         host_data_['vulnerabilities'] = [vuln_data]
         data = dict(hosts=[host_data_])
-        if args.out == "json":
-            prefix = '\n' if args.spaced_before else ''
-            suffix = '\n' if args.spaced_middle else ''
-            suffix += ('\n' if args.spare else '').join([''] + [json.dumps(data) for _ in range(int(args.count) - 1)])
+        if out == "json":
+            prefix = '\n' if spaced_before else ''
+            suffix = '\n' if spaced_middle else ''
+            suffix += ('\n' if spare else '').join([''] + [json.dumps(data) for _ in range(int(count) - 1)])
             print(f"{prefix}{json.dumps(data)}{suffix}")
-        elif args.out == "str":
+        elif out == "str":
             print("NO JSON OUTPUT")
-        elif args.out == "bad_json":
+        elif out == "bad_json":
             del data["hosts"][0]["ip"]
             print(f"{json.dumps(data)}")
+    else:
+        print(omit_everything, file=sys.stderr)
 
-    if args.err:
+    if err:
         print("Print by stderr", file=sys.stderr)
-    if args.fails:
+    if fails:
         sys.exit(1)

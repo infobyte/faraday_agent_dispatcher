@@ -8,13 +8,13 @@ Installation
 Stable release
 --------------
 
-To install dummy_faraday_agent, run this command in your terminal:
+To install faraday_agent_dispatcher, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install dummy_faraday_agent
+    $ pip install faraday_agent_dispatcher
 
-This is the preferred method to install dummy_faraday_agent, as it will always install the most recent stable release.
+This is the preferred method to install faraday_agent_dispatcher, as it will always install the most recent stable release.
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
@@ -26,19 +26,19 @@ you through the process.
 From sources
 ------------
 
-The sources for dummy_faraday_agent can be downloaded from the `Github repo`_.
+The sources for faraday_agent_dispatcher can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/EricHorvat/dummy_faraday_agent
+    $ git clone git://github.com/faradaysec/faraday_agent_dispatcher
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/EricHorvat/dummy_faraday_agent/tarball/master
+    $ curl  -OL https://github.com/faradaysec/faraday_agent_dispatcher/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/EricHorvat/dummy_faraday_agent
-.. _tarball: https://github.com/EricHorvat/dummy_faraday_agent/tarball/master
+.. _Github repo: https://github.com/faradaysec/faraday_agent_dispatcher
+.. _tarball: https://github.com/faradaysec/faraday_agent_dispatcher/tarball/master
