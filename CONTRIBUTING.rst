@@ -15,7 +15,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/EricHorvat/dummy_faraday_agent/issues.
+Report bugs at https://github.com/faradaysec/faraday_agent_dispatcher/issues.
 
 If you are reporting a bug, please include:
 
@@ -38,14 +38,14 @@ and "help wanted" is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-dummy_faraday_agent could always use more documentation, whether as part of the
-official dummy_faraday_agent docs, in docstrings, or even on the web in blog posts,
+faraday_agent_dispatcher could always use more documentation, whether as part of the
+official faraday_agent_dispatcher docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/EricHorvat/dummy_faraday_agent/issues.
+The best way to send feedback is to file an issue at https://github.com/faraday/faraday_agent_dispatcher/issues.
 
 If you are proposing a feature:
 
@@ -57,17 +57,17 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `dummy_faraday_agent` for local development.
+Ready to contribute? Here's how to set up `faraday_agent_dispatcher` for local development.
 
-1. Fork the `dummy_faraday_agent` repo on GitHub.
+1. Fork the `faraday_agent_dispatcher` repo on GitHub.
 2. Clone your fork locally::
 
-    $ git clone git@github.com:your_name_here/dummy_faraday_agent.git
+    $ git clone git@github.com:your_name_here/faraday_agent_dispatcher.git
 
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
 
-    $ mkvirtualenv dummy_faraday_agent
-    $ cd dummy_faraday_agent/
+    $ mkvirtualenv faraday_agent_dispatcher
+    $ cd faraday_agent_dispatcher/
     $ python setup.py develop
 
 4. Create a branch for local development::
@@ -79,7 +79,7 @@ Ready to contribute? Here's how to set up `dummy_faraday_agent` for local develo
 5. When you're done making changes, check that your changes pass flake8 and the
    tests, including testing other Python versions with tox::
 
-    $ flake8 dummy_faraday_agent tests
+    $ flake8 faraday_agent_dispatcher tests
     $ python setup.py test or py.test
     $ tox
 
@@ -103,7 +103,7 @@ Before you submit a pull request, check that it meets these guidelines:
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
 3. The pull request should work for Python 2.7, 3.4, 3.5 and 3.6, and for PyPy. Check
-   https://travis-ci.org/EricHorvat/dummy_faraday_agent/pull_requests
+   https://travis-ci.org/faradaysec/faraday_agent_dispatcher/pull_requests
    and make sure that the tests pass for all supported Python versions.
 
 Tips
@@ -111,7 +111,7 @@ Tips
 
 To run a subset of tests::
 
-$ py.test tests.test_dummy_faraday_agent
+$ py.test tests.faraday_agent_dispatcher
 
 
 Deploying
