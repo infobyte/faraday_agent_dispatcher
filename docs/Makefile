@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
-SPHINXPROJ    = dummy_faraday_agent
+SPHINXPROJ    = faraday_agent_dispatcher
 SOURCEDIR     = .
 BUILDDIR      = _build
 
