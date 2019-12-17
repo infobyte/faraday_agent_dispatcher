@@ -40,6 +40,12 @@ setup_requirements = ['pytest-runner', 'click', 'setuptools_scm']
 
 test_requirements = ['pytest', 'pytest-aiohttp']
 
+extra_req = {
+        'dev': [
+            'giteasychangelog'
+        ]
+    }
+
 setup(
     author="Eric Horvat",
     author_email='erich@infobytesec.com',
@@ -59,6 +65,7 @@ setup(
         ],
     },
     install_requires=requirements,
+    extras_require=extra_req,
     license="GNU General Public License v3",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
