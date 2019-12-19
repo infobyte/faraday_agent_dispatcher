@@ -101,7 +101,10 @@ class Dispatcher:
             try:
                 token_response = await self.session.post(token_registration_url,
                                                          json={'token': registration_token, 'name': self.agent_name})
-                assert token_response.status == 201
+                if token_response.status != 201:
+                    error_msg = "Invalid registration token, please reset and retry"
+                    logger.error(error_msg)
+                    raise AssertionError(error_msg)
                 token = await token_response.json()
                 self.agent_token = token["token"]
                 config.set(Sections.TOKENS, "agent", self.agent_token)
