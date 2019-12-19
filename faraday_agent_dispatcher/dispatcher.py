@@ -275,12 +275,12 @@ class Dispatcher:
         env = os.environ.copy()
         if isinstance(args, dict):
             for k in args:
-                env[k.upper()] = str(args[k])
+                env[f"EXECUTOR_CONFIG_{k.upper()}"] = str(args[k])
         else:
             logger.error("Args from data received has a not supported type")
             raise ValueError("Args from data received has a not supported type")
         for varenv, value in executor.varenvs.items():
-            env[varenv.upper()] = value
+            env[f"{varenv.upper()}"] = value
         process = await asyncio.create_subprocess_shell(
             executor.cmd,
             stdout=asyncio.subprocess.PIPE,
@@ -294,5 +294,9 @@ class Dispatcher:
     def control_config(self):
         for section in self.__control_dict:
             for option in self.__control_dict[section]:
+                if section not in config:
+                    err = f"Section {section} is an mandatory section in the config" # TODO "run config cmd"
+                    logger.error(err)
+                    raise ValueError(err)
                 value = config.get(section, option) if option in config[section] else None
                 self.__control_dict[section][option](option, value)

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Tests for `faraday_dummy_agent` package."""
+"""Tests for `faraday_agent_dispatcher` package."""
 
 import json
 import os
@@ -106,6 +106,43 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "replace": {Sections.AGENT: {"executors": "ex1,ex1"}},
                            "expected_exception": ValueError
                            },
+                          {"remove": {Sections.AGENT: ["section"]},
+                           "replace": {},
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {Sections.TOKENS: ["section"]},
+                           "replace": {},
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {Sections.SERVER: ["section"]},
+                           "replace": {},
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {},
+                           "replace": {},
+                           "duplicate_exception": True,
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": "ex1, ex2"}},
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": "ex1,ex2 "}},
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": " ex1,ex2"}},
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": " ex1, ex2 , ex3"}},
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": "ex1,ex 1"}},
+                           "expected_exception": ValueError
+                           },
+                          {"remove": {},
+                           "replace": {Sections.AGENT: {"executors": "ex1,ex8"}},
+                           "expected_exception": ValueError
+                           },
                           {"remove": {},
                            "replace": {}}
                           ])
@@ -116,10 +153,19 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                 configuration.add_section(section)
             configuration.set(section, option, config_changes_dict["replace"][section][option])
     for section in config_changes_dict["remove"]:
-        for option in config_changes_dict["remove"][section]:
-            configuration.remove_option(section, option)
+        if "section" in config_changes_dict["remove"][section]:
+            configuration.remove_section(section)
+        else:
+            for option in config_changes_dict["remove"][section]:
+                configuration.remove_option(section, option)
     tmp_custom_config.save()
     if "expected_exception" in config_changes_dict:
+        if "duplicate_exception" in config_changes_dict and config_changes_dict["duplicate_exception"]:
+            with open(tmp_custom_config.config_file_path, "r") as file:
+                content = file.read()
+            with open(tmp_custom_config.config_file_path, "w") as file:
+                file.write(content)
+                file.write(content)
         with pytest.raises(config_changes_dict["expected_exception"]):
             Dispatcher(None, tmp_custom_config.config_file_path)
     else:
@@ -617,26 +663,26 @@ async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default
                                  ]
                              },
                              {  # 20
-                                 "data": {"action": "RUN", "agent_id": 1, "executor": "ex2", "args": {"out": "json"}},
+                                 "data": {"action": "RUN", "agent_id": 1, "executor": "add_ex1", "args": {"out": "json"}},
                                  "logs": [
-                                     {"levelname": "INFO", "msg": "Running ex2 executor"},
+                                     {"levelname": "INFO", "msg": "Running add_ex1 executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create"},
-                                     {"levelname": "INFO", "msg": "Executor ex2 finished successfully"}
+                                     {"levelname": "INFO", "msg": "Executor add_ex1 finished successfully"}
                                  ],
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
-                                         "executor_name": "ex2",
+                                         "executor_name": "add_ex1",
                                          "running": True,
-                                         "message": "Running ex2 executor from unnamed_agent agent"
+                                         "message": "Running add_ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
-                                         "executor_name": "ex2",
+                                         "executor_name": "add_ex1",
                                          "successful": True,
-                                         "message": "Executor ex2 from unnamed_agent finished successfully"
+                                         "message": "Executor add_ex1 from unnamed_agent finished successfully"
                                      }
                                  ],
-                                 "extra": ["ex2"]
+                                 "extra": ["add_ex1"]
                              },
                          ])
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,

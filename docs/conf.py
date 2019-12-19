@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# faraday_dummy_agent documentation build configuration file, created by
+# faraday_agent_dispatcher documentation build configuration file, created by
 # sphinx-quickstart on Fri Jun  9 13:47:02 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -47,7 +47,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'faraday_dummy_agent'
+project = u'faraday_agent_dispatcher'
 copyright = u"2019, Eric Horvat"
 author = u"Eric Horvat"
 
@@ -101,7 +101,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'dummy_faraday_agentdoc'
+htmlhelp_basename = 'faraday_agent_dispatcher'
 
 
 # -- Options for LaTeX output ------------------------------------------
@@ -128,8 +128,8 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass
 # [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'faraday_dummy_agent.tex',
-     u'faraday_dummy_agent Documentation',
+    (master_doc, 'faraday_agent_dispatcher.tex',
+     u'faraday_agent_dispatcher Documentation',
      u'Eric Horvat', 'manual'),
 ]
 
@@ -139,8 +139,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'faraday_dummy_agent',
-     u'faraday_dummy_agent Documentation',
+    (master_doc, 'faraday_agent_dispatcher',
+     u'faraday_agent_dispatcher Documentation',
      [author], 1)
 ]
 
@@ -151,10 +151,10 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'faraday_dummy_agent',
-     u'faraday_dummy_agent Documentation',
+    (master_doc, 'faraday_agent_dispatcher',
+     u'faraday_agent_dispatcher Documentation',
      author,
-     'faraday_dummy_agent',
+     'faraday_agent_dispatcher',
      'One line description of project.',
      'Miscellaneous'),
 ]

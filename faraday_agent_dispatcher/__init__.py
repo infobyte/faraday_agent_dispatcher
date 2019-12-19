@@ -16,8 +16,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-"""Top-level package for faraday_dummy_agent."""
+"""Top-level package for faraday_agent_dispatcher."""
 
 __author__ = """Eric Horvat"""
 __email__ = 'erich@infobytesec.com'
-__version__ = '0.1.0'
+__version__ = '1.0'

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Console script for faraday_dummy_agent."""
+"""Console script for faraday_agent_dispatcher."""
 import os
 import sys
 import shutil
