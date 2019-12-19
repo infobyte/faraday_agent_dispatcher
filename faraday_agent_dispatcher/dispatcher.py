@@ -115,6 +115,7 @@ class Dispatcher:
                     raise e
 
         self.websocket_token = await self.reset_websocket_token()
+        logger.info("Registered successfully")
 
     async def connect(self, out_func=None):
 
