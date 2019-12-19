@@ -172,41 +172,92 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
         Dispatcher(None, tmp_custom_config.config_file_path)
 
 
-async def test_start_and_register(test_config: FaradayTestConfig, tmp_default_config):
+@pytest.mark.parametrize('register_options',
+                         [
+                             # 0
+                             {
+                                 "replace_data": {Sections.TOKENS: {"registration": "NotOk" * 5}},
+                                 "logs": [
+                                     {"levelname": "ERROR", "msg": "Invalid registration token, please reset and retry"},
+                                 ],
+                                 "expected_exception": AssertionError
+                             },
+                             # 1
+                             {
+                                 "replace_data": {
+                                     Sections.TOKENS: {
+                                         "agent":
+                                             "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446"
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "ERROR", "msg": "Invalid agent token, removing and retrying"},
+                                     {"levelname": "INFO", "msg": "Registered successfully"},
+                                 ],
+                             },
+                             # 2
+                             {
+                                 "replace_data": {},
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Registered successfully"},
+                                 ],
+                             },
+                             # 3
+                             {
+                                 "replace_data": {
+                                     Sections.TOKENS: {
+                                         "agent":
+                                             "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446"
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "ERROR", "msg": "Invalid agent token, removing and retrying"},
+                                     {"levelname": "ERROR",
+                                      "msg": "Invalid registration token, please reset and retry"},
+                                 ],
+                             }
+                         ])
+async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,
+                                     test_logger_handler):
     # Config
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
     configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
     configuration.set(Sections.EXECUTOR_DATA.format("ex1"), "cmd", 'exit 1')
-    tmp_default_config.save()
 
-    # Init and register it
-    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
-    await dispatcher.register()
+    for section in register_options["replace_data"]:
+        for option in register_options["replace_data"][section]:
+            if section not in configuration:
+                configuration.add_section(section)
+            configuration.set(section, option, register_options["replace_data"][section][option])
 
-    # Control tokens
-    assert dispatcher.agent_token == test_config.agent_token
-
-    signer = TimestampSigner(test_config.app_config['SECRET_KEY'], salt="websocket_agent")
-    agent_id = int(signer.unsign(dispatcher.websocket_token).decode('utf-8'))
-    assert test_config.agent_id == agent_id
-
-
-async def test_start_with_bad_config(test_config: FaradayTestConfig, tmp_default_config):
-    # Config
-    configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
-    configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.SERVER, "workspace", test_config.workspace)
-    configuration.set(Sections.TOKENS, "registration", "NotOk" * 5)
-    configuration.set(Sections.EXECUTOR_DATA.format("ex1"), "cmd", 'exit 1')
     tmp_default_config.save()
 
     # Init and register it
     dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
 
-    with pytest.raises(AssertionError):
+    if "expected_exception" in register_options:
+        with pytest.raises(register_options["expected_exception"]):
+            await dispatcher.register()
+    else:
         await dispatcher.register()
+
+        # Control tokens
+        assert dispatcher.agent_token == test_config.agent_token
+
+        signer = TimestampSigner(test_config.app_config['SECRET_KEY'], salt="websocket_agent")
+        agent_id = int(signer.unsign(dispatcher.websocket_token).decode('utf-8'))
+        assert test_config.agent_id == agent_id
+
+    history = test_logger_handler.history
+
+    for l in register_options["logs"]:
+        min_count = 1 if "min_count" not in l else l["min_count"]
+        max_count = sys.maxsize if "max_count" not in l else l["max_count"]
+        assert max_count >= \
+            len(list(filter(lambda x: x.levelname == l["levelname"] and l["msg"] in x.message, history))) >= \
+            min_count, l["msg"]
 
 
 @pytest.mark.parametrize('executor_options',
