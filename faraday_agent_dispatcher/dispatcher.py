@@ -86,6 +86,7 @@ class Dispatcher:
             api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/'),
             headers=headers)
 
+        assert websocket_token_response.status == 200
         websocket_token_json = await websocket_token_response.json()
         return websocket_token_json["token"]
 
@@ -117,8 +118,17 @@ class Dispatcher:
                     logger.info(f"Unexpected error: {e}")
                     raise e
 
-        self.websocket_token = await self.reset_websocket_token()
-        logger.info("Registered successfully")
+        try:
+            self.websocket_token = await self.reset_websocket_token()
+            logger.info("Registered successfully")
+        except AssertionError as e:
+            error_msg = "Invalid agent token, removing and retrying"
+            logger.error(error_msg)
+            config.remove_option(Sections.TOKENS, "agent")
+            self.agent_token = None
+            await self.register()
+
+
 
     async def connect(self, out_func=None):
 

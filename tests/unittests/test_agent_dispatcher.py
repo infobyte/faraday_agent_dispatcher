@@ -207,7 +207,8 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "replace_data": {
                                      Sections.TOKENS: {
                                          "agent":
-                                             "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446"
+                                             "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446",
+                                         "registration": "NotOk" * 5
                                      }
                                  },
                                  "logs": [
@@ -215,6 +216,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      {"levelname": "ERROR",
                                       "msg": "Invalid registration token, please reset and retry"},
                                  ],
+                                 "expected_exception": AssertionError
                              }
                          ])
 async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,
