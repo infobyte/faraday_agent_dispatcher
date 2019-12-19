@@ -52,6 +52,7 @@ def setup_console_logging(formatter):
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     console_handler.setLevel(config.LOGGING_LEVEL)
+    console_handler.name = "CONSOLE_HANDLER"
     add_handler(console_handler)
     LVL_SETTABLE_HANDLERS.append(console_handler)
 
@@ -62,11 +63,15 @@ def setup_file_logging(formatter):
         log_file(), maxBytes=MAX_LOG_FILE_SIZE, backupCount=MAX_LOG_FILE_BACKUP_COUNT)
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)
+    file_handler.name = "FILE_HANDLER"
     add_handler(file_handler)
 
 
 def add_handler(handler):
     logger = logging.getLogger(ROOT_LOGGER)
+    for hldr in logger.handlers:
+        if hldr.name == handler.name:
+            logger.removeHandler(hldr)
     logger.addHandler(handler)
     LOGGING_HANDLERS.append(handler)
 
