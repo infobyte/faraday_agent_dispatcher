@@ -121,6 +121,7 @@ class Dispatcher:
             error_msg = "Invalid agent token, removing and retrying"
             logger.error(error_msg)
             config.remove_option(Sections.TOKENS, "agent")
+            save_config(self.config_path)
             self.agent_token = None
             await self.register()
 
