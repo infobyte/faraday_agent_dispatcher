@@ -16,6 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
+import ssl
 import json
 
 import asyncio
@@ -49,7 +50,9 @@ class Dispatcher:
             "host": control_host,
             "api_port": control_int(),
             "websocket_port": control_int(),
-            "workspace": control_str
+            "workspace": control_str,
+            "ssl": control_int(True),
+            "ssl_cert": control_str
         },
         Sections.TOKENS: {
             "registration": control_registration_token,
@@ -78,13 +81,20 @@ class Dispatcher:
             executor_name:
                 Executor(executor_name, config) for executor_name in config[Sections.AGENT].get("executors", []).split(",")
         }
+        ssl_cert_path = config.get(Sections.SERVER, "ssl_cert")
+        self.ssl_enabled = config.get(Sections.SERVER, "ssl")
+        self.api_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ssl_enabled and ssl_cert_path else {}
+        self.ws_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ssl_enabled and ssl_cert_path else {}
+
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
         headers = {"Authorization": f"Agent {self.agent_token}"}
         websocket_token_response = await self.session.post(
-            api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/'),
-            headers=headers)
+            api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/', secure=self.ssl_enabled),
+            headers=headers,
+            **self.api_kwargs
+        )
 
         websocket_token_json = await websocket_token_response.json()
         return websocket_token_json["token"]
@@ -96,11 +106,14 @@ class Dispatcher:
             assert registration_token is not None, "The registration token is mandatory"
             token_registration_url = api_url(self.host,
                                              self.api_port,
-                                             postfix=f"/_api/v2/ws/{self.workspace}/agent_registration/")
+                                             postfix=f"/_api/v2/ws/{self.workspace}/agent_registration/",
+                                             secure=self.ssl_enabled)
             logger.info(f"token_registration_url: {token_registration_url}")
             try:
                 token_response = await self.session.post(token_registration_url,
-                                                         json={'token': registration_token, 'name': self.agent_name})
+                                                         json={'token': registration_token, 'name': self.agent_name},
+                                                         **self.api_kwargs
+                                                         )
                 assert token_response.status == 201
                 token = await token_response.json()
                 self.agent_token = token["token"]
@@ -131,7 +144,8 @@ class Dispatcher:
 
         if out_func is None:
 
-            async with websockets.connect(websocket_url(self.host, self.websocket_port)) as websocket:
+            async with websockets.connect(websocket_url(self.host, self.websocket_port, self.ssl_enabled),
+                                          **self.ws_kwargs) as websocket:
                 await websocket.send(connected_data)
 
                 logger.info("Connection to Faraday server succeeded")
@@ -237,7 +251,7 @@ class Dispatcher:
                 logger.info("Running {} executor".format(executor.name))
 
                 process = await self.create_process(executor, passed_params)
-                tasks = [StdOutLineProcessor(process, self.session).process_f(),
+                tasks = [StdOutLineProcessor(process, self.session, self.ssl_enabled, self.api_kwargs).process_f(),
                          StdErrLineProcessor(process).process_f(),
                          ]
                 await out_func(

@@ -60,21 +60,23 @@ class FileLineProcessor:
 
 class StdOutLineProcessor(FileLineProcessor):
 
-    def __init__(self, process, session: ClientSession):
+    def __init__(self, process, session: ClientSession, ssl_enabled, api_kwargs):
         super().__init__("stdout")
         self.process = process
         self.__session = session
+        self.api_kwargs = api_kwargs
+        self.ssl_enabled = ssl_enabled
 
     async def next_line(self):
         line = await self.process.stdout.readline()
         line = line.decode('utf-8')
         return line[:-1]
 
-    @staticmethod
-    def post_url():
+    def post_url(self):
         host = config.get('server', 'host')
         port = config.get('server', 'api_port')
-        return api_url(host, port, postfix=f"/_api/v2/ws/{config.get('server', 'workspace')}/bulk_create/")
+        return api_url(host, port, postfix=f"/_api/v2/ws/{config.get('server', 'workspace')}/bulk_create/",
+                       secure=self.ssl_enabled)
 
     async def processing(self, line):
         try:
@@ -87,6 +89,7 @@ class StdOutLineProcessor(FileLineProcessor):
                 json=loaded_json,
                 headers=headers,
                 raise_for_status=False,
+                ** self.api_kwargs
             )
             if res.status == 201:
                 logger.info("Data sent to bulk create")
