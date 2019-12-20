@@ -33,12 +33,11 @@ with open('README.md') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', 'websockets', 'aiofiles', 'aiohttp<4.0.0', 'requests',
-                'syslog_rfc5424_formatter', 'itsdangerous', 'autobahn', 'twisted']
+requirements = ['Click>=6.0', 'websockets', 'aiohttp<4.0.0', 'syslog_rfc5424_formatter']
 
 setup_requirements = ['pytest-runner', 'click', 'setuptools_scm']
 
-test_requirements = ['pytest', 'pytest-aiohttp']
+test_requirements = ['pytest', 'pytest-aiohttp', 'requests', 'itsdangerous']
 
 extra_req = {
         'dev': [
