@@ -2,7 +2,7 @@
 import os
 import subprocess
 
-"""Yo need to clone and install faraday plugins"""
+"""You need to clone and install faraday plugins"""
 from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
 
 cmd = [
