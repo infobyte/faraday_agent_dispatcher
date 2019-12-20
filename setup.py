@@ -30,7 +30,7 @@ if sys.version_info.major < 3 or sys.version_info.minor < 7:
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
+with open('RELEASE.md') as history_file:
     history = history_file.read()
 
 requirements = ['Click>=6.0', 'websockets', 'aiohttp<4.0.0', 'syslog_rfc5424_formatter']
