@@ -23,6 +23,7 @@ import os
 import pytest
 import sys
 
+from aiohttp.client_exceptions import ClientResponseError
 from pathlib import Path
 from itsdangerous import TimestampSigner
 
@@ -37,6 +38,7 @@ from faraday_agent_dispatcher.config import (
 from tests.utils.text_utils import fuzzy_string
 from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, tmp_custom_config, tmp_default_config, \
     test_logger_handler, test_logger_folder
+
 
 
 @pytest.mark.parametrize('config_changes_dict',
@@ -180,7 +182,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "logs": [
                                      {"levelname": "ERROR", "msg": "Invalid registration token, please reset and retry"},
                                  ],
-                                 "expected_exception": AssertionError
+                                 "expected_exception": ClientResponseError
                              },
                              # 1
                              {
@@ -216,7 +218,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      {"levelname": "ERROR",
                                       "msg": "Invalid registration token, please reset and retry"},
                                  ],
-                                 "expected_exception": AssertionError
+                                 "expected_exception": ClientResponseError
                              }
                          ])
 async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,

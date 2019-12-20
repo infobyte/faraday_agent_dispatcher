@@ -86,7 +86,6 @@ class Dispatcher:
             api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/'),
             headers=headers)
 
-        assert websocket_token_response.status == 200
         websocket_token_json = await websocket_token_response.json()
         return websocket_token_json["token"]
 
@@ -102,26 +101,23 @@ class Dispatcher:
             try:
                 token_response = await self.session.post(token_registration_url,
                                                          json={'token': registration_token, 'name': self.agent_name})
-                if token_response.status != 201:
-                    error_msg = "Invalid registration token, please reset and retry"
-                    logger.error(error_msg)
-                    raise AssertionError(error_msg)
                 token = await token_response.json()
                 self.agent_token = token["token"]
                 config.set(Sections.TOKENS, "agent", self.agent_token)
                 save_config(self.config_path)
             except ClientResponseError as e:
                 if e.status == 404:
-                    logger.info(f'404 HTTP ERROR received: Workspace "{self.workspace}" not found')
-                    return
+                    logger.error(f'404 HTTP ERROR received: Workspace "{self.workspace}" not found')
+                elif e.status == 401:
+                    logger.error("Invalid registration token, please reset and retry")
                 else:
                     logger.info(f"Unexpected error: {e}")
-                    raise e
+                raise e
 
         try:
             self.websocket_token = await self.reset_websocket_token()
             logger.info("Registered successfully")
-        except AssertionError as e:
+        except ClientResponseError as e:
             error_msg = "Invalid agent token, removing and retrying"
             logger.error(error_msg)
             config.remove_option(Sections.TOKENS, "agent")
