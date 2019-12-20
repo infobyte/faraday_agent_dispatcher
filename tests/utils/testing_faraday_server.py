@@ -157,7 +157,7 @@ async def aiohttp_faraday_client(aiohttp_client, aiohttp_server, test_config: Fa
     app.router.add_post(f"/_api/v2/ws/error500/bulk_create/", get_bulk_create(test_config))
     app.router.add_post(f"/_api/v2/ws/error429/bulk_create/", get_bulk_create(test_config))
     server = await aiohttp_server(app)
-    client = await aiohttp_client(server)
+    client = await aiohttp_client(server, raise_for_status=True)
     return client
 
 
