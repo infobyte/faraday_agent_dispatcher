@@ -4,7 +4,6 @@ import re
 import sys
 import time
 import requests
-import logging
 
 from faraday_plugins.plugins.manager import PluginsManager
 
@@ -32,7 +31,7 @@ def nessus_add_target(url, token, x_token = '', target = '', template = 'basic',
     templates = nessus_templates(url, token, x_token)
 
     if template not in templates:
-        logging.error ('Template {} not valid. Setting basic as default.'.format(template))
+        print('Template {} not valid. Setting basic as default'.format(template), file=sys.stderr)
         template = 'basic'
 
     payload = { 'uuid': '{}'.format(templates[template]), 'settings': { 'name': '{}'.format(name), 'enabled': True, 'text_targets': target, 'agent_group_id': [] }}
@@ -45,19 +44,19 @@ def nessus_scan_run(url, scan_id, token, x_token = '', target = 'basic', policie
     headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token }
 
     s = requests.post(url + '/scans/{scan_id}/launch'.format(scan_id=scan_id), headers=headers, verify=False).json()
-    logging.error ('scan', s)
+    print('scan uuid {}'.format(s), file=sys.stderr)
+
     scan_uuid = s['scan_uuid']
 
     read = { 'read': False }
     s = requests.get(url + '/scans/{scan_id}'.format(scan_id=scan_id), headers=headers, verify=False)
-    #logging.error("scans ", s.json())
     status = s.json()['info']['status']
     while status == 'running':
-        logging.error("scan status check ", s)
+        print("scan status check {}".format(s), file=sys.stderr)
         time.sleep(5)
         s = requests.get(url + '/scans/{scan_id}'.format(scan_id=scan_id), headers=headers, verify=False)
         status = s.json()['info']['status']
-    logging.error("scan status", status)
+    print("scan status {}".format(status),file=sys.stderr)
 
 def nessus_scan_export(url, scan_id, token, x_token = '', target = ''):
     content = None
@@ -69,11 +68,11 @@ def nessus_scan_export(url, scan_id, token, x_token = '', target = ''):
         s = requests.get(url + '/tokens/{token}/status'.format(token = r['token']), verify=False).json()
         status = s['status']
         while status != 'ready':
-            logging.error("report export status check ", s)
+            print("report export status check {}".format(s), file=sys.stderr))
             time.sleep(5)
             s = requests.get(url + '/tokens/{token}/status'.format(token = r['token']), verify=False).json()
             status = s['status']
-        logging.error ('report export status ', status)
+        print('Report export status {}'.format(status), file=sys.stderr)
         r = requests.get(url + '/tokens/{token}/download'.format(token = r['token']), allow_redirects=True, verify=False)
         content = r.content
 
