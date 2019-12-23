@@ -12,13 +12,18 @@ def control_int(nullable=False):
     return control
 
 
-def control_str(field_name, value):
-    if not isinstance(value, str):
-        raise ValueError(f"{field_name} must be a string")
+def control_str(nullable=False):
+    def control(field_name, value):
+        if value is None and nullable:
+            return
+        if not isinstance(value, str):
+            raise ValueError(f"{field_name} must be a string")
+
+    return control
 
 
 def control_host(field_name, value):
-    control_str(field_name, value)
+    control_str()(field_name, value)
 
 
 
