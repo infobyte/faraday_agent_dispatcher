@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 from faraday_agent_dispatcher.cli import config_wizard
-from faraday_agent_dispatcher.config import FARADAY_PATH
 
 
 class ExecutorConfig:
@@ -137,12 +136,15 @@ def parse_config(config: Dict):
         output = f"A\n{dispatcher_config.config_str()}"
     if "executors_config" in config:
         executors_config = config["executors_config"]
+        output = f"{output}E\n"
         if "add" in executors_config:
             pass
         if "mod" in executors_config:
             pass
         if "del" in executors_config:
             pass
+    output = f"{output}\n"
+    return output
 
 @pytest.mark.parametrize(
     "testing_configs",
@@ -170,5 +172,7 @@ def test_new_config(testing_configs: Dict[(str, object)], ini_filepath):
         else:
             path = Path(file_system)
         in_data = parse_config(testing_configs)
-        result = runner.invoke(config_wizard, args=["-c", path], input=in_data)
+        env = os.environ
+        env["DEFAULT_VALUE_NONE"] = "True"
+        result = runner.invoke(config_wizard, args=["-c", path], input=in_data, env=env)
         assert result.exit_code == testing_configs["exit_code"]

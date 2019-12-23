@@ -30,6 +30,7 @@ from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher import config
 import faraday_agent_dispatcher.logger as logging
+from pathlib import Path
 
 logger = logging.get_logger()
 
@@ -42,8 +43,7 @@ def cli():
     pass
 
 
-async def main(config_file):
-
+def process_config_file(config_file, verify=True):
     if config_file is None and not os.path.exists(config.CONFIG_FILENAME):
         logger.info("Config file doesn't exist. Creating a new one")
         os.makedirs(config.CONFIG_PATH, exist_ok=True)
@@ -51,6 +51,16 @@ async def main(config_file):
         logger.info(f"Config file at {config.CONFIG_FILENAME} created")
     config_file = config_file or config.CONFIG_FILENAME
     config.reset_config(config_file)
+    if verify:
+        #TODO verify
+        pass
+
+
+async def main(config_file):
+
+    config_file = Path(config_file)
+
+    process_config_file(config_file)
 
     async with ClientSession(raise_for_status=True) as session:
         try:
@@ -84,15 +94,42 @@ def run(config_file, logdir):
     sys.exit(exit_code)
 
 
+def process_agent():
+    pass
+
+
+def process_executors():
+    pass
+
+
+def get_default_value_and_choices(default_value, choices):
+    if "DEFAULT_VALUE_NONE" in os.environ:
+        default_value = None
+        choices = choices + ["Q"]
+    return default_value, choices
+
 @click.command(help="faraday-dispatcher config_wizard")
-@click.option("-c", "--config-file", default=None, help="Path to config ini file")
+@click.option("-c", "--config-filepath", default=None, help="Path to config ini file")
 def config_wizard(config_filepath):
-    value = click.prompt("Enter 1", type=int)
-    if value is not 1:
-        sys.exit(126)
-    value = click.prompt("Enter 1")
-    if value is not "1":
-        sys.exit(127)
+
+    process_config_file(config_filepath)
+    # TODO VERIFY is empty
+
+    end = False
+
+    def_value, choices = get_default_value_and_choices("", ["A", "E"])
+
+    while not end:
+        value = click.prompt("What you want to edit?",
+                             type=click.Choice(choices=choices, case_sensitive=False),
+                             default=def_value)
+        if value.upper() == "A":
+            process_agent()
+        elif value.upper() == "E":
+            process_executors()
+        else:
+            # TODO CHECK BEFORE
+            end = True
 
 
 cli.add_command(config_wizard)

@@ -38,13 +38,14 @@ LOGGING_LEVEL = logging.DEBUG
 instance = configparser.ConfigParser()
 
 
-def reset_config(filepath):
+def reset_config(filepath: Path):
     instance.clear()
-    try:
-        if not instance.read(filepath):
-            raise ValueError(f'Unable to read config file located at {filepath}')
-    except DuplicateSectionError as e:
-        raise ValueError(f'The config in {filepath} contains duplicated sections')
+    if filepath.is_file():
+        try:
+            if not instance.read(filepath):
+                raise ValueError(f'Unable to read config file located at {filepath}')
+        except DuplicateSectionError as e:
+            raise ValueError(f'The config in {filepath} contains duplicated sections')
 
 
 def check_filepath(filepath: str = None):
