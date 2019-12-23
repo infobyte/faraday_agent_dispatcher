@@ -34,7 +34,7 @@ class ExecutorConfig:
 
 class DispatcherConfig:
     def __init__(self, host=None, api_port=None, ws_port=None, workspace=None, agent_name=None,
-                 registration_token=None, executors=None, empty=False):
+                 registration_token=None, empty=False):
         self.server_config = {
             "host": host or "",
             "api_port": api_port or "",
@@ -43,7 +43,6 @@ class DispatcherConfig:
         }
         self.agent = agent_name or ""
         self.registration_token = registration_token or ""
-        self.executors: List[ExecutorConfig] = executors or []
         self.empty = empty
 
     def config_str(self):
@@ -53,25 +52,27 @@ class DispatcherConfig:
                  f"{self.server_config['workspace']}\n" \
                  f"{self.server_config['ws_port']}\n" \
                  f"{self.agent}\n" \
-                 f"{self.registration_token}\n" \
-                 f"{len(self.executors)}\n"
-        for executor in self.executors:
-            config = f"{config}{executor.config_str()}\n"
+                 f"{self.registration_token}\n"
         return config
+
 # Order will be:
-    # * Host
-    # * API port
-    # * WS port
-    # * Workspace
-    # * Agent name
-    # * Registration token (if set, remove agent token)
-    # * Executors How many?:
+    # * Agent/Executor (?)
+    # * Agent
+    #   * Host
+    #   * API port
+    #   * WS port
+    #   * Workspace
+    #   * Agent name
+    #   * Registration token (if set, remove agent token)
+    # * Executors
+    # AMD (?)
+    #   * MD -> Which one?
     #   * Main config:
     #     * Executor name
     #     * Executor command
     #     * Max size
-    #   * VARENVS
-    #   * Params
+    #   * VARENVS AMD (?)
+    #   * Params AMD (?)
 
 
 def generate_configs():
@@ -83,15 +84,16 @@ def generate_configs():
         },
         # Executors config
         {
-            "config": DispatcherConfig(
-                executors=[
+            "config": DispatcherConfig(),
+            "executors_config": {
+                "add": [
                     ExecutorConfig(name="ex1", cmd="qweqe", params={"qeqwe": True, "asdasda": False}),
                     ExecutorConfig(name="ex2", cmd="qwdfeqe", varenvs={"asdasda": "False"}),
                     ExecutorConfig(name="ex3", cmd="qweqe", params={"qeqwe": True, "asdasda": False},
                                    varenvs={"asdasda": "False"}),
                     ExecutorConfig(name="ex1", cmd="qweqe", max_size="99999", params={"qeqwe": True, "asdasda": False}),
                 ]
-            ),
+            },
             "exit_code": 0
         },
         # Dispatcher config
@@ -120,23 +122,35 @@ def ls_old_inis():
     path = Path(__file__).parent.parent / 'data' / 'old_version_inis'
     for file in os.listdir(path):
         if os.path.isfile(os.path.join(path, file)):
-            files.append(file)
+            files.append(path / file)
     return files
 
 
 configs = generate_configs()
 inis_files = [""] + ls_old_inis()
 
-# TODO OPEN 0.1.ini with default config
-# TODO MORE TESTS: IDEA OF COMMAND
-# if exists_config:
-#   ask_for_each_existing_executor_to_[A/M/D]
-# ask_for_new_executors()
 
+def parse_config(config: Dict):
+    output = ""
+    if "config" in config:
+        dispatcher_config: DispatcherConfig = config['config']
+        output = f"A\n{dispatcher_config.config_str()}"
+    if "executors_config" in config:
+        executors_config = config["executors_config"]
+        if "add" in executors_config:
+            pass
+        if "mod" in executors_config:
+            pass
+        if "del" in executors_config:
+            pass
 
 @pytest.mark.parametrize(
     "testing_configs",
     configs
+)
+@pytest.mark.parametrize(
+    "ini_filepath",
+    inis_files
 )
 def test_new_config(testing_configs: Dict[(str, object)], ini_filepath):
     runner = CliRunner()
@@ -147,10 +161,14 @@ def test_new_config(testing_configs: Dict[(str, object)], ini_filepath):
         with open(ini_filepath, 'r') as content_file:
             content = content_file.read()
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem() as file_system:
+
         if content:
-            path = FARADAY_PATH / "config" / "dispatcher.ini"
-            with path.open() as content_file:
+            path = Path(file_system) / "dispatcher.ini"
+            with path.open(mode="w") as content_file:
                 content_file.write(content)
-        result = runner.invoke(config_wizard, input=testing_configs["config"].config_str())
+        else:
+            path = Path(file_system)
+        in_data = parse_config(testing_configs)
+        result = runner.invoke(config_wizard, args=["-c", path], input=in_data)
         assert result.exit_code == testing_configs["exit_code"]
