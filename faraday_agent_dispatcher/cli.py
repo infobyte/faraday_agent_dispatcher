@@ -86,13 +86,13 @@ def run(config_file, logdir):
 
 @click.command(help="faraday-dispatcher config_wizard")
 @click.option("-c", "--config-file", default=None, help="Path to config ini file")
-def config_wizard(config_file):
+def config_wizard(config_filepath):
     value = click.prompt("Enter 1", type=int)
     if value is not 1:
-        sys.exit(1)
+        sys.exit(126)
     value = click.prompt("Enter 1")
     if value is not "1":
-        sys.exit(2)
+        sys.exit(127)
 
 
 cli.add_command(config_wizard)
