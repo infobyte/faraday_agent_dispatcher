@@ -50,16 +50,16 @@ class Dispatcher:
             "host": control_host,
             "api_port": control_int(),
             "websocket_port": control_int(),
-            "workspace": control_str,
-            "ssl": control_int(True),
-            "ssl_cert": control_str
+            "workspace": control_str(),
+            "ssl": control_int(nullable=True),
+            "ssl_cert": control_str(nullable=True)
         },
         Sections.TOKENS: {
             "registration": control_registration_token,
             "agent": control_agent_token
         },
         Sections.AGENT: {
-            "agent_name": control_str,
+            "agent_name": control_str(),
             "executors": control_list(can_repeat=False)
         },
     }
@@ -81,8 +81,8 @@ class Dispatcher:
             executor_name:
                 Executor(executor_name, config) for executor_name in config[Sections.AGENT].get("executors", []).split(",")
         }
-        ssl_cert_path = config.get(Sections.SERVER, "ssl_cert")
-        self.ssl_enabled = config.get(Sections.SERVER, "ssl")
+        ssl_cert_path = config[Sections.SERVER].get("ssl_cert", None)
+        self.ssl_enabled = config[Sections.SERVER].get("ssl", None)
         self.api_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ssl_enabled and ssl_cert_path else {}
         self.ws_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ssl_enabled and ssl_cert_path else {}
 
