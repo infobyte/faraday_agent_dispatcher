@@ -61,6 +61,12 @@ def save_config(filepath=None):
         instance.write(configfile)
 
 
+def verify():
+    # TODO
+    print("WARNING VERIFY TODO")
+    pass
+
+
 class Sections:
     TOKENS = "tokens"
     SERVER = "server"
