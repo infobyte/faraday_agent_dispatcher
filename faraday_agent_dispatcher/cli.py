@@ -29,6 +29,7 @@ from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher import config
 from faraday_agent_dispatcher.config import Sections
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 import faraday_agent_dispatcher.logger as logging
 from pathlib import Path
 
@@ -110,12 +111,12 @@ class Wizard:
             elif value.upper() == "E":
                 self.process_executors()
             else:
-                config.save_config(self.config_filepath)
                 end = True
+        config.save_config(self.config_filepath)
 
-    def choose_adm(self):
+    def choose_adm(self, subject):
         def_value, choices = self.get_default_value_and_choices("", ["A", "M", "D"])
-        value = click.prompt("Do you want to add, modify or delete?",
+        value = click.prompt(f"Do you want to add, modify or delete an {subject}?",
                              type=click.Choice(choices=choices, case_sensitive=False),
                              default=def_value).upper()
         return value
@@ -134,12 +135,12 @@ class Wizard:
         }
 
         for section in agent_dict:
-            print(f"Section: {section}")
+            print(f"{Bcolors.OKBLUE}Section: {section}{Bcolors.ENDC}")
             for opt in agent_dict[section]:
                 def_value = config.instance[section].get(opt, "")
                 value = click.prompt(f"{opt}", default=f"{def_value}")
                 if value == "":
-                    print("TODO WARNING")
+                    print(f"{Bcolors.WARNING}TODO WARNING{Bcolors.ENDC}")
 
                 config.instance.set(section, opt, value)
 
@@ -154,14 +155,14 @@ class Wizard:
         end = False
 
         while not end:
-            print(f"The actual configured executors are: {self.executors_list}")
-            value = self.choose_adm()
+            print(f"The actual configured {Bcolors.OKBLUE}{Bcolors.BOLD}executors{Bcolors.ENDC} are: {Bcolors.OKGREEN}{self.executors_list}{Bcolors.ENDC}")
+            value = self.choose_adm("executor")
             if value.upper() == "A":
                 self.new_executor()
             elif value.upper() == "M":
                 self.edit_executor()
             elif value.upper() == "D":
-                delete_executor()
+                self.delete_executor()
             else:
                 end = True
 
@@ -170,20 +171,20 @@ class Wizard:
         section = Sections.EXECUTOR_VARENVS.format(executor_name)
 
         while not end:
-            print(f"The actual environment variable are: "
-                  f"{config.instance.options(section)}")
-            value = self.choose_adm()
+            print(f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name} executor's environment variables{Bcolors.ENDC} are: "
+                  f"{Bcolors.OKGREEN}{config.instance.options(section)}{Bcolors.ENDC}")
+            value = self.choose_adm("environment variable")
             if value == "A":
                 envvar = click.prompt("Environment variable name").lower()
                 if envvar in config.instance.options(section):
-                    print("TODO WARN")
+                    print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
                 else:
                     value = click.prompt("Environment variable value")
                     config.instance.set(section, envvar, value)
             elif value == "M":
                 envvar = click.prompt("Environment variable name").lower()
                 if envvar not in config.instance.options(section):
-                    print("TODO WARN")
+                    print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
                 else:
                     def_value = config.instance.get(section, envvar)
                     value = click.prompt("Environment variable value", default=def_value)
@@ -191,7 +192,7 @@ class Wizard:
             elif value == "D":
                 envvar = click.prompt("Environment variable name").lower()
                 if envvar not in config.instance.options(section):
-                    print("TODO WARN")
+                    print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
                 else:
                     config.instance.remove_option(section, envvar)
             else:
@@ -202,27 +203,27 @@ class Wizard:
         section = Sections.EXECUTOR_PARAMS.format(executor_name)
 
         while not end:
-            print(f"The actual args are: "
-                  f"{config.instance.options(section)}")
-            value = self.choose_adm()
+            print(f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name} executor's arguments{Bcolors.ENDC} are: "
+                  f"{Bcolors.OKGREEN}{config.instance.options(section)}{Bcolors.ENDC}")
+            value = self.choose_adm("argument")
             if value == "A":
                 param = click.prompt("Argument name").lower()
                 if param in config.instance.options(section):
-                    print("TODO WARN")
+                    print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
                 else:
                     value = click.confirm("Is mandatory?")
                     config.instance.set(section, param, f"{value}")
             elif value == "M":
                 param = click.prompt("Argument name").lower()
                 if param not in config.instance.options(section):
-                    print("TODO WARN")
+                    print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
                 else:
                     value = click.confirm("Is mandatory?")
                     config.instance.set(section, param, f"{value}")
             elif value == "D":
-                param = click.prompt("Environment variable name").lower()
+                param = click.prompt("Argument name").lower()
                 if param not in config.instance.options(section):
-                    print("TODO WARN")
+                    print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
                 else:
                     config.instance.remove_option(section, param)
             else:
@@ -237,9 +238,9 @@ class Wizard:
         self.executors_list.append(name)
         max_buff_size = click.prompt("Max data sent to server", type=int, default=65536)
         cmd = click.prompt("Command to execute")
-        config.instance.add_section(Sections.EXECUTOR_DATA.format(name))
-        config.instance.add_section(Sections.EXECUTOR_VARENVS.format(name))
-        config.instance.add_section(Sections.EXECUTOR_PARAMS.format(name))
+        for section in Wizard.EXECUTOR_SECTIONS:
+            formatted_section = section.format(name)
+            config.instance.add_section(formatted_section)
         config.instance.set(Sections.EXECUTOR_DATA.format(name), "cmd", cmd)
         config.instance.set(Sections.EXECUTOR_DATA.format(name), "max_size", f"{max_buff_size}")
         self.process_var_envs(name)
@@ -255,7 +256,7 @@ class Wizard:
         while new_name is None:
             new_name = click.prompt("New name", default=name)
             if new_name in self.executors_list and name != new_name:
-                print("REPEATED")
+                print(f"{Bcolors.WARNING}REPEATED{Bcolors.ENDC}")
                 new_name = None
         if new_name != name:
             for unformated_section in Wizard.EXECUTOR_SECTIONS:
@@ -275,7 +276,13 @@ class Wizard:
         self.process_var_envs(name)
         self.process_params(name)
 
-
+    def delete_executor(self):
+        name = click.prompt("Name")
+        if name not in self.executors_list:
+            return
+        for section in Wizard.EXECUTOR_SECTIONS:
+            config.instance.remove_section(section.format(name))
+        self.executors_list.remove(name)
 
     def get_default_value_and_choices(self, default_value, choices):
         if "DEFAULT_VALUE_NONE" in os.environ:
