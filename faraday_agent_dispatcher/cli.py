@@ -94,6 +94,7 @@ class Wizard:
         self.config_filepath = config_filepath
         config.reset_config(config_filepath)
         config.verify()
+        self.executors_list = []
 
     def run(self):
         end = False
@@ -112,12 +113,11 @@ class Wizard:
                 config.save_config(self.config_filepath)
                 end = True
 
-
     def choose_adm(self):
         def_value, choices = self.get_default_value_and_choices("", ["A", "M", "D"])
         value = click.prompt("Do you want to add, modify or delete?",
                              type=click.Choice(choices=choices, case_sensitive=False),
-                             default=def_value)
+                             default=def_value).upper()
         return value
 
     def process_agent(self):
@@ -153,18 +153,129 @@ class Wizard:
     def process_executors(self):
         end = False
 
-        print(f"The actual configured executors are: {self.executors_list}")
-
         while not end:
-            value = "3"
+            print(f"The actual configured executors are: {self.executors_list}")
+            value = self.choose_adm()
             if value.upper() == "A":
-                new_executor()
+                self.new_executor()
             elif value.upper() == "M":
-                edit_executor()
+                self.edit_executor()
             elif value.upper() == "D":
                 delete_executor()
             else:
                 end = True
+
+    def process_var_envs(self, executor_name):
+        end = False
+        section = Sections.EXECUTOR_VARENVS.format(executor_name)
+
+        while not end:
+            print(f"The actual environment variable are: "
+                  f"{config.instance.options(section)}")
+            value = self.choose_adm()
+            if value == "A":
+                envvar = click.prompt("Environment variable name").lower()
+                if envvar in config.instance.options(section):
+                    print("TODO WARN")
+                else:
+                    value = click.prompt("Environment variable value")
+                    config.instance.set(section, envvar, value)
+            elif value == "M":
+                envvar = click.prompt("Environment variable name").lower()
+                if envvar not in config.instance.options(section):
+                    print("TODO WARN")
+                else:
+                    def_value = config.instance.get(section, envvar)
+                    value = click.prompt("Environment variable value", default=def_value)
+                    config.instance.set(section, envvar, value)
+            elif value == "D":
+                envvar = click.prompt("Environment variable name").lower()
+                if envvar not in config.instance.options(section):
+                    print("TODO WARN")
+                else:
+                    config.instance.remove_option(section, envvar)
+            else:
+                end = True
+
+    def process_params(self, executor_name):
+        end = False
+        section = Sections.EXECUTOR_PARAMS.format(executor_name)
+
+        while not end:
+            print(f"The actual args are: "
+                  f"{config.instance.options(section)}")
+            value = self.choose_adm()
+            if value == "A":
+                param = click.prompt("Argument name").lower()
+                if param in config.instance.options(section):
+                    print("TODO WARN")
+                else:
+                    value = click.confirm("Is mandatory?")
+                    config.instance.set(section, param, f"{value}")
+            elif value == "M":
+                param = click.prompt("Argument name").lower()
+                if param not in config.instance.options(section):
+                    print("TODO WARN")
+                else:
+                    value = click.confirm("Is mandatory?")
+                    config.instance.set(section, param, f"{value}")
+            elif value == "D":
+                param = click.prompt("Environment variable name").lower()
+                if param not in config.instance.options(section):
+                    print("TODO WARN")
+                else:
+                    config.instance.remove_option(section, param)
+            else:
+                end = True
+
+    def new_executor(self):
+        name = None
+        while name is None:
+            name = click.prompt("Name")
+            if name in self.executors_list:
+                name = None
+        self.executors_list.append(name)
+        max_buff_size = click.prompt("Max data sent to server", type=int, default=65536)
+        cmd = click.prompt("Command to execute")
+        config.instance.add_section(Sections.EXECUTOR_DATA.format(name))
+        config.instance.add_section(Sections.EXECUTOR_VARENVS.format(name))
+        config.instance.add_section(Sections.EXECUTOR_PARAMS.format(name))
+        config.instance.set(Sections.EXECUTOR_DATA.format(name), "cmd", cmd)
+        config.instance.set(Sections.EXECUTOR_DATA.format(name), "max_size", f"{max_buff_size}")
+        self.process_var_envs(name)
+        self.process_params(name)
+
+    EXECUTOR_SECTIONS = [Sections.EXECUTOR_DATA, Sections.EXECUTOR_PARAMS, Sections.EXECUTOR_VARENVS]
+
+    def edit_executor(self):
+        name = click.prompt("Name")
+        if name not in self.executors_list:
+            return
+        new_name = None
+        while new_name is None:
+            new_name = click.prompt("New name", default=name)
+            if new_name in self.executors_list and name != new_name:
+                print("REPEATED")
+                new_name = None
+        if new_name != name:
+            for unformated_section in Wizard.EXECUTOR_SECTIONS:
+                section = unformated_section.format(new_name)
+                config.instance.add_section(section)
+                for item in config.instance.items(unformated_section.format(name)):
+                    config.instance.set(section, item[0], item[1])
+                config.instance.remove_section(unformated_section.format(name))
+            name = new_name
+        section = Sections.EXECUTOR_DATA.format(name)
+        max_buff_size = click.prompt("Max data sent to server", type=int,
+                                     default=config.instance.get(section, "max_size"))
+        cmd = click.prompt("Command to execute",
+                           default=config.instance.get(section, "cmd"))
+        config.instance.set(section, "cmd", cmd)
+        config.instance.set(section, "max_size", f"{max_buff_size}")
+        self.process_var_envs(name)
+        self.process_params(name)
+
+
 
     def get_default_value_and_choices(self, default_value, choices):
         if "DEFAULT_VALUE_NONE" in os.environ:
