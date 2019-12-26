@@ -18,7 +18,6 @@
 """Console script for faraday_agent_dispatcher."""
 import os
 import sys
-import shutil
 
 import click
 import asyncio
@@ -29,6 +28,7 @@ from aiohttp import ClientSession
 from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher import config
+from faraday_agent_dispatcher.config import Sections
 import faraday_agent_dispatcher.logger as logging
 from pathlib import Path
 
@@ -43,19 +43,16 @@ def cli():
     pass
 
 
-def process_config_file(config_filepath: Path, verify: bool = True):
+def process_config_file(config_filepath: Path):
     if config_filepath is None and not os.path.exists(config.CONFIG_FILENAME):
         logger.info("Config file doesn't exist. Run the command `faraday-dispatcher config-wizard` to create one")
         exit(1)
     config_filepath = config_filepath or Path(config.CONFIG_FILENAME)
+    config_filepath = Path(config_filepath)
     config.reset_config(config_filepath)
-    if verify:
-        config.verify()
 
 
 async def main(config_file):
-
-    config_file = Path(config_file)
 
     process_config_file(config_file)
 
@@ -91,42 +88,96 @@ def run(config_file, logdir):
     sys.exit(exit_code)
 
 
-def process_agent():
-    pass
+class Wizard:
+
+    def __init__(self, config_filepath):
+        self.config_filepath = config_filepath
+        config.reset_config(config_filepath)
+        config.verify()
+
+    def run(self):
+        end = False
+
+        def_value, choices = self.get_default_value_and_choices("", ["A", "E"])
+
+        while not end:
+            value = click.prompt("Do you want to edit the agent or the executors?",
+                                 type=click.Choice(choices=choices, case_sensitive=False),
+                                 default=def_value)
+            if value.upper() == "A":
+                self.process_agent()
+            elif value.upper() == "E":
+                self.process_executors()
+            else:
+                config.save_config(self.config_filepath)
+                end = True
 
 
-def process_executors():
-    pass
+    def choose_adm(self):
+        def_value, choices = self.get_default_value_and_choices("", ["A", "M", "D"])
+        value = click.prompt("Do you want to add, modify or delete?",
+                             type=click.Choice(choices=choices, case_sensitive=False),
+                             default=def_value)
+        return value
 
+    def process_agent(self):
+        agent_dict = {
+            Sections.SERVER: [
+                "host", "api_port", "websocket_port", "workspace"
+            ],
+            Sections.TOKENS: [
+                "registration"
+            ],
+            Sections.AGENT: [
+                "agent_name"
+            ],
+        }
 
-def get_default_value_and_choices(default_value, choices):
-    if "DEFAULT_VALUE_NONE" in os.environ:
-        default_value = None
-        choices = choices + ["Q"]
-    return default_value, choices
+        for section in agent_dict:
+            print(f"Section: {section}")
+            for opt in agent_dict[section]:
+                def_value = config.instance[section].get(opt, "")
+                value = click.prompt(f"{opt}", default=f"{def_value}")
+                if value == "":
+                    print("TODO WARNING")
+
+                config.instance.set(section, opt, value)
+
+    def executors(self):
+        executors = config.instance[Sections.AGENT].get("executors", "")
+        self.executors_list = executors.split(",")
+
+    def save_executors(self):
+        config.instance.set(Sections.AGENT,"executors",",".join(self.executors_list))
+
+    def process_executors(self):
+        end = False
+
+        print(f"The actual configured executors are: {self.executors_list}")
+
+        while not end:
+            value = "3"
+            if value.upper() == "A":
+                new_executor()
+            elif value.upper() == "M":
+                edit_executor()
+            elif value.upper() == "D":
+                delete_executor()
+            else:
+                end = True
+
+    def get_default_value_and_choices(self, default_value, choices):
+        if "DEFAULT_VALUE_NONE" in os.environ:
+            default_value = None
+            choices = choices + ["Q"]
+        return default_value, choices
+
 
 @click.command(help="faraday-dispatcher config_wizard")
 @click.option("-c", "--config-filepath", default=None, help="Path to config ini file")
 def config_wizard(config_filepath):
 
-    process_config_file(config_filepath, verify=False)
-
-    end = False
-
-    def_value, choices = get_default_value_and_choices("", ["A", "E"])
-
-    while not end:
-        value = click.prompt("What you want to edit?",
-                             type=click.Choice(choices=choices, case_sensitive=False),
-                             default=def_value)
-        if value.upper() == "A":
-            process_agent()
-        elif value.upper() == "E":
-            process_executors()
-        else:
-            # TODO CHECK BEFORE
-            end = True
-
+    Wizard(config_filepath or Path(config.CONFIG_FILENAME)).run()
 
 cli.add_command(config_wizard)
 cli.add_command(run)
