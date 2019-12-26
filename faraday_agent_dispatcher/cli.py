@@ -43,17 +43,14 @@ def cli():
     pass
 
 
-def process_config_file(config_file, verify=True):
-    if config_file is None and not os.path.exists(config.CONFIG_FILENAME):
-        logger.info("Config file doesn't exist. Creating a new one")
-        os.makedirs(config.CONFIG_PATH, exist_ok=True)
-        shutil.copyfile(config.EXAMPLE_CONFIG_FILENAME, config.CONFIG_FILENAME)
-        logger.info(f"Config file at {config.CONFIG_FILENAME} created")
-    config_file = config_file or config.CONFIG_FILENAME
-    config.reset_config(config_file)
+def process_config_file(config_filepath: Path, verify: bool = True):
+    if config_filepath is None and not os.path.exists(config.CONFIG_FILENAME):
+        logger.info("Config file doesn't exist. Run the command `faraday-dispatcher config-wizard` to create one")
+        exit(1)
+    config_filepath = config_filepath or Path(config.CONFIG_FILENAME)
+    config.reset_config(config_filepath)
     if verify:
-        #TODO verify
-        pass
+        config.verify()
 
 
 async def main(config_file):
@@ -112,8 +109,7 @@ def get_default_value_and_choices(default_value, choices):
 @click.option("-c", "--config-filepath", default=None, help="Path to config ini file")
 def config_wizard(config_filepath):
 
-    process_config_file(config_filepath)
-    # TODO VERIFY is empty
+    process_config_file(config_filepath, verify=False)
 
     end = False
 
