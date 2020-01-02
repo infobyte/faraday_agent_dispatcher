@@ -111,6 +111,7 @@ class Wizard:
             elif value.upper() == "E":
                 self.process_executors()
             else:
+                self.process_choice_errors(value)
                 end = True
         config.save_config(self.config_filepath)
 
@@ -119,6 +120,7 @@ class Wizard:
         value = click.prompt(f"Do you want to add, modify or delete an {subject}?",
                              type=click.Choice(choices=choices, case_sensitive=False),
                              default=def_value).upper()
+        self.process_choice_errors(value)
         return value
 
     def process_agent(self):
@@ -287,8 +289,13 @@ class Wizard:
     def get_default_value_and_choices(self, default_value, choices):
         if "DEFAULT_VALUE_NONE" in os.environ:
             default_value = None
-            choices = choices + ["Q"]
+            choices = choices + ["Q", "\0"]
         return default_value, choices
+
+    @staticmethod
+    def process_choice_errors(value):
+        if "" in os.environ and value in ["\0"]:
+            raise click.exceptions.Abort()
 
 
 @click.command(help="faraday-dispatcher config_wizard")
