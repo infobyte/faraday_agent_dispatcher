@@ -4,7 +4,7 @@ from typing import List, Dict
 import os
 from pathlib import Path
 
-from faraday_agent_dispatcher.cli import config_wizard
+from faraday_agent_dispatcher.cli.main import config_wizard
 
 
 class ExecutorConfig:
@@ -139,6 +139,7 @@ def parse_config(config: Dict):
             pass
     output = f"{output}\n"
     return output
+
 
 @pytest.mark.parametrize(
     "testing_configs",
