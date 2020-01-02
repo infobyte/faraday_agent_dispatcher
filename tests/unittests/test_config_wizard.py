@@ -105,13 +105,7 @@ def generate_configs():
         {
             "config": DispatcherConfig(host="qew", api_port="13123", ws_port="1234", workspace="wwww",
                                        agent_name="agent", registration_token="12345678901234567890"),
-            "exit_code": 1
-        },
-        # Bad token config
-        {
-            "config": DispatcherConfig(host="qew", api_port="13123", ws_port="1234", workspace="wwww",
-                                       agent_name="agent", registration_token="12345678901234567890"),
-            "exit_code": 1
+            "exit_code": 2
         },
     ]
 
@@ -171,7 +165,7 @@ def test_new_config(testing_configs: Dict[(str, object)], ini_filepath):
                 content_file.write(content)
         else:
             path = Path(file_system)
-        in_data = parse_config(testing_configs)
+        in_data = parse_config(testing_configs) + "\0" * 1000  # HORRIBLE FIX
         env = os.environ
         env["DEFAULT_VALUE_NONE"] = "True"
         result = runner.invoke(config_wizard, args=["-c", path], input=in_data, env=env)
