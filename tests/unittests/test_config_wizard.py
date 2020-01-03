@@ -49,9 +49,8 @@ class DispatcherConfig:
                  f"{self.server_config['api_port']}\n" \
                  f"{self.server_config['ws_port']}\n" \
                  f"{self.server_config['workspace']}\n" \
-                 f"{self.server_config['ws_port']}\n" \
-                 f"{self.agent}\n" \
-                 f"{self.registration_token}\n"
+                 f"{self.registration_token}\n" \
+                 f"{self.agent}\n"
         return config
 
 # Order will be:
@@ -97,15 +96,16 @@ def generate_configs():
         },
         # Dispatcher config
         {
-            "config": DispatcherConfig(host="qew", api_port="13123", ws_port="1234", workspace="wwww",
+            "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
                                        agent_name="agent", registration_token="1234567890123456789012345"),
             "exit_code": 0
         },
         # Bad token config
         {
-            "config": DispatcherConfig(host="qew", api_port="13123", ws_port="1234", workspace="wwww",
+            "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
                                        agent_name="agent", registration_token="12345678901234567890"),
-            "exit_code": 2
+            "exit_code": 1,
+            "exception": ValueError("registration must be 25 character length")
         },
     ]
 
@@ -166,8 +166,11 @@ def test_new_config(testing_configs: Dict[(str, object)], ini_filepath):
                 content_file.write(content)
         else:
             path = Path(file_system)
-        in_data = parse_config(testing_configs) + "\0" * 1000  # HORRIBLE FIX
+        in_data = parse_config(testing_configs) + "\0\n" * 1000  # HORRIBLE FIX
         env = os.environ
         env["DEFAULT_VALUE_NONE"] = "True"
         result = runner.invoke(config_wizard, args=["-c", path], input=in_data, env=env)
-        assert result.exit_code == testing_configs["exit_code"]
+        assert result.exit_code == testing_configs["exit_code"], result.exception
+        if "exception" in testing_configs:
+            assert str(result.exception) == str(testing_configs["exception"])
+            assert result.exception.__class__ == testing_configs["exception"].__class__
