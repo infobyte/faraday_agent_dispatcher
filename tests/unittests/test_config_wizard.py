@@ -20,14 +20,13 @@ class ExecutorConfig:
         config = \
             f"{self.name}\n" \
             f"{self.cmd}\n" \
-            f"{self.max_size}\n" \
-            f"{len(self.varenvs)}\n"
+            f"{self.max_size}\n"
         for key in self.varenvs:
-            config = f"{config}{key}\n{self.varenvs[key]}\n"
-        config = f"{config}" \
-                 f"{len(self.params)}\n"
+            config = f"{config}A\n{key}\n{self.varenvs[key]}\n"
+        config = f"{config}Q\n"
         for key in self.params:
-            config = f"{config}{key}\n{str(self.params[key])}\n"
+            config = f"{config}A\n{key}\n{'y' if self.params[key] else 'n'}\n"
+        config = f"{config}Q\n"
         return config
 
 
@@ -86,9 +85,22 @@ def generate_configs():
             "executors_config": {
                 "add": [
                     ExecutorConfig(name="ex1", cmd="qweqe", params={"qeqwe": True, "asdasda": False}),
-                    ExecutorConfig(name="ex2", cmd="qwdfeqe", varenvs={"asdasda": "False"}),
+                    ExecutorConfig(name="ex2", cmd="qwdfeqe", varenvs={"asdasda": "AVarEnv"}),
                     ExecutorConfig(name="ex3", cmd="qweqe", params={"qeqwe": True, "asdasda": False},
-                                   varenvs={"asdasda": "False"}),
+                                   varenvs={"asdasda": "AVarEnv"}),
+                ]
+            },
+            "exit_code": 0
+        },
+        # Bad Executors config
+        {
+            "config": DispatcherConfig(),
+            "executors_config": {
+                "add": [
+                    ExecutorConfig(name="ex1", cmd="qweqe", params={"qeqwe": True, "asdasda": False}),
+                    ExecutorConfig(name="ex2", cmd="qwdfeqe", varenvs={"asdasda": "AVarEnv"}),
+                    ExecutorConfig(name="ex3", cmd="qweqe", params={"qeqwe": True, "asdasda": False},
+                                   varenvs={"asdasda": "AVarEnv"}),
                     ExecutorConfig(name="ex1", cmd="qweqe", max_size="99999", params={"qeqwe": True, "asdasda": False}),
                 ]
             },
@@ -132,12 +144,16 @@ def parse_config(config: Dict):
         executors_config = config["executors_config"]
         output = f"{output}E\n"
         if "add" in executors_config:
-            pass
+            for executor_conf in executors_config["add"]:
+                output = f"{output}A\n{executor_conf.config_str()}"
         if "mod" in executors_config:
-            pass
+            for executor_conf in executors_config["mod"]:
+                output = f"{output}M\n{executor_conf.config_str()}"
         if "del" in executors_config:
-            pass
-    output = f"{output}\n"
+            for executor_conf in executors_config["del"]:
+                output = f"{output}D\n{executor_conf.name}\n"
+        output = f"{output}Q\n"
+    output = f"{output}Q\n"
     return output
 
 

@@ -78,7 +78,7 @@ def verify():
     if Sections.AGENT not in instance:
         if OldSections.EXECUTOR in instance:
             agent_name = instance.get(OldSections.EXECUTOR, "agent_name")
-            executor_name = "ex1"
+            executor_name = "unnamed_executor"
             instance.add_section(Sections.EXECUTOR_DATA.format(executor_name))
             instance.add_section(Sections.EXECUTOR_VARENVS.format(executor_name))
             instance.add_section(Sections.EXECUTOR_PARAMS.format(executor_name))
