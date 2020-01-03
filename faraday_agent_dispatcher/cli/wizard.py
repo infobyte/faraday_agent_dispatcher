@@ -1,6 +1,7 @@
 import os
 
 import click
+from pathlib import Path
 
 from faraday_agent_dispatcher import config
 from faraday_agent_dispatcher.config import Sections
@@ -9,26 +10,29 @@ from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 def process_agent():
     agent_dict = {
-        Sections.SERVER: [
-            "host", "api_port", "websocket_port", "workspace"
-        ],
-        Sections.TOKENS: [
-            "registration"
-        ],
-        Sections.AGENT: [
-            "agent_name"
-        ],
+        Sections.SERVER: {
+            "host": "127.0.0.2", "api_port": 6000, "websocket_port": 6006, "workspace": "works"
+        },
+        Sections.TOKENS: {
+            "registration": "ACorrectTokenHas25CharLen"
+                 },
+        Sections.AGENT: {
+            "agent_name": "agent"
+        },
     }
 
     for section in agent_dict:
         print(f"{Bcolors.OKBLUE}Section: {section}{Bcolors.ENDC}")
         for opt in agent_dict[section]:
-            def_value = config.instance[section].get(opt, "")
-            value = click.prompt(f"{opt}", default=f"{def_value}")
+            if section not in config.instance:
+                config.instance.add_section(section)
+            def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]
+            value = click.prompt(f"{opt}", default=def_value)
             if value == "":
                 print(f"{Bcolors.WARNING}TODO WARNING{Bcolors.ENDC}")
+            config.__control_dict[section][opt](opt, value)
 
-            config.instance.set(section, opt, value)
+            config.instance.set(section, opt, str(value))
 
 
 def get_default_value_and_choices(default_value, choices):
@@ -119,9 +123,14 @@ def process_params(executor_name):
 
 class Wizard:
 
-    def __init__(self, config_filepath):
+    def __init__(self, config_filepath: Path):
         self.config_filepath = config_filepath
-        config.reset_config(config_filepath)
+
+        try:
+            config.reset_config(config_filepath)
+        except ValueError as e:
+            if e.args[1] or config_filepath.is_file():
+                raise e  # the filepath is either a file, or a folder containing a file, which can't be processed
         config.verify()
         self.executors_list = []
 
