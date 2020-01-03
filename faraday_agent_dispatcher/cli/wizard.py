@@ -43,7 +43,7 @@ def get_default_value_and_choices(default_value, choices):
 
 
 def process_choice_errors(value):
-    if "" in os.environ and value in ["\0"]:
+    if "DEFAULT_VALUE_NONE" in os.environ and value in ["\0"]:
         raise click.exceptions.Abort()
 
 
@@ -180,10 +180,11 @@ class Wizard:
         while name is None:
             name = click.prompt("Name")
             if name in self.executors_list:
+                print(f"An executuor with \'{name}\' name already exists")
                 name = None
         self.executors_list.append(name)
+        cmd = click.prompt("Command to execute", default="exit 1")
         max_buff_size = click.prompt("Max data sent to server", type=int, default=65536)
-        cmd = click.prompt("Command to execute")
         for section in Wizard.EXECUTOR_SECTIONS:
             formatted_section = section.format(name)
             config.instance.add_section(formatted_section)
