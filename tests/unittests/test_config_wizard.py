@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from faraday_agent_dispatcher.cli.main import config_wizard
+from tests.utils.text_utils import fuzzy_string
 
 
 class ExecutorConfig:
@@ -28,6 +29,19 @@ class ExecutorConfig:
             config = f"{config}A\n{key}\n{'y' if self.params[key] else 'n'}\n"
         config = f"{config}Q\n"
         return config
+
+
+class RepeatedExecutorConfig(ExecutorConfig):
+
+    def __init__(self, name=None, repeated_name=None, cmd=None, max_size=None, varenvs: Dict[(str, str)] = None,
+                 params: Dict[(str, bool)] = None):
+        super().__init__(repeated_name, cmd, max_size, varenvs, params)
+        self.correct_name = name or fuzzy_string(8)
+
+    def config_str(self):
+        config = super().config_str().split("\n")
+        config.insert(1, self.correct_name)
+        return '\n'.join(config)
 
 
 class DispatcherConfig:
@@ -101,7 +115,8 @@ def generate_configs():
                     ExecutorConfig(name="ex2", cmd="qwdfeqe", varenvs={"asdasda": "AVarEnv"}),
                     ExecutorConfig(name="ex3", cmd="qweqe", params={"qeqwe": True, "asdasda": False},
                                    varenvs={"asdasda": "AVarEnv"}),
-                    ExecutorConfig(name="ex1", cmd="qweqe", max_size="99999", params={"qeqwe": True, "asdasda": False}),
+                    RepeatedExecutorConfig(repeated_name="ex1", cmd="qweqe", params={"qeqwe": True, "asdasda": False},
+                                           varenvs={"asdasda": "AVarEnv"}),
                 ]
             },
             "exit_code": 0

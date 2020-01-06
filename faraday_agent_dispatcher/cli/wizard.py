@@ -11,7 +11,7 @@ from faraday_agent_dispatcher.utils.text_utils import Bcolors
 def process_agent():
     agent_dict = {
         Sections.SERVER: {
-            "host": "127.0.0.2", "api_port": 6000, "websocket_port": 6006, "workspace": "works"
+            "host": "127.0.0.1", "api_port": 6000, "websocket_port": 6006, "workspace": "works"
         },
         Sections.TOKENS: {
             "registration": "ACorrectTokenHas25CharLen"
