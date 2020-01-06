@@ -1,89 +1,11 @@
 import pytest
 from click.testing import CliRunner
-from typing import List, Dict
+from typing import Dict
 import os
 from pathlib import Path
 
 from faraday_agent_dispatcher.cli.main import config_wizard
-from tests.utils.text_utils import fuzzy_string
-
-
-class ExecutorConfig:
-    def __init__(self, name=None, cmd=None, max_size=None, varenvs: Dict[(str, str)] = None,
-                 params: Dict[(str, bool)] = None):
-        self.name = name or ""
-        self.cmd = cmd or ""
-        self.max_size = max_size or ""
-        self.varenvs = varenvs or {}
-        self.params = params or {}
-
-    def config_str(self):
-        config = \
-            f"{self.name}\n" \
-            f"{self.cmd}\n" \
-            f"{self.max_size}\n"
-        for key in self.varenvs:
-            config = f"{config}A\n{key}\n{self.varenvs[key]}\n"
-        config = f"{config}Q\n"
-        for key in self.params:
-            config = f"{config}A\n{key}\n{'y' if self.params[key] else 'n'}\n"
-        config = f"{config}Q\n"
-        return config
-
-
-class RepeatedExecutorConfig(ExecutorConfig):
-
-    def __init__(self, name=None, repeated_name=None, cmd=None, max_size=None, varenvs: Dict[(str, str)] = None,
-                 params: Dict[(str, bool)] = None):
-        super().__init__(repeated_name, cmd, max_size, varenvs, params)
-        self.correct_name = name or fuzzy_string(8)
-
-    def config_str(self):
-        config = super().config_str().split("\n")
-        config.insert(1, self.correct_name)
-        return '\n'.join(config)
-
-
-class DispatcherConfig:
-    def __init__(self, host=None, api_port=None, ws_port=None, workspace=None, agent_name=None,
-                 registration_token=None, empty=False):
-        self.server_config = {
-            "host": host or "",
-            "api_port": api_port or "",
-            "ws_port": ws_port or "",
-            "workspace": workspace or "",
-        }
-        self.agent = agent_name or ""
-        self.registration_token = registration_token or ""
-        self.empty = empty
-
-    def config_str(self):
-        config = f"{self.server_config['host']}\n" \
-                 f"{self.server_config['api_port']}\n" \
-                 f"{self.server_config['ws_port']}\n" \
-                 f"{self.server_config['workspace']}\n" \
-                 f"{self.registration_token}\n" \
-                 f"{self.agent}\n"
-        return config
-
-# Order will be:
-    # * Agent/Executor (?)
-    # * Agent
-    #   * Host
-    #   * API port
-    #   * WS port
-    #   * Workspace
-    #   * Agent name
-    #   * Registration token (if set, remove agent token)
-    # * Executors
-    # AMD (?)
-    #   * MD -> Which one?
-    #   * Main config:
-    #     * Executor name
-    #     * Executor command
-    #     * Max size
-    #   * VARENVS AMD (?)
-    #   * Params AMD (?)
+from tests.unittests.configuration import ExecutorConfig, DispatcherConfig
 
 
 def generate_configs():
@@ -91,54 +13,6 @@ def generate_configs():
         # All default
         {
             "config": DispatcherConfig(),
-            "exit_code": 0
-        },
-        # Executors config
-        {
-            "config": DispatcherConfig(),
-            "executors_config": {
-                "add": [
-                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False}),
-                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv1": "AVarEnv"}),
-                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
-                                   varenvs={"add_varenv1": "AVarEnv"}),
-                ]
-            },
-            "exit_code": 0
-        },
-        # Bad Executors config
-        {
-            "config": DispatcherConfig(),
-            "executors_config": {
-                "add": [
-                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False}),
-                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv1": "AVarEnv"}),
-                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
-                                   varenvs={"add_varenv1": "AVarEnv"}),
-                    RepeatedExecutorConfig(repeated_name="ex1", cmd="cmd 4",
-                                           params={"add_param3": True, "add_param4": False},
-                                           varenvs={"add_varenv2": "AVarEnv"}),
-                ]
-            },
-            "exit_code": 0
-        },
-        # Executors config
-        {
-            "config": DispatcherConfig(),
-            "executors_config": {
-                "add": [
-                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False}),
-                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv": "AVarEnv"}),
-                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
-                                   varenvs={"add_varenv": "AVarEnv"}),
-                ],
-                "mod": [
-                    ExecutorConfig(name="ex1", cmd="exit 1", params={"mod_param1": True, "add_param1": False}),
-                    ExecutorConfig(name="ex2", cmd="", varenvs={"mod_varenv1": "AVarEnv"}),
-                    ExecutorConfig(name="ex3", cmd="", params={"mod_param1": True, "mod_param2": False},
-                                   varenvs={"mod_varenv1": "AVarEnv"}),
-                ]
-            },
             "exit_code": 0
         },
         # Dispatcher config
@@ -153,6 +27,51 @@ def generate_configs():
                                        agent_name="agent", registration_token="12345678901234567890"),
             "exit_code": 1,
             "exception": ValueError("registration must be 25 character length")
+        },
+        # Executors config
+        {
+            "config": DispatcherConfig(),
+            "executors_config": [
+                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False},
+                                   adm_type="add"),
+                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv1": "AVarEnv"}, adm_type="add"),
+                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
+                                   varenvs={"add_varenv1": "AVarEnv"}, adm_type="add"),
+                ],
+            "exit_code": 0
+        },
+        # Bad Executors config
+        {
+            "config": DispatcherConfig(),
+            "executors_config": [
+                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False},
+                                   adm_type="add"),
+                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv1": "AVarEnv"},adm_type="add"),
+                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
+                                   varenvs={"add_varenv1": "AVarEnv"},adm_type="add"),
+                    ExecutorConfig(error_name="ex1", cmd="cmd 4", name="ex4",
+                                   params={"add_param3": True, "add_param4": False},
+                                   varenvs={"add_varenv2": "AVarEnv"}, adm_type="add"),
+                ]
+            ,
+            "exit_code": 0
+        },
+        # Executors config
+        {
+            "config": DispatcherConfig(),
+            "executors_config": [
+                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False},
+                                   adm_type="add"),
+                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv": "AVarEnv"}, adm_type="add"),
+                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
+                                   varenvs={"add_varenv": "AVarEnv"}, adm_type="add"),
+                    ExecutorConfig(name="ex1", cmd="exit 1", params={"mod_param1": True, "add_param1": False},
+                                   adm_type="mod"),
+                    ExecutorConfig(name="ex2", cmd="", varenvs={"mod_varenv1": "AVarEnv"}, adm_type="mod"),
+                    ExecutorConfig(name="ex3", cmd="", params={"mod_param1": True, "mod_param2": False},
+                                   varenvs={"mod_varenv1": "AVarEnv"}, adm_type="mod"),
+                ],
+            "exit_code": 0
         },
     ]
 
