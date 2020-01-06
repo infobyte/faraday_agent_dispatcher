@@ -98,10 +98,10 @@ def generate_configs():
             "config": DispatcherConfig(),
             "executors_config": {
                 "add": [
-                    ExecutorConfig(name="ex1", cmd="qweqe", params={"qeqwe": True, "asdasda": False}),
-                    ExecutorConfig(name="ex2", cmd="qwdfeqe", varenvs={"asdasda": "AVarEnv"}),
-                    ExecutorConfig(name="ex3", cmd="qweqe", params={"qeqwe": True, "asdasda": False},
-                                   varenvs={"asdasda": "AVarEnv"}),
+                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False}),
+                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv1": "AVarEnv"}),
+                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
+                                   varenvs={"add_varenv1": "AVarEnv"}),
                 ]
             },
             "exit_code": 0
@@ -111,12 +111,32 @@ def generate_configs():
             "config": DispatcherConfig(),
             "executors_config": {
                 "add": [
-                    ExecutorConfig(name="ex1", cmd="qweqe", params={"qeqwe": True, "asdasda": False}),
-                    ExecutorConfig(name="ex2", cmd="qwdfeqe", varenvs={"asdasda": "AVarEnv"}),
-                    ExecutorConfig(name="ex3", cmd="qweqe", params={"qeqwe": True, "asdasda": False},
-                                   varenvs={"asdasda": "AVarEnv"}),
-                    RepeatedExecutorConfig(repeated_name="ex1", cmd="qweqe", params={"qeqwe": True, "asdasda": False},
-                                           varenvs={"asdasda": "AVarEnv"}),
+                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False}),
+                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv1": "AVarEnv"}),
+                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
+                                   varenvs={"add_varenv1": "AVarEnv"}),
+                    RepeatedExecutorConfig(repeated_name="ex1", cmd="cmd 4",
+                                           params={"add_param3": True, "add_param4": False},
+                                           varenvs={"add_varenv2": "AVarEnv"}),
+                ]
+            },
+            "exit_code": 0
+        },
+        # Executors config
+        {
+            "config": DispatcherConfig(),
+            "executors_config": {
+                "add": [
+                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False}),
+                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv": "AVarEnv"}),
+                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
+                                   varenvs={"add_varenv": "AVarEnv"}),
+                ],
+                "mod": [
+                    ExecutorConfig(name="ex1", cmd="exit 1", params={"mod_param1": True, "add_param1": False}),
+                    ExecutorConfig(name="ex2", cmd="", varenvs={"mod_varenv1": "AVarEnv"}),
+                    ExecutorConfig(name="ex3", cmd="", params={"mod_param1": True, "mod_param2": False},
+                                   varenvs={"mod_varenv1": "AVarEnv"}),
                 ]
             },
             "exit_code": 0
