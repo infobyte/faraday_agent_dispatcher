@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import List
 
 # Order will be:
 # * Agent/Executor (?)
@@ -41,8 +41,8 @@ class ParamConfig(VarEnvConfig):
 
 
 class ExecutorConfig:
-    def __init__(self, name=None, error_name=None, cmd=None, max_size=None, varenvs: Dict[(str, VarEnvConfig)] = None,
-                 params: Dict[(str, ParamConfig)] = None, adm_type: str = None):
+    def __init__(self, name=None, error_name=None, cmd=None, max_size=None, varenvs: List[VarEnvConfig] = None,
+                 params: List[ParamConfig] = None, adm_type: str = None):
         self.name = name or ""
         self.error_name = error_name
         self.cmd = cmd or ""
@@ -62,11 +62,11 @@ class ExecutorConfig:
             f"{self.name}\n" \
             f"{self.cmd}\n" \
             f"{self.max_size}\n"
-        for key in self.varenvs:
-            config = f"{config}{self.varenvs[key].config_str()}\n"
+        for varenv_config in self.varenvs:
+            config = f"{config}{varenv_config.config_str()}\n"
         config = f"{config}Q\n"
-        for key in self.params:
-            config = f"{config}{self.params[key].config_str()}\n"
+        for param_config in self.params:
+            config = f"{config}{param_config.config_str()}\n"
         config = f"{config}Q\n"
         return config
 
