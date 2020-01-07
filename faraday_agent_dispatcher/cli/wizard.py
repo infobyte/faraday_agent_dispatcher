@@ -67,14 +67,14 @@ def process_var_envs(executor_name):
         if value == "A":
             env_var = click.prompt("Environment variable name").lower()
             if env_var in config.instance.options(section):
-                print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
+                print(f"{Bcolors.WARNING}The environment variable {env_var} already exists{Bcolors.ENDC}")
             else:
                 value = click.prompt("Environment variable value")
                 config.instance.set(section, env_var, value)
         elif value == "M":
             env_var = click.prompt("Environment variable name").lower()
             if env_var not in config.instance.options(section):
-                print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
+                print(f"{Bcolors.WARNING}There is no {env_var} environment variable{Bcolors.ENDC}")
             else:
                 def_value = config.instance.get(section, env_var)
                 value = click.prompt("Environment variable value", default=def_value)
@@ -82,7 +82,7 @@ def process_var_envs(executor_name):
         elif value == "D":
             env_var = click.prompt("Environment variable name").lower()
             if env_var not in config.instance.options(section):
-                print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
+                print(f"{Bcolors.WARNING}There is no {env_var} environment variable{Bcolors.ENDC}")
             else:
                 config.instance.remove_option(section, env_var)
         else:
@@ -100,21 +100,21 @@ def process_params(executor_name):
         if value == "A":
             param = click.prompt("Argument name").lower()
             if param in config.instance.options(section):
-                print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
+                print(f"{Bcolors.WARNING}The argument {param} already exists{Bcolors.ENDC}")
             else:
                 value = click.confirm("Is mandatory?")
                 config.instance.set(section, param, f"{value}")
         elif value == "M":
             param = click.prompt("Argument name").lower()
             if param not in config.instance.options(section):
-                print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
+                print(f"{Bcolors.WARNING}There is no {param} argument{Bcolors.ENDC}")
             else:
                 value = click.confirm("Is mandatory?")
                 config.instance.set(section, param, f"{value}")
         elif value == "D":
             param = click.prompt("Argument name").lower()
             if param not in config.instance.options(section):
-                print(f"{Bcolors.WARNING}TODO WARN{Bcolors.ENDC}")
+                print(f"{Bcolors.WARNING}There is no {param} argument{Bcolors.ENDC}")
             else:
                 config.instance.remove_option(section, param)
         else:
@@ -179,12 +179,10 @@ class Wizard:
                 end = True
 
     def new_executor(self):
-        name = None
-        while name is None:
-            name = click.prompt("Name")
-            if name in self.executors_list:
-                print(f"An executuor with \'{name}\' name already exists")
-                name = None
+        name = click.prompt("Name")
+        if name in self.executors_list:
+            print(f"{Bcolors.WARNING}The executor {name} already exists{Bcolors.ENDC}")
+            return
         self.executors_list.append(name)
         cmd = click.prompt("Command to execute", default="exit 1")
         max_buff_size = click.prompt("Max data sent to server", type=int, default=65536)
@@ -201,12 +199,13 @@ class Wizard:
     def edit_executor(self):
         name = click.prompt("Name")
         if name not in self.executors_list:
+            print(f"{Bcolors.WARNING}There is no {name} argument{Bcolors.ENDC}")
             return
         new_name = None
         while new_name is None:
             new_name = click.prompt("New name", default=name)
             if new_name in self.executors_list and name != new_name:
-                print(f"{Bcolors.WARNING}REPEATED{Bcolors.ENDC}")
+                print(f"{Bcolors.WARNING}The executor {name} already exists{Bcolors.ENDC}")
                 new_name = None
         if new_name != name:
             for unformatted_section in Wizard.EXECUTOR_SECTIONS:
@@ -229,6 +228,7 @@ class Wizard:
     def delete_executor(self):
         name = click.prompt("Name")
         if name not in self.executors_list:
+            print(f"{Bcolors.WARNING}There is no {name} argument{Bcolors.ENDC}")
             return
         for section in Wizard.EXECUTOR_SECTIONS:
             config.instance.remove_section(section.format(name))
