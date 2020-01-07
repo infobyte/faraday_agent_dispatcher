@@ -133,6 +133,7 @@ class Wizard:
                 raise e  # the filepath is either a file, or a folder containing a file, which can't be processed
         config.verify()
         self.executors_list = []
+        self.load_executors()
 
     def run(self):
         end = False
@@ -150,11 +151,13 @@ class Wizard:
             else:
                 process_choice_errors(value)
                 end = True
+        self.save_executors()
         config.save_config(self.config_filepath)
 
-    def executors(self):
-        executors = config.instance[Sections.AGENT].get("executors", "")
-        self.executors_list = executors.split(",")
+    def load_executors(self):
+        if Sections.AGENT in config.instance:
+            executors = config.instance[Sections.AGENT].get("executors", "")
+            self.executors_list = executors.split(",")
 
     def save_executors(self):
         config.instance.set(Sections.AGENT, "executors", ",".join(self.executors_list))
