@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 from faraday_agent_dispatcher.cli.main import config_wizard
-from tests.unittests.configuration import ExecutorConfig, DispatcherConfig
+from tests.unittests.configuration import ExecutorConfig, DispatcherConfig, ParamConfig, VarEnvConfig
 
 
 def generate_configs():
@@ -32,11 +32,29 @@ def generate_configs():
         {
             "config": DispatcherConfig(),
             "executors_config": [
-                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False},
+                    ExecutorConfig(name="ex1",
+                                   cmd="cmd 1",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=True, adm_type="add"),
+                                       ParamConfig(name="add_param2", value=False, adm_type="add")
+                                   ],
                                    adm_type="add"),
-                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv1": "AVarEnv"}, adm_type="add"),
-                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
-                                   varenvs={"add_varenv1": "AVarEnv"}, adm_type="add"),
+                    ExecutorConfig(name="ex2",
+                                   cmd="cmd 2",
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type="add")
+                                   ],
+                                   adm_type="add"),
+                    ExecutorConfig(name="ex3",
+                                   cmd="cmd 3",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=True, adm_type="add"),
+                                       ParamConfig(name="add_param2", value=False, adm_type="add")
+                                   ],
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type="add")
+                                   ],
+                                   adm_type="add"),
                 ],
             "exit_code": 0
         },
@@ -44,14 +62,40 @@ def generate_configs():
         {
             "config": DispatcherConfig(),
             "executors_config": [
-                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False},
+                    ExecutorConfig(name="ex1",
+                                   cmd="cmd 1",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=True, adm_type="add"),
+                                       ParamConfig(name="add_param2", value=False, adm_type="add")
+                                   ],
                                    adm_type="add"),
-                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv1": "AVarEnv"},adm_type="add"),
-                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
-                                   varenvs={"add_varenv1": "AVarEnv"},adm_type="add"),
-                    ExecutorConfig(error_name="ex1", cmd="cmd 4", name="ex4",
-                                   params={"add_param3": True, "add_param4": False},
-                                   varenvs={"add_varenv2": "AVarEnv"}, adm_type="add"),
+                    ExecutorConfig(name="ex2",
+                                   cmd="cmd 2",
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type="add")
+                                   ],
+                                   adm_type="add"),
+                    ExecutorConfig(name="ex3",
+                                   cmd="cmd 3",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=True, adm_type="add"),
+                                       ParamConfig(name="add_param2", value=False, adm_type="add")
+                                   ],
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type="add")
+                                   ]
+                                   ,adm_type="add"),
+                    ExecutorConfig(error_name="ex1",
+                                   cmd="cmd 4",
+                                   name="ex4",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=True, adm_type="add"),
+                                       ParamConfig(name="add_param2", value=False, adm_type="add")
+                                   ],
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type="add")
+                                   ],
+                                   adm_type="add"),
                 ]
             ,
             "exit_code": 0
@@ -60,16 +104,47 @@ def generate_configs():
         {
             "config": DispatcherConfig(),
             "executors_config": [
-                    ExecutorConfig(name="ex1", cmd="cmd 1", params={"add_param1": True, "add_param2": False},
+                    ExecutorConfig(name="ex1",
+                                   cmd="cmd 1",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=True, adm_type="add"),
+                                       ParamConfig(name="add_param2", value=False, adm_type="add")
+                                   ],
                                    adm_type="add"),
-                    ExecutorConfig(name="ex2", cmd="cmd 2", varenvs={"add_varenv": "AVarEnv"}, adm_type="add"),
-                    ExecutorConfig(name="ex3", cmd="cmd 3", params={"add_param1": True, "add_param2": False},
-                                   varenvs={"add_varenv": "AVarEnv"}, adm_type="add"),
-                    ExecutorConfig(name="ex1", cmd="exit 1", params={"mod_param1": True, "add_param1": False},
+                    ExecutorConfig(name="ex2",
+                                   cmd="cmd 2",
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type="add")
+                                   ],
+                                   adm_type="add"),
+                    ExecutorConfig(name="ex3", cmd="cmd 3",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=True, adm_type="add"),
+                                       ParamConfig(name="add_param2", value=False, adm_type="add")
+                                   ],
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type="add")
+                                   ],
+                                   adm_type="add"),
+                    ExecutorConfig(name="ex1",
+                                   cmd="exit 1",
+                                   params=[
+                                       ParamConfig(name="mod_param1", value=True, adm_type="add"),
+                                       ParamConfig(name="add_param1", value=False, adm_type="mod")
+                                   ],
                                    adm_type="mod"),
-                    ExecutorConfig(name="ex2", cmd="", varenvs={"mod_varenv1": "AVarEnv"}, adm_type="mod"),
-                    ExecutorConfig(name="ex3", cmd="", params={"mod_param1": True, "mod_param2": False},
-                                   varenvs={"mod_varenv1": "AVarEnv"}, adm_type="mod"),
+                    ExecutorConfig(name="ex2",
+                                   cmd="",
+                                   varenvs=[
+                                       VarEnvConfig(name="mod_varenv1", value="AVarEnv", adm_type="add")
+                                   ],
+                                   adm_type="mod"),
+                    ExecutorConfig(name="ex3",
+                                   cmd="",
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type="mod")
+                                   ],
+                                   adm_type="mod"),
                 ],
             "exit_code": 0
         },
@@ -97,15 +172,8 @@ def parse_config(config: Dict):
     if "executors_config" in config:
         executors_config = config["executors_config"]
         output = f"{output}E\n"
-        if "add" in executors_config:
-            for executor_conf in executors_config["add"]:
-                output = f"{output}A\n{executor_conf.config_str()}"
-        if "mod" in executors_config:
-            for executor_conf in executors_config["mod"]:
-                output = f"{output}M\n{executor_conf.config_str()}"
-        if "del" in executors_config:
-            for executor_conf in executors_config["del"]:
-                output = f"{output}D\n{executor_conf.name}\n"
+        for executor_conf in executors_config:
+            output = f"{output}{executor_conf.config_str()}"
         output = f"{output}Q\n"
     output = f"{output}Q\n"
     return output
