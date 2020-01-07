@@ -42,8 +42,8 @@ def get_default_value_and_choices(default_value, choices):
     return default_value, choices
 
 
-def undefault_confirm(text: str):
-    return click.prompt(text=text, type=click.Choice(["Y", "N"]))
+def confirm_prompt(text: str, default=None):
+    return click.prompt(text=text, type=click.Choice(["Y", "N"]), default=default)
 
 
 def process_choice_errors(value):
@@ -106,14 +106,15 @@ def process_params(executor_name):
             if param in config.instance.options(section):
                 print(f"{Bcolors.WARNING}The argument {param} already exists{Bcolors.ENDC}")
             else:
-                value = undefault_confirm("Is mandatory?")
+                value = confirm_prompt("Is mandatory?")
                 config.instance.set(section, param, f"{value}")
         elif value == "M":
             param = click.prompt("Argument name").lower()
             if param not in config.instance.options(section):
                 print(f"{Bcolors.WARNING}There is no {param} argument{Bcolors.ENDC}")
             else:
-                value = undefault_confirm("Is mandatory?")
+                old_value = config.instance.get(section, param)
+                value = confirm_prompt("Is mandatory?", default=old_value)
                 config.instance.set(section, param, f"{value}")
         elif value == "D":
             param = click.prompt("Argument name").lower()
