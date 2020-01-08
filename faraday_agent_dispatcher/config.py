@@ -43,6 +43,8 @@ USE_RFC = False
 
 LOGGING_LEVEL = logging.DEBUG
 
+DEFAULT_EXECUTOR_VERIFY_NAME = "unnamed_executor"
+
 instance = configparser.ConfigParser()
 
 
@@ -78,7 +80,7 @@ def verify():
     if Sections.AGENT not in instance:
         if OldSections.EXECUTOR in instance:
             agent_name = instance.get(OldSections.EXECUTOR, "agent_name")
-            executor_name = "unnamed_executor"
+            executor_name = DEFAULT_EXECUTOR_VERIFY_NAME
             instance.add_section(Sections.EXECUTOR_DATA.format(executor_name))
             instance.add_section(Sections.EXECUTOR_VARENVS.format(executor_name))
             instance.add_section(Sections.EXECUTOR_PARAMS.format(executor_name))
