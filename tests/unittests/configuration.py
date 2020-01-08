@@ -43,7 +43,7 @@ class VarEnvConfig:
 
 class ParamConfig(VarEnvConfig):
 
-    def __init__(self, name: str, value: bool, adm_type: str):
+    def __init__(self, name: str, value: bool, adm_type: ADMType):
         super().__init__(name, 'Y' if value else 'N', adm_type)
 
 

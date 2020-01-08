@@ -10,25 +10,25 @@ from tests.unittests.configuration import ExecutorConfig, DispatcherConfig, Para
 
 def generate_configs():
     return [
-        # All default
+        # 0 All default
         {
             "config": DispatcherConfig(),
             "exit_code": 0
         },
-        # Dispatcher config
+        # 1 Dispatcher config
         {
             "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
                                        agent_name="agent", registration_token="1234567890123456789012345"),
             "exit_code": 0
         },
-        # Bad token config
+        # 2 Bad token config
         {
             "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
                                        agent_name="agent", registration_token="12345678901234567890"),
             "exit_code": 1,
-            "exception": ValueError("registration must be 25 character length")
+            "exception": ValueError("registration must be 25 character length") # TODO CHANGE TO NOT RAISE AND JUST WARN
         },
-        # Executors config
+        # 3 Basic Executors config
         {
             "config": DispatcherConfig(),
             "executors_config": [
@@ -58,7 +58,7 @@ def generate_configs():
                 ],
             "exit_code": 0
         },
-        # Bad Executors config
+        # 4 Basic Bad Executors config
         {
             "config": DispatcherConfig(),
             "executors_config": [
@@ -100,7 +100,7 @@ def generate_configs():
             ,
             "exit_code": 0
         },
-        # Executors config
+        # 5 Basic Mod Executors config
         {
             "config": DispatcherConfig(),
             "executors_config": [
@@ -127,6 +127,7 @@ def generate_configs():
                                    ],
                                    adm_type=ADMType.ADD),
                     ExecutorConfig(name="ex1",
+                                   error_name="QWE",
                                    cmd="exit 1",
                                    params=[
                                        ParamConfig(name="mod_param1", value=True, adm_type=ADMType.ADD),
@@ -140,6 +141,53 @@ def generate_configs():
                                    ],
                                    adm_type=ADMType.MODIFY),
                     ExecutorConfig(name="ex3",
+                                   new_name="eX3",
+                                   cmd="",
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)
+                                   ],
+                                   adm_type=ADMType.MODIFY),
+                ],
+            "exit_code": 0
+        },
+        # 6 Basic Del Executors config
+        {
+            "config": DispatcherConfig(),
+            "executors_config": [
+                    ExecutorConfig(name="ex1",
+                                   cmd="cmd 1",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                   ],
+                                   adm_type=ADMType.ADD),
+                    ExecutorConfig(name="ex2",
+                                   cmd="cmd 2",
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                   ],
+                                   adm_type=ADMType.ADD),
+                    ExecutorConfig(name="ex3", cmd="cmd 3",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                   ],
+                                   varenvs=[
+                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                   ],
+                                   adm_type=ADMType.ADD),
+                    ExecutorConfig(name="ex1",
+                                   error_name="QWE",
+                                   cmd="exit 1",
+                                   params=[
+                                       ParamConfig(name="add_param1", value=False, adm_type=ADMType.DELETE)
+                                   ],
+                                   adm_type=ADMType.MODIFY),
+                    ExecutorConfig(name="ex2",
+                                   cmd="",
+                                   adm_type=ADMType.DELETE),
+                    ExecutorConfig(name="ex3",
+                                   new_name="eX3",
                                    cmd="",
                                    varenvs=[
                                        VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)
@@ -212,3 +260,5 @@ def test_new_config(testing_configs: Dict[(str, object)], ini_filepath):
         if "exception" in testing_configs:
             assert str(result.exception) == str(testing_configs["exception"])
             assert result.exception.__class__ == testing_configs["exception"].__class__
+        else:
+            assert '\0\n' not in result.output
