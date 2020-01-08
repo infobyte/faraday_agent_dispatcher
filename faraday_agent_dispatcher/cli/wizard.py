@@ -11,13 +11,34 @@ from faraday_agent_dispatcher.utils.text_utils import Bcolors
 def process_agent():
     agent_dict = {
         Sections.SERVER: {
-            "host": "127.0.0.1", "api_port": 6000, "websocket_port": 6006, "workspace": "works"
+            "host": {
+                "default_value": "127.0.0.1",
+                "type": click.STRING,
+            },
+            "api_port":  {
+                "default_value": "5985",
+                "type": click.IntRange(min=1024, max=65536),
+            },
+            "websocket_port":   {
+                "default_value": "5985",
+                "type": click.IntRange(min=1024, max=65536),
+            },
+            "workspace": {
+                "default_value": "workspace",
+                "type": click.STRING,
+            }
         },
         Sections.TOKENS: {
-            "registration": "ACorrectTokenHas25CharLen"
-                 },
+            "workspace": {
+                "default_value": "ACorrectTokenHas25CharLen",
+                "type": click.STRING,
+            }
+        },
         Sections.AGENT: {
-            "agent_name": "agent"
+            "agent_name": {
+                "default_value": "agent",
+                "type": click.STRING,
+            }
         },
     }
 
@@ -26,8 +47,8 @@ def process_agent():
         for opt in agent_dict[section]:
             if section not in config.instance:
                 config.instance.add_section(section)
-            def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]
-            value = click.prompt(f"{opt}", default=def_value)
+            def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"]
+            value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
             if value == "":
                 print(f"{Bcolors.WARNING}TODO WARNING{Bcolors.ENDC}")
             config.__control_dict[section][opt](opt, value)
@@ -190,7 +211,7 @@ class Wizard:
             return
         self.executors_list.append(name)
         cmd = click.prompt("Command to execute", default="exit 1")
-        max_buff_size = click.prompt("Max data sent to server", type=int, default=65536)
+        max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=1024), default=65536)
         for section in Wizard.EXECUTOR_SECTIONS:
             formatted_section = section.format(name)
             config.instance.add_section(formatted_section)
@@ -223,7 +244,7 @@ class Wizard:
         section = Sections.EXECUTOR_DATA.format(name)
         cmd = click.prompt("Command to execute",
                            default=config.instance.get(section, "cmd"))
-        max_buff_size = click.prompt("Max data sent to server", type=int,
+        max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=1),
                                      default=config.instance.get(section, "max_size"))
         config.instance.set(section, "cmd", cmd)
         config.instance.set(section, "max_size", f"{max_buff_size}")
