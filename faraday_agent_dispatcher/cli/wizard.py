@@ -52,7 +52,7 @@ def process_agent():
             while value is None:
                 value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
                 if value == "":
-                    print(f"{Bcolors.WARNING}TODO WARNING{Bcolors.ENDC}")
+                    print(f"{Bcolors.WARNING}Trying to save with empty value{Bcolors.ENDC}")
                 try:
                     config.__control_dict[section][opt](opt, value)
                 except ValueError as e:
@@ -231,7 +231,7 @@ class Wizard:
     def edit_executor(self):
         name = click.prompt("Name")
         if name not in self.executors_list:
-            print(f"{Bcolors.WARNING}There is no {name} argument{Bcolors.ENDC}")
+            print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
             return
         new_name = None
         while new_name is None:
@@ -260,7 +260,7 @@ class Wizard:
     def delete_executor(self):
         name = click.prompt("Name")
         if name not in self.executors_list:
-            print(f"{Bcolors.WARNING}There is no {name} argument{Bcolors.ENDC}")
+            print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
             return
         for section in Wizard.EXECUTOR_SECTIONS:
             config.instance.remove_section(section.format(name))
