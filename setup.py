@@ -33,11 +33,10 @@ with open('README.md') as readme_file:
 with open('RELEASE.md') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', 'websockets', 'aiohttp<4.0.0', 'syslog_rfc5424_formatter']
+requirements = ['Click>=6.0', 'websockets', 'aiohttp<4.0.0', 'syslog_rfc5424_formatter',
+                'pytest', 'pytest-aiohttp', 'requests', 'itsdangerous']
 
 setup_requirements = ['pytest-runner', 'click', 'setuptools_scm']
-
-test_requirements = ['pytest', 'pytest-aiohttp', 'requests', 'itsdangerous']
 
 extra_req = {
         'dev': [
@@ -73,8 +72,6 @@ setup(
     packages=find_packages(include=['faraday_agent_dispatcher', 'faraday_agent_dispatcher.*']),
     use_scm_version=False,
     setup_requires=setup_requirements,
-    test_suite='tests',
-    tests_require=test_requirements,
     url='https://github.com/infobyte/faraday_agent_dispatcher',
     version='1.0',
     zip_safe=False,
