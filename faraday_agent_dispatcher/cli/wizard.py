@@ -29,7 +29,7 @@ def process_agent():
             }
         },
         Sections.TOKENS: {
-            "workspace": {
+            "registration": {
                 "default_value": "ACorrectTokenHas25CharLen",
                 "type": click.STRING,
             }
