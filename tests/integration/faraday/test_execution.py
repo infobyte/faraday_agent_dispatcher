@@ -24,7 +24,7 @@ USER = os.getenv("FARADAY_USER")
 EMAIL = os.getenv("FARADAY_EMAIL")
 PASS = os.getenv("FARADAY_PASSWORD")
 
-CONFIG_DIR = "./config_file.ini"
+CONFIG_DIR = "../../data/old_version_inis/1.0.ini"
 LOGGER_DIR = "./logs"
 
 agent_ok_status_keys_set = {'create_date',
