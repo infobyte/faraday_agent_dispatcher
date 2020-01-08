@@ -48,10 +48,16 @@ def process_agent():
             if section not in config.instance:
                 config.instance.add_section(section)
             def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"]
-            value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
-            if value == "":
-                print(f"{Bcolors.WARNING}TODO WARNING{Bcolors.ENDC}")
-            config.__control_dict[section][opt](opt, value)
+            value = None
+            while value is None:
+                value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
+                if value == "":
+                    print(f"{Bcolors.WARNING}TODO WARNING{Bcolors.ENDC}")
+                try:
+                    config.__control_dict[section][opt](opt, value)
+                except ValueError as e:
+                    print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+                    value = None
 
             config.instance.set(section, opt, str(value))
 

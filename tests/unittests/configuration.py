@@ -101,7 +101,14 @@ class DispatcherConfig:
         config = f"{self.server_config['host']}\n" \
                  f"{self.server_config['api_port']}\n" \
                  f"{self.server_config['ws_port']}\n" \
-                 f"{self.server_config['workspace']}\n" \
+                 f"{self.server_config['workspace']}\n"
+
+        if isinstance(self.registration_token, str):
+            self.registration_token = [self.registration_token]
+        for token in self.registration_token:
+            config = f"{config}{token}\n"
+
+        config = f"{config}" \
                  f"{self.registration_token}\n" \
                  f"{self.agent}\n"
         return config
