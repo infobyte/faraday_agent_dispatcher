@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from faraday_agent_dispatcher.cli.main import config_wizard
+from faraday_agent_dispatcher import config as config_mod
 from tests.unittests.configuration import ExecutorConfig, DispatcherConfig, ParamConfig, VarEnvConfig, ADMType
 
 
@@ -13,20 +14,23 @@ def generate_configs():
         # 0 All default
         {
             "config": DispatcherConfig(),
-            "exit_code": 0
+            "exit_code": 0,
+            "after_executors": set()
         },
         # 1 Dispatcher config
         {
             "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
                                        agent_name="agent", registration_token="1234567890123456789012345"),
-            "exit_code": 0
+            "exit_code": 0,
+            "after_executors": set()
         },
         # 2 Bad token config
         {
             "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
                                        agent_name="agent", registration_token=["12345678901234567890", ""]),
             "exit_code": 0,
-            "expected_outputs": ["registration must be 25 character length"]
+            "expected_outputs": ["registration must be 25 character length"],
+            "after_executors": set()
         },
         # 3 Basic Executors config
         {
@@ -56,7 +60,8 @@ def generate_configs():
                                    ],
                                    adm_type=ADMType.ADD),
                 ],
-            "exit_code": 0
+            "exit_code": 0,
+            "after_executors": {"ex1", "ex2", "ex3"}
         },
         # 4 Basic Bad Executors config
         {
@@ -96,9 +101,9 @@ def generate_configs():
                                        VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
                                    adm_type=ADMType.ADD),
-                ]
-            ,
-            "exit_code": 0
+                ],
+            "exit_code": 0,
+            "after_executors": {"ex1", "ex2", "ex3", "ex4"}
         },
         # 5 Basic Mod Executors config
         {
@@ -148,7 +153,8 @@ def generate_configs():
                                    ],
                                    adm_type=ADMType.MODIFY),
                 ],
-            "exit_code": 0
+            "exit_code": 0,
+            "after_executors": {"ex1", "ex2", "ex3"}
         },
         # 6 Basic Del Executors config
         {
@@ -194,22 +200,28 @@ def generate_configs():
                                    ],
                                    adm_type=ADMType.MODIFY),
                 ],
-            "exit_code": 0
+            "exit_code": 0,
+            "after_executors": {"ex1", "ex3"}
         },
     ]
 
 
-def ls_old_inis():
-    files = []
-    path = Path(__file__).parent.parent / 'data' / 'old_version_inis'
-    for file in os.listdir(path):
-        if os.path.isfile(os.path.join(path, file)):
-            files.append(path / file)
-    return files
+def old_version_path():
+    return Path(__file__).parent.parent / 'data' / 'old_version_inis'
 
 
 configs = generate_configs()
-inis_files = [""] + ls_old_inis()
+ini_configs = \
+    [
+        {
+            "dir": "",
+            "old_executors": set()
+        },
+        {
+            "dir": old_version_path() / '0.1.ini',
+            "old_executors": {"default"}
+        }
+    ]
 
 
 def parse_config(config: Dict):
@@ -232,16 +244,17 @@ def parse_config(config: Dict):
     configs
 )
 @pytest.mark.parametrize(
-    "ini_filepath",
-    inis_files
+    "ini_config",
+    ini_configs
 )
-def test_new_config(testing_configs: Dict[(str, object)], ini_filepath):
+def test_new_config(testing_configs: Dict[(str, object)], ini_config):
     runner = CliRunner()
 
     content = None
+    content_path = ini_config["dir"]
 
-    if ini_filepath != "":
-        with open(ini_filepath, 'r') as content_file:
+    if content_path != "":
+        with open(content_path, 'r') as content_file:
             content = content_file.read()
 
     with runner.isolated_filesystem() as file_system:
@@ -265,3 +278,14 @@ def test_new_config(testing_configs: Dict[(str, object)], ini_filepath):
         if "expected_outputs" in testing_configs:
             for expected_output in testing_configs["expected_outputs"]:
                 assert expected_output in result.output
+
+        expected_executors_set = set.union(ini_config["old_executors"], testing_configs["after_executors"])
+        if "default" in expected_executors_set:
+            expected_executors_set.remove("default")
+            expected_executors_set.add(config_mod.DEFAULT_EXECUTOR_VERIFY_NAME)
+
+        config_mod.reset_config(path)
+        executor_config_set = set(config_mod.instance.get(config_mod.Sections.AGENT, "executors").split(","))
+        if '' in executor_config_set:
+            executor_config_set.remove('')
+        assert executor_config_set == expected_executors_set
