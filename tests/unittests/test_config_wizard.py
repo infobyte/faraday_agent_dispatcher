@@ -220,6 +220,10 @@ ini_configs = \
         {
             "dir": old_version_path() / '0.1.ini',
             "old_executors": {"default"}
+        },
+        {
+            "dir": old_version_path() / '1.0.ini',
+            "old_executors": {"test", "test2"}
         }
     ]
 
