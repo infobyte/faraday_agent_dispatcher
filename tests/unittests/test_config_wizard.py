@@ -26,7 +26,7 @@ def generate_configs():
             "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
                                        agent_name="agent", registration_token=["12345678901234567890", ""]),
             "exit_code": 0,
-            "expected_outputs": ["registration must be 25 character length"] # TODO CHANGE TO NOT RAISE AND JUST WARN
+            "expected_outputs": ["registration must be 25 character length"]
         },
         # 3 Basic Executors config
         {
