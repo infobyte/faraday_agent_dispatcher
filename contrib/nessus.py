@@ -98,7 +98,7 @@ def main():
     scan_file = ''
     NESSUS_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_NAME", 'my_scan')
     NESSUS_URL = os.getenv("EXECUTOR_CONFIG_NESSUS_URL") #  https://nessus:port
-    NESSUS_USERNAME = os.getenv("EXECUTOR_CONFIG_NESSUS_USERNAME")
+    NESSUS_USERNAME = os.getenv("NESSUS_USERNAME")
     NESSUS_PASSWORD = os.getenv("NESSUS_PASSWORD")
     NESSUS_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_TARGET") #  ip, domain, range
     NESSUS_SCAN_TEMPLATE = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_TEMPLATE", "basic") #  name field
