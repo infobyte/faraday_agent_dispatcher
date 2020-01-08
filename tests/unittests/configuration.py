@@ -1,4 +1,5 @@
 from typing import List
+from enum import Enum
 
 # Order will be:
 # * Agent/Executor (?)
@@ -20,15 +21,21 @@ from typing import List
 #   * Params AMD (?)
 
 
+class ADMType(Enum):
+    ADD = 1
+    MODIFY = 2
+    DELETE = 3
+
+
 class VarEnvConfig:
 
-    def __init__(self, name: str, value: str, adm_type: str):
+    def __init__(self, name: str, value: str, adm_type: ADMType):
         self.name = name
         self.value = value
         self.adm_type = adm_type
 
     def config_str(self):
-        prefix = self.adm_type.upper()[0]
+        prefix = self.adm_type.name[0]
         if prefix == "D":
             return f"{prefix}\n{self.name}\n"
         return f"{prefix}\n{self.name}\n{self.value}\n"
@@ -37,12 +44,12 @@ class VarEnvConfig:
 class ParamConfig(VarEnvConfig):
 
     def __init__(self, name: str, value: bool, adm_type: str):
-        super().__init__(name, 'y' if value else 'n', adm_type)
+        super().__init__(name, 'Y' if value else 'N', adm_type)
 
 
 class ExecutorConfig:
     def __init__(self, name=None, error_name=None, cmd=None, max_size=None, varenvs: List[VarEnvConfig] = None,
-                 params: List[ParamConfig] = None, adm_type: str = None):
+                 params: List[ParamConfig] = None, new_name: str = "", adm_type: ADMType = None):
         self.name = name or ""
         self.error_name = error_name
         self.cmd = cmd or ""
@@ -50,16 +57,22 @@ class ExecutorConfig:
         self.varenvs = varenvs or {}
         self.params = params or {}
         self.adm_type = adm_type
+        self.new_name = new_name
 
     def config_str(self):
-        prefix = self.adm_type.upper()[0]
-        if prefix == "D":
-            return f"{prefix}\n{self.name}\n"
+        prefix = self.adm_type.name[0]
         config = f"{prefix}\n"
         if self.error_name:
             config = f"{config}{self.error_name}\n{prefix}\n"
+
+        if self.adm_type == ADMType.DELETE:
+            return f"{config}{self.name}\n"
+
         config = f"{config}" \
-            f"{self.name}\n" \
+                 f"{self.name}\n"
+        if self.adm_type == ADMType.MODIFY:
+            config = f"{config}{self.new_name}\n"
+        config = f"{config}" \
             f"{self.cmd}\n" \
             f"{self.max_size}\n"
         for varenv_config in self.varenvs:

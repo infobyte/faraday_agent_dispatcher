@@ -43,7 +43,7 @@ def get_default_value_and_choices(default_value, choices):
 
 
 def confirm_prompt(text: str, default=None):
-    return click.prompt(text=text, type=click.Choice(["Y", "N"]), default=default)
+    return click.prompt(text=text, type=click.Choice(["Y", "N"]), default=default) == 'Y'
 
 
 def process_choice_errors(value):
@@ -221,10 +221,10 @@ class Wizard:
                 config.instance.remove_section(unformatted_section.format(name))
             name = new_name
         section = Sections.EXECUTOR_DATA.format(name)
-        max_buff_size = click.prompt("Max data sent to server", type=int,
-                                     default=config.instance.get(section, "max_size"))
         cmd = click.prompt("Command to execute",
                            default=config.instance.get(section, "cmd"))
+        max_buff_size = click.prompt("Max data sent to server", type=int,
+                                     default=config.instance.get(section, "max_size"))
         config.instance.set(section, "cmd", cmd)
         config.instance.set(section, "max_size", f"{max_buff_size}")
         process_var_envs(name)
