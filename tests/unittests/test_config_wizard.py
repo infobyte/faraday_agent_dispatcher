@@ -24,9 +24,9 @@ def generate_configs():
         # 2 Bad token config
         {
             "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
-                                       agent_name="agent", registration_token="12345678901234567890"),
-            "exit_code": 1,
-            "exception": ValueError("registration must be 25 character length") # TODO CHANGE TO NOT RAISE AND JUST WARN
+                                       agent_name="agent", registration_token=["12345678901234567890", ""]),
+            "exit_code": 0,
+            "expected_outputs": ["registration must be 25 character length"] # TODO CHANGE TO NOT RAISE AND JUST WARN
         },
         # 3 Basic Executors config
         {
@@ -262,3 +262,6 @@ def test_new_config(testing_configs: Dict[(str, object)], ini_filepath):
             assert result.exception.__class__ == testing_configs["exception"].__class__
         else:
             assert '\0\n' not in result.output
+        if "expected_outputs" in testing_configs:
+            for expected_output in testing_configs["expected_outputs"]:
+                assert expected_output in result.output
