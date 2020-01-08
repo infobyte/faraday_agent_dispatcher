@@ -20,7 +20,7 @@ def process_agent():
                 "type": click.IntRange(min=1024, max=65536),
             },
             "websocket_port":   {
-                "default_value": "5985",
+                "default_value": "9000",
                 "type": click.IntRange(min=1024, max=65536),
             },
             "workspace": {
