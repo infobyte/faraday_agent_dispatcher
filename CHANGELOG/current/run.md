@@ -1,0 +1,1 @@
+The dispatcher now runs with a `faraday-dispatcher run` command
