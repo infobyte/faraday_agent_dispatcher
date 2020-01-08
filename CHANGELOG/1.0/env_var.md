@@ -1,0 +1,1 @@
+You can add fixed parameters than shouldn't came by the web (e.g. passwords) are set in the dispatcher.ini
