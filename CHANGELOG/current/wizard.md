@@ -1,0 +1,1 @@
+`faraday-dispatcher wizard` command added which generates configuration .ini file
