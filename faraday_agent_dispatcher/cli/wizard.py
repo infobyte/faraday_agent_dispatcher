@@ -17,11 +17,11 @@ def process_agent():
             },
             "api_port":  {
                 "default_value": "5985",
-                "type": click.IntRange(min=1024, max=65536),
+                "type": click.IntRange(min=1, max=65535),
             },
             "websocket_port":   {
                 "default_value": "9000",
-                "type": click.IntRange(min=1024, max=65536),
+                "type": click.IntRange(min=1, max=65535),
             },
             "workspace": {
                 "default_value": "workspace",
