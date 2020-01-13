@@ -7,6 +7,7 @@ import requests
 
 from faraday_plugins.plugins.manager import PluginsManager
 
+
 def nessus_login(url, user, password):
     payload = {'username': user, 'password': password}
     response = requests.post(url + '/session', payload, verify=False)
@@ -20,7 +21,8 @@ def nessus_login(url, user, password):
 
     return None
 
-def nessus_templates(url, token, x_token = '', target = ''):
+
+def nessus_templates(url, token, x_token='', target=''):
     headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token}
     payload = {}
     response = requests.get(url + '/editor/scan/templates', json=payload, headers=headers, verify=False)
@@ -30,7 +32,8 @@ def nessus_templates(url, token, x_token = '', target = ''):
 
     return None
 
-def nessus_add_target(url, token, x_token = '', target = '', template = 'basic', name = 'nessus_scan'):
+
+def nessus_add_target(url, token, x_token='', target='', template='basic', name='nessus_scan'):
     headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token}
     templates = nessus_templates(url, token, x_token)
     if not templates:
@@ -40,7 +43,8 @@ def nessus_add_target(url, token, x_token = '', target = '', template = 'basic',
         print('Template {} not valid. Setting basic as default'.format(template), file=sys.stderr)
         template = 'basic'
 
-    payload = { 'uuid': '{}'.format(templates[template]), 'settings': { 'name': '{}'.format(name), 'enabled': True, 'text_targets': target, 'agent_group_id': [] }}
+    payload = {'uuid': '{}'.format(templates[template]),
+               'settings': {'name': '{}'.format(name), 'enabled': True, 'text_targets': target, 'agent_group_id': []}}
     response = requests.post(url + '/scans', json=payload, headers=headers, verify=False)
     if response.status_code == 200:
         return response.json()['scan']['id']
@@ -49,8 +53,8 @@ def nessus_add_target(url, token, x_token = '', target = '', template = 'basic',
     return None
 
 
-def nessus_scan_run(url, scan_id, token, x_token = '', target = 'basic', policies=''):
-    headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token }
+def nessus_scan_run(url, scan_id, token, x_token='', target='basic', policies=''):
+    headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token}
 
     response = requests.post(url + '/scans/{scan_id}/launch'.format(scan_id=scan_id), headers=headers, verify=False)
     if response.status_code != 200:
@@ -68,15 +72,18 @@ def nessus_scan_run(url, scan_id, token, x_token = '', target = 'basic', policie
             if tries == 3:
                 status = 'error'
                 tries += 1
-            print('Could not get scan status. Response from server was {}. This error ocurred {} time[s]'.format(response.status_code, tries), file=sys.stderr)
+            print('Could not get scan status. Response from server was {}. This error ocurred {} time[s]'.format(
+                response.status_code, tries), file=sys.stderr)
         time.sleep(5)
     return status
 
-def nessus_scan_export(url, scan_id, token, x_token = '', target = ''):
+
+def nessus_scan_export(url, scan_id, token, x_token='', target=''):
     content = None
     headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token}
 
-    response = requests.post(url + '/scans/{scan_id}/export?limit=2500'.format(scan_id=scan_id), data={'format': 'nessus'}, headers=headers, verify=False)
+    response = requests.post(url + '/scans/{scan_id}/export?limit=2500'.format(scan_id=scan_id),
+                             data={'format': 'nessus'}, headers=headers, verify=False)
     if response.status_code == 200:
         if 'token' in response.json():
             export_token = response.json()['token']
@@ -84,11 +91,6 @@ def nessus_scan_export(url, scan_id, token, x_token = '', target = ''):
         print('Export failed with status {}'.format(response.status_code), file=sys.stderr)
         return None
 
-    #status = 'processing'
-    #while status != 'ready':
-    #    response = requests.get(url + '/tokens/{token}/status'.format(token=export_token), verify=False).json()
-    #    status = response['status']
-    #    time.sleep(5)
     status = 'processing'
     tries = 0
     while status != 'ready':
@@ -100,20 +102,23 @@ def nessus_scan_export(url, scan_id, token, x_token = '', target = ''):
             if tries == 3:
                 status = 'error'
                 tries += 1
-            print('Could not get export status. Response from server was {}. This error ocurred {} time[s]'.format(response.status_code, tries), file=sys.stderr)
+            print('Could not get export status. Response from server was {}. This error ocurred {} time[s]'.format(
+                response.status_code, tries), file=sys.stderr)
         time.sleep(5)
-    return status
 
     print('Report export status {}'.format(status), file=sys.stderr)
-    r = requests.get(url + '/tokens/{token}/download'.format(token = export_token), allow_redirects=True, verify=False)
-    content = r.content
+    response = requests.get(url + '/tokens/{token}/download'.format(token=export_token), allow_redirects=True,
+                            verify=False)
+    if response.status_code == 200:
+        return response.content
 
-    return content
+    return None
+
 
 def get_x_api_token(url, token):
     x_token = None
 
-    headers = {'X-Cookie': 'token={}'.format(token)} 
+    headers = {'X-Cookie': 'token={}'.format(token)}
 
     pattern = r"\{key:\"getApiToken\",value:function\(\)\{return\"([a-zA-Z0-9]*-[a-zA-Z0-9]*-[a-zA-Z0-9]*-[a-zA-Z0-9]*-[a-zA-Z0-9]*)\"\}"
     response = requests.get(url + '/nessus6.js', headers=headers, verify=False)
@@ -129,16 +134,19 @@ def get_x_api_token(url, token):
 
     return x_token
 
-def main():
 
+def main():
     NESSUS_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_NAME", 'my_scan')
-    NESSUS_URL = os.getenv("EXECUTOR_CONFIG_NESSUS_URL") #  https://nessus:port
+    NESSUS_URL = os.getenv("EXECUTOR_CONFIG_NESSUS_URL")  # https://nessus:port
     NESSUS_USERNAME = os.getenv("NESSUS_USERNAME")
     NESSUS_PASSWORD = os.getenv("NESSUS_PASSWORD")
-    NESSUS_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_TARGET") #  ip, domain, range
-    NESSUS_SCAN_TEMPLATE = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_TEMPLATE", "basic") #  name field
+    NESSUS_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_TARGET")  # ip, domain, range
+    NESSUS_SCAN_TEMPLATE = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_TEMPLATE", "basic")  # name field
 
-    scan_file = ''
+    if not NESSUS_URL:
+        NESSUS_URL = os.getenv("NESSUS_URL")
+
+    scan_file = None
 
     token = nessus_login(NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD)
     if not token:
@@ -148,7 +156,7 @@ def main():
     if not x_token:
         sys.exit(1)
 
-    scan_id = nessus_add_target(NESSUS_URL, token, x_token, NESSUS_SCAN_TARGET, NESSUS_SCAN_TEMPLATE,NESSUS_SCAN_NAME)
+    scan_id = nessus_add_target(NESSUS_URL, token, x_token, NESSUS_SCAN_TARGET, NESSUS_SCAN_TEMPLATE, NESSUS_SCAN_NAME)
     if not scan_id:
         sys.exit(1)
 
@@ -156,9 +164,13 @@ def main():
     if status != 'error':
         scan_file = nessus_scan_export(NESSUS_URL, scan_id, token, x_token)
 
-    plugin = PluginsManager().get_plugin("nessus")
-    plugin.parseOutputString(scan_file)
-    print(plugin.get_json())
+    if scan_file:
+        plugin = PluginsManager().get_plugin("nessus")
+        plugin.parseOutputString(scan_file)
+        print(plugin.get_json())
+    else:
+        print("Scan file was empty")
+
 
 if __name__ == '__main__':
     main()
