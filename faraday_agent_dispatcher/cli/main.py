@@ -50,11 +50,12 @@ def process_config_file(config_filepath: Path):
     config_filepath = config_filepath or Path(config.CONFIG_FILENAME)
     config_filepath = Path(config_filepath)
     config.reset_config(config_filepath)
+    return config_filepath
 
 
 async def main(config_file):
 
-    process_config_file(config_file)
+    config_file = process_config_file(config_file)
 
     async with ClientSession(raise_for_status=True) as session:
         try:

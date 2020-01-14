@@ -53,9 +53,12 @@ class Dispatcher:
         self.session = session
         self.websocket = None
         self.websocket_token = None
+        executors_list_str = config[Sections.AGENT].get("executors", []).split(",")
+        if "" in executors_list_str:
+            executors_list_str.remove("")
         self.executors = {
             executor_name:
-                Executor(executor_name, config) for executor_name in config[Sections.AGENT].get("executors", []).split(",")
+                Executor(executor_name, config) for executor_name in executors_list_str
         }
 
     async def reset_websocket_token(self):
