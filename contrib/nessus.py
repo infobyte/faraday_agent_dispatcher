@@ -7,13 +7,16 @@ import requests
 
 from faraday_plugins.plugins.manager import PluginsManager
 
+MAX_TRIES = 3
+TIME_BETWEEN_TRIES = 5
+
 
 def nessus_login(url, user, password):
     payload = {'username': user, 'password': password}
     response = requests.post(url + '/session', payload, verify=False)
 
     if response.status_code == 200:
-        if 'token' in response.json():
+        if response.headers['content-type'].lower() == "application/json" and 'token' in response.json():
             return response.json()['token']
         print('Nessus did not response with a valid token', file=sys.stderr)
     else:
@@ -27,8 +30,10 @@ def nessus_templates(url, token, x_token='', target=''):
     payload = {}
     response = requests.get(url + '/editor/scan/templates', json=payload, headers=headers, verify=False)
 
-    if response.status_code == 200:
-        return {template['name']: template['uuid'] for template in response.json()['templates']}
+    if response.status_code == 200 and 'templates' in response.json() \
+            and response.headers['content-type'].lower() == "application/json":
+        return {template['name']: template['uuid'] for template in response.json()['templates']
+                if 'uuid' in template and 'name' in template}
 
     return None
 
@@ -46,7 +51,10 @@ def nessus_add_target(url, token, x_token='', target='', template='basic', name=
     payload = {'uuid': '{}'.format(templates[template]),
                'settings': {'name': '{}'.format(name), 'enabled': True, 'text_targets': target, 'agent_group_id': []}}
     response = requests.post(url + '/scans', json=payload, headers=headers, verify=False)
-    if response.status_code == 200:
+    if response.status_code == 200 \
+            and response.headers['content-type'].lower() == "application/json" \
+            and 'scan' in response.json() \
+            and 'id' in response.json()['scan']:
         return response.json()['scan']['id']
     else:
         print('Could not create scan. Response from server was {}'.format(response.status_code), file=sys.stderr)
@@ -66,27 +74,32 @@ def nessus_scan_run(url, scan_id, token, x_token='', target='basic', policies=''
     while status == 'running':
         response = requests.get(url + '/scans/{}'.format(scan_id), headers=headers, verify=False)
         if response.status_code == 200:
-            tries = 0
-            status = response.json()['info']['status']
-        else:
-            if tries == 3:
+            if response.headers['content-type'].lower() == "application/json" \
+                    and 'info' in response.json() \
+                    and 'status' in response.json()['info']:
+                status = response.json()['info']['status']
+            else:
+                print("The nessus server give a 200 with unexpected response", file=sys.stderr)
                 status = 'error'
-                tries += 1
-            print('Could not get scan status. Response from server was {}. This error ocurred {} time[s]'.format(
-                response.status_code, tries), file=sys.stderr)
-        time.sleep(5)
+        else:
+            if tries == MAX_TRIES:
+                status = 'error'
+                print('Could not get scan status. Response from server was {}. This error ocurred {} time[s]'.format(
+                    response.status_code, tries), file=sys.stderr)
+            tries += 1
+        time.sleep(TIME_BETWEEN_TRIES)
     return status
 
 
-def nessus_scan_export(url, scan_id, token, x_token='', target=''):
-    content = None
+def nessus_scan_export(url, scan_id, token, x_token=''):
     headers = {'X-Cookie': 'token={}'.format(token), 'X-API-Token': x_token}
 
     response = requests.post(url + '/scans/{scan_id}/export?limit=2500'.format(scan_id=scan_id),
                              data={'format': 'nessus'}, headers=headers, verify=False)
-    if response.status_code == 200:
-        if 'token' in response.json():
-            export_token = response.json()['token']
+    if response.status_code == 200 \
+            and response.headers['content-type'].lower() == "application/json" \
+            and 'token' in response.json():
+        export_token = response.json()['token']
     else:
         print('Export failed with status {}'.format(response.status_code), file=sys.stderr)
         return None
@@ -95,16 +108,21 @@ def nessus_scan_export(url, scan_id, token, x_token='', target=''):
     tries = 0
     while status != 'ready':
         response = requests.get(url + '/tokens/{token}/status'.format(token=export_token), verify=False)
-        if response.status_code == 200:
-            tries = 0
-            status = response.json()['status']
-        else:
-            if tries == 3:
+        if response.status_code == 200 :
+            if response.headers['content-type'].lower() == "application/json" \
+                    and 'status' in response.json():
+                status = response.json()['status']
+            else:
+                print("The nessus server give a 200 with unexpected response", file=sys.stderr)
                 status = 'error'
-                tries += 1
-            print('Could not get export status. Response from server was {}. This error ocurred {} time[s]'.format(
-                response.status_code, tries), file=sys.stderr)
-        time.sleep(5)
+        else:
+            if tries == MAX_TRIES:
+                status = 'error'
+                print('Could not get export status. Response from server was {}. This error ocurred {} time[s]'.format(
+                    response.status_code, tries), file=sys.stderr)
+            tries += 1
+
+        time.sleep(TIME_BETWEEN_TRIES)
 
     print('Report export status {}'.format(status), file=sys.stderr)
     response = requests.get(url + '/tokens/{token}/download'.format(token=export_token), allow_redirects=True,
@@ -128,7 +146,7 @@ def get_x_api_token(url, token):
         if matched:
             x_token = matched.group(1)
         else:
-            print("X-api-token not found :(")
+            print("X-api-token not found :(", file=sys.stderr)
     else:
         print('Could not get x-api-token. Response from server was {}'.format(response.status_code), file=sys.stderr)
 
@@ -145,6 +163,9 @@ def main():
 
     if not NESSUS_URL:
         NESSUS_URL = os.getenv("NESSUS_URL")
+        if not NESSUS_URL:
+            print("URL not provided", file=sys.stderr)
+            sys.exit(1)
 
     scan_file = None
 
@@ -169,7 +190,7 @@ def main():
         plugin.parseOutputString(scan_file)
         print(plugin.get_json())
     else:
-        print("Scan file was empty")
+        print("Scan file was empty", file=sys.stderr)
 
 
 if __name__ == '__main__':
