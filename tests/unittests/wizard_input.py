@@ -27,7 +27,7 @@ class ADMType(Enum):
     DELETE = 3
 
 
-class VarEnvConfig:
+class VarEnvInput:
 
     def __init__(self, name: str, value: str, adm_type: ADMType):
         self.name = name
@@ -41,15 +41,15 @@ class VarEnvConfig:
         return f"{prefix}\n{self.name}\n{self.value}\n"
 
 
-class ParamConfig(VarEnvConfig):
+class ParamInput(VarEnvInput):
 
     def __init__(self, name: str, value: bool, adm_type: ADMType):
         super().__init__(name, 'Y' if value else 'N', adm_type)
 
 
-class ExecutorConfig:
-    def __init__(self, name=None, error_name=None, cmd=None, max_size=None, varenvs: List[VarEnvConfig] = None,
-                 params: List[ParamConfig] = None, new_name: str = "", adm_type: ADMType = None):
+class ExecutorInput:
+    def __init__(self, name=None, error_name=None, cmd=None, max_size=None, varenvs: List[VarEnvInput] = None,
+                 params: List[ParamInput] = None, new_name: str = "", adm_type: ADMType = None):
         self.name = name or ""
         self.error_name = error_name
         self.cmd = cmd or ""
@@ -84,7 +84,7 @@ class ExecutorConfig:
         return config
 
 
-class DispatcherConfig:
+class DispatcherInput:
     def __init__(self, host=None, api_port=None, ws_port=None, workspace=None, agent_name=None,
                  registration_token=None, empty=False):
         self.server_config = {
