@@ -154,7 +154,7 @@ def generate_inputs():
                                   adm_type=ADMType.MODIFY),
                 ],
             "exit_code": 0,
-            "after_executors": {"ex1", "ex2", "ex3"}
+            "after_executors": {"ex1", "ex2", "eX3"}
         },
         # 6 Basic Del Executors input
         {
@@ -193,10 +193,9 @@ def generate_inputs():
                                   cmd="",
                                   adm_type=ADMType.DELETE),
                     ExecutorInput(name="ex3",
-                                  new_name="eX3",
                                   cmd="",
                                   varenvs=[
-                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)
+                                       VarEnvInput(name="add_varenv1", value="", adm_type=ADMType.DELETE)
                                    ],
                                   adm_type=ADMType.MODIFY),
                 ],

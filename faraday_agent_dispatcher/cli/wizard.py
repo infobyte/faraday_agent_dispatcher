@@ -246,6 +246,8 @@ class Wizard:
                 for item in config.instance.items(unformatted_section.format(name)):
                     config.instance.set(section, item[0], item[1])
                 config.instance.remove_section(unformatted_section.format(name))
+            self.executors_list.remove(name)
+            self.executors_list.append(new_name)
             name = new_name
         section = Sections.EXECUTOR_DATA.format(name)
         cmd = click.prompt("Command to execute",
