@@ -63,7 +63,7 @@ def process_agent():
 
 
 def get_default_value_and_choices(default_value, choices):
-    if "DEFAULT_VALUE_NONE" in os.environ:
+    if "DEBUG_INPUT_MODE" in os.environ:
         default_value = None
         choices = choices + ["Q", "\0"]
     return default_value, choices
@@ -74,7 +74,7 @@ def confirm_prompt(text: str, default=None):
 
 
 def process_choice_errors(value):
-    if "DEFAULT_VALUE_NONE" in os.environ and value in ["\0"]:
+    if "DEBUG_INPUT_MODE" in os.environ and value in ["\0"]:
         raise click.exceptions.Abort()
 
 

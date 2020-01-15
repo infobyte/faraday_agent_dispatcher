@@ -9,33 +9,33 @@ from faraday_agent_dispatcher import config as config_mod
 from tests.unittests.wizard_input import ExecutorInput, DispatcherInput, ParamInput, VarEnvInput, ADMType
 
 
-def generate_configs():
+def generate_inputs():
     return [
         # 0 All default
         {
-            "config": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(),
             "exit_code": 0,
             "after_executors": set()
         },
-        # 1 Dispatcher config
+        # 1 Dispatcher input
         {
-            "config": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
+            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
                                       agent_name="agent", registration_token="1234567890123456789012345"),
             "exit_code": 0,
             "after_executors": set()
         },
-        # 2 Bad token config
+        # 2 Bad token input
         {
-            "config": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
+            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
                                       agent_name="agent", registration_token=["12345678901234567890", ""]),
             "exit_code": 0,
-            "expected_outputs": ["registration must be 25 character length"],
+            "expected_output": ["registration must be 25 character length"],
             "after_executors": set()
         },
-        # 3 Basic Executors config
+        # 3 Basic Executors input
         {
-            "config": DispatcherInput(),
-            "executors_config": [
+            "dispatcher_input": DispatcherInput(),
+            "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
                                   params=[
@@ -63,10 +63,10 @@ def generate_configs():
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "ex3"}
         },
-        # 4 Basic Bad Executors config
+        # 4 Basic Bad Executors input
         {
-            "config": DispatcherInput(),
-            "executors_config": [
+            "dispatcher_input": DispatcherInput(),
+            "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
                                   params=[
@@ -105,10 +105,10 @@ def generate_configs():
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "ex3", "ex4"}
         },
-        # 5 Basic Mod Executors config
+        # 5 Basic Mod Executors input
         {
-            "config": DispatcherInput(),
-            "executors_config": [
+            "dispatcher_input": DispatcherInput(),
+            "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
                                   params=[
@@ -156,10 +156,10 @@ def generate_configs():
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "ex3"}
         },
-        # 6 Basic Del Executors config
+        # 6 Basic Del Executors input
         {
-            "config": DispatcherInput(),
-            "executors_config": [
+            "dispatcher_input": DispatcherInput(),
+            "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
                                   params=[
@@ -210,7 +210,7 @@ def old_version_path():
     return Path(__file__).parent.parent / 'data' / 'old_version_inis'
 
 
-configs = generate_configs()
+inputs = generate_inputs()
 ini_configs = \
     [
         {
@@ -228,30 +228,30 @@ ini_configs = \
     ]
 
 
-def parse_config(config: Dict):
-    output = ""
-    if "config" in config:
-        dispatcher_config: DispatcherInput = config['config']
-        output = f"A\n{dispatcher_config.config_str()}"
-    if "executors_config" in config:
-        executors_config: List[ExecutorInput] = config["executors_config"]
-        output = f"{output}E\n"
-        for executor_conf in executors_config:
-            output = f"{output}{executor_conf.config_str()}"
-        output = f"{output}Q\n"
-    output = f"{output}Q\n"
-    return output
+def parse_inputs(testing_inputs: Dict):
+    result_input = ""
+    if "dispatcher_input" in testing_inputs:
+        dispatcher_input: DispatcherInput = testing_inputs['dispatcher_input']
+        result_input = f"A\n{dispatcher_input.input_str()}"
+    if "executors_input" in testing_inputs:
+        executors_input: List[ExecutorInput] = testing_inputs["executors_input"]
+        result_input = f"{result_input}E\n"
+        for executor_input in executors_input:
+            result_input = f"{result_input}{executor_input.input_str()}"
+        result_input = f"{result_input}Q\n"
+    result_input = f"{result_input}Q\n"
+    return result_input
 
 
 @pytest.mark.parametrize(
-    "testing_configs",
-    configs
+    "testing_inputs",
+    inputs
 )
 @pytest.mark.parametrize(
     "ini_config",
     ini_configs
 )
-def test_new_config(testing_configs: Dict[(str, object)], ini_config):
+def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
     runner = CliRunner()
 
     content = None
@@ -269,21 +269,26 @@ def test_new_config(testing_configs: Dict[(str, object)], ini_config):
                 content_file.write(content)
         else:
             path = Path(file_system)
-        in_data = parse_config(testing_configs) + "\0\n" * 1000  # HORRIBLE FIX
+        ''' 
+        The in_data variable will be consumed for the cli command, but in order to avoid unexpected inputs with no
+        data (and a infinite wait), a \0\n block of input is added at the end of the input. Furthermore the \0 is added
+        as a possible choice of the ones and should exit with error.
+        '''
+        in_data = parse_inputs(testing_inputs) + "\0\n" * 1000
         env = os.environ
-        env["DEFAULT_VALUE_NONE"] = "True"
+        env["DEBUG_INPUT_MODE"] = "True"
         result = runner.invoke(config_wizard, args=["-c", path], input=in_data, env=env)
-        assert result.exit_code == testing_configs["exit_code"], result.exception
-        if "exception" in testing_configs:
-            assert str(result.exception) == str(testing_configs["exception"])
-            assert result.exception.__class__ == testing_configs["exception"].__class__
+        assert result.exit_code == testing_inputs["exit_code"], result.exception
+        if "exception" in testing_inputs:
+            assert str(result.exception) == str(testing_inputs["exception"])
+            assert result.exception.__class__ == testing_inputs["exception"].__class__
         else:
-            assert '\0\n' not in result.output
-        if "expected_outputs" in testing_configs:
-            for expected_output in testing_configs["expected_outputs"]:
+            assert '\0\n' not in result.output  # Control '\0' is not passed in the output, as the input is echoed
+        if "expected_outputs" in testing_inputs:
+            for expected_output in testing_inputs["expected_outputs"]:
                 assert expected_output in result.output
 
-        expected_executors_set = set.union(ini_config["old_executors"], testing_configs["after_executors"])
+        expected_executors_set = set.union(ini_config["old_executors"], testing_inputs["after_executors"])
         if "default" in expected_executors_set:
             expected_executors_set.remove("default")
             expected_executors_set.add(config_mod.DEFAULT_EXECUTOR_VERIFY_NAME)

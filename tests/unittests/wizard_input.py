@@ -13,7 +13,7 @@ from enum import Enum
 # * Executors
 # AMD (?)
 #   * MD -> Which one?
-#   * Main config:
+#   * Main input:
 #     * Executor name
 #     * Executor command
 #     * Max size
@@ -34,7 +34,7 @@ class VarEnvInput:
         self.value = value
         self.adm_type = adm_type
 
-    def config_str(self):
+    def input_str(self):
         prefix = self.adm_type.name[0]
         if prefix == "D":
             return f"{prefix}\n{self.name}\n"
@@ -59,35 +59,35 @@ class ExecutorInput:
         self.adm_type = adm_type
         self.new_name = new_name
 
-    def config_str(self):
+    def input_str(self):
         prefix = self.adm_type.name[0]
-        config = f"{prefix}\n"
+        cli_input = f"{prefix}\n"
         if self.error_name:
-            config = f"{config}{self.error_name}\n{prefix}\n"
+            cli_input = f"{input}{self.error_name}\n{prefix}\n"
 
         if self.adm_type == ADMType.DELETE:
-            return f"{config}{self.name}\n"
+            return f"{cli_input}{self.name}\n"
 
-        config = f"{config}" \
-                 f"{self.name}\n"
+        cli_input = f"{cli_input}" \
+                    f"{self.name}\n"
         if self.adm_type == ADMType.MODIFY:
-            config = f"{config}{self.new_name}\n"
-        config = f"{config}" \
+            cli_input = f"{cli_input}{self.new_name}\n"
+        cli_input = f"{cli_input}" \
             f"{self.cmd}\n" \
             f"{self.max_size}\n"
-        for varenv_config in self.varenvs:
-            config = f"{config}{varenv_config.config_str()}\n"
-        config = f"{config}Q\n"
-        for param_config in self.params:
-            config = f"{config}{param_config.config_str()}\n"
-        config = f"{config}Q\n"
-        return config
+        for varenv_input in self.varenvs:
+            cli_input = f"{cli_input}{varenv_input.input_str()}\n"
+        cli_input = f"{cli_input}Q\n"
+        for param_input in self.params:
+            cli_input = f"{cli_input}{param_input.input_str()}\n"
+        cli_input = f"{cli_input}Q\n"
+        return cli_input
 
 
 class DispatcherInput:
     def __init__(self, host=None, api_port=None, ws_port=None, workspace=None, agent_name=None,
                  registration_token=None, empty=False):
-        self.server_config = {
+        self.server_input = {
             "host": host or "",
             "api_port": api_port or "",
             "ws_port": ws_port or "",
@@ -97,18 +97,17 @@ class DispatcherInput:
         self.registration_token = registration_token or ""
         self.empty = empty
 
-    def config_str(self):
-        config = f"{self.server_config['host']}\n" \
-                 f"{self.server_config['api_port']}\n" \
-                 f"{self.server_config['ws_port']}\n" \
-                 f"{self.server_config['workspace']}\n"
+    def input_str(self):
+        input_str = f"{self.server_input['host']}\n" \
+                 f"{self.server_input['api_port']}\n" \
+                 f"{self.server_input['ws_port']}\n" \
+                 f"{self.server_input['workspace']}\n"
 
         if isinstance(self.registration_token, str):
             self.registration_token = [self.registration_token]
         for token in self.registration_token:
-            config = f"{config}{token}\n"
+            input_str = f"{input_str}{token}\n"
 
-        config = f"{config}" \
-                 f"{self.registration_token}\n" \
-                 f"{self.agent}\n"
-        return config
+        return f"{input_str}" \
+               f"{self.registration_token}\n" \
+               f"{self.agent}\n"
