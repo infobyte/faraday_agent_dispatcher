@@ -219,7 +219,7 @@ ini_configs = \
         },
         {
             "dir": old_version_path() / '0.1.ini',
-            "old_executors": {"default"}
+            "old_executors": {config_mod.DEFAULT_EXECUTOR_VERIFY_NAME}
         },
         {
             "dir": old_version_path() / '1.0.ini',
@@ -289,9 +289,6 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
                 assert expected_output in result.output
 
         expected_executors_set = set.union(ini_config["old_executors"], testing_inputs["after_executors"])
-        if "default" in expected_executors_set:
-            expected_executors_set.remove("default")
-            expected_executors_set.add(config_mod.DEFAULT_EXECUTOR_VERIFY_NAME)
 
         config_mod.reset_config(path)
         executor_config_set = set(config_mod.instance.get(config_mod.Sections.AGENT, "executors").split(","))
