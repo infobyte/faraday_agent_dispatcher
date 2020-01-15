@@ -1,204 +1,204 @@
 import pytest
 from click.testing import CliRunner
-from typing import Dict
+from typing import Dict, List
 import os
 from pathlib import Path
 
 from faraday_agent_dispatcher.cli.main import config_wizard
 from faraday_agent_dispatcher import config as config_mod
-from tests.unittests.configuration import ExecutorConfig, DispatcherConfig, ParamConfig, VarEnvConfig, ADMType
+from tests.unittests.wizard_input import ExecutorInput, DispatcherInput, ParamInput, VarEnvInput, ADMType
 
 
 def generate_configs():
     return [
         # 0 All default
         {
-            "config": DispatcherConfig(),
+            "config": DispatcherInput(),
             "exit_code": 0,
             "after_executors": set()
         },
         # 1 Dispatcher config
         {
-            "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
-                                       agent_name="agent", registration_token="1234567890123456789012345"),
+            "config": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
+                                      agent_name="agent", registration_token="1234567890123456789012345"),
             "exit_code": 0,
             "after_executors": set()
         },
         # 2 Bad token config
         {
-            "config": DispatcherConfig(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
-                                       agent_name="agent", registration_token=["12345678901234567890", ""]),
+            "config": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
+                                      agent_name="agent", registration_token=["12345678901234567890", ""]),
             "exit_code": 0,
             "expected_outputs": ["registration must be 25 character length"],
             "after_executors": set()
         },
         # 3 Basic Executors config
         {
-            "config": DispatcherConfig(),
+            "config": DispatcherInput(),
             "executors_config": [
-                    ExecutorConfig(name="ex1",
-                                   cmd="cmd 1",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                    ExecutorInput(name="ex1",
+                                  cmd="cmd 1",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex2",
-                                   cmd="cmd 2",
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex2",
+                                  cmd="cmd 2",
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex3",
-                                   cmd="cmd 3",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex3",
+                                  cmd="cmd 3",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
                                    ],
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
+                                  adm_type=ADMType.ADD),
                 ],
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "ex3"}
         },
         # 4 Basic Bad Executors config
         {
-            "config": DispatcherConfig(),
+            "config": DispatcherInput(),
             "executors_config": [
-                    ExecutorConfig(name="ex1",
-                                   cmd="cmd 1",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                    ExecutorInput(name="ex1",
+                                  cmd="cmd 1",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex2",
-                                   cmd="cmd 2",
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex2",
+                                  cmd="cmd 2",
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex3",
-                                   cmd="cmd 3",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex3",
+                                  cmd="cmd 3",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
                                    ],
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ]
-                                   , adm_type=ADMType.ADD),
-                    ExecutorConfig(error_name="ex1",
-                                   cmd="cmd 4",
-                                   name="ex4",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                  , adm_type=ADMType.ADD),
+                    ExecutorInput(error_name="ex1",
+                                  cmd="cmd 4",
+                                  name="ex4",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
                                    ],
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
+                                  adm_type=ADMType.ADD),
                 ],
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "ex3", "ex4"}
         },
         # 5 Basic Mod Executors config
         {
-            "config": DispatcherConfig(),
+            "config": DispatcherInput(),
             "executors_config": [
-                    ExecutorConfig(name="ex1",
-                                   cmd="cmd 1",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                    ExecutorInput(name="ex1",
+                                  cmd="cmd 1",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex2",
-                                   cmd="cmd 2",
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex2",
+                                  cmd="cmd 2",
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex3", cmd="cmd 3",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex3", cmd="cmd 3",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
                                    ],
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex1",
-                                   error_name="QWE",
-                                   cmd="exit 1",
-                                   params=[
-                                       ParamConfig(name="mod_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param1", value=False, adm_type=ADMType.MODIFY)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex1",
+                                  error_name="QWE",
+                                  cmd="exit 1",
+                                  params=[
+                                       ParamInput(name="mod_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param1", value=False, adm_type=ADMType.MODIFY)
                                    ],
-                                   adm_type=ADMType.MODIFY),
-                    ExecutorConfig(name="ex2",
-                                   cmd="",
-                                   varenvs=[
-                                       VarEnvConfig(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  adm_type=ADMType.MODIFY),
+                    ExecutorInput(name="ex2",
+                                  cmd="",
+                                  varenvs=[
+                                       VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.MODIFY),
-                    ExecutorConfig(name="ex3",
-                                   new_name="eX3",
-                                   cmd="",
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)
+                                  adm_type=ADMType.MODIFY),
+                    ExecutorInput(name="ex3",
+                                  new_name="eX3",
+                                  cmd="",
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)
                                    ],
-                                   adm_type=ADMType.MODIFY),
+                                  adm_type=ADMType.MODIFY),
                 ],
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "ex3"}
         },
         # 6 Basic Del Executors config
         {
-            "config": DispatcherConfig(),
+            "config": DispatcherInput(),
             "executors_config": [
-                    ExecutorConfig(name="ex1",
-                                   cmd="cmd 1",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                    ExecutorInput(name="ex1",
+                                  cmd="cmd 1",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex2",
-                                   cmd="cmd 2",
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex2",
+                                  cmd="cmd 2",
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex3", cmd="cmd 3",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=True, adm_type=ADMType.ADD),
-                                       ParamConfig(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex3", cmd="cmd 3",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
                                    ],
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
                                    ],
-                                   adm_type=ADMType.ADD),
-                    ExecutorConfig(name="ex1",
-                                   error_name="QWE",
-                                   cmd="exit 1",
-                                   params=[
-                                       ParamConfig(name="add_param1", value=False, adm_type=ADMType.DELETE)
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex1",
+                                  error_name="QWE",
+                                  cmd="exit 1",
+                                  params=[
+                                       ParamInput(name="add_param1", value=False, adm_type=ADMType.DELETE)
                                    ],
-                                   adm_type=ADMType.MODIFY),
-                    ExecutorConfig(name="ex2",
-                                   cmd="",
-                                   adm_type=ADMType.DELETE),
-                    ExecutorConfig(name="ex3",
-                                   new_name="eX3",
-                                   cmd="",
-                                   varenvs=[
-                                       VarEnvConfig(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)
+                                  adm_type=ADMType.MODIFY),
+                    ExecutorInput(name="ex2",
+                                  cmd="",
+                                  adm_type=ADMType.DELETE),
+                    ExecutorInput(name="ex3",
+                                  new_name="eX3",
+                                  cmd="",
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)
                                    ],
-                                   adm_type=ADMType.MODIFY),
+                                  adm_type=ADMType.MODIFY),
                 ],
             "exit_code": 0,
             "after_executors": {"ex1", "ex3"}
@@ -231,10 +231,10 @@ ini_configs = \
 def parse_config(config: Dict):
     output = ""
     if "config" in config:
-        dispatcher_config: DispatcherConfig = config['config']
+        dispatcher_config: DispatcherInput = config['config']
         output = f"A\n{dispatcher_config.config_str()}"
     if "executors_config" in config:
-        executors_config = config["executors_config"]
+        executors_config: List[ExecutorInput] = config["executors_config"]
         output = f"{output}E\n"
         for executor_conf in executors_config:
             output = f"{output}{executor_conf.config_str()}"
