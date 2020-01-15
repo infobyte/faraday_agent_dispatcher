@@ -92,6 +92,19 @@ def verify():
             instance.remove_section(OldSections.EXECUTOR)
         else:
             should_be_empty = True
+    else:
+        data = []
+        if 'executors' in instance[Sections.AGENT]:
+            executor_list = instance.get(Sections.AGENT, 'executors').split(',')
+            for executor_name in executor_list:
+                if Sections.EXECUTOR_DATA.format(executor_name) not in instance.sections():
+                    data.append(f"{Sections.EXECUTOR_DATA.format(executor_name)} section does not exists")
+        else:
+            data.append(f'executors option not in {Sections.AGENT} section')
+
+        if len(data) > 0:
+            raise ValueError('\n'.join(data))
+
     if should_be_empty:
         assert len(instance.sections()) == 0
     else:

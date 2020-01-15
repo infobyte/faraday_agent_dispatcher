@@ -225,6 +225,17 @@ ini_configs = \
             "old_executors": {"test", "test2"}
         }
     ]
+error_ini_configs = \
+    [
+        {
+            "dir": old_version_path() / '1.0_error0.ini',
+            "exception_message": "notAConfiguredExecutor section does not exists"
+        },
+        {
+            "dir": old_version_path() / '1.0_error1.ini',
+            "exception_message": "executors option not in agent section"
+        }
+    ]
 
 
 def parse_inputs(testing_inputs: Dict):
@@ -296,13 +307,14 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         assert executor_config_set == expected_executors_set
 
 
-def test_verify():
+@pytest.mark.parametrize(
+    "ini_config",
+    error_ini_configs
+)
+def test_verify(ini_config):
     runner = CliRunner()
 
-    content_path = old_version_path() / '1.0_error.ini'
-
-    expected_outputs = ["It is not possible to load your config, please save it with another name and try to generate a"
-                        " new one with the command `faraday-dispatcher config-wizard`"]
+    content_path = ini_config["dir"]
 
     with open(content_path, 'r') as content_file:
         content = content_file.read()
@@ -316,8 +328,5 @@ def test_verify():
         env["DEBUG_INPUT_MODE"] = "True"
         result = runner.invoke(config_wizard, args=["-c", path], input="\0\n"*1000, env=env)
         assert result.exit_code == 1, result.exception
-        assert str(result.exception) == str("TODO")
+        assert str(result.exception) == ini_config["exception_message"]
         assert result.exception.__class__ == ValueError
-
-        for expected_output in expected_outputs:
-            assert expected_output in result.output
