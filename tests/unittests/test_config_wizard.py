@@ -294,3 +294,30 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         if '' in executor_config_set:
             executor_config_set.remove('')
         assert executor_config_set == expected_executors_set
+
+
+def test_verify():
+    runner = CliRunner()
+
+    content_path = old_version_path() / '1.0_error.ini'
+
+    expected_outputs = ["It is not possible to load your config, please save it with another name and try to generate a"
+                        " new one with the command `faraday-dispatcher config-wizard`"]
+
+    with open(content_path, 'r') as content_file:
+        content = content_file.read()
+
+    with runner.isolated_filesystem() as file_system:
+
+        path = Path(file_system) / "dispatcher.ini"
+        with path.open(mode="w") as content_file:
+            content_file.write(content)
+        env = os.environ
+        env["DEBUG_INPUT_MODE"] = "True"
+        result = runner.invoke(config_wizard, args=["-c", path], input="\0\n"*1000, env=env)
+        assert result.exit_code == 1, result.exception
+        assert str(result.exception) == str("TODO")
+        assert result.exception.__class__ == ValueError
+
+        for expected_output in expected_outputs:
+            assert expected_output in result.output
