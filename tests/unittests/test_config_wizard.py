@@ -19,15 +19,17 @@ def generate_inputs():
         },
         # 1 Dispatcher input
         {
-            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
-                                      agent_name="agent", registration_token="1234567890123456789012345"),
+            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234",
+                                                workspace="aworkspace", agent_name="agent",
+                                                registration_token="1234567890123456789012345"),
             "exit_code": 0,
             "after_executors": set()
         },
         # 2 Bad token input
         {
-            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234", workspace="aworkspace",
-                                      agent_name="agent", registration_token=["12345678901234567890", ""]),
+            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234",
+                                                workspace="aworkspace", agent_name="agent",
+                                                registration_token=["12345678901234567890", ""]),
             "exit_code": 0,
             "expected_output": ["registration must be 25 character length"],
             "after_executors": set()
@@ -195,9 +197,10 @@ def generate_inputs():
                     ExecutorInput(name="ex3",
                                   cmd="",
                                   varenvs=[
-                                       VarEnvInput(error_name="add_varenV1", name="add_varenv1",
-                                                   new_name="add_varenv1moded", value="", adm_type=ADMType.DELETE)
-                                   ],
+                                       VarEnvInput(error_name="aadd_varenv1", name="add_varenv1",
+                                                   new_name="add_varenv1moded", value="", adm_type=ADMType.MODIFY),
+                                       VarEnvInput(name="add_varenv1moded", value="", adm_type=ADMType.DELETE),
+                                  ],
                                   adm_type=ADMType.MODIFY),
                 ],
             "exit_code": 0,
