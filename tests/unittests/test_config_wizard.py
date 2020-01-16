@@ -195,7 +195,8 @@ def generate_inputs():
                     ExecutorInput(name="ex3",
                                   cmd="",
                                   varenvs=[
-                                       VarEnvInput(name="add_varenv1", value="", adm_type=ADMType.DELETE)
+                                       VarEnvInput(error_name="add_varenV1", name="add_varenv1",
+                                                   new_name="add_varenv1moded", value="", adm_type=ADMType.DELETE)
                                    ],
                                   adm_type=ADMType.MODIFY),
                 ],

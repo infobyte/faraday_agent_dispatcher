@@ -29,16 +29,27 @@ class ADMType(Enum):
 
 class VarEnvInput:
 
-    def __init__(self, name: str, value: str, adm_type: ADMType):
+    def __init__(self, name: str, value: str, adm_type: ADMType, error_name=None, new_name=None):
         self.name = name
         self.value = value
         self.adm_type = adm_type
+        self.error_name = error_name
+        self.new_name = new_name
 
     def input_str(self):
         prefix = self.adm_type.name[0]
-        if prefix == "D":
-            return f"{prefix}\n{self.name}\n"
-        return f"{prefix}\n{self.name}\n{self.value}\n"
+        cli_input = f"{prefix}\n"
+        if self.error_name:
+            cli_input = f"{cli_input}{self.error_name}\n{prefix}\n"
+
+        if self.adm_type == ADMType.DELETE:
+            return f"{cli_input}{self.name}\n"
+
+        cli_input = f"{cli_input}" \
+                    f"{self.name}\n"
+        if self.adm_type == ADMType.MODIFY:
+            cli_input = f"{cli_input}{self.new_name}\n"
+        return f"{cli_input}{self.value}\n"
 
 
 class ParamInput(VarEnvInput):
@@ -63,7 +74,7 @@ class ExecutorInput:
         prefix = self.adm_type.name[0]
         cli_input = f"{prefix}\n"
         if self.error_name:
-            cli_input = f"{input}{self.error_name}\n{prefix}\n"
+            cli_input = f"{cli_input}{self.error_name}\n{prefix}\n"
 
         if self.adm_type == ADMType.DELETE:
             return f"{cli_input}{self.name}\n"
@@ -76,10 +87,10 @@ class ExecutorInput:
             f"{self.cmd}\n" \
             f"{self.max_size}\n"
         for varenv_input in self.varenvs:
-            cli_input = f"{cli_input}{varenv_input.input_str()}\n"
+            cli_input = f"{cli_input}{varenv_input.input_str()}"
         cli_input = f"{cli_input}Q\n"
         for param_input in self.params:
-            cli_input = f"{cli_input}{param_input.input_str()}\n"
+            cli_input = f"{cli_input}{param_input.input_str()}"
         cli_input = f"{cli_input}Q\n"
         return cli_input
 
