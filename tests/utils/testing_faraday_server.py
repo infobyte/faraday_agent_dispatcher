@@ -11,6 +11,7 @@ import logging
 from logging import StreamHandler
 from faraday_agent_dispatcher.logger import get_logger, reset_logger
 from queue import Queue
+from pathlib import Path
 
 from faraday_agent_dispatcher.config import (
     EXAMPLE_CONFIG_FILENAME,
@@ -121,7 +122,7 @@ async def test_config(aiohttp_client, aiohttp_server, loop):
 
 
 class TmpConfig:
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
+    config_file_path = Path(f"/tmp/{fuzzy_string(10)}.ini")
 
     def save(self):
         save_config(self.config_file_path)
