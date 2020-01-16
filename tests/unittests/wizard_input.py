@@ -30,6 +30,8 @@ class ADMType(Enum):
 class VarEnvInput:
 
     def __init__(self, name: str, value: str, adm_type: ADMType, error_name=None, new_name=None):
+        if adm_type == ADMType.ADD and value == "":
+            raise ValueError("IF ADMTYPE = ADD, VALUE CAN NOT BE \"\"")
         self.name = name
         self.value = value
         self.adm_type = adm_type
@@ -48,7 +50,7 @@ class VarEnvInput:
         cli_input = f"{cli_input}" \
                     f"{self.name}\n"
         if self.adm_type == ADMType.MODIFY:
-            cli_input = f"{cli_input}{self.new_name}\n"
+            cli_input = f"{cli_input}{self.new_name or self.name}\n"
         return f"{cli_input}{self.value}\n"
 
 
@@ -82,7 +84,7 @@ class ExecutorInput:
         cli_input = f"{cli_input}" \
                     f"{self.name}\n"
         if self.adm_type == ADMType.MODIFY:
-            cli_input = f"{cli_input}{self.new_name}\n"
+            cli_input = f"{cli_input}{self.new_name or self.name}\n"
         cli_input = f"{cli_input}" \
             f"{self.cmd}\n" \
             f"{self.max_size}\n"
@@ -120,5 +122,4 @@ class DispatcherInput:
             input_str = f"{input_str}{token}\n"
 
         return f"{input_str}" \
-               f"{self.registration_token}\n" \
                f"{self.agent}\n"
