@@ -107,16 +107,7 @@ def process_var_envs(executor_name):
             if env_var not in config.instance.options(section):
                 print(f"{Bcolors.WARNING}There is no {env_var} environment variable{Bcolors.ENDC}")
             else:
-                new_name = None
-                while new_name is None:
-                    new_name = click.prompt("New name", default=env_var)
-                    if new_name in config.instance.options(section) and env_var != new_name:
-                        print(f"{Bcolors.WARNING}The environment variable {new_name} already exists{Bcolors.ENDC}")
-                        new_name = None
-                def_value = config.instance.get(section, env_var)
-                if env_var != new_name:
-                    config.instance.remove_option(section, env_var)
-                    env_var = new_name
+                def_value, env_var = get_new_name(env_var, section, "environment variable")
                 value = click.prompt("Environment variable value", default=def_value)
                 config.instance.set(section, env_var, value)
         elif value == "D":
@@ -127,6 +118,20 @@ def process_var_envs(executor_name):
                 config.instance.remove_option(section, env_var)
         else:
             end = True
+
+
+def get_new_name(name: str, section: str, named_type: str):
+    new_name = None
+    while new_name is None:
+        new_name = click.prompt("New name", default=name)
+        if new_name in config.instance.options(section) and name != new_name:
+            print(f"{Bcolors.WARNING}The {named_type} {new_name} already exists{Bcolors.ENDC}")
+            new_name = None
+    def_value = config.instance.get(section, name)
+    if name != new_name:
+        config.instance.remove_option(section, name)
+        name = new_name
+    return def_value, name
 
 
 def process_params(executor_name):
@@ -149,17 +154,8 @@ def process_params(executor_name):
             if param not in config.instance.options(section):
                 print(f"{Bcolors.WARNING}There is no {param} argument{Bcolors.ENDC}")
             else:
-                new_name = None
-                while new_name is None:
-                    new_name = click.prompt("New name", default=param)
-                    if new_name in config.instance.options(section) and param != new_name:
-                        print(f"{Bcolors.WARNING}The argument {new_name} already exists{Bcolors.ENDC}")
-                        new_name = None
-                old_value = config.instance.get(section, param)
-                if param != new_name:
-                    config.instance.remove_option(section, param)
-                    param = new_name
-                value = confirm_prompt("Is mandatory?", default=old_value)
+                def_value, param = get_new_name(param, section, "argument")
+                value = confirm_prompt("Is mandatory?", default=def_value)
                 config.instance.set(section, param, f"{value}")
         elif value == "D":
             param = click.prompt("Argument name").lower()

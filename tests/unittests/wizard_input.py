@@ -89,10 +89,10 @@ class ExecutorInput:
             f"{self.cmd}\n" \
             f"{self.max_size}\n"
         for varenv_input in self.varenvs:
-            cli_input = f"{cli_input}{varenv_input.input_str()}"
+            cli_input = f"{cli_input}{varenv_input.input_str}"
         cli_input = f"{cli_input}Q\n"
         for param_input in self.params:
-            cli_input = f"{cli_input}{param_input.input_str()}"
+            cli_input = f"{cli_input}{param_input.input_str}"
         cli_input = f"{cli_input}Q\n"
         return cli_input
 
