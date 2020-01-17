@@ -334,3 +334,34 @@ def test_verify(ini_config):
         assert result.exit_code == 1, result.exception
         assert str(result.exception) == ini_config["exception_message"]
         assert result.exception.__class__ == ValueError
+
+
+@pytest.mark.parametrize(
+    "delete_token",
+    [True, False]
+)
+def test_with_agent_token(delete_token):
+    runner = CliRunner()
+
+    content_path = old_version_path() / '1.0_with_agent_token.ini'
+
+    with open(content_path, 'r') as content_file:
+        content = content_file.read()
+
+    with runner.isolated_filesystem() as file_system:
+
+        path = Path(file_system) / "dispatcher.ini"
+        with path.open(mode="w") as content_file:
+            content_file.write(content)
+        env = os.environ
+        env["DEBUG_INPUT_MODE"] = "True"
+        input_str = f"A\n{DispatcherInput(delete_agent_token=delete_token).input_str()}Q\n"
+        result = runner.invoke(config_wizard, args=["-c", path], input=f"{input_str}\0\n"*1000, env=env)
+        assert result.exit_code == 0, result.exception
+
+        config_mod.reset_config(path)
+        if delete_token:
+            assert "agent" not in config_mod.instance.options(config_mod.Sections.TOKENS)
+        else:
+            assert "agent" in config_mod.instance.options(config_mod.Sections.TOKENS)
+

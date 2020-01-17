@@ -29,6 +29,7 @@ import faraday_agent_dispatcher.logger as logging
 
 from faraday_agent_dispatcher.config import instance as config, Sections, save_config, control_config
 from faraday_agent_dispatcher.executor import Executor
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -83,20 +84,31 @@ class Dispatcher:
             try:
                 token_response = await self.session.post(token_registration_url,
                                                          json={'token': registration_token, 'name': self.agent_name})
-                assert token_response.status == 201
                 token = await token_response.json()
                 self.agent_token = token["token"]
                 config.set(Sections.TOKENS, "agent", self.agent_token)
                 save_config(self.config_path)
             except ClientResponseError as e:
                 if e.status == 404:
-                    logger.info(f'404 HTTP ERROR received: Workspace "{self.workspace}" not found')
-                    return
+                    logger.error(f'404 HTTP ERROR received: Workspace "{self.workspace}" not found')
+                elif e.status == 401:
+                    logger.error("Invalid registration token, please reset and retry. If the error persist, you should "
+                                 "try to edit the registration token with the wizard command `faraday-dispatcher "
+                                 "config-wizard`")
                 else:
                     logger.info(f"Unexpected error: {e}")
-                    raise e
+                raise e
 
-        self.websocket_token = await self.reset_websocket_token()
+        try:
+            self.websocket_token = await self.reset_websocket_token()
+            logger.info("Registered successfully")
+        except ClientResponseError as e:
+            error_msg = "Invalid agent token, please reset and retry. If the error persist, you should remove " \
+                        f"the agent token with the wizard command `faraday-dispatcher " \
+                        f"config-wizard`"
+            logger.error(error_msg)
+            self.agent_token = None
+            raise e
 
     async def connect(self, out_func=None):
 
@@ -129,7 +141,7 @@ class Dispatcher:
             data = await self.websocket.recv()
             asyncio.create_task(self.run_once(data))
 
-    async def run_once(self, data:str= None, out_func=None):
+    async def run_once(self, data: str = None, out_func=None):
         out_func = out_func if out_func is not None else self.websocket.send
         logger.info('Parsing data: %s', data)
         data_dict = json.loads(data)
@@ -253,7 +265,8 @@ class Dispatcher:
                             "message": f"Executor {executor.name} from {self.agent_name} failed"
                         }))
 
-    async def create_process(self, executor: Executor, args):
+    @staticmethod
+    async def create_process(executor: Executor, args):
         env = os.environ.copy()
         if isinstance(args, dict):
             for k in args:
