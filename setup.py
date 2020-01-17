@@ -30,15 +30,19 @@ if sys.version_info.major < 3 or sys.version_info.minor < 7:
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
+with open('RELEASE.md') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', 'websockets', 'aiofiles', 'aiohttp<4.0.0', 'requests',
-                'syslog_rfc5424_formatter', 'itsdangerous', 'autobahn', 'twisted']
+requirements = ['Click>=6.0', 'websockets', 'aiohttp<4.0.0', 'syslog_rfc5424_formatter',
+                'pytest', 'pytest-aiohttp', 'requests', 'itsdangerous']
 
 setup_requirements = ['pytest-runner', 'click', 'setuptools_scm']
 
-test_requirements = ['pytest', 'pytest-aiohttp']
+extra_req = {
+        'dev': [
+            'giteasychangelog'
+        ]
+    }
 
 setup(
     author="Eric Horvat",
@@ -55,10 +59,11 @@ setup(
     description="Faraday agent dispatcher to communicate an agent to faraday",
     entry_points={
         'console_scripts': [
-            'faraday-dispatcher=faraday_agent_dispatcher.cli:main_sync',
+            'faraday-dispatcher=faraday_agent_dispatcher.cli.main:cli',
         ],
     },
     install_requires=requirements,
+    extras_require=extra_req,
     license="GNU General Public License v3",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
@@ -67,8 +72,6 @@ setup(
     packages=find_packages(include=['faraday_agent_dispatcher', 'faraday_agent_dispatcher.*']),
     use_scm_version=False,
     setup_requires=setup_requirements,
-    test_suite='tests',
-    tests_require=test_requirements,
     url='https://github.com/infobyte/faraday_agent_dispatcher',
     version='1.0',
     zip_safe=False,
