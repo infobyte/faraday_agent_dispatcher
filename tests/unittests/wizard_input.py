@@ -99,7 +99,7 @@ class ExecutorInput:
 
 class DispatcherInput:
     def __init__(self, host=None, api_port=None, ws_port=None, workspace=None, agent_name=None,
-                 registration_token=None, empty=False):
+                 registration_token=None, delete_agent_token: bool = None, empty=False):
         self.server_input = {
             "host": host or "",
             "api_port": api_port or "",
@@ -108,6 +108,7 @@ class DispatcherInput:
         }
         self.agent = agent_name or ""
         self.registration_token = registration_token or ""
+        self.delete_agent_token = delete_agent_token
         self.empty = empty
 
     def input_str(self):
@@ -120,6 +121,8 @@ class DispatcherInput:
             self.registration_token = [self.registration_token]
         for token in self.registration_token:
             input_str = f"{input_str}{token}\n"
+        if self.delete_agent_token is not None:
+            input_str = f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
 
         return f"{input_str}" \
                f"{self.agent}\n"
