@@ -25,17 +25,9 @@ from aiohttp.client_exceptions import ClientResponseError
 from faraday_agent_dispatcher.config import reset_config
 from faraday_agent_dispatcher.executor_helper import StdErrLineProcessor, StdOutLineProcessor
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
-from faraday_agent_dispatcher.utils.control_values_utils import (
-    control_int,
-    control_str,
-    control_host,
-    control_registration_token,
-    control_agent_token,
-    control_list
-)
 import faraday_agent_dispatcher.logger as logging
 
-from faraday_agent_dispatcher.config import instance as config, Sections, save_config
+from faraday_agent_dispatcher.config import instance as config, Sections, save_config, control_config
 from faraday_agent_dispatcher.executor import Executor
 
 logger = logging.get_logger()
@@ -44,26 +36,13 @@ logging.setup_logging()
 
 class Dispatcher:
 
-    __control_dict = {
-        Sections.SERVER: {
-            "host": control_host,
-            "api_port": control_int(),
-            "websocket_port": control_int(),
-            "workspace": control_str
-        },
-        Sections.TOKENS: {
-            "registration": control_registration_token,
-            "agent": control_agent_token
-        },
-        Sections.AGENT: {
-            "agent_name": control_str,
-            "executors": control_list(can_repeat=False)
-        },
-    }
-
     def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
-        self.control_config()
+        try:
+            control_config()
+        except ValueError as e:
+            logger.error(e)
+            raise e
         self.config_path = config_path
         self.host = config.get(Sections.SERVER, "host")
         self.api_port = config.get(Sections.SERVER, "api_port")
@@ -74,9 +53,12 @@ class Dispatcher:
         self.session = session
         self.websocket = None
         self.websocket_token = None
+        executors_list_str = config[Sections.AGENT].get("executors", []).split(",")
+        if "" in executors_list_str:
+            executors_list_str.remove("")
         self.executors = {
             executor_name:
-                Executor(executor_name, config) for executor_name in config[Sections.AGENT].get("executors", []).split(",")
+                Executor(executor_name, config) for executor_name in executors_list_str
         }
 
     async def reset_websocket_token(self):
@@ -301,13 +283,3 @@ class Dispatcher:
             # If the config is not set, use async.io default
         )
         return process
-
-    def control_config(self):
-        for section in self.__control_dict:
-            for option in self.__control_dict[section]:
-                if section not in config:
-                    err = f"Section {section} is an mandatory section in the config" # TODO "run config cmd"
-                    logger.error(err)
-                    raise ValueError(err)
-                value = config.get(section, option) if option in config[section] else None
-                self.__control_dict[section][option](option, value)
