@@ -29,6 +29,7 @@ import faraday_agent_dispatcher.logger as logging
 
 from faraday_agent_dispatcher.config import instance as config, Sections, save_config, control_config
 from faraday_agent_dispatcher.executor import Executor
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -91,7 +92,9 @@ class Dispatcher:
                 if e.status == 404:
                     logger.error(f'404 HTTP ERROR received: Workspace "{self.workspace}" not found')
                 elif e.status == 401:
-                    logger.error("Invalid registration token, please reset and retry")
+                    logger.error("Invalid registration token, please reset and retry. If the error persist, you should "
+                                 "try to edit the registration token with the wizard command `faraday-dispatcher "
+                                 "config-wizard`")
                 else:
                     logger.info(f"Unexpected error: {e}")
                 raise e
@@ -100,14 +103,12 @@ class Dispatcher:
             self.websocket_token = await self.reset_websocket_token()
             logger.info("Registered successfully")
         except ClientResponseError as e:
-            error_msg = "Invalid agent token, removing and retrying"
+            error_msg = "Invalid agent token, please reset and retry. If the error persist, you should remove " \
+                        f"the agent token with the wizard command `faraday-dispatcher " \
+                        f"config-wizard`"
             logger.error(error_msg)
-            config.remove_option(Sections.TOKENS, "agent")
-            save_config(self.config_path)
             self.agent_token = None
-            await self.register()
-
-
+            raise e
 
     async def connect(self, out_func=None):
 
@@ -140,7 +141,7 @@ class Dispatcher:
             data = await self.websocket.recv()
             asyncio.create_task(self.run_once(data))
 
-    async def run_once(self, data:str= None, out_func=None):
+    async def run_once(self, data: str = None, out_func=None):
         out_func = out_func if out_func is not None else self.websocket.send
         logger.info('Parsing data: %s', data)
         data_dict = json.loads(data)
@@ -264,7 +265,8 @@ class Dispatcher:
                             "message": f"Executor {executor.name} from {self.agent_name} failed"
                         }))
 
-    async def create_process(self, executor: Executor, args):
+    @staticmethod
+    async def create_process(executor: Executor, args):
         env = os.environ.copy()
         if isinstance(args, dict):
             for k in args:

@@ -19,7 +19,6 @@
 """Tests for `faraday_agent_dispatcher` package."""
 
 import json
-import os
 import pytest
 import sys
 
@@ -34,11 +33,11 @@ from faraday_agent_dispatcher.config import (
     instance as configuration,
     Sections
 )
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 from tests.utils.text_utils import fuzzy_string
 from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, tmp_custom_config, tmp_default_config, \
     test_logger_handler, test_logger_folder
-
 
 
 @pytest.mark.parametrize('config_changes_dict',
@@ -180,7 +179,12 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                              {
                                  "replace_data": {Sections.TOKENS: {"registration": "NotOk" * 5}},
                                  "logs": [
-                                     {"levelname": "ERROR", "msg": "Invalid registration token, please reset and retry"},
+                                     {"levelname": "ERROR",
+                                      "msg":
+                                          "Invalid registration token, please reset and retry. If the error persist, "
+                                          "you should try to edit the registration token with the wizard command "
+                                          f"`faraday-dispatcher config-wizard`"
+                                      },
                                  ],
                                  "expected_exception": ClientResponseError
                              },
@@ -193,9 +197,14 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      }
                                  },
                                  "logs": [
-                                     {"levelname": "ERROR", "msg": "Invalid agent token, removing and retrying"},
-                                     {"levelname": "INFO", "msg": "Registered successfully"},
+                                     {
+                                         "levelname": "ERROR",
+                                         "msg": "Invalid agent token, please reset and retry. If the error persist, "
+                                                "you should remove the agent token with the wizard command "
+                                                f"`faraday-dispatcher config-wizard`"
+                                      },
                                  ],
+                                 "expected_exception": ClientResponseError
                              },
                              # 2
                              {
@@ -203,22 +212,6 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Registered successfully"},
                                  ],
-                             },
-                             # 3
-                             {
-                                 "replace_data": {
-                                     Sections.TOKENS: {
-                                         "agent":
-                                             "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446",
-                                         "registration": "NotOk" * 5
-                                     }
-                                 },
-                                 "logs": [
-                                     {"levelname": "ERROR", "msg": "Invalid agent token, removing and retrying"},
-                                     {"levelname": "ERROR",
-                                      "msg": "Invalid registration token, please reset and retry"},
-                                 ],
-                                 "expected_exception": ClientResponseError
                              }
                          ])
 async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,
