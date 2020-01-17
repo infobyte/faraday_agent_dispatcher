@@ -32,7 +32,8 @@ def process_agent():
             "registration": {
                 "default_value": "ACorrectTokenHas25CharLen",
                 "type": click.STRING,
-            }
+            },
+            "agent": {}
         },
         Sections.AGENT: {
             "agent_name": {
@@ -47,19 +48,24 @@ def process_agent():
         for opt in agent_dict[section]:
             if section not in config.instance:
                 config.instance.add_section(section)
-            def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"]
-            value = None
-            while value is None:
-                value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
-                if value == "":
-                    print(f"{Bcolors.WARNING}Trying to save with empty value{Bcolors.ENDC}")
-                try:
-                    config.__control_dict[section][opt](opt, value)
-                except ValueError as e:
-                    print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
-                    value = None
+            if section == Sections.TOKENS and opt == "agent":
+                if "agent" in config.instance.options(section) \
+                        and confirm_prompt("Delete agent token?"):
+                    config.instance.remove_option(section, opt)
+            else:
+                def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"]
+                value = None
+                while value is None:
+                    value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
+                    if value == "":
+                        print(f"{Bcolors.WARNING}Trying to save with empty value{Bcolors.ENDC}")
+                    try:
+                        config.__control_dict[section][opt](opt, value)
+                    except ValueError as e:
+                        print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+                        value = None
 
-            config.instance.set(section, opt, str(value))
+                config.instance.set(section, opt, str(value))
 
 
 def get_default_value_and_choices(default_value, choices):
