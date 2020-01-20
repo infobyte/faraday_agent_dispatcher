@@ -1,4 +1,5 @@
 import os
+import sys
 
 import click
 from pathlib import Path
@@ -75,8 +76,10 @@ def get_default_value_and_choices(default_value, choices):
     return default_value, choices
 
 
-def confirm_prompt(text: str, default=None):
-    return click.prompt(text=text, type=click.Choice(["Y", "N"]), default=default) == 'Y'
+def confirm_prompt(text: str, default:bool = None):
+    if default is not None:
+        default = "Y" if default else "N"
+    return click.prompt(text=text, type=click.Choice(["Y", "N"], case_sensitive=False), default=default).upper() == 'Y'
 
 
 def process_choice_errors(value):
@@ -175,6 +178,8 @@ def process_params(executor_name):
 
 class Wizard:
 
+    MAX_BUFF_SIZE = 1024
+
     def __init__(self, config_filepath: Path):
         self.config_filepath = config_filepath
 
@@ -183,7 +188,11 @@ class Wizard:
         except ValueError as e:
             if e.args[1] or config_filepath.is_file():
                 raise e  # the filepath is either a file, or a folder containing a file, which can't be processed
-        config.verify()
+        try:
+            config.verify()
+        except ValueError as e:
+            print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+            sys.exit(1)
         self.executors_list = []
         self.load_executors()
 
@@ -202,14 +211,25 @@ class Wizard:
                 self.process_executors()
             else:
                 process_choice_errors(value)
-                end = True
-        self.save_executors()
+                try:
+                    if Sections.AGENT in config.instance.sections():
+                        self.save_executors()
+                        config.control_config()
+                        end = True
+                    else:
+                        print(f"{Bcolors.FAIL}Add agent configuration{Bcolors.ENDC}")
+
+                except ValueError as e:
+                    print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+
         config.save_config(self.config_filepath)
 
     def load_executors(self):
         if Sections.AGENT in config.instance:
             executors = config.instance[Sections.AGENT].get("executors", "")
             self.executors_list = executors.split(",")
+            if "" in self.executors_list:
+                self.executors_list.remove("")
 
     def save_executors(self):
         config.instance.set(Sections.AGENT, "executors", ",".join(self.executors_list))
@@ -237,7 +257,8 @@ class Wizard:
             return
         self.executors_list.append(name)
         cmd = click.prompt("Command to execute", default="exit 1")
-        max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=1024), default=65536)
+        max_buff_size = click.prompt("Max data sent to server",
+                                     type=click.IntRange(min=Wizard.MAX_BUFF_SIZE), default=65536)
         for section in Wizard.EXECUTOR_SECTIONS:
             formatted_section = section.format(name)
             config.instance.add_section(formatted_section)
@@ -272,7 +293,7 @@ class Wizard:
         section = Sections.EXECUTOR_DATA.format(name)
         cmd = click.prompt("Command to execute",
                            default=config.instance.get(section, "cmd"))
-        max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=1),
+        max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
                                      default=config.instance.get(section, "max_size"))
         config.instance.set(section, "cmd", cmd)
         config.instance.set(section, "max_size", f"{max_buff_size}")

@@ -96,6 +96,8 @@ def verify():
         data = []
         if 'executors' in instance[Sections.AGENT]:
             executor_list = instance.get(Sections.AGENT, 'executors').split(',')
+            if '' in executor_list:
+                executor_list.remove('')
             for executor_name in executor_list:
                 if Sections.EXECUTOR_DATA.format(executor_name) not in instance.sections():
                     data.append(f"{Sections.EXECUTOR_DATA.format(executor_name)} section does not exists")
