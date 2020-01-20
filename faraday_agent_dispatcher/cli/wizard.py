@@ -76,7 +76,7 @@ def get_default_value_and_choices(default_value, choices):
 
 
 def confirm_prompt(text: str, default=None):
-    return click.prompt(text=text, type=click.Choice(["Y", "N"]), default=default) == 'Y'
+    return click.prompt(text=text, type=click.Choice(["Y", "N"], case_sensitive=False), default=default).upper() == 'Y'
 
 
 def process_choice_errors(value):
@@ -175,6 +175,8 @@ def process_params(executor_name):
 
 class Wizard:
 
+    MAX_BUFF_SIZE = 1024
+
     def __init__(self, config_filepath: Path):
         self.config_filepath = config_filepath
 
@@ -237,7 +239,8 @@ class Wizard:
             return
         self.executors_list.append(name)
         cmd = click.prompt("Command to execute", default="exit 1")
-        max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=1024), default=65536)
+        max_buff_size = click.prompt("Max data sent to server",
+                                     type=click.IntRange(min=Wizard.MAX_BUFF_SIZE), default=65536)
         for section in Wizard.EXECUTOR_SECTIONS:
             formatted_section = section.format(name)
             config.instance.add_section(formatted_section)
@@ -272,7 +275,7 @@ class Wizard:
         section = Sections.EXECUTOR_DATA.format(name)
         cmd = click.prompt("Command to execute",
                            default=config.instance.get(section, "cmd"))
-        max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=1),
+        max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
                                      default=config.instance.get(section, "max_size"))
         config.instance.set(section, "cmd", cmd)
         config.instance.set(section, "max_size", f"{max_buff_size}")
