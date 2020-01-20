@@ -59,6 +59,8 @@ if __name__ == '__main__':
         elif out == "bad_json":
             del data["hosts"][0]["ip"]
             print(f"{json.dumps(data)}")
+        else:
+            print("unexpected value in out parameter", file=sys.stderr)
     else:
         print(omit_everything, file=sys.stderr)
 
