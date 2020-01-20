@@ -226,6 +226,8 @@ class Wizard:
         if Sections.AGENT in config.instance:
             executors = config.instance[Sections.AGENT].get("executors", "")
             self.executors_list = executors.split(",")
+            if "" in self.executors_list:
+                self.executors_list.remove("")
 
     def save_executors(self):
         config.instance.set(Sections.AGENT, "executors", ",".join(self.executors_list))
