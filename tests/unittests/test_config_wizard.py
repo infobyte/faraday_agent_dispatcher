@@ -332,8 +332,7 @@ def test_verify(ini_config):
         env["DEBUG_INPUT_MODE"] = "True"
         result = runner.invoke(config_wizard, args=["-c", path], env=env)
         assert result.exit_code == 1, result.exception
-        assert str(result.exception) == ini_config["exception_message"]
-        assert result.exception.__class__ == ValueError
+        assert ini_config["exception_message"] in result.output
 
 
 @pytest.mark.parametrize(

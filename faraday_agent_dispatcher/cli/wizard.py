@@ -1,4 +1,5 @@
 import os
+import sys
 
 import click
 from pathlib import Path
@@ -185,7 +186,11 @@ class Wizard:
         except ValueError as e:
             if e.args[1] or config_filepath.is_file():
                 raise e  # the filepath is either a file, or a folder containing a file, which can't be processed
-        config.verify()
+        try:
+            config.verify()
+        except ValueError as e:
+            print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+            sys.exit(1)
         self.executors_list = []
         self.load_executors()
 
@@ -204,8 +209,17 @@ class Wizard:
                 self.process_executors()
             else:
                 process_choice_errors(value)
-                end = True
-        self.save_executors()
+                try:
+                    if Sections.AGENT in config.instance.sections():
+                        self.save_executors()
+                        config.control_config()
+                        end = True
+                    else:
+                        print(f"{Bcolors.FAIL}Add agent configuration{Bcolors.ENDC}")
+
+                except ValueError as e:
+                    print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+
         config.save_config(self.config_filepath)
 
     def load_executors(self):
