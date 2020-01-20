@@ -92,8 +92,9 @@ def run(config_file, logdir):
 @click.command(help="faraday-dispatcher config_wizard")
 @click.option("-c", "--config-filepath", default=None, help="Path to config ini file")
 def config_wizard(config_filepath):
+    config_filepath = config_filepath or config.CONFIG_FILENAME
 
-    Wizard(config_filepath or Path(config.CONFIG_FILENAME)).run()
+    Wizard(Path(config_filepath)).run()
 
 
 cli.add_command(config_wizard)
