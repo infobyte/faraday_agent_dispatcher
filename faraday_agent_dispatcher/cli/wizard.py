@@ -76,7 +76,9 @@ def get_default_value_and_choices(default_value, choices):
     return default_value, choices
 
 
-def confirm_prompt(text: str, default=None):
+def confirm_prompt(text: str, default:bool = None):
+    if default is not None:
+        default = "Y" if default else "N"
     return click.prompt(text=text, type=click.Choice(["Y", "N"], case_sensitive=False), default=default).upper() == 'Y'
 
 
