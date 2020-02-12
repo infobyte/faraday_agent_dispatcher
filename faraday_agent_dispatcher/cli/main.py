@@ -27,7 +27,7 @@ from aiohttp import ClientSession
 
 from faraday_agent_dispatcher.cli.wizard import Wizard
 from faraday_agent_dispatcher.dispatcher import Dispatcher
-from faraday_agent_dispatcher import config
+from faraday_agent_dispatcher import config, __version__
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 import faraday_agent_dispatcher.logger as logging
 from pathlib import Path
@@ -39,6 +39,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
+@click.version_option(__version__, '-v', '--version')
 def cli():
     pass
 
