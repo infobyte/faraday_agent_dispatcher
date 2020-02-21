@@ -25,7 +25,7 @@ def create_w3af_file(url_targe, path_file_w3af):
 
 def get_path_xml():
     path = os.path.join(os.path.expanduser('~'), 'Desarrollo', 'w3af')
-    path_xml = "{}/output-w3af.xml"
+    path_xml = "{}/output-w3af.xml".format(path)
     return path_xml
 
 
