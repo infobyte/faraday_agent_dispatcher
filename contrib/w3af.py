@@ -5,11 +5,6 @@ from faraday_plugins.plugins.manager import PluginsManager
 import time
 import subprocess
 
-# python crear basic.w3af --> PONER URL
-# Python Ejecutar sh. --> run_w3af.sh
-# Esperar a que termine sh.
-# buscar el file
-# ejecutar agente
 
 def create_w3af_file(url_targe, path_file_w3af):
     text = "" \
@@ -30,11 +25,10 @@ def get_path_xml():
 
 
 def main():
-    #url_target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
-    url_target = "http://moth/w3af/"
+    url_target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
     path_file_w3af = "/home/blas/Desarrollos/faraday_agent_dispatcher/contrib/config_report_file.w3af"
     create_w3af_file(url_target, path_file_w3af)
-    subprocess.call("./run_w3af.sh")
+    subprocess.call("/home/blas/Desarrollos/faraday_agent_dispatcher/contrib/run_w3af.sh")
     xml = get_path_xml()
     plugin = PluginsManager().get_plugin("W3af")
     plugin.parseOutputString(xml)
