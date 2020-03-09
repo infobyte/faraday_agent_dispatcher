@@ -24,8 +24,8 @@ USER = os.getenv("FARADAY_USER")
 EMAIL = os.getenv("FARADAY_EMAIL")
 PASS = os.getenv("FARADAY_PASSWORD")
 
-CONFIG_DIR = "./config_file.ini"
-LOGGER_DIR = "./logs"
+CONFIG_DIR = Path(__file__).parent.parent.parent / 'data' / 'old_version_inis' / '1.0.ini'
+LOGGER_DIR = Path("./logs")
 
 agent_ok_status_keys_set = {'create_date',
                             'creator',
@@ -81,7 +81,7 @@ def test_execute_agent():
     save_config(CONFIG_DIR)
 
     # Init dispatcher!
-    command = ['faraday-dispatcher', f'--config-file={CONFIG_DIR}', f'--logdir={LOGGER_DIR}']
+    command = ['faraday-dispatcher', 'run', f'--config-file={CONFIG_DIR}', f'--logdir={LOGGER_DIR}']
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     time.sleep(2)  # If fails check time
 

@@ -26,18 +26,11 @@ from aiohttp.client_exceptions import ClientResponseError
 from faraday_agent_dispatcher.config import reset_config
 from faraday_agent_dispatcher.executor_helper import StdErrLineProcessor, StdOutLineProcessor
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
-from faraday_agent_dispatcher.utils.control_values_utils import (
-    control_int,
-    control_str,
-    control_host,
-    control_registration_token,
-    control_agent_token,
-    control_list
-)
 import faraday_agent_dispatcher.logger as logging
 
-from faraday_agent_dispatcher.config import instance as config, Sections, save_config
+from faraday_agent_dispatcher.config import instance as config, Sections, save_config, control_config
 from faraday_agent_dispatcher.executor import Executor
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -45,28 +38,13 @@ logging.setup_logging()
 
 class Dispatcher:
 
-    __control_dict = {
-        Sections.SERVER: {
-            "host": control_host,
-            "api_port": control_int(),
-            "websocket_port": control_int(),
-            "workspace": control_str(),
-            "ssl": control_int(nullable=True),
-            "ssl_cert": control_str(nullable=True)
-        },
-        Sections.TOKENS: {
-            "registration": control_registration_token,
-            "agent": control_agent_token
-        },
-        Sections.AGENT: {
-            "agent_name": control_str(),
-            "executors": control_list(can_repeat=False)
-        },
-    }
-
     def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
-        self.control_config()
+        try:
+            control_config()
+        except ValueError as e:
+            logger.error(e)
+            raise e
         self.config_path = config_path
         self.host = config.get(Sections.SERVER, "host")
         self.api_port = config.get(Sections.SERVER, "api_port")
@@ -77,9 +55,12 @@ class Dispatcher:
         self.session = session
         self.websocket = None
         self.websocket_token = None
+        executors_list_str = config[Sections.AGENT].get("executors", []).split(",")
+        if "" in executors_list_str:
+            executors_list_str.remove("")
         self.executors = {
             executor_name:
-                Executor(executor_name, config) for executor_name in config[Sections.AGENT].get("executors", []).split(",")
+                Executor(executor_name, config) for executor_name in executors_list_str
         }
         ssl_cert_path = config[Sections.SERVER].get("ssl_cert", None)
         self.ssl_enabled = config[Sections.SERVER].get("ssl", None)
@@ -114,20 +95,31 @@ class Dispatcher:
                                                          json={'token': registration_token, 'name': self.agent_name},
                                                          **self.api_kwargs
                                                          )
-                assert token_response.status == 201
                 token = await token_response.json()
                 self.agent_token = token["token"]
                 config.set(Sections.TOKENS, "agent", self.agent_token)
                 save_config(self.config_path)
             except ClientResponseError as e:
                 if e.status == 404:
-                    logger.info(f'404 HTTP ERROR received: Workspace "{self.workspace}" not found')
-                    return
+                    logger.error(f'404 HTTP ERROR received: Workspace "{self.workspace}" not found')
+                elif e.status == 401:
+                    logger.error("Invalid registration token, please reset and retry. If the error persist, you should "
+                                 "try to edit the registration token with the wizard command `faraday-dispatcher "
+                                 "config-wizard`")
                 else:
                     logger.info(f"Unexpected error: {e}")
-                    raise e
+                raise e
 
-        self.websocket_token = await self.reset_websocket_token()
+        try:
+            self.websocket_token = await self.reset_websocket_token()
+            logger.info("Registered successfully")
+        except ClientResponseError as e:
+            error_msg = "Invalid agent token, please reset and retry. If the error persist, you should remove " \
+                        f"the agent token with the wizard command `faraday-dispatcher " \
+                        f"config-wizard`"
+            logger.error(error_msg)
+            self.agent_token = None
+            raise e
 
     async def connect(self, out_func=None):
 
@@ -161,7 +153,7 @@ class Dispatcher:
             data = await self.websocket.recv()
             asyncio.create_task(self.run_once(data))
 
-    async def run_once(self, data:str= None, out_func=None):
+    async def run_once(self, data: str = None, out_func=None):
         out_func = out_func if out_func is not None else self.websocket.send
         logger.info('Parsing data: %s', data)
         data_dict = json.loads(data)
@@ -285,7 +277,8 @@ class Dispatcher:
                             "message": f"Executor {executor.name} from {self.agent_name} failed"
                         }))
 
-    async def create_process(self, executor: Executor, args):
+    @staticmethod
+    async def create_process(executor: Executor, args):
         env = os.environ.copy()
         if isinstance(args, dict):
             for k in args:
@@ -304,13 +297,3 @@ class Dispatcher:
             # If the config is not set, use async.io default
         )
         return process
-
-    def control_config(self):
-        for section in self.__control_dict:
-            for option in self.__control_dict[section]:
-                if section not in config:
-                    err = f"Section {section} is an mandatory section in the config" # TODO "run config cmd"
-                    logger.error(err)
-                    raise ValueError(err)
-                value = config.get(section, option) if option in config[section] else None
-                self.__control_dict[section][option](option, value)

@@ -18,7 +18,6 @@
 """Console script for faraday_agent_dispatcher."""
 import os
 import sys
-import shutil
 
 import click
 import asyncio
@@ -26,23 +25,38 @@ import traceback
 
 from aiohttp import ClientSession
 
+from faraday_agent_dispatcher.cli.wizard import Wizard
 from faraday_agent_dispatcher.dispatcher import Dispatcher
+from faraday_agent_dispatcher import config, __version__
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
-from faraday_agent_dispatcher import config
 import faraday_agent_dispatcher.logger as logging
+from pathlib import Path
 
 logger = logging.get_logger()
 
 
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+
+@click.group(context_settings=CONTEXT_SETTINGS)
+@click.version_option(__version__, '-v', '--version')
+def cli():
+    pass
+
+
+def process_config_file(config_filepath: Path):
+    if config_filepath is None and not os.path.exists(config.CONFIG_FILENAME):
+        logger.info("Config file doesn't exist. Run the command `faraday-dispatcher config-wizard` to create one")
+        exit(1)
+    config_filepath = config_filepath or Path(config.CONFIG_FILENAME)
+    config_filepath = Path(config_filepath)
+    config.reset_config(config_filepath)
+    return config_filepath
+
+
 async def main(config_file):
 
-    if config_file is None and not os.path.exists(config.CONFIG_FILENAME):
-        logger.info("Config file doesn't exist. Creating a new one")
-        os.makedirs(config.CONFIG_PATH, exist_ok=True)
-        shutil.copyfile(config.EXAMPLE_CONFIG_FILENAME, config.CONFIG_FILENAME)
-        logger.info(f"Config file at {config.CONFIG_FILENAME} created")
-    config_file = config_file or config.CONFIG_FILENAME
-    config.reset_config(config_file)
+    config_file = process_config_file(config_file)
 
     async with ClientSession(raise_for_status=True) as session:
         try:
@@ -59,10 +73,10 @@ async def main(config_file):
     return 0
 
 
-@click.command("faraday-dispatcher")
+@click.command(help="faraday-dispatcher run")
 @click.option("-c", "--config-file", default=None, help="Path to config ini file")
 @click.option("--logdir", default="~", help="Path to logger directory")
-def main_sync(config_file, logdir):
+def run(config_file, logdir):
     logging.reset_logger(logdir)
     logger = logging.get_logger()
     try:
@@ -76,5 +90,17 @@ def main_sync(config_file, logdir):
     sys.exit(exit_code)
 
 
-if __name__ == "__main__":
-    main_sync(None)
+@click.command(help="faraday-dispatcher config_wizard")
+@click.option("-c", "--config-filepath", default=None, help="Path to config ini file")
+def config_wizard(config_filepath):
+    config_filepath = config_filepath or config.CONFIG_FILENAME
+
+    Wizard(Path(config_filepath)).run()
+
+
+cli.add_command(config_wizard)
+cli.add_command(run)
+
+if __name__ == '__main__':
+
+    cli()
