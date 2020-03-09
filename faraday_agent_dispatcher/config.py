@@ -106,19 +106,18 @@ def verify():
         else:
             data.append(f'executors option not in {Sections.AGENT} section')
 
-        if 'api_ssl' not in instance[Sections.SERVER]:
-            instance.set(Sections.SERVER, "api_ssl", "False")
-        if 'ws_ssl' not in instance[Sections.SERVER]:
-            instance.set(Sections.SERVER, "ws_ssl", "False")
-        if 'ssl_cert' not in instance[Sections.SERVER]:
-            instance.set(Sections.SERVER, "ssl_cert", "")
-
         if len(data) > 0:
             raise ValueError('\n'.join(data))
 
     if should_be_empty:
         assert len(instance.sections()) == 0
     else:
+        if 'api_ssl' not in instance[Sections.SERVER]:
+            instance.set(Sections.SERVER, "api_ssl", "False")
+        if 'ws_ssl' not in instance[Sections.SERVER]:
+            instance.set(Sections.SERVER, "ws_ssl", "False")
+        if 'ssl_cert' not in instance[Sections.SERVER]:
+            instance.set(Sections.SERVER, "ssl_cert", "")
         control_config()
 
 
