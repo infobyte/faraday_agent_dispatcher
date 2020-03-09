@@ -131,14 +131,14 @@ __control_dict = {
             "host": control_host,
             "api_port": control_int(),
             "websocket_port": control_int(),
-            "workspace": control_str
+            "workspace": control_str()
         },
         Sections.TOKENS: {
             "registration": control_registration_token,
             "agent": control_agent_token
         },
         Sections.AGENT: {
-            "agent_name": control_str,
+            "agent_name": control_str(),
             "executors": control_list(can_repeat=False)
         },
     }
