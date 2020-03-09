@@ -60,12 +60,12 @@ class FileLineProcessor:
 
 class StdOutLineProcessor(FileLineProcessor):
 
-    def __init__(self, process, session: ClientSession, ssl_enabled, api_kwargs):
+    def __init__(self, process, session: ClientSession, api_ssl_enabled, api_kwargs):
         super().__init__("stdout")
         self.process = process
         self.__session = session
         self.api_kwargs = api_kwargs
-        self.ssl_enabled = ssl_enabled
+        self.api_ssl_enabled = api_ssl_enabled
 
     async def next_line(self):
         line = await self.process.stdout.readline()
@@ -76,7 +76,7 @@ class StdOutLineProcessor(FileLineProcessor):
         host = config.get('server', 'host')
         port = config.get('server', 'api_port')
         return api_url(host, port, postfix=f"/_api/v2/ws/{config.get('server', 'workspace')}/bulk_create/",
-                       secure=self.ssl_enabled)
+                       secure=self.api_ssl_enabled)
 
     async def processing(self, line):
         try:

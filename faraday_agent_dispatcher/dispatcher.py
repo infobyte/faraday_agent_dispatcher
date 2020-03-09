@@ -63,16 +63,16 @@ class Dispatcher:
                 Executor(executor_name, config) for executor_name in executors_list_str
         }
         ssl_cert_path = config[Sections.SERVER].get("ssl_cert", None)
-        self.ssl_enabled = config[Sections.SERVER].get("ssl", None)
-        self.api_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ssl_enabled and ssl_cert_path else {}
-        self.ws_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ssl_enabled and ssl_cert_path else {}
-
+        self.api_ssl_enabled = config[Sections.SERVER].get("api_ssl", None)
+        self.ws_ssl_enabled = config[Sections.SERVER].get("ws_ssl", None)
+        self.api_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.api_ssl_enabled and ssl_cert_path else {}
+        self.ws_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ws_ssl_enabled and ssl_cert_path else {}
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
         headers = {"Authorization": f"Agent {self.agent_token}"}
         websocket_token_response = await self.session.post(
-            api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/', secure=self.ssl_enabled),
+            api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/', secure=self.api_ssl_enabled),
             headers=headers,
             **self.api_kwargs
         )
@@ -88,7 +88,7 @@ class Dispatcher:
             token_registration_url = api_url(self.host,
                                              self.api_port,
                                              postfix=f"/_api/v2/ws/{self.workspace}/agent_registration/",
-                                             secure=self.ssl_enabled)
+                                             secure=self.api_ssl_enabled)
             logger.info(f"token_registration_url: {token_registration_url}")
             try:
                 token_response = await self.session.post(token_registration_url,
@@ -136,7 +136,7 @@ class Dispatcher:
 
         if out_func is None:
 
-            async with websockets.connect(websocket_url(self.host, self.websocket_port, self.ssl_enabled),
+            async with websockets.connect(websocket_url(self.host, self.websocket_port, self.ws_ssl_enabled),
                                           **self.ws_kwargs) as websocket:
                 await websocket.send(connected_data)
 
@@ -243,7 +243,7 @@ class Dispatcher:
                 logger.info("Running {} executor".format(executor.name))
 
                 process = await self.create_process(executor, passed_params)
-                tasks = [StdOutLineProcessor(process, self.session, self.ssl_enabled, self.api_kwargs).process_f(),
+                tasks = [StdOutLineProcessor(process, self.session, self.api_ssl_enabled, self.api_kwargs).process_f(),
                          StdErrLineProcessor(process).process_f(),
                          ]
                 await out_func(
