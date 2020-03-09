@@ -26,7 +26,6 @@ def control_host(field_name, value):
     control_str()(field_name, value)
 
 
-
 def control_list(can_repeat=True):
     def control(field_name, value):
         if not isinstance(value, str):

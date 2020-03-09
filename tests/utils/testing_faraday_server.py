@@ -11,6 +11,7 @@ import logging
 from logging import StreamHandler
 from faraday_agent_dispatcher.logger import get_logger, reset_logger
 from queue import Queue
+from pathlib import Path
 
 from faraday_agent_dispatcher.config import (
     EXAMPLE_CONFIG_FILENAME,
@@ -121,7 +122,7 @@ async def test_config(aiohttp_client, aiohttp_server, loop):
 
 
 class TmpConfig:
-    config_file_path = f"/tmp/{fuzzy_string(10)}.ini"
+    config_file_path = Path(f"/tmp/{fuzzy_string(10)}.ini")
 
     def save(self):
         save_config(self.config_file_path)
@@ -157,7 +158,7 @@ async def aiohttp_faraday_client(aiohttp_client, aiohttp_server, test_config: Fa
     app.router.add_post(f"/_api/v2/ws/error500/bulk_create/", get_bulk_create(test_config))
     app.router.add_post(f"/_api/v2/ws/error429/bulk_create/", get_bulk_create(test_config))
     server = await aiohttp_server(app)
-    client = await aiohttp_client(server)
+    client = await aiohttp_client(server, raise_for_status=True)
     return client
 
 
