@@ -27,6 +27,18 @@ def process_agent():
             "workspace": {
                 "default_value": "workspace",
                 "type": click.STRING,
+            },
+            "api_ssl": {
+                "default_value": "False",
+                "type": click.BOOL,
+            },
+            "ws_ssl": {
+                "default_value": "False",
+                "type": click.BOOL,
+            },
+            "ssl_cert": {
+                "default_value": "",
+                "type": click.Path(allow_dash=False),
             }
         },
         Sections.TOKENS: {

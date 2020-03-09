@@ -18,7 +18,8 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_host,
     control_registration_token,
     control_agent_token,
-    control_list
+    control_list,
+    control_bool
 )
 
 import os
@@ -94,6 +95,7 @@ def verify():
             should_be_empty = True
     else:
         data = []
+
         if 'executors' in instance[Sections.AGENT]:
             executor_list = instance.get(Sections.AGENT, 'executors').split(',')
             if '' in executor_list:
@@ -103,6 +105,13 @@ def verify():
                     data.append(f"{Sections.EXECUTOR_DATA.format(executor_name)} section does not exists")
         else:
             data.append(f'executors option not in {Sections.AGENT} section')
+
+        if 'api_ssl' not in instance[Sections.SERVER]:
+            instance.set(Sections.SERVER, "api_ssl", "False")
+        if 'ws_ssl' not in instance[Sections.SERVER]:
+            instance.set(Sections.SERVER, "ws_ssl", "False")
+        if 'ssl_cert' not in instance[Sections.SERVER]:
+            instance.set(Sections.SERVER, "ssl_cert", "")
 
         if len(data) > 0:
             raise ValueError('\n'.join(data))
@@ -131,7 +140,10 @@ __control_dict = {
             "host": control_host,
             "api_port": control_int(),
             "websocket_port": control_int(),
-            "workspace": control_str()
+            "workspace": control_str(),
+            "api_ssl": control_bool,
+            "ws_ssl": control_bool,
+            "ssl_cert": control_str(nullable=True),
         },
         Sections.TOKENS: {
             "registration": control_registration_token,
