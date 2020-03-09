@@ -38,7 +38,7 @@ def control_list(can_repeat=True):
 
 
 def control_bool(field_name, value):
-    if value.lower() not in ["true", "false", "t", "f"]:
+    if str(value).lower() not in ["true", "false", "t", "f"]:
         raise ValueError(f"Trying to parse {field_name} with value {value} and should be a bool")
 
 
