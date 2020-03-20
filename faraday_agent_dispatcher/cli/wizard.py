@@ -72,7 +72,7 @@ def process_agent():
 def get_default_value_and_choices(default_value, choices):
     if "DEBUG_INPUT_MODE" in os.environ:
         default_value = None
-        choices = choices + ["Q", "\0"]
+        choices = choices + ["\0"]
     return default_value, choices
 
 
@@ -88,8 +88,8 @@ def process_choice_errors(value):
 
 
 def choose_adm(subject):
-    def_value, choices = get_default_value_and_choices("", ["A", "M", "D"])
-    value = click.prompt(f"Do you want to add, modify or delete an {subject}?",
+    def_value, choices = get_default_value_and_choices("Q", ["A", "M", "D", "Q"])
+    value = click.prompt(f"Do you want to [A]dd, [M]odify or [D]elete an {subject}? Do you want to [Q]uit?",
                          type=click.Choice(choices=choices, case_sensitive=False),
                          default=def_value).upper()
     process_choice_errors(value)
@@ -199,10 +199,10 @@ class Wizard:
     def run(self):
         end = False
 
-        def_value, choices = get_default_value_and_choices("", ["A", "E"])
+        def_value, choices = get_default_value_and_choices("Q", ["A", "E", "Q"])
 
         while not end:
-            value = click.prompt("Do you want to edit the agent or the executors?",
+            value = click.prompt("Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?",
                                  type=click.Choice(choices=choices, case_sensitive=False),
                                  default=def_value)
             if value.upper() == "A":
