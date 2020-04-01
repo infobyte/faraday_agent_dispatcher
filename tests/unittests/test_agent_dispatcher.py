@@ -280,6 +280,19 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              {  # 2
                                  "data": {"action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}},
                                  "logs": [
+                                     {"levelname": "INFO", "msg": "Data not contains execution id"},
+                                 ],
+                                 "ws_responses": [
+                                     {"error": "'execution_id' key is mandatory in this websocket connection"}
+                                 ]
+                             },
+                             {  # 3
+                                 "data": {"action": "RUN",
+                                          "execution_id": 1,
+                                          "agent_id": 1,
+                                          "executor": "ex1",
+                                          "args": {"out": "json"}},
+                                 "logs": [
                                      {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create"},
                                      {"levelname": "INFO", "msg": "Executor ex1 finished successfully"}
@@ -288,11 +301,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -301,6 +316,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              {  # 3
                                  "data": {
                                      "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "execution_id": 1,
                                      "args": {"out": "json", "count": "5"}
                                  },
                                  "logs": [
@@ -312,11 +328,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -325,6 +343,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              {  # 4
                                  "data": {
                                      "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "execution_id": 1,
                                      "args": {"out": "json", "count": "5", "spare": "T"}
                                  },
                                  "logs": [
@@ -336,11 +355,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -350,6 +371,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                  "data": {
                                      "action": "RUN",
                                      "agent_id": 1,
+                                     "execution_id": 1,
                                      "executor": "ex1",
                                      "args": {"out": "json", "spaced_before": "T"}
                                  },
@@ -361,11 +383,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -374,6 +398,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              {  # 6
                                  "data": {
                                      "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "execution_id": 1,
                                      "args": {"out": "json", "spaced_middle": "T", "count": "5", "spare": "T"}
                                  },
                                  "logs": [
@@ -385,11 +410,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -397,7 +424,9 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              },
                              {  # 7
                                  "data": {
-                                     "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "bad_json"}
+                                     "action": "RUN", "agent_id": 1,
+                                     "execution_id": 1,
+                                     "executor": "ex1", "args": {"out": "bad_json"}
                                  },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running ex1 executor"},
@@ -410,11 +439,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -422,7 +453,9 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              },
                              {  # 8
                                  "data": {
-                                     "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "str"}
+                                     "action": "RUN", "agent_id": 1,
+                                     "execution_id": 1,
+                                     "executor": "ex1", "args": {"out": "str"}
                                  },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running ex1 executor"},
@@ -433,11 +466,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -446,6 +481,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              {  # 9
                                  "data": {
                                      "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "execution_id": 1,
                                      "args": {"out": "none", "err": "T"}
                                  },
                                  "logs": [
@@ -457,11 +493,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -470,6 +508,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              {  # 10
                                  "data": {
                                      "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "execution_id": 1,
                                      "args": {"out": "none", "fails": "T"}
                                  },
                                  "logs": [
@@ -480,11 +519,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": False,
                                          "message": "Executor ex1 from unnamed_agent failed"
                                      }
@@ -495,6 +536,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      "action": "RUN",
                                      "agent_id": 1,
                                      "executor": "ex1",
+                                     "execution_id": 1,
                                      "args": {"out": "none", "err": "T", "fails": "T"}
                                  },
                                  "logs": [
@@ -506,11 +548,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": False,
                                          "message": "Executor ex1 from unnamed_agent failed"
                                      }
@@ -521,6 +565,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      "action": "RUN",
                                      "agent_id": 1,
                                      "executor": "ex1",
+                                     "execution_id": 1,
                                      "args": {"out": "json"}
                                  },
                                  "logs": [
@@ -534,11 +579,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -548,6 +595,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                  "data": {
                                      "action": "RUN",
                                      "agent_id": 1,
+                                     "execution_id": 1,
                                      "executor": "ex1",
                                      "args": {"err": "T", "fails": "T"},
                                  },
@@ -560,6 +608,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": False,
                                          "message": "Mandatory argument(s) not passed to ex1 executor from "
                                                     "unnamed_agent agent"
@@ -569,6 +618,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              {  # 14
                                  "data": {
                                      "action": "RUN", "agent_id": 1, "executor": "ex1",
+                                     "execution_id": 1,
                                      "args": {"out": "json", "WTF": "T"}
                                  },
                                  "logs": [
@@ -584,6 +634,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": False,
                                          "message": "Unexpected argument(s) passed to ex1 executor from unnamed_agent "
                                                     "agent"
@@ -592,7 +643,9 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              },
                              {  # 15
                                  "data": {
-                                     "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}
+                                     "action": "RUN", "agent_id": 1,
+                                     "execution_id": 1,
+                                     "executor": "ex1", "args": {"out": "json"}
                                  },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running ex1 executor"},
@@ -606,11 +659,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -618,7 +673,9 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              },
                              {  # 16
                                  "data": {
-                                     "action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}
+                                     "action": "RUN", "agent_id": 1,
+                                     "execution_id": 1,
+                                     "executor": "ex1", "args": {"out": "json"}
                                  },
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running ex1 executor"},
@@ -632,18 +689,22 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
                                  ]
                              },
                              {  # 17
-                                 "data": {"action": "RUN", "agent_id": 1, "executor": "ex1", "args": {"out": "json"}},
+                                 "data": {"action": "RUN", "agent_id": 1,
+                                          "execution_id": 1,
+                                          "executor": "ex1", "args": {"out": "json"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running ex1 executor"},
                                      {"levelname": "ERROR", "msg": "ValueError raised processing stdout, try with "
@@ -655,11 +716,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor ex1 from unnamed_agent finished successfully"
                                      }
@@ -668,6 +731,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              {  # 18
                                  "data": {
                                      "action": "RUN", "agent_id": 1,
+                                     "execution_id": 1,
                                      "args": {"out": "json"}
                                  },
                                  "logs": [
@@ -682,6 +746,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                  "ws_responses": [
                                      {
                                          "action": "RUN_STATUS",
+                                         "execution_id": 1,
                                          "running": False,
                                          "message": "No executor selected to unnamed_agent agent"
                                      }
@@ -689,7 +754,9 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                              },
                              {  # 19
                                  "data": {
-                                     "action": "RUN", "agent_id": 1, "executor": "NOT_4N_CORRECT_EXECUTOR",
+                                     "action": "RUN", "agent_id": 1,
+                                     "execution_id": 1,
+                                     "executor": "NOT_4N_CORRECT_EXECUTOR",
                                      "args": {"out": "json"}
                                  },
                                  "logs": [
@@ -705,13 +772,16 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "NOT_4N_CORRECT_EXECUTOR",
+                                         "execution_id": 1,
                                          "running": False,
                                          "message": "The selected executor NOT_4N_CORRECT_EXECUTOR not exists in "
                                                     "unnamed_agent agent"}
                                  ]
                              },
                              {  # 20
-                                 "data": {"action": "RUN", "agent_id": 1, "executor": "add_ex1", "args": {"out": "json"}},
+                                 "data": {"action": "RUN", "agent_id": 1,
+                                          "execution_id": 1,
+                                          "executor": "add_ex1", "args": {"out": "json"}},
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Running add_ex1 executor"},
                                      {"levelname": "INFO", "msg": "Data sent to bulk create"},
@@ -721,11 +791,13 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                      {
                                          "action": "RUN_STATUS",
                                          "executor_name": "add_ex1",
+                                         "execution_id": 1,
                                          "running": True,
                                          "message": "Running add_ex1 executor from unnamed_agent agent"
                                      }, {
                                          "action": "RUN_STATUS",
                                          "executor_name": "add_ex1",
+                                         "execution_id": 1,
                                          "successful": True,
                                          "message": "Executor add_ex1 from unnamed_agent finished successfully"
                                      }
