@@ -61,6 +61,7 @@ class Dispatcher:
             executor_name:
                 Executor(executor_name, config) for executor_name in executors_list_str
         }
+        self.execution_id = None
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
@@ -155,12 +156,19 @@ class Dispatcher:
             await out_func(json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"}))
             return
 
+        if "execution_id" not in data_dict:
+            logger.info("Data not contains execution id")
+            await out_func(json.dumps({"error": "'execution_id' key is mandatory in this websocket connection"}))
+            return
+        self.execution_id = data_dict["execution_id"]
+
         if data_dict["action"] == "RUN":
             if "executor" not in data_dict:
                 logger.error("No executor selected")
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "running": False,
                         "message": f"No executor selected to {self.agent_name} agent"
                     })
@@ -172,6 +180,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "executor_name": data_dict['executor'],
                         "running": False,
                         "message": f"The selected executor {data_dict['executor']} not exists in {self.agent_name} "
@@ -199,6 +208,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "executor_name": executor.name,
                         "running": False,
                         "message": f"Unexpected argument(s) passed to {executor.name} executor from {self.agent_name} "
@@ -219,6 +229,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "executor_name": executor.name,
                         "running": False,
                         "message": f"Mandatory argument(s) not passed to {executor.name} executor from "
@@ -237,6 +248,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "executor_name": executor.name,
                         "running": True,
                         "message": running_msg
@@ -250,6 +262,7 @@ class Dispatcher:
                     await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
+                            "execution_id": self.execution_id,
                             "executor_name": executor.name,
                             "successful": True,
                             "message": f"Executor {executor.name} from {self.agent_name} finished successfully"
@@ -260,6 +273,7 @@ class Dispatcher:
                     await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
+                            "execution_id": self.execution_id,
                             "executor_name": executor.name,
                             "successful": False,
                             "message": f"Executor {executor.name} from {self.agent_name} failed"
