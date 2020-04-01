@@ -242,7 +242,7 @@ class Dispatcher:
                 logger.info("Running {} executor".format(executor.name))
 
                 process = await self.create_process(executor, passed_params)
-                tasks = [StdOutLineProcessor(process, self.session).process_f(),
+                tasks = [StdOutLineProcessor(process, self.session, self.execution_id).process_f(),
                          StdErrLineProcessor(process).process_f(),
                          ]
                 await out_func(
