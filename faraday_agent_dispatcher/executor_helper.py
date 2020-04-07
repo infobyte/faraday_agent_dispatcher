@@ -60,9 +60,10 @@ class FileLineProcessor:
 
 class StdOutLineProcessor(FileLineProcessor):
 
-    def __init__(self, process, session: ClientSession):
+    def __init__(self, process, session: ClientSession, execution_id: int):
         super().__init__("stdout")
         self.process = process
+        self.execution_id = execution_id
         self.__session = session
 
     async def next_line(self):
@@ -81,6 +82,7 @@ class StdOutLineProcessor(FileLineProcessor):
             loaded_json = json.loads(line)
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
             headers = [("authorization", "agent {}".format(config.get("tokens", "agent")))]
+            loaded_json["execution_id"] = self.execution_id
 
             res = await self.__session.post(
                 self.post_url(),
