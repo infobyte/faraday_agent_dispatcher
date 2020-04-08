@@ -137,8 +137,14 @@ class Dispatcher:
 
         if out_func is None:
 
-            async with websockets.connect(websocket_url(self.host, self.websocket_port, self.ws_ssl_enabled),
-                                          **self.ws_kwargs) as websocket:
+            async with websockets.connect(
+                    websocket_url(
+                        self.host,
+                        self.websocket_port,
+                        postfix='/websockets',
+                        secure=self.ws_ssl_enabled
+                    ),
+                    **self.ws_kwargs) as websocket:
                 await websocket.send(connected_data)
 
                 logger.info("Connection to Faraday server succeeded")
