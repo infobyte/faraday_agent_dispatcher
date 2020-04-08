@@ -66,6 +66,7 @@ setup(
     extras_require=extra_req,
     license="GNU General Public License v3",
     long_description=readme + '\n\n' + history,
+    long_description_content_type='text/markdown',
     include_package_data=True,
     keywords='faraday integration',
     name='faraday_agent_dispatcher',

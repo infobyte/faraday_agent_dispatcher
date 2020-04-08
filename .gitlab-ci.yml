@@ -23,6 +23,7 @@ before_script:
 stages:
     - testing
     - post_testing
+    - publish
 
 services:
     - postgres:latest
@@ -60,5 +61,18 @@ integration_faraday:
         variables:
             - $CI_COMMIT_REF_NAME =~ /^(dev|master)$/
             - $INTEGRATION
+
+
+publish_pypi:
+    image: python:3
+    stage: publish
+    script:
+      - apt-get update -qy
+      - apt-get install twine -y
+      - python setup.py sdist bdist_wheel
+      - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
+    only:
+      variables:
+        - $CI_COMMIT_TAG
 
 
