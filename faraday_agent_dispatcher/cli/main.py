@@ -84,8 +84,7 @@ def run(config_file, logdir):
     except KeyboardInterrupt:
         sys.exit(0)
     except Exception as e:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        logger.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        logger.debug("Error running the dispatcher", exc_info=e)
         raise
     sys.exit(exit_code)
 
