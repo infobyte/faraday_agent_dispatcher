@@ -234,12 +234,9 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
     # Init and register it
     dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
 
-    if "expected_exception" in register_options:
-        with pytest.raises(register_options["expected_exception"]):
-            await dispatcher.register()
-    else:
-        await dispatcher.register()
+    await dispatcher.register()
 
+    if "expected_exception" not in register_options:
         # Control tokens
         assert dispatcher.agent_token == test_config.agent_token
 
