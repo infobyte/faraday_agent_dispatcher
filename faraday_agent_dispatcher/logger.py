@@ -112,3 +112,10 @@ def reset_logger(logger_folder = None):
     if logger_folder is not None:
         config.LOGS_PATH = logger_folder
     setup_logging()
+
+
+def get_level(loglevel: str):
+    numeric_level = getattr(logging, loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % loglevel)
+    return numeric_level
