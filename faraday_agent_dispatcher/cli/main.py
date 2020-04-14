@@ -76,8 +76,15 @@ async def main(config_file):
 @click.command(help="faraday-dispatcher run")
 @click.option("-c", "--config-file", default=None, help="Path to config ini file")
 @click.option("--logdir", default="~", help="Path to logger directory")
-def run(config_file, logdir):
+@click.option("--log-level", default="info", help="Log level set = [notset|debug|info|warning|error|critical]")
+@click.option("--debug", is_flag=True, default=False, help="Set debug logging, overrides --log-level option")
+def run(config_file, logdir, log_level, debug):
     logging.reset_logger(logdir)
+    if debug:
+        logging_level = logging.get_level("debug")
+    else:
+        logging_level = logging.get_level(log_level)
+    logging.set_logging_level(logging_level)
     logger = logging.get_logger()
     try:
         exit_code = asyncio.run(main(config_file))
