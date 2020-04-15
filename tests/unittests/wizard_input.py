@@ -98,16 +98,16 @@ class ExecutorInput:
 
 
 class DispatcherInput:
-    def __init__(self, host=None, api_port=None, ws_port=None, workspace=None, api_ssl=None,
-                 ws_ssl=None, ssl_cert=None, agent_name=None,
+    def __init__(self, host=None, api_port=None, ws_port=None, workspace=None,
+                 ssl=None, ssl_cert=None, agent_name=None,
                  registration_token=None, delete_agent_token: bool = None, empty=False):
+        self.ssl = ssl is None or ssl.lower() != "false"
         self.server_input = {
+            "ssl": ssl or "",
             "host": host or "",
             "api_port": api_port or "",
             "ws_port": ws_port or "",
             "workspace": workspace or "",
-            "api_ssl": api_ssl or "False",
-            "ws_ssl": ws_ssl or "False",
             "ssl_cert": ssl_cert or ""
         }
         self.agent = agent_name or ""
@@ -116,13 +116,20 @@ class DispatcherInput:
         self.empty = empty
 
     def input_str(self):
-        input_str = f"{self.server_input['host']}\n" \
-                 f"{self.server_input['api_port']}\n" \
-                 f"{self.server_input['ws_port']}\n" \
-                 f"{self.server_input['workspace']}\n" \
-                 f"{self.server_input['api_ssl']}\n" \
-                 f"{self.server_input['ws_ssl']}\n" \
-                 f"{self.server_input['ssl_cert']}\n"
+        if self.ssl:
+            input_str = \
+                        f"{self.server_input['host']}\n" \
+                        f"{self.server_input['ssl']}\n" \
+                        f"{self.server_input['api_port']}\n" \
+                        f"{self.server_input['ssl_cert']}\n" \
+                        f"{self.server_input['workspace']}\n"
+        else:
+            input_str = \
+                     f"{self.server_input['host']}\n" \
+                     f"{self.server_input['ssl']}\n" \
+                     f"{self.server_input['api_port']}\n" \
+                     f"{self.server_input['ws_port']}\n" \
+                     f"{self.server_input['workspace']}\n"
 
         if isinstance(self.registration_token, str):
             self.registration_token = [self.registration_token]

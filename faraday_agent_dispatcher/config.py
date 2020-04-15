@@ -112,10 +112,8 @@ def verify():
     if should_be_empty:
         assert len(instance.sections()) == 0
     else:
-        if 'api_ssl' not in instance[Sections.SERVER]:
-            instance.set(Sections.SERVER, "api_ssl", "False")
-        if 'ws_ssl' not in instance[Sections.SERVER]:
-            instance.set(Sections.SERVER, "ws_ssl", "False")
+        if 'ssl' not in instance[Sections.SERVER]:
+            instance.set(Sections.SERVER, "ssl", "True")
         if 'ssl_cert' not in instance[Sections.SERVER]:
             instance.set(Sections.SERVER, "ssl_cert", "")
         control_config()
@@ -137,12 +135,11 @@ class Sections:
 __control_dict = {
         Sections.SERVER: {
             "host": control_host,
+            "ssl": control_bool,
+            "ssl_cert": control_str(nullable=True),
             "api_port": control_int(),
             "websocket_port": control_int(),
             "workspace": control_str(),
-            "api_ssl": control_bool,
-            "ws_ssl": control_bool,
-            "ssl_cert": control_str(nullable=True),
         },
         Sections.TOKENS: {
             "registration": control_registration_token,
