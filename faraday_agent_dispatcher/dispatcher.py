@@ -29,7 +29,6 @@ import faraday_agent_dispatcher.logger as logging
 
 from faraday_agent_dispatcher.config import instance as config, Sections, save_config, control_config
 from faraday_agent_dispatcher.executor import Executor
-from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -98,7 +97,8 @@ class Dispatcher:
                                  "config-wizard`")
                 else:
                     logger.info(f"Unexpected error: {e}")
-                raise e
+                logger.debug(msg="Exception raised", exc_info=e)
+                return
 
         try:
             self.websocket_token = await self.reset_websocket_token()
@@ -109,7 +109,8 @@ class Dispatcher:
                         f"config-wizard`"
             logger.error(error_msg)
             self.agent_token = None
-            raise e
+            logger.debug(msg="Exception raised", exc_info=e)
+            return
 
     async def connect(self, out_func=None):
 
