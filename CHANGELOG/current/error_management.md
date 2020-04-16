@@ -1,1 +1,0 @@
-Worked in the error management, now not expected to raise exception; and showable depending on log levels
