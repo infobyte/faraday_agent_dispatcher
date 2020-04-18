@@ -17,9 +17,21 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": set()
         },
+        # 1 SSL cert
+        {
+            "dispatcher_input": DispatcherInput(ssl_cert='/home/lalal/asda.crt'),
+            "exit_code": 0,
+            "after_executors": set()
+        },
+        # 2 All default with ssl false
+        {
+            "dispatcher_input": DispatcherInput(ssl='false'),
+            "exit_code": 0,
+            "after_executors": set()
+        },
         # 1 Dispatcher input
         {
-            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234",
+            "dispatcher_input": DispatcherInput(ssl='false',host="127.0.0.1", api_port="13123", ws_port="1234",
                                                 workspace="aworkspace", agent_name="agent",
                                                 registration_token="1234567890123456789012345"),
             "exit_code": 0,
@@ -27,7 +39,7 @@ def generate_inputs():
         },
         # 2 Bad token input
         {
-            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234",
+            "dispatcher_input": DispatcherInput(ssl='false',host="127.0.0.1", api_port="13123", ws_port="1234",
                                                 workspace="aworkspace", agent_name="agent",
                                                 registration_token=["12345678901234567890", ""]),
             "exit_code": 0,
@@ -36,7 +48,7 @@ def generate_inputs():
         },
         # 3 Basic Executors input
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -67,7 +79,7 @@ def generate_inputs():
         },
         # 4 Basic Bad Executors input
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -109,7 +121,7 @@ def generate_inputs():
         },
         # 5 Basic Mod Executors input
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -160,7 +172,7 @@ def generate_inputs():
         },
         # 6 Basic Del Executors input
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",

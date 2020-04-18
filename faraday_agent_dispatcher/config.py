@@ -18,7 +18,8 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_host,
     control_registration_token,
     control_agent_token,
-    control_list
+    control_list,
+    control_bool
 )
 
 import os
@@ -94,6 +95,7 @@ def verify():
             should_be_empty = True
     else:
         data = []
+
         if 'executors' in instance[Sections.AGENT]:
             executor_list = instance.get(Sections.AGENT, 'executors').split(',')
             if '' in executor_list:
@@ -110,6 +112,10 @@ def verify():
     if should_be_empty:
         assert len(instance.sections()) == 0
     else:
+        if 'ssl' not in instance[Sections.SERVER]:
+            instance.set(Sections.SERVER, "ssl", "True")
+        if 'ssl_cert' not in instance[Sections.SERVER]:
+            instance.set(Sections.SERVER, "ssl_cert", "")
         control_config()
 
 
@@ -129,16 +135,18 @@ class Sections:
 __control_dict = {
         Sections.SERVER: {
             "host": control_host,
+            "ssl": control_bool,
+            "ssl_cert": control_str(nullable=True),
             "api_port": control_int(),
             "websocket_port": control_int(),
-            "workspace": control_str
+            "workspace": control_str(),
         },
         Sections.TOKENS: {
             "registration": control_registration_token,
             "agent": control_agent_token
         },
         Sections.AGENT: {
-            "agent_name": control_str,
+            "agent_name": control_str(),
             "executors": control_list(can_repeat=False)
         },
     }
