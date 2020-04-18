@@ -1,1 +1,1 @@
-Now is possible to receive params from the [Faraday](http://github.com/infobyte/faraday) server
+Now is possible to receive params from the [Faraday](faraday) server
