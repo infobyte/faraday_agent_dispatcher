@@ -1,0 +1,11 @@
+{
+  "arguments": {
+    "DOMAIN": true
+  },
+  "environment_variables": [
+
+  ],
+  "check_cmds": [
+
+  ]
+}

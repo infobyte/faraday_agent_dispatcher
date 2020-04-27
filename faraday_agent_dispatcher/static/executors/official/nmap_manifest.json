@@ -1,0 +1,12 @@
+{
+  "arguments": {
+    "PORT_LIST": true,
+    "TARGET": true
+  },
+  "environment_variables": [
+
+  ],
+  "check_cmds": [
+    "nmap --version"
+  ]
+}
