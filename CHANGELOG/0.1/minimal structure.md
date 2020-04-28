@@ -1,1 +1,1 @@
-[Basic structure](TODO) implemented, with executor with fixed values
+Basic structure implemented, with executor with fixed values

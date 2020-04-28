@@ -27,7 +27,7 @@ from aiohttp import ClientSession
 
 from faraday_agent_dispatcher.cli.wizard import Wizard
 from faraday_agent_dispatcher.dispatcher import Dispatcher
-from faraday_agent_dispatcher import config
+from faraday_agent_dispatcher import config, __version__
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 import faraday_agent_dispatcher.logger as logging
 from pathlib import Path
@@ -39,6 +39,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
+@click.version_option(__version__, '-v', '--version')
 def cli():
     pass
 
@@ -75,16 +76,22 @@ async def main(config_file):
 @click.command(help="faraday-dispatcher run")
 @click.option("-c", "--config-file", default=None, help="Path to config ini file")
 @click.option("--logdir", default="~", help="Path to logger directory")
-def run(config_file, logdir):
+@click.option("--log-level", default="info", help="Log level set = [notset|debug|info|warning|error|critical]")
+@click.option("--debug", is_flag=True, default=False, help="Set debug logging, overrides --log-level option")
+def run(config_file, logdir, log_level, debug):
     logging.reset_logger(logdir)
+    if debug:
+        logging_level = logging.get_level("debug")
+    else:
+        logging_level = logging.get_level(log_level)
+    logging.set_logging_level(logging_level)
     logger = logging.get_logger()
     try:
         exit_code = asyncio.run(main(config_file))
     except KeyboardInterrupt:
         sys.exit(0)
     except Exception as e:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        logger.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        logger.debug("Error running the dispatcher", exc_info=e)
         raise
     sys.exit(exit_code)
 
