@@ -6,7 +6,15 @@ from pathlib import Path
 
 from faraday_agent_dispatcher.cli.main import config_wizard
 from faraday_agent_dispatcher import config as config_mod
-from tests.unittests.wizard_input import ExecutorInput, DispatcherInput, ParamInput, VarEnvInput, ADMType
+from tests.unittests.wizard_input import (
+    ExecutorInput,
+    DispatcherInput,
+    ParamInput,
+    VarEnvInput,
+    ADMType,
+    RepoExecutorInput,
+    RepoVarEnvInput
+)
 
 
 def generate_inputs():
@@ -205,6 +213,29 @@ def generate_inputs():
                 ],
             "exit_code": 0,
             "after_executors": {"ex1", "ex3"}
+        },
+        # 7 Basic Repo Executors input
+        {
+            "dispatcher_input": DispatcherInput(),
+            "executors_input": [
+                    RepoExecutorInput(name="ex1",
+                                      base="nessus",
+                                      varenvs=[
+                                          RepoVarEnvInput(name="NESSUS_USERNAME", value="asd"),
+                                          RepoVarEnvInput(name="NESSUS_PASSWORD", value="asdsad"),
+                                          RepoVarEnvInput(name="NESSUS_URL", value="asdasd")
+                                      ],
+                                      adm_type=ADMType.ADD),
+                    RepoExecutorInput(name="ex1",
+                                      varenvs=[
+                                          RepoVarEnvInput(name="NESSUS_USERNAME", value="asd"),
+                                          RepoVarEnvInput(name="NESSUS_PASSWORD", value="asdsad"),
+                                          RepoVarEnvInput(name="NESSUS_URL", value="asdasd")
+                                      ],
+                                      adm_type=ADMType.MODIFY),
+                ],
+            "exit_code": 0,
+            "after_executors": {"ex1", "ex2", "ex3"}
         },
     ]
 
