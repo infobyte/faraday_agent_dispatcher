@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 import click
@@ -7,7 +8,17 @@ from pathlib import Path
 from faraday_agent_dispatcher import config
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
+from faraday_agent_dispatcher.cli.utils.general_inputs import (
+    choose_adm,
+    confirm_prompt,
+    get_default_value_and_choices,
+    process_choice_errors
+)
+from faraday_agent_dispatcher.cli.utils.general_prompts import (
+    get_new_name,
+)
 
+REPO_EXECUTOR_PAGE_SIZE = 2
 
 def process_agent():
     agent_dict = {
@@ -69,33 +80,6 @@ def process_agent():
                 config.instance.set(section, opt, str(value))
 
 
-def get_default_value_and_choices(default_value, choices):
-    if "DEBUG_INPUT_MODE" in os.environ:
-        default_value = None
-        choices = choices + ["\0"]
-    return default_value, choices
-
-
-def confirm_prompt(text: str, default:bool = None):
-    if default is not None:
-        default = "Y" if default else "N"
-    return click.prompt(text=text, type=click.Choice(["Y", "N"], case_sensitive=False), default=default).upper() == 'Y'
-
-
-def process_choice_errors(value):
-    if "DEBUG_INPUT_MODE" in os.environ and value in ["\0"]:
-        raise click.exceptions.Abort()
-
-
-def choose_adm(subject):
-    def_value, choices = get_default_value_and_choices("Q", ["A", "M", "D", "Q"])
-    value = click.prompt(f"Do you want to [A]dd, [M]odify or [D]elete an {subject}? Do you want to [Q]uit?",
-                         type=click.Choice(choices=choices, case_sensitive=False),
-                         default=def_value).upper()
-    process_choice_errors(value)
-    return value
-
-
 def process_var_envs(executor_name):
     end = False
     section = Sections.EXECUTOR_VARENVS.format(executor_name)
@@ -127,20 +111,6 @@ def process_var_envs(executor_name):
                 config.instance.remove_option(section, env_var)
         else:
             end = True
-
-
-def get_new_name(name: str, section: str, named_type: str):
-    new_name = None
-    while new_name is None:
-        new_name = click.prompt("New name", default=name)
-        if new_name in config.instance.options(section) and name != new_name:
-            print(f"{Bcolors.WARNING}The {named_type} {new_name} already exists{Bcolors.ENDC}")
-            new_name = None
-    def_value = config.instance.get(section, name)
-    if name != new_name:
-        config.instance.remove_option(section, name)
-        name = new_name
-    return def_value, name
 
 
 def process_params(executor_name):
@@ -181,6 +151,7 @@ class Wizard:
     MAX_BUFF_SIZE = 1024
 
     def __init__(self, config_filepath: Path):
+        self.get_base_repo()
         self.config_filepath = config_filepath
 
         try:
@@ -250,20 +221,82 @@ class Wizard:
             else:
                 end = True
 
-    def new_executor(self):
+    def check_name(self):
         name = click.prompt("Name")
         if name in self.executors_list:
             print(f"{Bcolors.WARNING}The executor {name} already exists{Bcolors.ENDC}")
             return
         self.executors_list.append(name)
-        cmd = click.prompt("Command to execute", default="exit 1")
-        max_buff_size = click.prompt("Max data sent to server",
-                                     type=click.IntRange(min=Wizard.MAX_BUFF_SIZE), default=65536)
+        return name
+
+    def new_executor(self):
+        custom_executor = confirm_prompt("Is a custom executor?", default=False)
+        if custom_executor:
+            self.new_custom_executor()
+        else:
+            self.new_repo_executor()
+
+    def get_base_repo(self):
+        folder = Path(__file__).parent.parent / 'static' / 'executors' / 'official'
+        executors = [executor for executor in os.listdir(folder) if re.match(".*_manifest.json", executor) is None]
+        choosen = None
+        page = 0
+        import math
+        max_page = int(math.ceil(len(executors) / REPO_EXECUTOR_PAGE_SIZE))
+        while choosen is None:
+            print("Choose an executor")
+            paged_executors = executors[
+                                page*REPO_EXECUTOR_PAGE_SIZE :
+                                min( (page+1) * REPO_EXECUTOR_PAGE_SIZE, len(executors))
+                              ]
+            for i, name in enumerate(paged_executors):
+                print(f"{i+1}: {name}")
+            if page > 0:
+                print("-: Previous page")
+            if page < max_page - 1:
+                print("+: Next page")
+            choosen = click.prompt("Choose")
+            if choosen not in [str(i) for i in range(1, len(paged_executors)+1)]:
+                if choosen == '+' and page < max_page - 1:
+                    page += 1
+                elif choosen == '-' and page > 0:
+                    page -= 1
+                else:
+                    print("Invalid value")
+                choosen = None
+            else:
+                choosen = paged_executors[int(choosen)-1]
+        choosen_metadata_path = folder / f"{os.path.splitext(choosen)[0]}_manifest.json"
+        choosen_path = folder / choosen
+        import json
+        with open(choosen_metadata_path) as ppp:
+            data = ppp.read()
+            metadata = json.loads(data)
+        #TODO get cmd from metadata and file path
+        return choosen_path, metadata
+
+    def new_repo_executor(self):
+        cmd, metadata = self.get_base_repo()
+        name = self.check_name()
+        Wizard.set_some_things(name,cmd)
+        # ask varenvs #load manifest
+        # set params from manifest
+        pass
+
+    @staticmethod
+    def set_some_things(name, cmd):
+        max_buff_size = \
+            click.prompt("Max data sent to server", type=click.IntRange(min=Wizard.MAX_BUFF_SIZE), default=65536)
         for section in Wizard.EXECUTOR_SECTIONS:
             formatted_section = section.format(name)
             config.instance.add_section(formatted_section)
         config.instance.set(Sections.EXECUTOR_DATA.format(name), "cmd", cmd)
         config.instance.set(Sections.EXECUTOR_DATA.format(name), "max_size", f"{max_buff_size}")
+
+    def new_custom_executor(self):
+        name = self.check_name()
+        cmd = click.prompt("Command to execute", default="exit 1")
+        Wizard.set_some_things(name, cmd)
         process_var_envs(name)
         process_params(name)
 
