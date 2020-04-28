@@ -19,6 +19,7 @@ WS_PORT = config.get(Sections.SERVER, "websocket_port")
 WORKSPACE = fuzzy_string(6).lower()  # TODO FIX WHEN FARADAY ACCEPTS CAPITAL FIRST LETTER
 AGENT_NAME = fuzzy_string(6)
 EXECUTOR_NAME = fuzzy_string(6)
+SSL = "false"
 
 USER = os.getenv("FARADAY_USER")
 EMAIL = os.getenv("FARADAY_EMAIL")
@@ -56,6 +57,7 @@ def test_execute_agent():
     config.set(Sections.TOKENS, "registration", token)
     config.remove_option(Sections.TOKENS, "agent")
     config.set(Sections.SERVER, "workspace", WORKSPACE)
+    config.set(Sections.SERVER, "ssl", SSL)
     config.set(Sections.AGENT, "agent_name", AGENT_NAME)
     config.set(Sections.AGENT, "executors", EXECUTOR_NAME)
     path_to_basic_executor = (

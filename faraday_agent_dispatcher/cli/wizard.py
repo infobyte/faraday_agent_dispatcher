@@ -13,36 +13,50 @@ def process_agent():
     agent_dict = {
         Sections.SERVER: {
             "host": {
-                "default_value": "127.0.0.1",
+                "default_value": lambda _: "127.0.0.1",
                 "type": click.STRING,
             },
+            "ssl": {
+                "default_value": lambda _: "True",
+                "type": click.BOOL,
+            },
+            "ssl_port": {
+                "default_value": lambda _: "443",
+                "type": click.IntRange(min=1, max=65535),
+            },
+            "ssl_cert": {
+                "default_value": lambda _: "",
+                "type": click.Path(allow_dash=False),
+            },
             "api_port":  {
-                "default_value": "5985",
+                "default_value": lambda _ssl: "443" if _ssl else "5985",
                 "type": click.IntRange(min=1, max=65535),
             },
             "websocket_port":   {
-                "default_value": "9000",
+                "default_value": lambda _ssl: "443" if _ssl else "9000",
                 "type": click.IntRange(min=1, max=65535),
             },
             "workspace": {
-                "default_value": "workspace",
+                "default_value": lambda _: "workspace",
                 "type": click.STRING,
             }
         },
         Sections.TOKENS: {
             "registration": {
-                "default_value": "ACorrectTokenHas25CharLen",
+                "default_value": lambda _: "ACorrectTokenHas25CharLen",
                 "type": click.STRING,
             },
             "agent": {}
         },
         Sections.AGENT: {
             "agent_name": {
-                "default_value": "agent",
+                "default_value": lambda _: "agent",
                 "type": click.STRING,
             }
         },
     }
+
+    ssl = True
 
     for section in agent_dict:
         print(f"{Bcolors.OKBLUE}Section: {section}{Bcolors.ENDC}")
@@ -53,26 +67,53 @@ def process_agent():
                 if "agent" in config.instance.options(section) \
                         and confirm_prompt("Delete agent token?"):
                     config.instance.remove_option(section, opt)
+            elif section == Sections.SERVER and opt.__contains__("port"):
+                if opt == "ssl_port":
+                    if ssl:
+                        value = ask_value(agent_dict, opt, section, ssl, 'api_port')
+                        config.instance.set(section, 'api_port', str(value))
+                        config.instance.set(section, 'websocket_port', str(value))
+                    else:
+                        continue
+                else:
+                    if not ssl:
+                        value = ask_value(agent_dict, opt, section, ssl)
+                        config.instance.set(section, opt, str(value))
+                    else:
+                        continue
+            elif opt == "ssl_cert":
+                if ssl:
+                    value = ask_value(agent_dict, opt, section, ssl)
+                    config.instance.set(section, opt, str(value))
             else:
-                def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"]
-                value = None
-                while value is None:
-                    value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
-                    if value == "":
-                        print(f"{Bcolors.WARNING}Trying to save with empty value{Bcolors.ENDC}")
-                    try:
-                        config.__control_dict[section][opt](opt, value)
-                    except ValueError as e:
-                        print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
-                        value = None
-
+                value = ask_value(agent_dict, opt, section, ssl)
+                if opt == "ssl":
+                    ssl = value == "True"
                 config.instance.set(section, opt, str(value))
+
+
+def ask_value(agent_dict, opt, section, ssl, control_opt=None):
+    def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
+    value = None
+    while value is None:
+        value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
+        if value == "":
+            print(f"{Bcolors.WARNING}Trying to save with empty value{Bcolors.ENDC}")
+        try:
+            if control_opt is None:
+                config.__control_dict[section][opt](opt, value)
+            else:
+                config.__control_dict[section][control_opt](opt, value)
+        except ValueError as e:
+            print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+            value = None
+    return value
 
 
 def get_default_value_and_choices(default_value, choices):
     if "DEBUG_INPUT_MODE" in os.environ:
         default_value = None
-        choices = choices + ["Q", "\0"]
+        choices = choices + ["\0"]
     return default_value, choices
 
 
@@ -88,8 +129,8 @@ def process_choice_errors(value):
 
 
 def choose_adm(subject):
-    def_value, choices = get_default_value_and_choices("", ["A", "M", "D"])
-    value = click.prompt(f"Do you want to add, modify or delete an {subject}?",
+    def_value, choices = get_default_value_and_choices("Q", ["A", "M", "D", "Q"])
+    value = click.prompt(f"Do you want to [A]dd, [M]odify or [D]elete an {subject}? Do you want to [Q]uit?",
                          type=click.Choice(choices=choices, case_sensitive=False),
                          default=def_value).upper()
     process_choice_errors(value)
@@ -199,10 +240,10 @@ class Wizard:
     def run(self):
         end = False
 
-        def_value, choices = get_default_value_and_choices("", ["A", "E"])
+        def_value, choices = get_default_value_and_choices("Q", ["A", "E", "Q"])
 
         while not end:
-            value = click.prompt("Do you want to edit the agent or the executors?",
+            value = click.prompt("Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?",
                                  type=click.Choice(choices=choices, case_sensitive=False),
                                  default=def_value)
             if value.upper() == "A":
