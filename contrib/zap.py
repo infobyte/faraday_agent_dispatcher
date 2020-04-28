@@ -21,19 +21,16 @@ def report_zap(target, api_key, dir_save):
 
 
 def run_zap_proxy(path):
-    try:
-        os.chdir(path)
-    except FileNotFoundError:
-        raise
-    PID = subprocess.Popen("./zap.sh", shell=True).pid
-    return PID
+    pid = subprocess.Popen(path, shell=True).pid
+    return pid
 
 
 def main():
     target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
-    api_key = os.environ.get('EXECUTOR_CONFIG_API_KEY')
+    api_key = os.environ.get('API_KEY')
+    my_env = os.environ
     dir_save = '/home/blas/Escritorio/report.xml'
-    path = os.path.join(os.path.expanduser('~'), 'Descargas', 'ZAP_2.9.0')
+    path = my_env["ZAP"] if 'ZAP' in my_env else "/home/blas/Descargas/ZAP_2.9.0/zap.sh"
     pid_zap = run_zap_proxy(path)
     if pid_zap == 0:
         print("Zap Proxy not found", file=sys.stderr)
@@ -44,7 +41,6 @@ def main():
     plugin = PluginsManager().get_plugin("zap")
     plugin.parseOutputString(zap_xml)
     print(plugin.get_json())
-
 
 
 if __name__ == '__main__':
