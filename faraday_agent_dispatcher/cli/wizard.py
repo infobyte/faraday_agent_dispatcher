@@ -45,9 +45,9 @@ class Wizard:
         self.executors_list = []
         self.load_executors()
         if "WIZARD_DEV" in os.environ:
-            Wizard.EXECUTOR_FOLDER /= "dev"
+            self.folder = Wizard.EXECUTOR_FOLDER / "dev"
         else:
-            Wizard.EXECUTOR_FOLDER /= "official"
+            self.folder = Wizard.EXECUTOR_FOLDER / "official"
 
     def run(self):
         end = False
@@ -123,7 +123,7 @@ class Wizard:
     def get_base_repo(self):
         executors = [
             f"{executor}"
-            for executor in os.listdir(Wizard.EXECUTOR_FOLDER)
+            for executor in os.listdir(self.folder)
             if re.match(".*_manifest.json", executor) is None]
         max_page = int(math.ceil(len(executors) / REPO_EXECUTOR_PAGE_SIZE))
         chosen_path = None
@@ -169,11 +169,10 @@ class Wizard:
         del metadata["cmd"]
         return cmd, metadata
 
-    @staticmethod
-    def read_executor_metadata(chosen):
+    def read_executor_metadata(self, chosen):
         chosen = Path(chosen)
-        chosen_metadata_path = Wizard.EXECUTOR_FOLDER / f"{chosen.stem}_manifest.json"
-        chosen_path = Wizard.EXECUTOR_FOLDER / chosen
+        chosen_metadata_path = self.folder / f"{chosen.stem}_manifest.json"
+        chosen_path = self.EXECUTOR_FOLDER / chosen
         with open(chosen_metadata_path) as metadata_file:
             data = metadata_file.read()
             metadata = json.loads(data)

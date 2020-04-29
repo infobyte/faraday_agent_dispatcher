@@ -219,7 +219,7 @@ def generate_inputs():
             "dispatcher_input": DispatcherInput(),
             "executors_input": [
                     RepoExecutorInput(name="ex1",
-                                      base="nessus",
+                                      base="2",
                                       varenvs=[
                                           RepoVarEnvInput(name="NESSUS_USERNAME", value="asd"),
                                           RepoVarEnvInput(name="NESSUS_PASSWORD", value="asdsad"),
@@ -235,7 +235,7 @@ def generate_inputs():
                                       adm_type=ADMType.MODIFY),
                 ],
             "exit_code": 0,
-            "after_executors": {"ex1", "ex2", "ex3"}
+            "after_executors": {"ex1"}
         },
     ]
 
