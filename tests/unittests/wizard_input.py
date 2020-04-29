@@ -82,9 +82,6 @@ class ExecutorInput:
         prefix = self.adm_type.name[0]
         cli_input = f"{prefix}\n"
 
-        if self.adm_type == ADMType.ADD:
-            return f"{cli_input}Y\n"
-
         if self.error_name:
             cli_input = f"{cli_input}{self.error_name}\n{prefix}\n"
 
@@ -93,6 +90,10 @@ class ExecutorInput:
 
         cli_input = f"{cli_input}" \
                     f"{self.name}\n"
+
+        if self.adm_type == ADMType.ADD:
+            cli_input = f"{cli_input}Y\n"
+
         if self.adm_type == ADMType.MODIFY:
             cli_input = f"{cli_input}{self.new_name or self.name}\n"
         cli_input = f"{cli_input}" \
@@ -133,9 +134,6 @@ class RepoExecutorInput:
         prefix = self.adm_type.name[0]
         cli_input = f"{prefix}\n"
 
-        if self.adm_type == ADMType.ADD:
-            return f"{cli_input}N\n{self.base}\n"
-
         if self.error_name:
             cli_input = f"{cli_input}{self.error_name}\n{prefix}\n"
 
@@ -144,6 +142,10 @@ class RepoExecutorInput:
 
         cli_input = f"{cli_input}" \
                     f"{self.name}\n"
+
+        if self.adm_type == ADMType.ADD:
+            cli_input = f"{cli_input}N\n{self.base}\n"
+
         if self.adm_type == ADMType.MODIFY:
             cli_input = f"{cli_input}{self.new_name or self.name}\n"
         cli_input = f"{cli_input}" \
