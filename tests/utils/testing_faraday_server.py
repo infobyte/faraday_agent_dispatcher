@@ -106,6 +106,8 @@ def get_bulk_create(test_config: FaradayTestConfig):
         _host_data = host_data.copy()
         _host_data["vulnerabilities"] = [vuln_data.copy()]
         data = json.loads((await request.read()).decode())
+        if "execution_id" not in data:
+            return web.HTTPBadRequest()
         if "ip" not in data["hosts"][0]:
             return web.HTTPBadRequest()
         assert _host_data == data["hosts"][0]
