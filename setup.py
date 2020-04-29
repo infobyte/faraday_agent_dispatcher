@@ -19,6 +19,7 @@
 """The setup script."""
 
 import sys
+from re import search
 from setuptools import setup, find_packages
 
 if sys.version_info.major < 3 or sys.version_info.minor < 7:
@@ -26,6 +27,9 @@ if sys.version_info.major < 3 or sys.version_info.minor < 7:
     print("Install a newer Python version to proceed")
     sys.exit(1)
 
+
+with open('faraday_agent_dispatcher/__init__.py', 'rt', encoding='utf8') as f:
+    version = search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
 with open('README.md') as readme_file:
     readme = readme_file.read()
@@ -66,6 +70,7 @@ setup(
     extras_require=extra_req,
     license="GNU General Public License v3",
     long_description=readme + '\n\n' + history,
+    long_description_content_type='text/markdown',
     include_package_data=True,
     keywords='faraday integration',
     name='faraday_agent_dispatcher',
@@ -73,6 +78,6 @@ setup(
     use_scm_version=False,
     setup_requires=setup_requirements,
     url='https://github.com/infobyte/faraday_agent_dispatcher',
-    version='1.0',
+    version=version,
     zip_safe=False,
 )
