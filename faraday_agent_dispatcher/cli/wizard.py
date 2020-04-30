@@ -172,7 +172,7 @@ class Wizard:
                 except FileNotFoundError as e:
                     print(f"{Bcolors.WARNING}Not existent manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
 
-        cmd = metadata["cmd"].format(FILE_PATH=chosen_path)
+        cmd = metadata["cmd"].format(EXECUTOR_FILE_PATH=chosen_path)
         del metadata["cmd"]
         return cmd, metadata
 

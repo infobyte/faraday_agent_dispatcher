@@ -13,5 +13,5 @@
   "check_cmds": [
 
   ],
-  "cmd": "python3 {FILE_PATH}"
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
 }
