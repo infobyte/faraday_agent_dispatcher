@@ -28,14 +28,9 @@ from itsdangerous import TimestampSigner
 
 from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher.config import (
-    reset_config,
-    save_config,
     instance as configuration,
     Sections
 )
-from faraday_agent_dispatcher.utils.text_utils import Bcolors
-
-from tests.utils.text_utils import fuzzy_string
 from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, tmp_custom_config, tmp_default_config, \
     test_logger_handler, test_logger_folder
 
