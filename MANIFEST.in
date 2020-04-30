@@ -10,6 +10,5 @@ recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
 
-prune faraday_agent_dispatcher/contrib/dev *
-include faraday_agent_dispatcher/contrib/*
-exclude faraday_agent_dispatcher/contrib/dev *
+prune faraday_agent_dispatcher/static/executors/dev
+graft faraday_agent_dispatcher/static/executors/official
