@@ -7,5 +7,6 @@
   ],
   "check_cmds": [
 
-  ]
+  ],
+  "cmd": "sh {FILE_PATH}"
 }

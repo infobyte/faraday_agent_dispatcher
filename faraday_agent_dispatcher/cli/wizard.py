@@ -1,3 +1,4 @@
+import asyncio
 import json
 import math
 import os
@@ -19,6 +20,9 @@ from faraday_agent_dispatcher.cli.utils.general_inputs import (
     get_default_value_and_choices,
     process_choice_errors
 )
+import faraday_agent_dispatcher.logger as logging
+
+logger = logging.get_logger()
 
 REPO_EXECUTOR_PAGE_SIZE = 2
 
@@ -49,7 +53,7 @@ class Wizard:
         else:
             self.folder = Wizard.EXECUTOR_FOLDER / "official"
 
-    def run(self):
+    async def run(self):
         end = False
 
         def_value, choices = get_default_value_and_choices("Q", ["A", "E", "Q"])
@@ -61,7 +65,7 @@ class Wizard:
             if value.upper() == "A":
                 process_agent()
             elif value.upper() == "E":
-                self.process_executors()
+                await self.process_executors()
             else:
                 process_choice_errors(value)
                 try:
@@ -87,7 +91,7 @@ class Wizard:
     def save_executors(self):
         config.instance.set(Sections.AGENT, "executors", ",".join(self.executors_list))
 
-    def process_executors(self):
+    async def process_executors(self):
         end = False
 
         while not end:
@@ -95,7 +99,7 @@ class Wizard:
                   f"{self.executors_list}{Bcolors.ENDC}")
             value = choose_adm("executor")
             if value.upper() == "A":
-                self.new_executor()
+                await self.new_executor()
             elif value.upper() == "M":
                 self.edit_executor()
             elif value.upper() == "D":
@@ -111,16 +115,16 @@ class Wizard:
         self.executors_list.append(name)
         return name
 
-    def new_executor(self):
+    async def new_executor(self):
         name = self.check_executors_name()
         if name:
             custom_executor = confirm_prompt("Is a custom executor?", default=False)
             if custom_executor:
                 self.new_custom_executor(name)
             else:
-                self.new_repo_executor(name)
+                await self.new_repo_executor(name)
 
-    def get_base_repo(self):
+    async def get_base_repo(self):
         executors = [
             f"{executor}"
             for executor in os.listdir(self.folder)
@@ -161,6 +165,9 @@ class Wizard:
                         print(f"{Bcolors.WARNING}Invalid manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
                         chosen_path = None
                     else:
+                        if not await self.check_commands(metadata):
+                            print(f"{Bcolors.WARNING}Invalid bash dependency for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
+                            chosen_path = None
                         metadata["name"] = chosen
                 except FileNotFoundError as e:
                     print(f"{Bcolors.WARNING}Not existent manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
@@ -182,9 +189,33 @@ class Wizard:
     def check_metadata(metadata):
         return all(k in metadata for k in ("cmd", "check_cmds", "arguments", "environment_variables"))
 
-    def new_repo_executor(self, name):
+
+    @staticmethod
+    async def check_commands(metadata):
+
+        async def run_check_command(cmd):
+            proc = await asyncio.create_subprocess_shell(cmd,
+                                                         stdout=asyncio.subprocess.PIPE,
+                                                         stderr=asyncio.subprocess.PIPE
+                                                         )
+            while True:
+                stdout, stderr = await proc.communicate()
+                if len(stdout) > 0:
+                    logger.debug(f"Dependency check prints: {stdout}")
+                if len(stderr) > 0:
+                    logger.debug(f"Dependency check error: {stderr}")
+                if len(stdout) == 0 and len(stderr) == 0:
+                    break
+                
+            return proc.returncode
+
+        check_coros = [run_check_command(cmd) for cmd in metadata["check_cmds"]]
+        responses = await asyncio.gather(*check_coros)
+        return all(response == 0 for response in responses)
+
+    async def new_repo_executor(self, name):
         try:
-            cmd, metadata = self.get_base_repo()
+            cmd, metadata = await self.get_base_repo()
             Wizard.set_generic_data(name, cmd, metadata["name"])
             process_repo_var_envs(name, metadata)
             set_repo_params(name, metadata)

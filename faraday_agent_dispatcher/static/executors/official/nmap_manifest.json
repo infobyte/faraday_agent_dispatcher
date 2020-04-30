@@ -8,5 +8,6 @@
   ],
   "check_cmds": [
     "nmap --version"
-  ]
+  ],
+  "cmd": "python3 {FILE_PATH}"
 }
