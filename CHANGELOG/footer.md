@@ -1,0 +1,1 @@
+[faraday]: http://github.com/infobyte/faraday
