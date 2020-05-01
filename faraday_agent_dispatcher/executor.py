@@ -9,7 +9,7 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
 class Executor:
     __control_dict = {
         Sections.EXECUTOR_DATA: {
-           "cmd": control_str,
+           "cmd": control_str(),
            "max_size": control_int(True)
         }
     }

@@ -16,6 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
+import ssl
 import json
 
 import asyncio
@@ -29,7 +30,6 @@ import faraday_agent_dispatcher.logger as logging
 
 from faraday_agent_dispatcher.config import instance as config, Sections, save_config, control_config
 from faraday_agent_dispatcher.executor import Executor
-from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -61,13 +61,20 @@ class Dispatcher:
             executor_name:
                 Executor(executor_name, config) for executor_name in executors_list_str
         }
+        ssl_cert_path = config[Sections.SERVER].get("ssl_cert", None)
+        self.ws_ssl_enabled = self.api_ssl_enabled = config[Sections.SERVER].get("ssl", "False").lower() in ["t", "true"]
+        self.api_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.api_ssl_enabled and ssl_cert_path else {}
+        self.ws_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ws_ssl_enabled and ssl_cert_path else {}
+        self.execution_id = None
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
         headers = {"Authorization": f"Agent {self.agent_token}"}
         websocket_token_response = await self.session.post(
-            api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/'),
-            headers=headers)
+            api_url(self.host, self.api_port, postfix='/_api/v2/agent_websocket_token/', secure=self.api_ssl_enabled),
+            headers=headers,
+            **self.api_kwargs
+        )
 
         websocket_token_json = await websocket_token_response.json()
         return websocket_token_json["token"]
@@ -79,11 +86,14 @@ class Dispatcher:
             assert registration_token is not None, "The registration token is mandatory"
             token_registration_url = api_url(self.host,
                                              self.api_port,
-                                             postfix=f"/_api/v2/ws/{self.workspace}/agent_registration/")
+                                             postfix=f"/_api/v2/ws/{self.workspace}/agent_registration/",
+                                             secure=self.api_ssl_enabled)
             logger.info(f"token_registration_url: {token_registration_url}")
             try:
                 token_response = await self.session.post(token_registration_url,
-                                                         json={'token': registration_token, 'name': self.agent_name})
+                                                         json={'token': registration_token, 'name': self.agent_name},
+                                                         **self.api_kwargs
+                                                         )
                 token = await token_response.json()
                 self.agent_token = token["token"]
                 config.set(Sections.TOKENS, "agent", self.agent_token)
@@ -97,7 +107,8 @@ class Dispatcher:
                                  "config-wizard`")
                 else:
                     logger.info(f"Unexpected error: {e}")
-                raise e
+                logger.debug(msg="Exception raised", exc_info=e)
+                return
 
         try:
             self.websocket_token = await self.reset_websocket_token()
@@ -108,7 +119,8 @@ class Dispatcher:
                         f"config-wizard`"
             logger.error(error_msg)
             self.agent_token = None
-            raise e
+            logger.debug(msg="Exception raised", exc_info=e)
+            return
 
     async def connect(self, out_func=None):
 
@@ -125,7 +137,14 @@ class Dispatcher:
 
         if out_func is None:
 
-            async with websockets.connect(websocket_url(self.host, self.websocket_port)) as websocket:
+            async with websockets.connect(
+                    websocket_url(
+                        self.host,
+                        self.websocket_port,
+                        postfix='/websockets',
+                        secure=self.ws_ssl_enabled
+                    ),
+                    **self.ws_kwargs) as websocket:
                 await websocket.send(connected_data)
 
                 logger.info("Connection to Faraday server succeeded")
@@ -155,12 +174,19 @@ class Dispatcher:
             await out_func(json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"}))
             return
 
+        if "execution_id" not in data_dict:
+            logger.info("Data not contains execution id")
+            await out_func(json.dumps({"error": "'execution_id' key is mandatory in this websocket connection"}))
+            return
+        self.execution_id = data_dict["execution_id"]
+
         if data_dict["action"] == "RUN":
             if "executor" not in data_dict:
                 logger.error("No executor selected")
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "running": False,
                         "message": f"No executor selected to {self.agent_name} agent"
                     })
@@ -172,6 +198,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "executor_name": data_dict['executor'],
                         "running": False,
                         "message": f"The selected executor {data_dict['executor']} not exists in {self.agent_name} "
@@ -199,6 +226,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "executor_name": executor.name,
                         "running": False,
                         "message": f"Unexpected argument(s) passed to {executor.name} executor from {self.agent_name} "
@@ -219,6 +247,7 @@ class Dispatcher:
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "executor_name": executor.name,
                         "running": False,
                         "message": f"Mandatory argument(s) not passed to {executor.name} executor from "
@@ -231,12 +260,15 @@ class Dispatcher:
                 logger.info("Running {} executor".format(executor.name))
 
                 process = await self.create_process(executor, passed_params)
-                tasks = [StdOutLineProcessor(process, self.session).process_f(),
-                         StdErrLineProcessor(process).process_f(),
-                         ]
+                tasks = [
+                    StdOutLineProcessor(process, self.session, self.execution_id, self.api_ssl_enabled,
+                                        self.api_kwargs).process_f(),
+                    StdErrLineProcessor(process).process_f(),
+                ]
                 await out_func(
                     json.dumps({
                         "action": "RUN_STATUS",
+                        "execution_id": self.execution_id,
                         "executor_name": executor.name,
                         "running": True,
                         "message": running_msg
@@ -250,6 +282,7 @@ class Dispatcher:
                     await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
+                            "execution_id": self.execution_id,
                             "executor_name": executor.name,
                             "successful": True,
                             "message": f"Executor {executor.name} from {self.agent_name} finished successfully"
@@ -260,6 +293,7 @@ class Dispatcher:
                     await out_func(
                         json.dumps({
                             "action": "RUN_STATUS",
+                            "execution_id": self.execution_id,
                             "executor_name": executor.name,
                             "successful": False,
                             "message": f"Executor {executor.name} from {self.agent_name} failed"

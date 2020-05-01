@@ -1,0 +1,13 @@
+{
+  "arguments": {
+    "PORT_LIST": true,
+    "TARGET": true
+  },
+  "environment_variables": [
+
+  ],
+  "check_cmds": [
+    "nmap --version"
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}

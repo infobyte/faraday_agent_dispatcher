@@ -1,0 +1,12 @@
+{
+  "arguments": {
+    "DOMAIN": true
+  },
+  "environment_variables": [
+
+  ],
+  "check_cmds": [
+
+  ],
+  "cmd": "sh {EXECUTOR_FILE_PATH}"
+}

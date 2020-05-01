@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import os
 import subprocess
 
@@ -14,7 +13,11 @@ cmd = [
 ]
 
 
-results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-nmap = NmapPlugin()
-nmap.parseOutputString(results.stdout)
-print(nmap.get_json())
+def main():
+    results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    nmap = NmapPlugin()
+    nmap.parseOutputString(results.stdout)
+    print(nmap.get_json())
+
+if __name__ == '__main__':
+    main()
