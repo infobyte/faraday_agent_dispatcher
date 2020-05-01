@@ -1,1 +1,0 @@
-If the server says the agent token is invalid, it tries to get a new one

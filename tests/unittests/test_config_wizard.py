@@ -6,7 +6,15 @@ from pathlib import Path
 
 from faraday_agent_dispatcher.cli.main import config_wizard
 from faraday_agent_dispatcher import config as config_mod
-from tests.unittests.wizard_input import ExecutorInput, DispatcherInput, ParamInput, VarEnvInput, ADMType
+from tests.unittests.wizard_input import (
+    ExecutorInput,
+    DispatcherInput,
+    ParamInput,
+    VarEnvInput,
+    ADMType,
+    RepoExecutorInput,
+    RepoVarEnvInput
+)
 
 
 def generate_inputs():
@@ -17,26 +25,38 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": set()
         },
-        # 1 Dispatcher input
+        # 1 SSL cert
         {
-            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234",
+            "dispatcher_input": DispatcherInput(ssl_cert='/home/lalal/asda.crt'),
+            "exit_code": 0,
+            "after_executors": set()
+        },
+        # 2 All default with ssl false
+        {
+            "dispatcher_input": DispatcherInput(ssl='false'),
+            "exit_code": 0,
+            "after_executors": set()
+        },
+        # 3 Dispatcher input
+        {
+            "dispatcher_input": DispatcherInput(ssl='false',host="127.0.0.1", api_port="13123", ws_port="1234",
                                                 workspace="aworkspace", agent_name="agent",
                                                 registration_token="1234567890123456789012345"),
             "exit_code": 0,
             "after_executors": set()
         },
-        # 2 Bad token input
+        # 4 Bad token input
         {
-            "dispatcher_input": DispatcherInput(host="127.0.0.1", api_port="13123", ws_port="1234",
+            "dispatcher_input": DispatcherInput(ssl='false',host="127.0.0.1", api_port="13123", ws_port="1234",
                                                 workspace="aworkspace", agent_name="agent",
                                                 registration_token=["12345678901234567890", ""]),
             "exit_code": 0,
             "expected_output": ["registration must be 25 character length"],
             "after_executors": set()
         },
-        # 3 Basic Executors input
+        # 5 Basic Executors input
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -65,9 +85,9 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "ex3"}
         },
-        # 4 Basic Bad Executors input
+        # 6 Basic Bad Executors input
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -107,9 +127,9 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "ex3", "ex4"}
         },
-        # 5 Basic Mod Executors input
+        # 7 Basic Mod Executors input
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -158,9 +178,9 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "eX3"}
         },
-        # 6 Basic Del Executors input
+        # 8 Basic Del Executors input
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -205,6 +225,29 @@ def generate_inputs():
                 ],
             "exit_code": 0,
             "after_executors": {"ex1", "ex3"}
+        },
+        # 9 Basic Repo Executors input
+        {
+            "dispatcher_input": DispatcherInput(),
+            "executors_input": [
+                    RepoExecutorInput(name="ex1",
+                                      base="2",
+                                      varenvs=[
+                                          RepoVarEnvInput(name="NESSUS_USERNAME", value="asd"),
+                                          RepoVarEnvInput(name="NESSUS_PASSWORD", value="asdsad"),
+                                          RepoVarEnvInput(name="NESSUS_URL", value="asdasd")
+                                      ],
+                                      adm_type=ADMType.ADD),
+                    RepoExecutorInput(name="ex1",
+                                      varenvs=[
+                                          RepoVarEnvInput(name="NESSUS_USERNAME", value="asd"),
+                                          RepoVarEnvInput(name="NESSUS_PASSWORD", value="asdsad"),
+                                          RepoVarEnvInput(name="NESSUS_URL", value="asdasd")
+                                      ],
+                                      adm_type=ADMType.MODIFY),
+                ],
+            "exit_code": 0,
+            "after_executors": {"ex1"}
         },
     ]
 
