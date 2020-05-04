@@ -1,3 +1,4 @@
+from faraday_agent_dispatcher.cli.utils.model_load import executor_metadata, executor_folder
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.control_values_utils import (
     control_int,
@@ -6,10 +7,31 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
 )
 
 
+def get_repo_path(repo_name):
+    import os
+    from pathlib import Path
+    import json
+
+    EXECUTOR_FOLDER = Path(__file__).parent.parent / 'static' / 'executors'
+    if "WIZARD_DEV" in os.environ:
+        folder = EXECUTOR_FOLDER / "dev"
+    else:
+        folder = EXECUTOR_FOLDER / "official"
+    chosen = Path(repo_name)
+    chosen_metadata_path = folder / f"{chosen.stem}_manifest.json"
+    chosen_path = EXECUTOR_FOLDER / chosen
+    with open(chosen_metadata_path) as metadata_file:
+        data = metadata_file.read()
+        metadata = json.loads(data)
+    return metadata["cmd"].format(EXECUTOR_FILE_PATH=chosen_path)
+
+
+
 class Executor:
     __control_dict = {
         Sections.EXECUTOR_DATA: {
-           "cmd": control_str(),
+           "cmd": control_str(True),
+           "repo_executor": control_str(True),
            "max_size": control_int(True)
         }
     }
@@ -21,7 +43,14 @@ class Executor:
         executor_section = Sections.EXECUTOR_DATA.format(name)
         params_section = Sections.EXECUTOR_PARAMS.format(name)
         varenvs_section = Sections.EXECUTOR_VARENVS.format(name)
-        self.cmd = config.get(executor_section, "cmd")
+        repo_name = config[executor_section].get("repo_executor", None)
+        if repo_name:
+            metadata = executor_metadata(repo_name)
+            repo_path = executor_folder() / repo_name
+            self.cmd = metadata['cmd'].format(EXECUTOR_FILE_PATH=repo_path)
+        else:
+            self.cmd = config[executor_section].get("cmd")
+
         self.max_size = int(config[executor_section].get("max_size", 64 * 1024))
         self.params = dict(config[params_section]) if params_section in config else {}
         self.params = {key: value.lower() in ["t", "true"] for key, value in self.params.items()}
