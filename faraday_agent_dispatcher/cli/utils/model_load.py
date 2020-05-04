@@ -181,7 +181,7 @@ def process_repo_var_envs(executor_name, metadata: dict):
     env_vars = metadata["environment_variables"]
 
     for env_var in env_vars:
-        def_value = config.instance[section].get(executor_name, None)
+        def_value = config.instance[section].get(env_var, None)
         value = click.prompt(f"Environment variable {env_var} value", default=def_value)
         config.instance.set(section, env_var, value)
 
