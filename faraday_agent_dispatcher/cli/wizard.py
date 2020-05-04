@@ -152,6 +152,7 @@ class Wizard:
                     raise WizardCanceledOption("Repository executor selection canceled")
                 else:
                     print(f"{Bcolors.WARNING}Invalid option {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
+                chosen = None
             else:
                 try:
                     chosen = paged_executors[int(chosen)-1]
