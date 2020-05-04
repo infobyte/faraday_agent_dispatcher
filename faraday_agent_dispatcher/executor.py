@@ -1,3 +1,7 @@
+import os
+from pathlib import Path
+import json
+
 from faraday_agent_dispatcher.cli.utils.model_load import executor_metadata, executor_folder
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.control_values_utils import (
@@ -8,9 +12,6 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
 
 
 def get_repo_path(repo_name):
-    import os
-    from pathlib import Path
-    import json
 
     EXECUTOR_FOLDER = Path(__file__).parent.parent / 'static' / 'executors'
     if "WIZARD_DEV" in os.environ:
