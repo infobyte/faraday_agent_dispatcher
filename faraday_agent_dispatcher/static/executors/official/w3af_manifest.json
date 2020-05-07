@@ -2,7 +2,7 @@
   "arguments": {
     "W3AF_TARGET_URL": true
   },
-  "enviroment_variables": [
+  "environment_variables": [
     "W3AF_PATH"
   ],
   "check_cmds": [
