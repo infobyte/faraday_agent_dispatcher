@@ -1,0 +1,13 @@
+{
+  "arguments": {
+    "ZAP_TARGET_URL": true
+  },
+  "environment_variables": [
+    "ZAP_API_KEY",
+    "ZAP_RUN_ZAP"
+  ],
+  "check_cmds": [
+
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}
