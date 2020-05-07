@@ -21,7 +21,6 @@ import sys
 
 import click
 import asyncio
-import traceback
 
 from aiohttp import ClientSession
 
@@ -31,8 +30,6 @@ from faraday_agent_dispatcher import config, __version__
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 import faraday_agent_dispatcher.logger as logging
 from pathlib import Path
-
-logger = logging.get_logger()
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -44,7 +41,7 @@ def cli():
     pass
 
 
-def process_config_file(config_filepath: Path):
+def process_config_file(config_filepath: Path, logger):
     if config_filepath is None and not os.path.exists(config.CONFIG_FILENAME):
         logger.info("Config file doesn't exist. Run the command `faraday-dispatcher config-wizard` to create one")
         exit(1)
@@ -54,9 +51,9 @@ def process_config_file(config_filepath: Path):
     return config_filepath
 
 
-async def main(config_file):
+async def main(config_file, logger):
 
-    config_file = process_config_file(config_file)
+    config_file = process_config_file(config_file, logger)
 
     async with ClientSession(raise_for_status=True) as session:
         try:
@@ -79,15 +76,9 @@ async def main(config_file):
 @click.option("--log-level", default="info", help="Log level set = [notset|debug|info|warning|error|critical]")
 @click.option("--debug", is_flag=True, default=False, help="Set debug logging, overrides --log-level option")
 def run(config_file, logdir, log_level, debug):
-    logging.reset_logger(logdir)
-    if debug:
-        logging_level = logging.get_level("debug")
-    else:
-        logging_level = logging.get_level(log_level)
-    logging.set_logging_level(logging_level)
-    logger = logging.get_logger()
+    logger = setting_logger(debug, log_level, logdir)
     try:
-        exit_code = asyncio.run(main(config_file))
+        exit_code = asyncio.run(main(config_file, logger))
     except KeyboardInterrupt:
         sys.exit(0)
     except Exception as e:
@@ -96,12 +87,28 @@ def run(config_file, logdir, log_level, debug):
     sys.exit(exit_code)
 
 
+def setting_logger(debug, log_level, logdir):
+    logging.reset_logger(logdir)
+    if debug:
+        logging_level = logging.get_level("debug")
+    else:
+        logging_level = logging.get_level(log_level)
+    logging.set_logging_level(logging_level)
+    logger = logging.get_logger()
+    return logger
+
+
 @click.command(help="faraday-dispatcher config_wizard")
 @click.option("-c", "--config-filepath", default=None, help="Path to config ini file")
-def config_wizard(config_filepath):
+@click.option("--logdir", default="~", help="Path to logger directory")
+@click.option("--log-level", default="info", help="Log level set = [notset|debug|info|warning|error|critical]")
+@click.option("--debug", is_flag=True, default=False, help="Set debug logging, overrides --log-level option")
+def config_wizard(config_filepath, logdir, log_level, debug):
+    setting_logger(debug, log_level, logdir)
+
     config_filepath = config_filepath or config.CONFIG_FILENAME
 
-    Wizard(Path(config_filepath)).run()
+    asyncio.run(Wizard(Path(config_filepath)).run())
 
 
 cli.add_command(config_wizard)
