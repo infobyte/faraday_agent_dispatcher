@@ -22,8 +22,8 @@ def main():
         sys.exit()
 
     my_env = os.environ
-    if 'ZAP' in my_env:
-        path = my_env["ZAP"]
+    if 'RUN_ZAP' in my_env:
+        path = my_env["RUN_ZAP"]
         pid_zap = run_zap_proxy(path)
 
         if pid_zap == 0:
