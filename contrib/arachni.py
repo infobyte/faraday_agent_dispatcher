@@ -15,8 +15,8 @@ def main():
         print("Environment variables no set", file=sys.stderr)
         sys.exit()
 
-    if 'ARACHNI' in my_envs:
-        path_arachni = os.environ.get('ARACHNI')
+    if 'RUN_ARACHNI' in my_envs:
+        path_arachni = os.environ.get('RUN_ARACHNI')
     else:
         print("Environment variables no set", file=sys.stderr)
         sys.exit()
