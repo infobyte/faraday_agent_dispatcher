@@ -3,7 +3,7 @@
     "NIKTO2_TARGET_URL": true,
     "NIKTO2_TARGET_PORT": false
   },
-  "enviroment_variables": [
+  "environment_variables": [
 
   ],
   "check_cmds": [
