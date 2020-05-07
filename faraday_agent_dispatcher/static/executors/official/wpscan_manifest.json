@@ -2,7 +2,7 @@
   "arguments": {
     "WPSCAN_TARGET_URL": true
   },
-  "enviroment_variables": [
+  "environment_variables": [
 
   ],
   "check_cmds": [
