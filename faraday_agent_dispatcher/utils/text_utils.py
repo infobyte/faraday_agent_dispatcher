@@ -7,3 +7,5 @@ class Bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+    REVERSE = '\033[7m'
+    END_REVERSE = '\033[27m'
