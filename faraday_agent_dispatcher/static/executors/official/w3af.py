@@ -16,12 +16,12 @@ def main():
         with tempfile.TemporaryDirectory() as tempdirname:
             name_result = f'{tempdirname}/config_report_file.w3af'
             file_w3af = open(name_result, "w")
-            command_text = "" \
-                           "plugins\n output console,xml_file\n output\n output config xml_file\n " \
-                           "set output_file {}/output-w3af.xml\n set verbose True\n back\n output config console\n " \
-                           "set verbose False\n back\n crawl all, !bing_spider, !google_spider, !spider_man\n crawl\n" \
-                           " grep all\n grep\n audit all\n audit\n bruteforce all\n bruteforce\n back\n target\n" \
-                           " set target {}\n back\n start\n exit".format(tempdirname, url_target)
+            command_text = f'plugins\n output console,xml_file\n output\n output config xml_file\n ' \
+                           f'set output_file {tempdirname}/output-w3af.xml\n set verbose True\n back\n ' \
+                           f'output config console\n set verbose False\n back\n crawl all, !bing_spider, !google_spider,' \
+                           f' !spider_man\n crawl\n grep all\n grep\n audit all\n audit\n bruteforce all\n bruteforce\n ' \
+                           f'back\n target\n set target {url_target}\n back\n start\n exit'
+
             file_w3af.write(command_text)
             file_w3af.close()
             try:
