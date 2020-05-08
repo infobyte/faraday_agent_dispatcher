@@ -6,7 +6,6 @@ import tempfile
 import time
 
 
-
 def main():
     my_envs = os.environ
     if 'EXECUTOR_CONFIG_NAME_URL' in my_envs:
