@@ -1,0 +1,12 @@
+{
+  "arguments": {
+    "OPENVAS_SCAN_NAME": true,
+  },
+  "environment_variables": [
+
+  ],
+  "check_cmds": [
+    "docker -v"
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}
