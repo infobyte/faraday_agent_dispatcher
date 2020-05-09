@@ -4,6 +4,7 @@ import sys
 from faraday_plugins.plugins.manager import PluginsManager
 import subprocess
 import tempfile
+from pathlib import Path
 
 
 def main():
@@ -14,7 +15,7 @@ def main():
 
     if 'W3AF_PATH' in os.environ:
         with tempfile.TemporaryDirectory() as tempdirname:
-            name_result = f'{tempdirname}/config_report_file.w3af'
+            name_result = Path(tempdirname) / 'config_report_file.w3af'
             file_w3af = open(name_result, "w")
             command_text = f'plugins\n output console,xml_file\n output\n output config xml_file\n ' \
                            f'set output_file {tempdirname}/output-w3af.xml\n set verbose True\n back\n ' \
@@ -26,14 +27,19 @@ def main():
             file_w3af.close()
             try:
                 os.chdir(path=os.environ.get('W3AF_PATH'))
+
             except FileNotFoundError:
                 print("No such file or directory", file=sys.stderr)
                 sys.exit()
 
-            subprocess.run(f'./w3af_console -s {name_result}', shell=True)
-            plugin = PluginsManager().get_plugin("w3af")
-            plugin.parseOutputString(f'{tempdirname}/output-w3af.xml')
-            print(plugin.get_json())
+            if os.path.isfile('w3af_console'):
+                subprocess.run(f'./w3af_console -s {name_result}', shell=True)
+                plugin = PluginsManager().get_plugin("w3af")
+                plugin.parseOutputString(f'{tempdirname}/output-w3af.xml')
+                print(plugin.get_json())
+            else:
+                print("No such file or directory", file=sys.stderr)
+                sys.exit()
 
     else:
         print("W3AF_PATH not set", file=sys.stderr)
