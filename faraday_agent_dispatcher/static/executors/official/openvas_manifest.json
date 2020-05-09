@@ -1,6 +1,6 @@
 {
   "arguments": {
-    "OPENVAS_SCAN_NAME": true,
+    "OPENVAS_SCAN_NAME": true
   },
   "environment_variables": [
 
