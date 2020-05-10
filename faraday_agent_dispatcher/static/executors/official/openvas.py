@@ -11,10 +11,7 @@ from pathlib import Path
 def main():
     # Imagen Docker
     # https://hub.docker.com/r/ictu/openvas-docker
-    # docker run --rm -v $(pwd):/openvas/results/ ictu/openvas-docker /openvas/run_scan.py 123.123.123.123,www.github.com openvas_scan_report
-
     url_target = os.environ.get('EXECUTOR_CONFIG_OPENVAS_TARGET_URL')
-    url_target = 'www.github.com'
     if not url_target:
         print("git URL not provided", file=sys.stderr)
         sys.exit()
