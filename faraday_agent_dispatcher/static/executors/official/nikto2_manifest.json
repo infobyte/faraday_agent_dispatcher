@@ -1,7 +1,7 @@
 {
   "arguments": {
-    "NIKTO2_TARGET_URL": true,
-    "NIKTO2_TARGET_PORT": false
+    "TARGET_URL": true,
+    "TARGET_PORT": false
   },
   "environment_variables": [
 
