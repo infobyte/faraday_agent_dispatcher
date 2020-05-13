@@ -8,5 +8,5 @@
   "check_cmds": [
 
   ],
-  "cmd": "sh {EXECUTOR_FILE_PATH}"
+  "cmd": "bash {EXECUTOR_FILE_PATH}"
 }
