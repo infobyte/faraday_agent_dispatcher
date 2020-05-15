@@ -64,7 +64,7 @@ def process_agent():
         },
         Sections.TOKENS: {
             "registration": {
-                "default_value": lambda _: "ACorrectTokenHas25CharLen",
+                "default_value": lambda _: "ACorrectTokenIs25CharLen",
                 "type": click.STRING,
             },
             "agent": {}
