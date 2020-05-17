@@ -6,7 +6,8 @@
 
   ],
   "check_cmds": [
-    "docker -v"
+    "docker -v",
+    "docker images -q ictu/openvas-docker"
   ],
   "cmd": "python3 {EXECUTOR_FILE_PATH}"
 }
