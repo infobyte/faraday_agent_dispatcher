@@ -11,7 +11,7 @@ from pathlib import Path
 from faraday_agent_dispatcher import config
 from faraday_agent_dispatcher.cli.utils.exceptions import WizardCanceledOption
 from faraday_agent_dispatcher.cli.utils.model_load import process_agent, process_var_envs, process_params, \
-    process_repo_var_envs, set_repo_params
+    process_repo_var_envs, set_repo_params, executor_folder, executor_metadata
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.cli.utils.general_inputs import (
@@ -24,13 +24,12 @@ import faraday_agent_dispatcher.logger as logging
 
 logger = logging.get_logger()
 
-REPO_EXECUTOR_PAGE_SIZE = 2
+REPO_EXECUTOR_PAGE_SIZE = 5
 
 
 class Wizard:
 
     MAX_BUFF_SIZE = 1024
-    EXECUTOR_FOLDER = Path(__file__).parent.parent / 'static' / 'executors'
     EXECUTOR_SECTIONS = [Sections.EXECUTOR_DATA, Sections.EXECUTOR_PARAMS, Sections.EXECUTOR_VARENVS]
 
     def __init__(self, config_filepath: Path):
@@ -48,10 +47,6 @@ class Wizard:
             sys.exit(1)
         self.executors_list = []
         self.load_executors()
-        if "WIZARD_DEV" in os.environ:
-            self.folder = Wizard.EXECUTOR_FOLDER / "dev"
-        else:
-            self.folder = Wizard.EXECUTOR_FOLDER / "official"
 
     async def run(self):
         end = False
@@ -127,13 +122,13 @@ class Wizard:
     async def get_base_repo(self):
         executors = [
             f"{executor}"
-            for executor in os.listdir(self.folder)
+            for executor in os.listdir(executor_folder())
             if re.match(".*_manifest.json", executor) is None]
         max_page = int(math.ceil(len(executors) / REPO_EXECUTOR_PAGE_SIZE))
-        chosen_path = None
+        chosen = None
         metadata = None
         page = 0
-        while chosen_path is None:
+        while chosen is None:
             print("The executors are:")
             paged_executors = executors[
                               page*REPO_EXECUTOR_PAGE_SIZE
@@ -157,33 +152,25 @@ class Wizard:
                     raise WizardCanceledOption("Repository executor selection canceled")
                 else:
                     print(f"{Bcolors.WARNING}Invalid option {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
+                chosen = None
             else:
                 try:
                     chosen = paged_executors[int(chosen)-1]
-                    chosen_path, metadata = self.read_executor_metadata(chosen)
+                    metadata = executor_metadata(chosen)
                     if not self.check_metadata(metadata):
                         print(f"{Bcolors.WARNING}Invalid manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
-                        chosen_path = None
+                        chosen = None
                     else:
                         if not await self.check_commands(metadata):
                             print(f"{Bcolors.WARNING}Invalid bash dependency for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
-                            chosen_path = None
-                        metadata["name"] = chosen
+                            chosen = None
+                        else:
+                            metadata["name"] = chosen
                 except FileNotFoundError as e:
                     print(f"{Bcolors.WARNING}Not existent manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
+                    chosen = None
 
-        cmd = metadata["cmd"].format(EXECUTOR_FILE_PATH=chosen_path)
-        del metadata["cmd"]
-        return cmd, metadata
-
-    def read_executor_metadata(self, chosen):
-        chosen = Path(chosen)
-        chosen_metadata_path = self.folder / f"{chosen.stem}_manifest.json"
-        chosen_path = self.EXECUTOR_FOLDER / chosen
-        with open(chosen_metadata_path) as metadata_file:
-            data = metadata_file.read()
-            metadata = json.loads(data)
-        return chosen_path, metadata
+        return metadata
 
     @staticmethod
     def check_metadata(metadata):
@@ -206,7 +193,7 @@ class Wizard:
                     logger.debug(f"Dependency check error: {stderr}")
                 if len(stdout) == 0 and len(stderr) == 0:
                     break
-                
+
             return proc.returncode
 
         check_coros = [run_check_command(cmd) for cmd in metadata["check_cmds"]]
@@ -215,28 +202,29 @@ class Wizard:
 
     async def new_repo_executor(self, name):
         try:
-            cmd, metadata = await self.get_base_repo()
-            Wizard.set_generic_data(name, cmd, metadata["name"])
+            metadata = await self.get_base_repo()
+            Wizard.set_generic_data(name, repo_executor_name=metadata["name"])
             process_repo_var_envs(name, metadata)
             set_repo_params(name, metadata)
         except WizardCanceledOption as e:
             print(f"{Bcolors.BOLD}New repository executor not added{Bcolors.ENDC}")
 
     @staticmethod
-    def set_generic_data(name, cmd, repo_executor_name: str = None):
+    def set_generic_data(name, cmd=None, repo_executor_name: str = None):
         max_buff_size = \
             click.prompt("Max data sent to server", type=click.IntRange(min=Wizard.MAX_BUFF_SIZE), default=65536)
         for section in Wizard.EXECUTOR_SECTIONS:
             formatted_section = section.format(name)
             config.instance.add_section(formatted_section)
-        config.instance.set(Sections.EXECUTOR_DATA.format(name), "cmd", cmd)
         config.instance.set(Sections.EXECUTOR_DATA.format(name), "max_size", f"{max_buff_size}")
         if repo_executor_name:
             config.instance.set(Sections.EXECUTOR_DATA.format(name), "repo_executor", f"{repo_executor_name}")
+        else:
+            config.instance.set(Sections.EXECUTOR_DATA.format(name), "cmd", cmd)
 
     def new_custom_executor(self, name):
         cmd = click.prompt("Command to execute", default="exit 1")
-        Wizard.set_generic_data(name, cmd)
+        Wizard.set_generic_data(name, cmd=cmd)
         process_var_envs(name)
         process_params(name)
 
@@ -268,8 +256,8 @@ class Wizard:
             max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
                                          default=config.instance.get(section, "max_size"))
             config.instance.set(section, "max_size", f"{max_buff_size}")
-            _, metadata = self.read_executor_metadata(repo_name)
-            process_repo_var_envs(name,metadata)
+            metadata = executor_metadata(repo_name)
+            process_repo_var_envs(name, metadata)
         else:
             cmd = click.prompt("Command to execute",
                                default=config.instance.get(section, "cmd"))

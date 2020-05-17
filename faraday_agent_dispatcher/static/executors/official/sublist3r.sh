@@ -3,7 +3,7 @@
 set -e
 
 die(){
-    echo $1
+    echo $1 >/dev/stderr
     exit 1
 }
 
