@@ -14,6 +14,8 @@ def run_zap_proxy(path):
 
 
 def main():
+    # If the script is run outside the dispatcher the environment variables are checked.
+    # ['API_KEY', 'EXECUTOR_CONFIG_TARGET_URL', 'ZAP_PATH']
     try:
         target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
         api_key = os.environ.get('API_KEY')
@@ -22,15 +24,14 @@ def main():
         sys.exit()
 
     my_env = os.environ
-    if 'RUN_ZAP' in my_env:
-        path = my_env["RUN_ZAP"]
+    if 'ZAP_PATH' in my_env:
+        path = my_env["ZAP_PATH"]
         pid_zap = run_zap_proxy(path)
 
         if pid_zap == 0:
             print("Zap Proxy not found", file=sys.stderr)
             sys.exit()
         else:
-            time.sleep(30)
             zap = ZAPv2(apikey=api_key)
             scanID = zap.spider.scan(target)
             while int(zap.spider.status(scanID)) < 100:
