@@ -24,7 +24,7 @@ import faraday_agent_dispatcher.logger as logging
 
 logger = logging.get_logger()
 
-REPO_EXECUTOR_PAGE_SIZE = 2
+REPO_EXECUTOR_PAGE_SIZE = 5
 
 
 class Wizard:
@@ -193,7 +193,7 @@ class Wizard:
                     logger.debug(f"Dependency check error: {stderr}")
                 if len(stdout) == 0 and len(stderr) == 0:
                     break
-                
+
             return proc.returncode
 
         check_coros = [run_check_command(cmd) for cmd in metadata["check_cmds"]]
