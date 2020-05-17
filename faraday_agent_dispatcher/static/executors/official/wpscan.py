@@ -8,8 +8,8 @@ from subprocess import Popen, PIPE
 
 
 def main():
-    # Se esta usando la imagen de docker.
-    # docker pull wpscanteam/wpscan
+    # If the script is run outside the dispatcher the environment variables are checked.
+    # ['EXECUTOR_CONFIG_WPSCAN_TARGET_URL']
     url_target = os.environ.get('EXECUTOR_CONFIG_WPSCAN_TARGET_URL')
     if not url_target:
         print("URL not provided", file=sys.stderr)
@@ -23,7 +23,7 @@ def main():
             command = f'sudo docker run --rm --mount type=bind,source={tempdirname},target=/output ' \
                       f'wpscanteam/wpscan:latest -o /output/{name_ouput_file} --url {url_target} -f json'
 
-            subprocess.run(command, shell=True)
+            subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
             plugin = WPScanPlugin()
             f = open(f'{tempdirname}/{name_ouput_file}', 'r')
             f.seek(0)
