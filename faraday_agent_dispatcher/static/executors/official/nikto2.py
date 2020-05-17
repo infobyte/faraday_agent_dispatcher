@@ -20,7 +20,7 @@ def main():
         else:
             command = f'nikto -h {url_target} -p {url_port} -o {name_result}'
 
-        subprocess.run(command, shell=True)
+        subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
         plugin = NiktoPlugin()
         f = open(name_result, 'r')
         f.seek(0)
