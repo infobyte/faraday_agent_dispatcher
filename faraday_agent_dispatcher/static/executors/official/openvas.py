@@ -9,11 +9,11 @@ from pathlib import Path
 
 
 def main():
-    # Imagen Docker
-    # https://hub.docker.com/r/ictu/openvas-docker
-    url_target = os.environ.get('EXECUTOR_CONFIG_OPENVAS_TARGET_URL')
+    # If the script is run outside the dispatcher the environment variables are checked.
+    # ['EXECUTOR_CONFIG_OPENVAS_SCAN_NAME']
+    url_target = os.environ.get('EXECUTOR_CONFIG_OPENVAS_SCAN_NAME')
     if not url_target:
-        print("git URL not provided", file=sys.stderr)
+        print("URL not provided", file=sys.stderr)
         sys.exit()
 
     p = Popen(['sudo', 'docker', 'images'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -22,7 +22,7 @@ def main():
         with tempfile.TemporaryDirectory() as tempdirname:
             command = f'docker run --rm -v {tempdirname}:/openvas/results/ ictu/openvas-docker ' \
                       f'/openvas/run_scan.py 123.123.123.123,{url_target} openvas_scan_report'
-            subprocess.run(command, shell=True)
+            subprocess.run(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             plugin = OpenvasPlugin()
             name_xml = Path(tempdirname) / 'openvas_scan_report.xml'
             if name_xml.exists():
