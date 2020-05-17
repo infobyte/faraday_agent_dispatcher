@@ -21,6 +21,7 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_list,
     control_bool
 )
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 import os
 import logging
@@ -29,13 +30,23 @@ from pathlib import Path
 from configparser import DuplicateSectionError
 
 try:
-    FARADAY_PATH = Path(os.environ['FARADAY_HOME'])
+    FARADAY_PATH = Path(os.environ['FARADAY_HOME']).expanduser()
 except KeyError:
     FARADAY_PATH = Path('~').expanduser() / '.faraday'
 
 
 LOGS_PATH = FARADAY_PATH / 'logs'
 CONFIG_PATH = FARADAY_PATH / 'config'
+
+
+if not FARADAY_PATH.exists():
+    print(f"{Bcolors.WARNING}The configuration folder does not exists, creating it{Bcolors.ENDC}")
+    FARADAY_PATH.mkdir()
+if not LOGS_PATH.exists():
+    LOGS_PATH.mkdir()
+if not CONFIG_PATH.exists():
+    CONFIG_PATH.mkdir()
+
 CONFIG_FILENAME = CONFIG_PATH / 'dispatcher.ini'
 
 EXAMPLE_CONFIG_FILENAME = Path(__file__).parent / 'example_config.ini'

@@ -46,21 +46,25 @@ unit_tests:
         - dist/*
         - run_from/logs/*
       expire_in: 7 days
-    except:
-      variables:
-        - $INTEGRATION
-        - $CI_COMMIT_REF_NAME =~ /^.*ci-int.*$/
+    rules:
+      - if: '$INTEGRATION'
+        when: never
+      - if: '$CI_COMMIT_REF_NAME =~ /^.*ci-test.*$/'
+        when: never
+      - when: always
 
 integration_faraday:
     stage: post_testing
-    script:
-        - apt-get update -qy
-        - apt-get install curl -y
-        - "curl -X POST -F token=$INTEGRATION_TOKEN -F ref=master -F \"variables[DISPATCHER_REF]=$CI_COMMIT_REF_NAME\" -F \"variables[FARADAY_REF]=$FARADAY_REF\" https://gitlab.com/api/v4/projects/15311100/trigger/pipeline"
-    only:
-        variables:
-            - $CI_COMMIT_REF_NAME =~ /^(dev|master)$/
-            - $INTEGRATION
+    variables:
+        DISPATCHER_REF: $CI_COMMIT_REF_NAME
+    trigger:
+        project: faradaysec/integrationrepo
+        strategy: depend
+    rules:
+        - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
+          when: always
+        - if: $INTEGRATION
+          when: always
 
 
 publish_pypi:
@@ -71,8 +75,19 @@ publish_pypi:
       - apt-get install twine -y
       - python setup.py sdist bdist_wheel
       - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
-    only:
-      variables:
-        - $CI_COMMIT_TAG
+    rules:
+      - if: '$CI_COMMIT_TAG'
+        when: always
 
 
+#Historical integration test with faraday trigger
+#integration_faraday:
+#    stage: post_testing
+#    script:
+#        - apt-get update -qy
+#        - apt-get install curl -y
+#        - "curl -X POST -F token=$INTEGRATION_TOKEN -F ref=master -F \"variables[DISPATCHER_REF]=$CI_COMMIT_REF_NAME\" -F \"variables[FARADAY_REF]=$FARADAY_REF\" https://gitlab.com/api/v4/projects/15311100/trigger/pipeline"
+#    only:
+#        variables:
+#            - $CI_COMMIT_REF_NAME =~ /^(dev|master)$/
+#            - $INTEGRATION
