@@ -81,8 +81,7 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "replace": {Sections.TOKENS: {
                                "agent": "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446"}}},
                           {"remove": {Sections.EXECUTOR_DATA.format("ex1"): ["cmd"]},
-                           "replace": {},
-                           "expected_exception": ValueError},
+                           "replace": {}},
                           {"remove": {},
                            "replace": {Sections.EXECUTOR_DATA.format("ex1"): {"max_size": "ASDASD"}},
                            "expected_exception": ValueError},
