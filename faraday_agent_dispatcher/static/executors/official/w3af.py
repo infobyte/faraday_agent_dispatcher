@@ -13,15 +13,18 @@ def main():
         print("URL not provided", file=sys.stderr)
         sys.exit()
 
+    # If the script is run outside the dispatcher the environment variables are checked.
+    # ['W3AF_PATH']
     if 'W3AF_PATH' in os.environ:
         with tempfile.TemporaryDirectory() as tempdirname:
             name_result = Path(tempdirname) / 'config_report_file.w3af'
             file_w3af = open(name_result, "w")
             command_text = f'plugins\n output console,xml_file\n output\n output config xml_file\n ' \
                            f'set output_file {tempdirname}/output-w3af.xml\n set verbose True\n back\n ' \
-                           f'output config console\n set verbose False\n back\n crawl all, !bing_spider, !google_spider,' \
-                           f' !spider_man\n crawl\n grep all\n grep\n audit all\n audit\n bruteforce all\n bruteforce\n ' \
-                           f'back\n target\n set target {url_target}\n back\n start\n exit'
+                           f'output config console\n set verbose False\n back\n crawl all, !bing_spider, ' \
+                           f'!google_spider, !spider_man\n crawl\n grep all\n grep\n audit all\n audit\n ' \
+                           f'bruteforce all\n bruteforce\n back\n target\n set target {url_target}\n ' \
+                           f'back\n start\n exit'
 
             file_w3af.write(command_text)
             file_w3af.close()
@@ -29,7 +32,8 @@ def main():
                 os.chdir(path=os.environ.get('W3AF_PATH'))
 
             except FileNotFoundError:
-                print("No such file or directory", file=sys.stderr)
+                print("The directory where w3af is located could not be found. Check environment variable W3AF_PATH",
+                      file=sys.stderr)
                 sys.exit()
 
             if os.path.isfile('w3af_console'):
@@ -38,7 +42,8 @@ def main():
                 plugin.parseOutputString(f'{tempdirname}/output-w3af.xml')
                 print(plugin.get_json())
             else:
-                print("No such file or directory", file=sys.stderr)
+                print("w3af_console file could not be found. For this reason the command cannot be run",
+                      file=sys.stderr)
                 sys.exit()
 
     else:
