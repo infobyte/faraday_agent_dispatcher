@@ -8,14 +8,16 @@ import time
 
 def main():
     my_envs = os.environ
+    # If the script is run outside the dispatcher the environment variables are checked.
+    # ['EXECUTOR_CONFIG_NAME_URL', 'ARACHNI_PATH']
     if 'EXECUTOR_CONFIG_NAME_URL' in my_envs:
         url_analyze = os.environ.get('EXECUTOR_CONFIG_NAME_URL')
     else:
         print("Environment variables no set", file=sys.stderr)
         sys.exit()
 
-    if 'RUN_ARACHNI' in my_envs:
-        path_arachni = os.environ.get('RUN_ARACHNI')
+    if 'ARACHNI_PATH' in my_envs:
+        path_arachni = os.environ.get('ARACHNI_PATH')
     else:
         print("Environment variables no set", file=sys.stderr)
         sys.exit()

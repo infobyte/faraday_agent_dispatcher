@@ -3,7 +3,7 @@
     "ARACHNI_NAME_URL": true
   },
   "environment_variables": [
-    "ARACHNI_RUN_ARACHNI"
+    "ARACHNI_PATH"
   ],
   "check_cmds": [
 
