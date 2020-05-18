@@ -19,13 +19,13 @@ def main():
     output, err = p.communicate(b"input data that is passed to subprocess' stdin")
     if str(output).find('wpscanteam/wpscan') >= 0:
         with tempfile.TemporaryDirectory() as tempdirname:
-            name_ouput_file = 'wpscan-output.json'
+            name_output_file = 'wpscan-output.json'
             command = f'sudo docker run --rm --mount type=bind,source={tempdirname},target=/output ' \
-                      f'wpscanteam/wpscan:latest -o /output/{name_ouput_file} --url {url_target} -f json'
+                      f'wpscanteam/wpscan:latest -o /output/{name_output_file} --url {url_target} -f json'
 
             subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
             plugin = WPScanPlugin()
-            f = open(f'{tempdirname}/{name_ouput_file}', 'r')
+            f = open(f'{tempdirname}/{name_output_file}', 'r')
             f.seek(0)
             plugin.parseOutputString(f.read())
             print(plugin.get_json())
