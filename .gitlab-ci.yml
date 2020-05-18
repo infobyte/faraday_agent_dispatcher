@@ -11,6 +11,12 @@ variables:
     FARADAY_REF: white/dev
     EXECUTOR_DIR: ./basic_executor.py
 
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: never
+    - when: always
+
 cache:
   paths:
     - "$CI_PROJECT_DIR/.cache/pip"
@@ -46,10 +52,12 @@ unit_tests:
         - dist/*
         - run_from/logs/*
       expire_in: 7 days
-    except:
-      variables:
-        - $INTEGRATION
-        - $CI_COMMIT_REF_NAME =~ /^.*ci-int.*$/
+    rules:
+      - if: '$INTEGRATION'
+        when: never
+      - if: '$CI_COMMIT_REF_NAME =~ /^.*ci-test.*$/'
+        when: never
+      - when: always
 
 integration_faraday:
     stage: post_testing
@@ -58,10 +66,11 @@ integration_faraday:
     trigger:
         project: faradaysec/integrationrepo
         strategy: depend
-    only:
-        variables:
-            - $CI_COMMIT_REF_NAME =~ /^(dev|master)$/
-            - $INTEGRATION
+    rules:
+        - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
+          when: always
+        - if: $INTEGRATION
+          when: always
 
 
 publish_pypi:
@@ -72,10 +81,9 @@ publish_pypi:
       - apt-get install twine -y
       - python setup.py sdist bdist_wheel
       - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
-    only:
-      variables:
-        - $CI_COMMIT_TAG
-
+    rules:
+      - if: '$CI_COMMIT_TAG'
+        when: always
 
 
 #Historical integration test with faraday trigger
