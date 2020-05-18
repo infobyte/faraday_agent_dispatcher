@@ -1,6 +1,6 @@
 {
   "arguments": {
-    "ZAP_TARGET_URL": true
+    "TARGET_URL": true
   },
   "environment_variables": [
     "API_KEY",
