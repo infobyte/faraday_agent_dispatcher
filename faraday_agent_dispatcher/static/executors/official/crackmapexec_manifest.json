@@ -1,0 +1,14 @@
+{
+  "arguments": {
+    "CRACKMAPEXEC_IP":  true,
+    "CRACKMAPEXEC_USER": false,
+    "CRACKMAPEXEC_PASS": false
+  },
+  "environment_variables": [
+
+  ],
+  "check_cmds": [
+    "cme -v"
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}
