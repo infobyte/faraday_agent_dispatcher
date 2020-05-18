@@ -47,7 +47,7 @@ def process_agent():
             },
             "ssl_cert": {
                 "default_value": lambda _: "",
-                "type": click.Path(allow_dash=False),
+                "type": click.Path(allow_dash=False, dir_okay=False),
             },
             "api_port":  {
                 "default_value": lambda _ssl: "443" if _ssl else "5985",
@@ -104,8 +104,13 @@ def process_agent():
                         continue
             elif opt == "ssl_cert":
                 if ssl:
-                    value = ask_value(agent_dict, opt, section, ssl)
-                    config.instance.set(section, opt, str(value))
+                    path = None
+                    while path is None:
+                        value = ask_value(agent_dict, opt, section, ssl)
+                        if value is "" or Path(value).exists():
+                            path = value
+
+                    config.instance.set(section, opt, str(path))
             else:
                 value = ask_value(agent_dict, opt, section, ssl)
                 if opt == "ssl":
