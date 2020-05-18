@@ -43,8 +43,7 @@ def main():
                 print(plugin.get_json())
             else:
                 print(f'w3af_console file could not be found. For this reason the command cannot be run.'
-                      f'Actual value = {os.environ.get("W3AF_PATH")}/w3af_console ',
-                      file=sys.stderr)
+                      f'Actual value = {os.environ.get("W3AF_PATH")}/w3af_console ', file=sys.stderr)
                 sys.exit()
 
     else:
