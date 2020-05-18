@@ -4,7 +4,7 @@
   },
   "environment_variables": [
     "API_KEY",
-    "RUN_ZAP"
+    "ZAP_PATH"
   ],
   "check_cmds": [
 
