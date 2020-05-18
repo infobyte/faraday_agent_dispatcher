@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 import os
 import sys
-from faraday_plugins.plugins.repo.nikto.plugin import NiktoPlugin
 import subprocess
 import tempfile
+from faraday_plugins.plugins.repo.nikto.plugin import NiktoPlugin
+import faraday_agent_dispatcher.logger as logging
+
+logger = logging.get_logger()
+logging.setup_logging()
 
 
 def main():
+    # If the script is run outside the dispatcher the environment variables are checked.
+    # ['EXECUTOR_CONFIG_TARGET_URL', 'EXECUTOR_CONFIG_TARGET_PORT']
     url_target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
     url_port = os.environ.get('EXECUTOR_CONFIG_TARGET_PORT')
     if not url_target:
@@ -20,7 +26,8 @@ def main():
         else:
             command = f'nikto -h {url_target} -p {url_port} -o {name_result}'
 
-        subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
+        nikto_process = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+        logger.info(f"Nikto stdout: {nikto_process.stdout.decode('utf-8')}")
         plugin = NiktoPlugin()
         f = open(name_result, 'r')
         f.seek(0)
