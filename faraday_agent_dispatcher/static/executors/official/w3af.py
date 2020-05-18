@@ -32,8 +32,8 @@ def main():
                 os.chdir(path=os.environ.get('W3AF_PATH'))
 
             except FileNotFoundError:
-                print("The directory where w3af is located could not be found. Check environment variable W3AF_PATH",
-                      file=sys.stderr)
+                print(f'The directory where w3af is located could not be found. Check environment variable W3AF_PATH = '
+                      f'{os.environ.get("W3AF_PATH")}', file=sys.stderr)
                 sys.exit()
 
             if os.path.isfile('w3af_console'):
@@ -42,7 +42,8 @@ def main():
                 plugin.parseOutputString(f'{tempdirname}/output-w3af.xml')
                 print(plugin.get_json())
             else:
-                print("w3af_console file could not be found. For this reason the command cannot be run",
+                print(f'w3af_console file could not be found. For this reason the command cannot be run.'
+                      f'Actual value = {os.environ.get("W3AF_PATH")}/w3af_console ',
                       file=sys.stderr)
                 sys.exit()
 
