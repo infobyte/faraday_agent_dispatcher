@@ -20,6 +20,8 @@ import ssl
 import json
 
 import asyncio
+from pathlib import Path
+
 import websockets
 from aiohttp.client_exceptions import ClientResponseError
 
@@ -61,8 +63,10 @@ class Dispatcher:
             executor_name:
                 Executor(executor_name, config) for executor_name in executors_list_str
         }
-        ssl_cert_path = config[Sections.SERVER].get("ssl_cert", None)
         self.ws_ssl_enabled = self.api_ssl_enabled = config[Sections.SERVER].get("ssl", "False").lower() in ["t", "true"]
+        ssl_cert_path = config[Sections.SERVER].get("ssl_cert", None)
+        if not Path(ssl_cert_path).exists():
+            raise ValueError(f"SSL cert does not exist in path {ssl_cert_path}")
         self.api_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.api_ssl_enabled and ssl_cert_path else {}
         self.ws_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ws_ssl_enabled and ssl_cert_path else {}
         self.execution_id = None
