@@ -11,8 +11,6 @@ def main():
     # ['EXECUTOR_CONFIG_TARGET_URL', 'EXECUTOR_CONFIG_TARGET_PORT']
     url_target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
     url_port = os.environ.get('EXECUTOR_CONFIG_TARGET_PORT')
-    url_target = 'localhost'
-    url_port = 8080
     if not url_target:
         print("URL not provided", file=sys.stderr)
         sys.exit()
