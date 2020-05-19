@@ -4,10 +4,6 @@ import sys
 import subprocess
 import tempfile
 from faraday_plugins.plugins.repo.nikto.plugin import NiktoPlugin
-import faraday_agent_dispatcher.logger as logging
-
-logger = logging.get_logger()
-logging.setup_logging()
 
 
 def main():
@@ -26,8 +22,9 @@ def main():
         else:
             command = f'nikto -h {url_target} -p {url_port} -o {name_result}'
 
-        nikto_process = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
-        logger.info(f"Nikto stdout: {nikto_process.stdout.decode('utf-8')}")
+        nikto_process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print(f"Nikto stdout: {nikto_process.stdout.decode('utf-8')}", file=sys.stderr)
+        print(f"Nikto stderr: {nikto_process.stdout.decode('utf-8')}", file=sys.stderr)
         plugin = NiktoPlugin()
         f = open(name_result, 'r')
         f.seek(0)
