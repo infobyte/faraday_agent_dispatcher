@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import os
 import sys
-from faraday_plugins.plugins.repo.wpscan.plugin import WPScanPlugin
 import subprocess
 import tempfile
+from pathlib import Path
+from faraday_plugins.plugins.repo.wpscan.plugin import WPScanPlugin
 
 
 def main():
@@ -15,6 +16,7 @@ def main():
         sys.exit()
 
     with tempfile.TemporaryDirectory() as tempdirname:
+        tempdir = Path(tempdirname)
         name_output_file = 'wpscan-output.json'
         command = f'docker run --rm --mount type=bind,source={tempdirname},target=/output ' \
                   f'wpscanteam/wpscan:latest -o /output/{name_output_file} --url {url_target} -f json'
@@ -26,7 +28,8 @@ def main():
             print(f"Wpscan stderr: {wpscan_process.stderr.decode('utf-8')}", file=sys.stderr)
 
         plugin = WPScanPlugin()
-        with open(f'{tempdirname}/{name_output_file}', 'r') as f:
+        file = tempdir / name_output_file
+        with open(file, 'r') as f:
             plugin.parseOutputString(f.read())
             print(plugin.get_json())
 
