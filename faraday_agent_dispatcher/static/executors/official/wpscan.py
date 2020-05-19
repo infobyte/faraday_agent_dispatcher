@@ -19,11 +19,11 @@ def main():
         command = f'docker run --rm --mount type=bind,source={tempdirname},target=/output ' \
                   f'wpscanteam/wpscan:latest -o /output/{name_output_file} --url {url_target} -f json'
 
-        wpscan_proccess = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if len(wpscan_proccess.stdout) > 0:
-            print(f"Wpscan stdout: {wpscan_proccess.stdout.decode('utf-8')}", file=sys.stderr)
-        if len(wpscan_proccess.stderr) > 0:
-            print(f"Wpscan stderr: {wpscan_proccess.stderr.decode('utf-8')}", file=sys.stderr)
+        wpscan_process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if len(wpscan_process.stdout) > 0:
+            print(f"Wpscan stdout: {wpscan_process.stdout.decode('utf-8')}", file=sys.stderr)
+        if len(wpscan_process.stderr) > 0:
+            print(f"Wpscan stderr: {wpscan_process.stderr.decode('utf-8')}", file=sys.stderr)
 
         plugin = WPScanPlugin()
         with open(f'{tempdirname}/{name_output_file}', 'r') as f:
