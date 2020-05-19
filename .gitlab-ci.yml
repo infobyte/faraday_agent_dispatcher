@@ -11,6 +11,12 @@ variables:
     FARADAY_REF: white/dev
     EXECUTOR_DIR: ./basic_executor.py
 
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: never
+    - when: always
+
 cache:
   paths:
     - "$CI_PROJECT_DIR/.cache/pip"
