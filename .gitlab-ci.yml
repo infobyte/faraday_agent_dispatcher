@@ -45,9 +45,11 @@ unit_tests:
         - pip install pytest pytest-cov pytest-aiohttp
         - python setup.py install
         - mkdir run_from
-        - cd run_from && mkdir logs && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --color=yes --disable-warnings
+        - cd run_from && mkdir logs && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --cov-config=../tests/unittests/.coveragerc --color=yes --disable-warnings --junitxml=report.xml
+        - cp report.xml ../
     artifacts:
-      when: on_failure
+      reports:
+        junit: report.xml
       paths:
         - dist/*
         - run_from/logs/*
