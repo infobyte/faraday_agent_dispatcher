@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import os
-from faraday_plugins.plugins.manager import PluginsManager
 import sys
 import tempfile
 import subprocess
+from pathlib import Path
+from faraday_plugins.plugins.manager import PluginsManager
 
 
 def main():
@@ -24,8 +25,9 @@ def main():
 
     os.chdir(path_arachni)
     with tempfile.TemporaryDirectory() as tempdirname:
-        name_result = f'{tempdirname}/report.afr'
-        xml_result = f'{tempdirname}/xml_arachni_report.xml'
+        tempdir = Path(tempdirname)
+        name_result = tempdir / 'report.afr'
+        xml_result = tempdir / 'xml_arachni_report.xml'
         arachni_process = subprocess.Popen([f'./arachni {url_analyze} --report-save-path={name_result}'],
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         (out, err) = arachni_process.communicate()
