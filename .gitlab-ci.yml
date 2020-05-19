@@ -57,7 +57,7 @@ unit_tests:
         when: never
       - if: '$CI_COMMIT_REF_NAME =~ /^.*ci-test.*$/'
         when: never
-      - when: always
+      - when: on_success
 
 integration_faraday:
     stage: post_testing
@@ -68,9 +68,9 @@ integration_faraday:
         strategy: depend
     rules:
         - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
-          when: always
+          when: on_success
         - if: $INTEGRATION
-          when: always
+          when: on_success
 
 
 publish_pypi:
@@ -83,7 +83,7 @@ publish_pypi:
       - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
     rules:
       - if: '$CI_COMMIT_TAG'
-        when: always
+        when: on_success
 
 
 #Historical integration test with faraday trigger
