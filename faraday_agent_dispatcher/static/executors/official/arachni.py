@@ -29,15 +29,19 @@ def main():
         arachni_process = subprocess.Popen([f'./arachni {url_analyze} --report-save-path={name_result}'],
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         (out, err) = arachni_process.communicate()
-        print(f"Arachni stdout: {out}", file=sys.stderr)
-        print(f"Arachni stderr: {err}", file=sys.stderr)
+        if len(out) > 0:
+            print(f"Arachni stdout: {out.decode('utf-8')}", file=sys.stderr)
+        if len(err) > 0:
+            print(f"Arachni stderr: {err.decode('utf-8')}", file=sys.stderr)
 
         arachni_reporter_process = subprocess.Popen([f'./arachni_reporter {name_result} '
                                                      f'--reporter=xml:outfile={xml_result}'],
                                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         (out, err) = arachni_reporter_process.communicate()
-        print(f"Arachni Reporter stdout: {out}", file=sys.stderr)
-        print(f"Arachni Reporter stderr: {err}", file=sys.stderr)
+        if len(out) > 0:
+            print(f"Arachni Reporter stdout: {out.decode('utf-8')}", file=sys.stderr)
+        if len(err) > 0:
+            print(f"Arachni Reporter stderr: {err.decode('utf-8')}", file=sys.stderr)
         plugin = PluginsManager().get_plugin("arachni")
         plugin.parseOutputString(xml_result)
         print(plugin.get_json())
@@ -45,3 +49,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
