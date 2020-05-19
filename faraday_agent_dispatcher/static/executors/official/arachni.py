@@ -3,7 +3,7 @@ import os
 from faraday_plugins.plugins.manager import PluginsManager
 import sys
 import tempfile
-import time
+import subprocess
 
 
 def main():
@@ -26,8 +26,18 @@ def main():
     with tempfile.TemporaryDirectory() as tempdirname:
         name_result = f'{tempdirname}/report.afr'
         xml_result = f'{tempdirname}/xml_arachni_report.xml'
-        os.system(f'./arachni {url_analyze} --report-save-path={name_result}')
-        os.system(f'./arachni_reporter {name_result} --reporter=xml:outfile={xml_result}')
+        arachni_process = subprocess.Popen([f'./arachni {url_analyze} --report-save-path={name_result}'],
+                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        (out, err) = arachni_process.communicate()
+        print(f"Arachni stdout: {out}", file=sys.stderr)
+        print(f"Arachni stderr: {err}", file=sys.stderr)
+
+        arachni_reporter_process = subprocess.Popen([f'./arachni_reporter {name_result} '
+                                                     f'--reporter=xml:outfile={xml_result}'],
+                                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        (out, err) = arachni_reporter_process.communicate()
+        print(f"Arachni Reporter stdout: {out}", file=sys.stderr)
+        print(f"Arachni Reporter stderr: {err}", file=sys.stderr)
         plugin = PluginsManager().get_plugin("arachni")
         plugin.parseOutputString(xml_result)
         print(plugin.get_json())
@@ -35,4 +45,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
