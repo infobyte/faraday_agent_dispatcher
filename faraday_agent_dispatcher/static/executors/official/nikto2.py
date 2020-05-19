@@ -17,7 +17,8 @@ def main():
         sys.exit()
 
     with tempfile.TemporaryDirectory() as tempdirname:
-        name_result = Path(tempdirname) / 'output.xml'
+        tmpdir = Path(tempdirname)
+        name_result = tmpdir / 'output.xml'
         if not url_port:
             command = f'nikto -h {url_target} -o {name_result}'
         else:
