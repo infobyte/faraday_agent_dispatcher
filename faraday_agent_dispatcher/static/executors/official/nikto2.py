@@ -24,7 +24,7 @@ def main():
 
         nikto_process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(f"Nikto stdout: {nikto_process.stdout.decode('utf-8')}", file=sys.stderr)
-        print(f"Nikto stderr: {nikto_process.stdout.decode('utf-8')}", file=sys.stderr)
+        print(f"Nikto stderr: {nikto_process.stderr.decode('utf-8')}", file=sys.stderr)
         plugin = NiktoPlugin()
         f = open(name_result, 'r')
         f.seek(0)
