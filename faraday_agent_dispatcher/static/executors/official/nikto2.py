@@ -3,6 +3,7 @@ import os
 import sys
 import subprocess
 import tempfile
+from pathlib import Path
 from faraday_plugins.plugins.repo.nikto.plugin import NiktoPlugin
 
 
@@ -16,7 +17,7 @@ def main():
         sys.exit()
 
     with tempfile.TemporaryDirectory() as tempdirname:
-        name_result = f'{tempdirname}/output.xml'
+        name_result = Path(tempdirname) / 'output.xml'
         if not url_port:
             command = f'nikto -h {url_target} -o {name_result}'
         else:
