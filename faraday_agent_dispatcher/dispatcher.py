@@ -20,11 +20,16 @@ import ssl
 import json
 
 import asyncio
+from asyncio import Task
+from typing import List
+
 import websockets
+from websockets.exceptions import ConnectionClosedError
 from aiohttp.client_exceptions import ClientResponseError
 
 from faraday_agent_dispatcher.config import reset_config
 from faraday_agent_dispatcher.executor_helper import StdErrLineProcessor, StdOutLineProcessor
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
 import faraday_agent_dispatcher.logger as logging
 
@@ -66,6 +71,7 @@ class Dispatcher:
         self.api_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.api_ssl_enabled and ssl_cert_path else {}
         self.ws_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ws_ssl_enabled and ssl_cert_path else {}
         self.execution_id = None
+        self.executor_tasks: List[Task] = []
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
@@ -156,9 +162,13 @@ class Dispatcher:
 
     async def run_await(self):
         while True:
-            # Next line must be uncommented, when faraday (and dispatcher) maintains the keep alive
-            data = await self.websocket.recv()
-            asyncio.create_task(self.run_once(data))
+            try:
+                data = await self.websocket.recv()
+                executor_task = asyncio.create_task(self.run_once(data))
+                self.executor_tasks.append(executor_task)
+            except ConnectionClosedError as e:
+                logger.info("The server ended connection")
+                break
 
     async def run_once(self, data: str = None, out_func=None):
         out_func = out_func if out_func is not None else self.websocket.send
@@ -319,3 +329,15 @@ class Dispatcher:
             # If the config is not set, use async.io default
         )
         return process
+
+    async def close(self, signal):
+        await self.websocket.send(
+            json.dumps({
+                "action": "LEAVE_AGENT",
+                "token": self.websocket_token,
+                "reason": f"{signal} received",
+            })
+        )
+        for task in self.executor_tasks:
+            task.cancel()
+        await self.websocket.close(code=1000, reason=f"{signal} received")

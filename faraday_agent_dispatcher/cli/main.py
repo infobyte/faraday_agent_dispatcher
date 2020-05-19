@@ -17,6 +17,7 @@
 
 """Console script for faraday_agent_dispatcher."""
 import os
+import signal
 import sys
 
 import click
@@ -64,6 +65,12 @@ async def main(config_file, logger):
             print(f'Try checking your config file located at {Bcolors.BOLD}'
                   f'{config.CONFIG_FILENAME}{Bcolors.ENDC}')
             return 1
+
+        loop = asyncio.get_event_loop()
+        for signame in ('SIGINT', 'SIGTERM'):
+            loop.add_signal_handler(getattr(signal, signame),
+                                    lambda: asyncio.ensure_future(dispatcher.close(signame)))
+
         await dispatcher.register()
         await dispatcher.connect()
 
