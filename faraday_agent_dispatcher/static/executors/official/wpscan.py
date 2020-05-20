@@ -28,8 +28,8 @@ def main():
             print(f"Wpscan stderr: {wpscan_process.stderr.decode('utf-8')}", file=sys.stderr)
 
         plugin = WPScanPlugin()
-        file = tempdir / name_output_file
-        with open(file, 'r') as f:
+        out_file = tempdir / name_output_file
+        with open(out_file, 'r') as f:
             plugin.parseOutputString(f.read())
             print(plugin.get_json())
 
