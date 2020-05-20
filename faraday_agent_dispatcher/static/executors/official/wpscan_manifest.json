@@ -1,0 +1,13 @@
+{
+  "arguments": {
+    "WPSCAN_TARGET_URL": true
+  },
+  "environment_variables": [
+
+  ],
+  "check_cmds": [
+    "docker -v",
+    "docker images -q wpscanteam/wpscan"
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}

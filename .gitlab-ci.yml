@@ -45,9 +45,11 @@ unit_tests:
         - pip install pytest pytest-cov pytest-aiohttp
         - python setup.py install
         - mkdir run_from
-        - cd run_from && mkdir logs && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --color=yes --disable-warnings
+        - cd run_from && mkdir logs && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --cov-config=../tests/unittests/.coveragerc --color=yes --disable-warnings --junitxml=report.xml
+        - cp report.xml ../
     artifacts:
-      when: on_failure
+      reports:
+        junit: report.xml
       paths:
         - dist/*
         - run_from/logs/*
@@ -57,7 +59,7 @@ unit_tests:
         when: never
       - if: '$CI_COMMIT_REF_NAME =~ /^.*ci-test.*$/'
         when: never
-      - when: always
+      - when: on_success
 
 integration_faraday:
     stage: post_testing
@@ -68,9 +70,9 @@ integration_faraday:
         strategy: depend
     rules:
         - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
-          when: always
+          when: on_success
         - if: $INTEGRATION
-          when: always
+          when: on_success
 
 
 publish_pypi:
@@ -83,7 +85,7 @@ publish_pypi:
       - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
     rules:
       - if: '$CI_COMMIT_TAG'
-        when: always
+        when: on_success
 
 
 #Historical integration test with faraday trigger
