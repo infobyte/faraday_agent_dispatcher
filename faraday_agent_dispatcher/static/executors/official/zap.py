@@ -37,14 +37,12 @@ def main():
             while int(zap.spider.status(scanID)) < 100:
                 time.sleep(1)
 
-            ft = tempfile.TemporaryFile('w+t')
-            ft.write(zap.core.xmlreport())
-            ft.seek(0)
-            zap.core.shutdown()
-            plugin = PluginsManager().get_plugin("zap")
-            plugin.parseOutputString(ft.read())
-            ft.close()
-            print(plugin.get_json())
+            with tempfile.TemporaryFile('w+t') as ft:
+                ft.write(zap.core.xmlreport())
+                zap.core.shutdown()
+                plugin = PluginsManager().get_plugin("zap")
+                plugin.parseOutputString(ft.read())
+                print(plugin.get_json())
     else:
         print("ZAP environment variable not found", file=sys.stderr)
         sys.exit()
