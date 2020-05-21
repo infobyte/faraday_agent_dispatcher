@@ -6,7 +6,8 @@
 
   ],
   "check_cmds": [
-    "sublist3r --help"
+    "jq --version",
+    "getent --version"
   ],
   "cmd": "bash {EXECUTOR_FILE_PATH}"
 }
