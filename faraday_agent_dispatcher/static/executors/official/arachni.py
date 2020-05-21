@@ -14,13 +14,13 @@ def main():
     if 'EXECUTOR_CONFIG_NAME_URL' in my_envs:
         url_analyze = os.environ.get('EXECUTOR_CONFIG_NAME_URL')
     else:
-        print("Environment variables no set", file=sys.stderr)
+        print("Param NAME_URL no passed", file=sys.stderr)
         sys.exit()
 
     if 'ARACHNI_PATH' in my_envs:
         path_arachni = os.environ.get('ARACHNI_PATH')
     else:
-        print("Environment variables no set", file=sys.stderr)
+        print("Environment variable ARACHNI_PATH no set", file=sys.stderr)
         sys.exit()
 
     os.chdir(path_arachni)
