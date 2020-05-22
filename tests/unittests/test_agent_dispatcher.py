@@ -139,8 +139,16 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "expected_exception": ValueError
                            },
                           {"remove": {},
-                           "replace": {}}
-                          ])
+                           "replace": {}
+                           },
+                          # X SSL cert is not an existent file
+                          {
+                            "remove": {},
+                            "replace": {Sections.SERVER: {"ssl": "True","ssl_cert": "/tmp/sarasa.pub"}},
+                            "expected_exception": ValueError
+                          },
+                          ],
+                         )
 def test_basic_built(tmp_custom_config, config_changes_dict):
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
@@ -209,7 +217,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                              }
                          ])
 async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,
-                                     test_logger_handler):
+                                  test_logger_handler):
     # Config
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
