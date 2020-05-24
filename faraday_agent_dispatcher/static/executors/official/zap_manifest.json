@@ -1,10 +1,9 @@
 {
   "arguments": {
-    "TARGET_URL": true
+    "TARGET_URL": true,
+    "API_KEY": true
   },
   "environment_variables": [
-    "API_KEY",
-    "ZAP_PATH"
   ],
   "check_cmds": [
 
