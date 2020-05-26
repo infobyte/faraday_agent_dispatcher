@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 import json
 
@@ -10,6 +9,9 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_bool
 )
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
+from faraday_agent_dispatcher.logger import get_logger
+
+logger = get_logger()
 
 
 def get_repo_path(repo_name):
@@ -70,9 +72,11 @@ class Executor:
                 control_bool(option, value)
 
     async def check_cmds(self):
+        if self.repo_name is None:
+            return True
         metadata = executor_metadata(self.repo_name)
         if not await check_commands(metadata):
-            print(f"{Bcolors.WARNING}Invalid bash dependency for {Bcolors.BOLD}{self.repo_name}{Bcolors.ENDC}")
+            logger.info(f"{Bcolors.WARNING}Invalid bash dependency for {Bcolors.BOLD}{self.repo_name}{Bcolors.ENDC}")
             return False
         else:
             return True
