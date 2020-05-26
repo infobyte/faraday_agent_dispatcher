@@ -90,6 +90,12 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
     return agent_websocket_token
 
 
+def get_base(test_config: FaradayTestConfig):
+    async def base(request):
+        return web.HTTPOk()
+    return base
+
+
 def get_bulk_create(test_config: FaradayTestConfig):
     async def bulk_create(request):
         error = verify_token(test_config, request)
@@ -153,6 +159,7 @@ def tmp_custom_config(config=None):
 
 async def aiohttp_faraday_client(aiohttp_client, aiohttp_server, test_config: FaradayTestConfig):
     app = web.Application()
+    app.router.add_get("", get_base(test_config))
     app.router.add_post(f"/_api/v2/ws/{test_config.workspace}/agent_registration/",
                         get_agent_registration(test_config))
     app.router.add_post('/_api/v2/agent_websocket_token/', get_agent_websocket_token(test_config))

@@ -26,10 +26,12 @@ from typing import List
 
 import websockets
 from websockets.exceptions import ConnectionClosedError
-from aiohttp.client_exceptions import ClientResponseError
+from aiohttp.client_exceptions import ClientResponseError, ClientConnectorError, ClientConnectorCertificateError, \
+    ClientConnectorSSLError
 
 from faraday_agent_dispatcher.config import reset_config
 from faraday_agent_dispatcher.executor_helper import StdErrLineProcessor, StdOutLineProcessor
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
 import faraday_agent_dispatcher.logger as logging
 
@@ -88,6 +90,8 @@ class Dispatcher:
         return websocket_token_json["token"]
 
     async def register(self):
+        if not await self.check_connection():
+            return
 
         if self.agent_token is None:
             registration_token = self.agent_token = config.get(Sections.TOKENS, "registration")
@@ -343,3 +347,20 @@ class Dispatcher:
         for task in self.executor_tasks:
             task.cancel()
         await self.websocket.close(code=1000, reason=f"{signal} received")
+
+    async def check_connection(self):
+        server_url = api_url(self.host, self.api_port, secure=self.api_ssl_enabled)
+        logger.debug(f"Validate server ssl certificate {server_url}")
+        try:
+            await self.session.get(server_url)
+        except (ClientConnectorCertificateError, ClientConnectorSSLError) as e:
+            logger.debug("Invalid SSL Certificate", exc_info=e)
+            print(f"{Bcolors.FAIL}Invalid SSL Certificate, use `faraday-dispatcher config-wizard` "
+                  f" and check the certificate configuration")
+            return False
+        except ClientConnectorError as e:
+            logger.error("Can not connect to Faraday server")
+            logger.debug("Connect failed traceback", exc_info=e)
+            return False
+        return True
+

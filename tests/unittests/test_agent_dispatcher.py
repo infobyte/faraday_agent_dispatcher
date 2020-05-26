@@ -214,6 +214,31 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Registered successfully"},
                                  ],
+                             },
+                             # 3 Cannot conect
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "host": "sarasa.com"
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "ERROR", "msg": "Can not connect to Faraday server"},
+                                 ],
+                                 "expected_exception": True
+                             },
+                             # 4 Invalid SSL
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "ssl": "True",
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'wrong.crt')
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
+                                 ],
+                                 "expected_exception": True
                              }
                          ])
 async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,
