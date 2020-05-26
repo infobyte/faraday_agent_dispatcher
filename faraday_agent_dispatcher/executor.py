@@ -2,30 +2,26 @@ import os
 from pathlib import Path
 import json
 
-from faraday_agent_dispatcher.cli.utils.model_load import executor_metadata, executor_folder
+from faraday_agent_dispatcher.utils.metadata_utils import executor_metadata, executor_folder, check_commands
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.control_values_utils import (
     control_int,
     control_str,
     control_bool
 )
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 
 def get_repo_path(repo_name):
 
-    EXECUTOR_FOLDER = Path(__file__).parent.parent / 'static' / 'executors'
-    if "WIZARD_DEV" in os.environ:
-        folder = EXECUTOR_FOLDER / "dev"
-    else:
-        folder = EXECUTOR_FOLDER / "official"
+    folder = executor_folder()
     chosen = Path(repo_name)
     chosen_metadata_path = folder / f"{chosen.stem}_manifest.json"
-    chosen_path = EXECUTOR_FOLDER / chosen
+    chosen_path = folder / chosen
     with open(chosen_metadata_path) as metadata_file:
         data = metadata_file.read()
         metadata = json.loads(data)
     return metadata["cmd"].format(EXECUTOR_FILE_PATH=chosen_path)
-
 
 
 class Executor:
@@ -44,10 +40,10 @@ class Executor:
         executor_section = Sections.EXECUTOR_DATA.format(name)
         params_section = Sections.EXECUTOR_PARAMS.format(name)
         varenvs_section = Sections.EXECUTOR_VARENVS.format(name)
-        repo_name = config[executor_section].get("repo_executor", None)
-        if repo_name:
-            metadata = executor_metadata(repo_name)
-            repo_path = executor_folder() / repo_name
+        self.repo_name = config[executor_section].get("repo_executor", None)
+        if self.repo_name:
+            metadata = executor_metadata(self.repo_name)
+            repo_path = executor_folder() / self.repo_name
             self.cmd = metadata['cmd'].format(EXECUTOR_FILE_PATH=repo_path)
         else:
             self.cmd = config[executor_section].get("cmd")
@@ -72,3 +68,11 @@ class Executor:
             for option in config[params_section]:
                 value = config.get(params_section, option)
                 control_bool(option, value)
+
+    async def check_cmds(self):
+        metadata = executor_metadata(self.repo_name)
+        if not await check_commands(metadata):
+            print(f"{Bcolors.WARNING}Invalid bash dependency for {Bcolors.BOLD}{self.repo_name}{Bcolors.ENDC}")
+            return False
+        else:
+            return True
