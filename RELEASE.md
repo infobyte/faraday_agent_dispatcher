@@ -1,3 +1,18 @@
+1.2 [May 27th, 2020]:
+---
+ * Now we have official executors, packaged with the dispatcher
+ * Fix error when killed by signal
+ * Fix error when server close connection
+ * Fix error when ssl certificate does not exists
+ * Fix error when folder `~/.faraday` does not exists, creating it
+ * The new official executors are:  
+    * nessus
+    * nikto
+    * nmap
+    * sublist3r
+    * wpscan
+    * w3af
+
 1.1 [Apr 22th, 2020]:
 ---
  * The dispatcher now runs with a `faraday-dispatcher run` command
