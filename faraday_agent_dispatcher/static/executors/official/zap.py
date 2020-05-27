@@ -26,12 +26,10 @@ def main():
         while int(zap.spider.status(scanID)) < 100:
             time.sleep(1)
 
-        with tempfile.TemporaryFile('w+t') as f:
-            f.write(zap.core.xmlreport())
-            f.seek(0)
-            plugin = PluginsManager().get_plugin("zap")
-            plugin.parseOutputString(f.read())
-            print(plugin.get_json())
+        zap_result = zap.core.xmlreport()
+        plugin = PluginsManager().get_plugin("zap")
+        plugin.parseOutputString(zap_result)
+        print(plugin.get_json())
 
     else:
         print("ZAP not running", file=sys.stderr)
