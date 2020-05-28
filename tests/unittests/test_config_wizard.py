@@ -292,6 +292,10 @@ ini_configs = \
         {
             "dir": old_version_path() / '1.0.ini',
             "old_executors": {"test", "test2"}
+        },
+        {
+            "dir": old_version_path() / '1.2.ini',
+            "old_executors": {"test", "test2", "test3"}
         }
     ]
 error_ini_configs = \
@@ -407,7 +411,7 @@ def test_verify(ini_config):
 def test_with_agent_token(delete_token):
     runner = CliRunner()
 
-    content_path = old_version_path() / '1.0_with_agent_token.ini'
+    content_path = old_version_path() / '1.2_with_agent_token.ini'
 
     with open(content_path, 'r') as content_file:
         content = content_file.read()

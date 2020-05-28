@@ -114,7 +114,7 @@ def process_agent():
             else:
                 value = ask_value(agent_dict, opt, section, ssl)
                 if opt == "ssl":
-                    ssl = value == "True"
+                    ssl = str(value).lower() == "true"
                 config.instance.set(section, opt, str(value))
 
 
