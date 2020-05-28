@@ -12,6 +12,7 @@
     * sublist3r
     * wpscan
     * w3af
+ * Faraday versions: 3.11
 
 1.1 [Apr 22th, 2020]:
 ---
