@@ -35,14 +35,21 @@ async def check_commands(metadata):
         while True:
             stdout, stderr = await proc.communicate()
             if len(stdout) > 0:
-                logger.debug(f"Dependency check prints: {stdout}")
+                logger.debug(f"Dependency check {cmd} prints: {stdout}")
             if len(stderr) > 0:
-                logger.debug(f"Dependency check error: {stderr}")
+                logger.error(f"Dependency check error of {cmd}: {stderr}")
             if len(stdout) == 0 and len(stderr) == 0:
                 break
 
         return proc.returncode
 
-    check_coros = [run_check_command(cmd) for cmd in metadata["check_cmds"]]
-    responses = await asyncio.gather(*check_coros)
-    return all(response == 0 for response in responses)
+    for cmd in metadata["check_cmds"]:
+        response = await run_check_command(cmd)
+        if response != 0:
+            return False
+
+    return True
+    # Async check if needed
+    # check_coros = [run_check_command(cmd) for cmd in metadata["check_cmds"]]
+    # responses = await asyncio.gather(*check_coros)
+    # return all(response == 0 for response in responses)
