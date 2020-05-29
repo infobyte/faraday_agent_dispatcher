@@ -121,6 +121,10 @@ class Dispatcher:
                     logger.info(f"Unexpected error: {e}")
                 logger.debug(msg="Exception raised", exc_info=e)
                 return
+            except ClientConnectorError as e:
+                logger.debug(msg="Connection con error failed", exc_info=e)
+                logger.error("Can connect to server")
+
 
         try:
             self.websocket_token = await self.reset_websocket_token()
@@ -337,22 +341,23 @@ class Dispatcher:
         return process
 
     async def close(self, signal):
-        await self.websocket.send(
-            json.dumps({
-                "action": "LEAVE_AGENT",
-                "token": self.websocket_token,
-                "reason": f"{signal} received",
-            })
-        )
-        for task in self.executor_tasks:
-            task.cancel()
-        await self.websocket.close(code=1000, reason=f"{signal} received")
+        if self.websocket and self.websocket.open:
+            await self.websocket.send(
+                json.dumps({
+                    "action": "LEAVE_AGENT",
+                    "token": self.websocket_token,
+                    "reason": f"{signal} received",
+                })
+            )
+            for task in self.executor_tasks:
+                task.cancel()
+            await self.websocket.close(code=1000, reason=f"{signal} received")
 
     async def check_connection(self):
         server_url = api_url(self.host, self.api_port, secure=self.api_ssl_enabled)
         logger.debug(f"Validate server ssl certificate {server_url}")
         try:
-            await self.session.get(server_url)
+            await self.session.get(server_url, timeout=1, **self.api_kwargs)
         except (ClientConnectorCertificateError, ClientConnectorSSLError) as e:
             logger.debug("Invalid SSL Certificate", exc_info=e)
             print(f"{Bcolors.FAIL}Invalid SSL Certificate, use `faraday-dispatcher config-wizard` "
@@ -361,6 +366,10 @@ class Dispatcher:
         except ClientConnectorError as e:
             logger.error("Can not connect to Faraday server")
             logger.debug("Connect failed traceback", exc_info=e)
+            return False
+        except asyncio.TimeoutError as e:
+            logger.error("Faraday server last more than time limit to respond. TIP: Check ssl configuration")
+            logger.debug("Timeout error. Check ssl", exc_info=e)
             return False
         return True
 

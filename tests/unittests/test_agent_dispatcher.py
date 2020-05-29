@@ -188,6 +188,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                           f"`faraday-dispatcher config-wizard`"
                                       },
                                  ],
+                                 "use_ssl_server": False,
                                  "expected_exception": ClientResponseError
                              },
                              # 1
@@ -206,6 +207,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                                 f"`faraday-dispatcher config-wizard`"
                                       },
                                  ],
+                                 "use_ssl_server": False,
                                  "expected_exception": ClientResponseError
                              },
                              # 2
@@ -214,8 +216,23 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Registered successfully"},
                                  ],
+                                 "use_ssl_server": False,
                              },
-                             # 3 Cannot conect
+                             # 3 OK SSL
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "host": "localhost",
+                                         "ssl": "True",
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.pub')
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Registered successfully"},
+                                 ],
+                                 "use_ssl_server": True,
+                             },
+                             # 4 Cannot conect
                              {
                                  "replace_data": {
                                      Sections.SERVER: {
@@ -225,27 +242,62 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "logs": [
                                      {"levelname": "ERROR", "msg": "Can not connect to Faraday server"},
                                  ],
+                                 "use_ssl_server": False,
                                  "expected_exception": True
                              },
-                             # 4 Invalid SSL
+                             # 5 SSL to port with http
                              {
                                  "replace_data": {
                                      Sections.SERVER: {
                                          "ssl": "True",
-                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'wrong.crt')
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.pub')
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "ERROR", "msg": "Faraday server last more than time limit to respond. TIP: Check ssl configuration"},
+                                     {"levelname": "DEBUG", "msg": "Timeout error. Check ssl"},
+                                 ],
+                                 "use_ssl_server": False,
+                                 "expected_exception": True
+                             },
+                             # 6 Invalid SSL
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "host": "localhost",
+                                         "ssl": "True",
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'wrong.pub')
                                      }
                                  },
                                  "logs": [
                                      {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
                                  ],
+                                 "use_ssl_server": True,
+                                 "expected_exception": True
+                             },
+                             # 7 Correct SSL but to 127.0.0.1, not to localhost
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "ssl": "True",
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.pub')
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
+                                 ],
+                                 "use_ssl_server": True,
                                  "expected_exception": True
                              }
                          ])
+@pytest.mark.asyncio
 async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,
                                   test_logger_handler):
+    client = test_config.ssl_client if register_options["use_ssl_server"] else test_config.client
+
     # Config
-    configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
-    configuration.set(Sections.SERVER, "host", test_config.client.host)
+    configuration.set(Sections.SERVER, "api_port", str(client.port))
+    configuration.set(Sections.SERVER, "host", client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
     configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
     configuration.set(Sections.EXECUTOR_DATA.format("ex1"), "cmd", 'exit 1')
@@ -259,7 +311,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
     tmp_default_config.save()
 
     # Init and register it
-    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
+    dispatcher = Dispatcher(client.session, tmp_default_config.config_file_path)
 
     await dispatcher.register()
 
@@ -850,6 +902,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                  "extra": ["add_ex1"]
                              },
                          ])
+@pytest.mark.asyncio
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
                         test_logger_folder, executor_options):
     # Config
@@ -903,7 +956,7 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
             len(list(filter(lambda x: x.levelname == l["levelname"] and l["msg"] in x.message, history))) >= \
             min_count, l["msg"]
 
-
+@pytest.mark.asyncio
 async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
                        test_logger_folder):
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
