@@ -276,6 +276,9 @@ class Dispatcher:
                 )
 
             if mandatory_full and all_accepted:
+                if not await executor.check_cmds():
+                    # The function logs why cant run
+                    return
                 running_msg = f"Running {executor.name} executor from {self.agent_name} agent"
                 logger.info("Running {} executor".format(executor.name))
 
