@@ -224,7 +224,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      Sections.SERVER: {
                                          "host": "localhost",
                                          "ssl": "True",
-                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.pub')
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.crt')
                                      }
                                  },
                                  "logs": [
@@ -250,7 +250,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "replace_data": {
                                      Sections.SERVER: {
                                          "ssl": "True",
-                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.pub')
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.crt')
                                      }
                                  },
                                  "logs": [
@@ -266,7 +266,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      Sections.SERVER: {
                                          "host": "localhost",
                                          "ssl": "True",
-                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'wrong.pub')
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'wrong.crt')
                                      }
                                  },
                                  "logs": [
@@ -280,7 +280,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "replace_data": {
                                      Sections.SERVER: {
                                          "ssl": "True",
-                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.pub')
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.crt')
                                      }
                                  },
                                  "logs": [
