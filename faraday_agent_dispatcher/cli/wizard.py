@@ -1,5 +1,3 @@
-import asyncio
-import json
 import math
 import os
 import re
@@ -11,7 +9,8 @@ from pathlib import Path
 from faraday_agent_dispatcher import config
 from faraday_agent_dispatcher.cli.utils.exceptions import WizardCanceledOption
 from faraday_agent_dispatcher.cli.utils.model_load import process_agent, process_var_envs, process_params, \
-    process_repo_var_envs, set_repo_params, executor_folder, executor_metadata
+    process_repo_var_envs, set_repo_params
+from faraday_agent_dispatcher.utils.metadata_utils import executor_folder, executor_metadata, check_commands
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.cli.utils.general_inputs import (
@@ -161,7 +160,7 @@ class Wizard:
                         print(f"{Bcolors.WARNING}Invalid manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
                         chosen = None
                     else:
-                        if not await self.check_commands(metadata):
+                        if not await check_commands(metadata):
                             print(f"{Bcolors.WARNING}Invalid bash dependency for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
                             chosen = None
                         else:
@@ -175,30 +174,6 @@ class Wizard:
     @staticmethod
     def check_metadata(metadata):
         return all(k in metadata for k in ("cmd", "check_cmds", "arguments", "environment_variables"))
-
-
-    @staticmethod
-    async def check_commands(metadata):
-
-        async def run_check_command(cmd):
-            proc = await asyncio.create_subprocess_shell(cmd,
-                                                         stdout=asyncio.subprocess.PIPE,
-                                                         stderr=asyncio.subprocess.PIPE
-                                                         )
-            while True:
-                stdout, stderr = await proc.communicate()
-                if len(stdout) > 0:
-                    logger.debug(f"Dependency check prints: {stdout}")
-                if len(stderr) > 0:
-                    logger.debug(f"Dependency check error: {stderr}")
-                if len(stdout) == 0 and len(stderr) == 0:
-                    break
-
-            return proc.returncode
-
-        check_coros = [run_check_command(cmd) for cmd in metadata["check_cmds"]]
-        responses = await asyncio.gather(*check_coros)
-        return all(response == 0 for response in responses)
 
     async def new_repo_executor(self, name):
         try:
