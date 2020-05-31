@@ -27,7 +27,7 @@ def generate_inputs():
         },
         # 1 SSL cert
         {
-            "dispatcher_input": DispatcherInput(ssl_cert='/home/lalal/asda.crt'),
+            "dispatcher_input": DispatcherInput(ssl_cert=Path(__file__).parent.parent / 'data' / 'mock.pub'),
             "exit_code": 0,
             "after_executors": set()
         },
@@ -49,7 +49,9 @@ def generate_inputs():
         {
             "dispatcher_input": DispatcherInput(ssl='false',host="127.0.0.1", api_port="13123", ws_port="1234",
                                                 workspace="aworkspace", agent_name="agent",
-                                                registration_token=["12345678901234567890", ""]),
+                                                registration_token=[
+                                                    "12345678901234567890", "1234567890123456789012345"
+                                                ]),
             "exit_code": 0,
             "expected_output": ["registration must be 25 character length"],
             "after_executors": set()
@@ -249,6 +251,26 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": {"ex1"}
         },
+        # 10 Pass folder as SSL cert
+        {
+            "dispatcher_input": DispatcherInput(
+                wrong_ssl_cert="/tmp",
+                ssl_cert=Path(__file__).parent.parent / 'data' / 'mock.pub',
+                workspace="asd",
+                agent_name="asd"
+            ),
+            "exit_code": 0,
+            "after_executors": set()
+        },
+        # 11 Wrong SSL cert
+        {
+            "dispatcher_input": DispatcherInput(
+                wrong_ssl_cert="/asdasdasd.pub",
+                ssl_cert=Path(__file__).parent.parent / 'data' / 'mock.pub'
+            ),
+            "exit_code": 0,
+            "after_executors": set()
+        },
     ]
 
 
@@ -270,6 +292,10 @@ ini_configs = \
         {
             "dir": old_version_path() / '1.0.ini',
             "old_executors": {"test", "test2"}
+        },
+        {
+            "dir": old_version_path() / '1.2.ini',
+            "old_executors": {"test", "test2", "test3"}
         }
     ]
 error_ini_configs = \
@@ -385,7 +411,7 @@ def test_verify(ini_config):
 def test_with_agent_token(delete_token):
     runner = CliRunner()
 
-    content_path = old_version_path() / '1.0_with_agent_token.ini'
+    content_path = old_version_path() / '1.2_with_agent_token.ini'
 
     with open(content_path, 'r') as content_file:
         content = content_file.read()
