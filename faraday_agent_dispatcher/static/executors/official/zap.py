@@ -3,7 +3,6 @@ import os
 import sys
 import time
 import subprocess
-import tempfile
 from zapv2 import ZAPv2
 from faraday_plugins.plugins.manager import PluginsManager
 
@@ -18,14 +17,18 @@ def main():
         print("environment variable not found", file=sys.stderr)
         sys.exit()
 
+    # zap is required to be started
     zap_run = subprocess.check_output('pgrep -f zap', shell=True)
 
     if len(zap_run.decode('utf-8').split('\n')) > 3:
+        # the apikey from ZAP->Tools->Options-API
         zap = ZAPv2(apikey=api_key)
+        # it passes the url to scan and starts
         scanID = zap.spider.scan(target)
+        # Wait for the scan to finish
         while int(zap.spider.status(scanID)) < 100:
             time.sleep(1)
-
+        # I finish the scan and the xml is generated
         zap_result = zap.core.xmlreport()
         plugin = PluginsManager().get_plugin("zap")
         plugin.parseOutputString(zap_result)
