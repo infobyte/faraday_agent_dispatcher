@@ -139,8 +139,16 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "expected_exception": ValueError
                            },
                           {"remove": {},
-                           "replace": {}}
-                          ])
+                           "replace": {}
+                           },
+                          # X SSL cert is not an existent file
+                          {
+                            "remove": {},
+                            "replace": {Sections.SERVER: {"ssl": "True","ssl_cert": "/tmp/sarasa.pub"}},
+                            "expected_exception": ValueError
+                          },
+                          ],
+                         )
 def test_basic_built(tmp_custom_config, config_changes_dict):
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
@@ -209,7 +217,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                              }
                          ])
 async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,
-                                     test_logger_handler):
+                                  test_logger_handler):
     # Config
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
@@ -882,9 +890,9 @@ async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_
             Path(__file__).parent.parent /
             'data' / 'basic_executor.py'
     )
-    configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3")
+    configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3,ex4")
 
-    for executor_name in ["ex1","ex2","ex3"]:
+    for executor_name in ["ex1","ex3","ex4"]:
         executor_section = Sections.EXECUTOR_DATA.format(executor_name)
         params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
         for section in [executor_section, params_section]:
@@ -894,8 +902,8 @@ async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_
 
     configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param1", "True")
     configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param2", "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex2"), "param3", "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex2"), "param4", "False")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param3", "False")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param4", "False")
     tmp_default_config.save()
     dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
 
@@ -914,12 +922,19 @@ async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_
                         {
                             "executor_name": "ex2",
                             "args": {
+                                "port_list": True,
+                                "target": True
+                            }
+                        },
+                        {
+                            "executor_name": "ex3",
+                            "args": {
                                 "param3": False,
                                 "param4": False
                             }
                         },
                         {
-                            "executor_name": "ex3",
+                            "executor_name": "ex4",
                             "args": {}
                         }
                     ]
