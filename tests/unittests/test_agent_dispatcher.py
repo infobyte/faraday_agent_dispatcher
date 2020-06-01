@@ -250,12 +250,14 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "replace_data": {
                                      Sections.SERVER: {
                                          "ssl": "True",
-                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.crt')
                                      }
                                  },
                                  "logs": [
                                      {"levelname": "ERROR", "msg": "Faraday server last more than time limit to respond. TIP: Check ssl configuration"},
                                      {"levelname": "DEBUG", "msg": "Timeout error. Check ssl"},
+                                 ],
+                                 "optional_logs": [
+                                     {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
                                  ],
                                  "use_ssl_server": False,
                                  "expected_exception": True
@@ -325,12 +327,30 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
 
     history = test_logger_handler.history
 
-    for l in register_options["logs"]:
+    logs_ok, failed_logs = await check_logs(history, register_options["logs"])
+
+    if "optional_logs" in register_options and not logs_ok:
+        logs_ok, new_failed_logs = await check_logs(history, register_options["optional_logs"])
+        failed_logs = {"logs": failed_logs, "optional_logs": new_failed_logs}
+
+    assert logs_ok, failed_logs
+
+
+async def check_logs(history, logs):
+    logs_ok = True
+    failed_logs = []
+    for l in logs:
         min_count = 1 if "min_count" not in l else l["min_count"]
         max_count = sys.maxsize if "max_count" not in l else l["max_count"]
-        assert max_count >= \
-            len(list(filter(lambda x: x.levelname == l["levelname"] and l["msg"] in x.message, history))) >= \
-            min_count, l["msg"]
+        log_ok = max_count >= \
+                   len(list(filter(lambda x: x.levelname == l["levelname"] and l["msg"] in x.message, history))) >= \
+                   min_count
+
+        if not log_ok:
+            failed_logs.append(l)
+
+        logs_ok &= log_ok
+    return logs_ok, failed_logs
 
 
 @pytest.mark.parametrize('executor_options',
