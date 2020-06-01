@@ -68,7 +68,7 @@ class ParamInput(VarEnvInput):
 
 class ExecutorInput:
     def __init__(self, name=None, error_name=None, cmd=None, max_size=None, varenvs: List[VarEnvInput] = None,
-                 params: List[ParamInput] = None, new_name: str = "", adm_type: ADMType = None):
+                 params: List[ParamInput] = None, new_name: str = "", new_error_name=None, adm_type: ADMType = None):
         self.name = name or ""
         self.error_name = error_name
         self.cmd = cmd or ""
@@ -77,6 +77,7 @@ class ExecutorInput:
         self.params = params or {}
         self.adm_type = adm_type
         self.new_name = new_name
+        self.new_error_name = new_error_name
 
     def input_str(self):
         prefix = self.adm_type.name[0]
@@ -95,6 +96,8 @@ class ExecutorInput:
             cli_input = f"{cli_input}Y\n"
 
         if self.adm_type == ADMType.MODIFY:
+            if self.new_error_name:
+                cli_input = f"{cli_input}{self.new_error_name}\n{prefix}\n"
             cli_input = f"{cli_input}{self.new_name or self.name}\n"
         cli_input = f"{cli_input}" \
             f"{self.cmd}\n" \
