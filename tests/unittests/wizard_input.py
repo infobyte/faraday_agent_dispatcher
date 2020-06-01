@@ -97,7 +97,7 @@ class ExecutorInput:
 
         if self.adm_type == ADMType.MODIFY:
             if self.new_error_name:
-                cli_input = f"{cli_input}{self.new_error_name}\n{prefix}\n"
+                cli_input = f"{cli_input}{self.new_error_name}\n"
             cli_input = f"{cli_input}{self.new_name or self.name}\n"
         cli_input = f"{cli_input}" \
             f"{self.cmd}\n" \
