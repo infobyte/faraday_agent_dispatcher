@@ -19,6 +19,7 @@
 """Tests for `faraday_agent_dispatcher` package."""
 
 import json
+import os
 import pytest
 import sys
 
@@ -189,7 +190,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                       },
                                  ],
                                  "use_ssl_server": False,
-                                 "expected_exception": ClientResponseError
+                                 "expected_exception": SystemExit
                              },
                              # 1
                              {
@@ -208,7 +209,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                       },
                                  ],
                                  "use_ssl_server": False,
-                                 "expected_exception": ClientResponseError
+                                 "expected_exception": SystemExit
                              },
                              # 2
                              {
@@ -243,7 +244,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      {"levelname": "ERROR", "msg": "Can not connect to Faraday server"},
                                  ],
                                  "use_ssl_server": False,
-                                 "expected_exception": True
+                                 "expected_exception": SystemExit
                              },
                              # 5 SSL to port with http
                              {
@@ -260,7 +261,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
                                  ],
                                  "use_ssl_server": False,
-                                 "expected_exception": True
+                                 "expected_exception": SystemExit
                              },
                              # 6 Invalid SSL
                              {
@@ -275,7 +276,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
                                  ],
                                  "use_ssl_server": True,
-                                 "expected_exception": True
+                                 "expected_exception": SystemExit
                              },
                              # 7 Correct SSL but to 127.0.0.1, not to localhost
                              {
@@ -289,12 +290,14 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
                                  ],
                                  "use_ssl_server": True,
-                                 "expected_exception": True
+                                 "expected_exception": SystemExit
                              }
                          ])
 @pytest.mark.asyncio
 async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,
                                   test_logger_handler):
+    os.environ['DISPATCHER_TEST'] = "True"
+
     client = test_config.ssl_client if register_options["use_ssl_server"] else test_config.client
 
     # Config
@@ -315,15 +318,17 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
     # Init and register it
     dispatcher = Dispatcher(client.session, tmp_default_config.config_file_path)
 
-    await dispatcher.register()
-
     if "expected_exception" not in register_options:
+        await dispatcher.register()
         # Control tokens
         assert dispatcher.agent_token == test_config.agent_token
 
         signer = TimestampSigner(test_config.app_config['SECRET_KEY'], salt="websocket_agent")
         agent_id = int(signer.unsign(dispatcher.websocket_token).decode('utf-8'))
         assert test_config.agent_id == agent_id
+    else:
+        with pytest.raises(register_options["expected_exception"]):
+            await dispatcher.register()
 
     history = test_logger_handler.history
 
