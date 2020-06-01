@@ -19,12 +19,19 @@ def main():
     with tempfile.TemporaryDirectory() as tempdirname:
         tmpdir = Path(tempdirname)
         name_result = tmpdir / 'output.xml'
-        if not url_port:
-            command = f'nikto -h {url_target} -o {name_result}'
-        else:
-            command = f'nikto -h {url_target} -p {url_port} -o {name_result}'
 
-        nikto_process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd = [
+            'nikto',
+            '-h', url_target,
+            '-o', name_result,
+        ]
+        if url_port:
+            cmd += [
+                '-o',
+                url_port,
+            ]
+
+        nikto_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if len(nikto_process.stdout) > 0:
             print(f"Nikto stdout: {nikto_process.stdout.decode('utf-8')}", file=sys.stderr)
         if len(nikto_process.stderr) > 0:
