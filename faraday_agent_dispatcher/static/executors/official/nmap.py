@@ -7,9 +7,9 @@ from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
 cmd = [
     "nmap",
     "-p{}".format(os.environ.get('EXECUTOR_CONFIG_PORT_LIST')),
+    "-oX", "-",
+    "--",
     os.environ.get('EXECUTOR_CONFIG_TARGET'),
-    "-oX",
-    "-",
 ]
 
 
