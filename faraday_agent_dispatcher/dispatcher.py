@@ -363,7 +363,7 @@ class Dispatcher:
         try:
             kwargs = self.api_kwargs.copy()
             if 'DISPATCHER_TEST' in os.environ and os.environ['DISPATCHER_TEST'] == "True":
-                kwargs["timeout"] = ClientTimeout(total=0.3)
+                kwargs["timeout"] = ClientTimeout(total=1)
             await self.session.get(server_url, **kwargs)
         except (ClientConnectorCertificateError, ClientConnectorSSLError) as e:
             logger.debug("Invalid SSL Certificate", exc_info=e)
