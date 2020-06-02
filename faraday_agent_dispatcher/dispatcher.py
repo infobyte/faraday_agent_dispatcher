@@ -364,6 +364,7 @@ class Dispatcher:
             await self.websocket.close(code=1000, reason=f"{signal} received")
         for task in self.executor_tasks[Dispatcher.TaskLabels.CONNECTION_CHECK]:
             task.cancel()
+        await asyncio.sleep(0.25)
 
     async def check_connection(self):
         server_url = api_url(self.host, self.api_port, secure=self.api_ssl_enabled)
