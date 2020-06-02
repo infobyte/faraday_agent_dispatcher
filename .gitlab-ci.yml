@@ -34,8 +34,7 @@ stages:
 services:
     - postgres:latest
 
-unit_tests:
-    image: python:3
+.unit_tests_base:
     stage: testing
     coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
     script:
@@ -60,6 +59,19 @@ unit_tests:
       - if: '$CI_COMMIT_REF_NAME =~ /^.*ci-test.*$/'
         when: never
       - when: on_success
+
+unit_test 3.7:
+    extends: .unit_tests_base
+    image: python:3.7
+
+unit_test 3.8:
+    extends: .unit_tests_base
+    image: python:3.8
+
+unit_test 3.9:
+    extends: .unit_tests_base
+    image: python:3.9-rc
+    allow_failure: true
 
 integration_faraday:
     stage: post_testing
