@@ -105,7 +105,7 @@ def process_agent():
                     path = None
                     while path is None:
                         value = ask_value(agent_dict, opt, section, ssl)
-                        if value is "" or Path(value).exists():
+                        if value == "" or Path(value).exists():
                             path = value
 
                     config.instance.set(section, opt, str(path))
