@@ -373,9 +373,10 @@ class Dispatcher:
             kwargs = self.api_kwargs.copy()
             if 'DISPATCHER_TEST' in os.environ and os.environ['DISPATCHER_TEST'] == "True":
                 kwargs["timeout"] = ClientTimeout(total=1)
-            check_connection_task = asyncio.create_task(self.session.get(server_url, **kwargs))
-            self.executor_tasks[Dispatcher.TaskLabels.CONNECTION_CHECK].append(check_connection_task)
-            await check_connection_task
+            await self.session.get(server_url, **kwargs)
+            #check_connection_task = asyncio.create_task(self.session.get(server_url, **kwargs))
+            #self.executor_tasks[Dispatcher.TaskLabels.CONNECTION_CHECK].append(check_connection_task)
+            #await check_connection_task
 
         except (ClientConnectorCertificateError, ClientConnectorSSLError) as e:
             logger.debug("Invalid SSL Certificate", exc_info=e)
