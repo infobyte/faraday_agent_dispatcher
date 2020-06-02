@@ -183,7 +183,6 @@ class Dispatcher:
                 data = await self.websocket.recv()
                 executor_task = asyncio.create_task(self.run_once(data))
                 self.executor_tasks[Dispatcher.TaskLabels.EXECUTOR].append(executor_task)
-                self.executor_tasks.append(executor_task)
             except ConnectionClosedError as e:
                 logger.info("The server ended connection")
                 break
