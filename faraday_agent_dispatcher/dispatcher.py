@@ -126,7 +126,6 @@ class Dispatcher:
                 logger.debug(msg="Connection con error failed", exc_info=e)
                 logger.error("Can connect to server")
 
-
         try:
             self.websocket_token = await self.reset_websocket_token()
             logger.info("Registered successfully")
@@ -359,7 +358,7 @@ class Dispatcher:
 
     async def check_connection(self):
         server_url = api_url(self.host, self.api_port, secure=self.api_ssl_enabled)
-        logger.debug(f"Validate server ssl certificate {server_url}")
+        logger.debug(f"Validating server ssl certificate {server_url}")
         try:
             kwargs = self.api_kwargs.copy()
             if 'DISPATCHER_TEST' in os.environ and os.environ['DISPATCHER_TEST'] == "True":
@@ -375,7 +374,7 @@ class Dispatcher:
             logger.debug("Connect failed traceback", exc_info=e)
             return False
         except asyncio.TimeoutError as e:
-            logger.error("Faraday server last more than time limit to respond. TIP: Check ssl configuration")
+            logger.error("Faraday server timed-out. TIP: Check ssl configuration")
             logger.debug("Timeout error. Check ssl", exc_info=e)
             return False
         return True
