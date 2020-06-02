@@ -1,0 +1,1 @@
+Fix error when connects with faraday fails when server does not respond

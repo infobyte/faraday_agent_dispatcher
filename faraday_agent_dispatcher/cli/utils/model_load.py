@@ -1,6 +1,4 @@
 import click
-import json
-import os
 from pathlib import Path
 
 from faraday_agent_dispatcher import config
@@ -10,9 +8,6 @@ from faraday_agent_dispatcher.cli.utils.general_prompts import (
 )
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
-
-MANDATORY_METADATA_KEYS = ["cmd", "check_cmds", "arguments", "environment_variables"]
-INFO_METADATA_KEYS = []
 
 def ask_value(agent_dict, opt, section, ssl, control_opt=None):
     def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
@@ -202,30 +197,3 @@ def set_repo_params(executor_name, metadata: dict):
     for param, value in params.items():
         config.instance.set(section, param, f"{value}")
 
-
-def executor_folder():
-
-    EXECUTOR_FOLDER = Path(__file__).parent.parent.parent / 'static' / 'executors'
-    if "WIZARD_DEV" in os.environ:
-        return EXECUTOR_FOLDER / "dev"
-    else:
-        return EXECUTOR_FOLDER / "official"
-
-
-def executor_metadata(executor_filename):
-    chosen = Path(executor_filename)
-    chosen_metadata_path = executor_folder() / f"{chosen.stem}_manifest.json"
-    chosen_path = executor_folder() / chosen
-    with open(chosen_metadata_path) as metadata_file:
-        data = metadata_file.read()
-        metadata = json.loads(data)
-    return metadata
-
-
-def check_metadata(metadata):
-    return all(k in metadata for k in MANDATORY_METADATA_KEYS)
-
-
-def full_check_metadata(metadata):
-    return all(k in metadata for k in INFO_METADATA_KEYS) and \
-        check_metadata(metadata)
