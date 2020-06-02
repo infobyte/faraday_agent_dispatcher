@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 
-from faraday_agent_dispatcher.cli.utils.model_load import executor_folder, executor_metadata, full_check_metadata
+from faraday_agent_dispatcher.utils.metadata_utils import executor_folder, executor_metadata, full_check_metadata
 
 
 def test_imports():
