@@ -11,6 +11,8 @@ from faraday_agent_dispatcher.cli.utils.general_prompts import (
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
+MANDATORY_METADATA_KEYS = ["cmd", "check_cmds", "arguments", "environment_variables"]
+INFO_METADATA_KEYS = []
 
 def ask_value(agent_dict, opt, section, ssl, control_opt=None):
     def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
@@ -219,3 +221,11 @@ def executor_metadata(executor_filename):
         metadata = json.loads(data)
     return metadata
 
+
+def check_metadata(metadata):
+    return all(k in metadata for k in MANDATORY_METADATA_KEYS)
+
+
+def full_check_metadata(metadata):
+    return all(k in metadata for k in INFO_METADATA_KEYS) and \
+        check_metadata(metadata)
