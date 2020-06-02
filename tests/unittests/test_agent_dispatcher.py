@@ -254,7 +254,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                      }
                                  },
                                  "logs": [
-                                     {"levelname": "ERROR", "msg": "Faraday server last more than time limit to respond. TIP: Check ssl configuration"},
+                                     {"levelname": "ERROR", "msg": "Faraday server timed-out. TIP: Check ssl configuration"},
                                      {"levelname": "DEBUG", "msg": "Timeout error. Check ssl"},
                                  ],
                                  "optional_logs": [
