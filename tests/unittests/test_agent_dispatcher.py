@@ -237,7 +237,7 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                              {
                                  "replace_data": {
                                      Sections.SERVER: {
-                                         "host": "sarasa.com"
+                                         "host": "cizfyteurbsc06aolxe0qtzsr2mftvy7bwvvd47e.com"
                                      }
                                  },
                                  "logs": [
