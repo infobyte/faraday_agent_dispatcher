@@ -11,7 +11,7 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
 )
 
 
-def get_repo_path(repo_name):
+def get_repo_path(repo_name): #TODO CHECK IF THIS IS A DELETE FUNCTION
 
     EXECUTOR_FOLDER = Path(__file__).parent.parent / 'static' / 'executors'
     if "WIZARD_DEV" in os.environ:
