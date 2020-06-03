@@ -44,19 +44,19 @@ def generate_xml(issues, name_result, json_issue_definitions):
         try:
             ET.SubElement(xml_request_response, "request").text = \
                 issue['issue']['evidence'][0]['request_response']['request'][0]['data']
-        except:
+        except KeyError:
             ET.SubElement(xml_request_response, "request").text = "No information"
 
         try:
             ET.SubElement(xml_request_response, "response").text = \
                 issue['issue']['evidence'][0]['request_response']['response'][0]['data']
-        except:
+        except KeyError:
             ET.SubElement(xml_request_response, "response").text = "No information"
 
         try:
             ET.SubElement(xml_request_response, "responseRedirected").text = \
                 issue['issue']['evidence'][0]['request_response']['was_redirect_followed']
-        except:
+        except KeyError:
             ET.SubElement(xml_request_response, "responseRedirected").text = "No information"
     tree = ET.ElementTree(xml_issues)
     tree.write(name_result)
@@ -121,18 +121,17 @@ def main():
         while scan_status != 'succeeded':
             try:
                 rg_issues = requests.get(f'{host_api}/{api_key}/v0.1/scan/{get_location}')
-            except:
+            except ConnectionError:
                 print("API gets no response.", file=sys.stderr)
                 sys.exit()
 
             issues = rg_issues.json()
             scan_status = issues['scan_status']
-            print(scan_status)
+            # Before checking back, wait 15 seconds.
             time.sleep(15)
 
         generate_xml(issues, name_result, json_issue_definitions)
         plugin = BurpPlugin()
-        time.sleep(699)
         with open(name_result, 'r') as f:
             plugin.parseOutputString(f.read())
             print(plugin.get_json())
