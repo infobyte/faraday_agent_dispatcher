@@ -5,36 +5,106 @@ from faraday_plugins.plugins.repo.openvas.plugin import OpenvasPlugin
 import subprocess
 import tempfile
 from pathlib import Path
+import xml.etree.ElementTree as ET
+import time
 
 
 def main():
     # If the script is run outside the dispatcher the environment variables are checked.
-    # ['EXECUTOR_CONFIG_OPENVAS_SCAN_NAME']
-    #url_target = os.environ.get('EXECUTOR_CONFIG_OPENVAS_SCAN_NAME')
-    url_target = 'http://pidgr.com/'
-    if not url_target:
-        print("URL not provided", file=sys.stderr)
+    # ["EXECUTOR_CONFIG_OPENVAS_USER", "EXECUTOR_CONFIG_OPENVAS_PASSW",
+    # "EXECUTOR_CONFIG_OPENVAS_HOST", "EXECUTOR_CONFIG_OPENVAS_PORT",
+    # "EXECUTOR_CONFIG_OPENVAS_SCAN_URL", "EXECUTOR_CONFIG_OPENVAS_SCAN_ID"]
+    user = os.environ.get('EXECUTOR_CONFIG_OPENVAS_USER')
+    passw = os.environ.get('EXECUTOR_CONFIG_OPENVAS_PASSW')
+    host = os.environ.get('EXECUTOR_CONFIG_OPENVAS_HOST')
+    port = os.environ.get('EXECUTOR_CONFIG_OPENVAS_PORT')
+    scan_url = os.environ.get('EXECUTOR_CONFIG_OPENVAS_SCAN_URL')
+    scan_id = os.environ.get('EXECUTOR_CONFIG_OPENVAS_SCAN_ID')
+
+    if not user or not passw or not host or not port:
+        print("Data config ['Host', 'Port', 'User', 'Passw'] OpenVas not provided",
+              file=sys.stderr)
         sys.exit()
 
-    with tempfile.TemporaryDirectory() as tempdirname:
-        tempdir = Path(tempdirname)
-        command = f'sudo docker run --rm -v $(pwd):/openvas/results/ ictu/openvas-docker ' \
-                  f'/openvas/run_scan.py 123.123.123.123,{url_target} openvas_scan_report'
+    if not scan_url:
+        print("Scan Url not provided", file=sys.stderr)
+        sys.exit()
 
-        openvas_process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if len(openvas_process.stdout) > 0:
-            print(f"Openvas stdout: {openvas_process.stdout.decode('utf-8')}", file=sys.stderr)
-        if len(openvas_process.stderr) > 0:
-            print(f"Openvas stderr: {openvas_process.stderr.decode('utf-8')}", file=sys.stderr)
-        plugin = OpenvasPlugin()
-        name_xml = tempdir / 'openvas_scan_report.xml'
-        if name_xml.exists():
-            with open(name_xml, 'r') as f:
-                plugin.parseOutputString(f.read())
-                print(plugin.get_json())
-        else:
-            print("File no exists", file=sys.stderr)
-            sys.exit()
+    if not scan_id:
+        # Scan_ID Full and fast
+        scan_id = 'daba56c8-73ec-11df-a475-002264764cea'
+
+    # Create task and get task_id
+    cmd_create_task = [
+        'omp',
+        '-u', user,
+        '-w',passw,
+        '-h', host,
+        '-p', port,
+        '-X', f'"<create_target><name>Suspect Host</name><hosts>{scan_url}</hosts></create_target>"'
+    ]
+    p = subprocess.run(cmd_create_task, stdout=subprocess.PIPE, shell=True)
+    task_create = ET.XML(p.stdout)
+    task_id = task_create.get('id')
+    if task_id is None:
+        print("Target Id not found", file=sys.stderr)
+        sys.exit()
+
+    # Config and get scan
+    cmd_create_scan = [
+        'omp',
+        '-u', user,
+        '-w',passw,
+        '-h', host,
+        '-p', port,
+        '-C',
+        '-c', scan_id,
+        '--name', '"ScanSuspectHost"',
+        '-target', task_id,
+    ]
+    p_scan = subprocess.run(cmd_create_scan, stdout=subprocess.PIPE, shell=True)
+    scan = p_scan.stdout.decode().split('\n')
+
+    # Start task get id for use report XML
+    cmd_start_scan = [
+        'omp',
+        '-u', user,
+        '-w', passw,
+        '-h', host,
+        '-p', port,
+        '-S', scan[0],
+    ]
+
+    p_start_scan = subprocess.run(cmd_start_scan, stdout=subprocess.PIPE, shell=True)
+    id_for_xml = p_start_scan.stdout.decode().split('\n')
+
+    cmd_status = [
+        'omp',
+        '-u', user,
+        '-w', passw,
+        '-h', host,
+        '-p', port,
+        '--get-task'
+    ]
+    status_level = -1
+
+    while status_level > -1:
+        p_status = subprocess.run(cmd_status, stdout=subprocess.PIPE, shell=True)
+        status_level = p_status.stdout.decode().find('Done')
+        time.sleep(10)
+
+    cmd_get_xml = [
+        'omp',
+        '-u', user,
+        '-w', passw,
+        '-h', host,
+        '-p', port,
+        '--get-report', id_for_xml[0]
+    ]
+    p_xml = subprocess.run(cmd_get_xml, stdout=subprocess.PIPE, shell=True)
+    plugin = OpenvasPlugin()
+    plugin.parseOutputString(p_xml.stdout)
+    print(plugin.get_json())
 
 
 if __name__ == '__main__':
