@@ -46,20 +46,27 @@ def main():
         print("not valid IP", file=sys.stderr)
         sys.exit()
 
-    if user and passw:
-        command = f'cme smw {ip}/24 -u {user} -p {passw}'
-        p = subprocess.run(command, stdout=subprocess.PIPE, shell=True)
-        output = p.stdout.decode('utf-8')
-        faraday_json = report(output)
+    command = [
+        'cme',
+        'smw', f"{ip}/24",
+    ]
 
-        print(faraday_json)
+    if user and passw:
+        command += [
+            '-u', user,
+            '-p', passw,
+        ]
 
     else:
-        command = f'cme smb {ip}/24 -u "" -p "" '
-        p = subprocess.run(command, stdout=subprocess.PIPE, shell=True)
-        output = p.stdout.decode('utf-8')
-        faraday_json = report(output)
-        print(faraday_json)
+        command += [
+            '-u', "",
+            '-p', "",
+        ]
+
+    p = subprocess.run(command, stdout=subprocess.PIPE, shell=True)
+    output = p.stdout.decode('utf-8')
+    faraday_json = report(output)
+    print(faraday_json)
 
 
 if __name__ == '__main__':
