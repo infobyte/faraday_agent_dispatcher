@@ -101,17 +101,20 @@ class Wizard:
             else:
                 end = True
 
-    def check_executors_name(self):
-        name = click.prompt("Name")
-        if name in self.executors_list:
+    def check_executors_name(self, show_text: str, default=None):
+        name = click.prompt(show_text, default=default)
+        if name in self.executors_list and name != default:
             print(f"{Bcolors.WARNING}The executor {name} already exists{Bcolors.ENDC}")
             return
-        self.executors_list.append(name)
+        if ',' in name:
+            print(f"{Bcolors.WARNING}The executor cannot contain \',\' in its name{Bcolors.ENDC}")
+            return
         return name
 
     async def new_executor(self):
-        name = self.check_executors_name()
+        name = self.check_executors_name("Name")
         if name:
+            self.executors_list.append(name)
             custom_executor = confirm_prompt("Is a custom executor?", default=False)
             if custom_executor:
                 self.new_custom_executor(name)
@@ -210,10 +213,7 @@ class Wizard:
             return
         new_name = None
         while new_name is None:
-            new_name = click.prompt("New name", default=name)
-            if new_name in self.executors_list and name != new_name:
-                print(f"{Bcolors.WARNING}The executor {name} already exists{Bcolors.ENDC}")
-                new_name = None
+            new_name = self.check_executors_name("New name", default=name)
         if new_name != name:
             for unformatted_section in Wizard.EXECUTOR_SECTIONS:
                 section = unformatted_section.format(new_name)
