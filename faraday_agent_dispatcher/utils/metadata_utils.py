@@ -6,6 +6,9 @@ import faraday_agent_dispatcher.logger as logging
 
 logger = logging.get_logger()
 
+MANDATORY_METADATA_KEYS = ["cmd", "check_cmds", "arguments", "environment_variables"]
+INFO_METADATA_KEYS = []
+
 
 def executor_folder():
 
@@ -24,6 +27,15 @@ def executor_metadata(executor_filename):
         data = metadata_file.read()
         metadata = json.loads(data)
     return metadata
+
+
+def check_metadata(metadata):
+    return all(k in metadata for k in MANDATORY_METADATA_KEYS)
+
+
+def full_check_metadata(metadata):
+    return all(k in metadata for k in INFO_METADATA_KEYS) and \
+        check_metadata(metadata)
 
 
 async def check_commands(metadata):
