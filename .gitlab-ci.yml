@@ -34,16 +34,19 @@ stages:
 services:
     - postgres:latest
 
-unit_tests:
-    image: python:3
+.unit_tests_base:
     stage: testing
     coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
     script:
         - pip install virtualenv
+        - apt-get update
+        - apt-get install openssl
         - virtualenv faraday_venv
         - source faraday_venv/bin/activate
         - pip install pytest pytest-cov pytest-aiohttp
         - python setup.py install
+        - openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -keyout tests/data/ok.key -out tests/data/ok.crt -subj "/CN=localhost"
+        - openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -keyout tests/data/other.key -out tests/data/wrong.crt -subj "/CN=localhost"
         - mkdir run_from
         - cd run_from && mkdir logs && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --cov-config=../tests/unittests/.coveragerc --color=yes --disable-warnings --junitxml=report.xml
         - cp report.xml ../
@@ -60,6 +63,19 @@ unit_tests:
       - if: '$CI_COMMIT_REF_NAME =~ /^.*ci-test.*$/'
         when: never
       - when: on_success
+
+unit_test 3.7:
+    extends: .unit_tests_base
+    image: python:3.7
+
+unit_test 3.8:
+    extends: .unit_tests_base
+    image: python:3.8
+
+unit_test 3.9:
+    extends: .unit_tests_base
+    image: python:3.9-rc
+    allow_failure: true
 
 integration_faraday:
     stage: post_testing
