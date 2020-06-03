@@ -1,13 +1,17 @@
 {
   "arguments": {
-    "OPENVAS_SCAN_NAME": true
+    "OPENVAS_USER": true,
+    "OPENVAS_PASSW": true,
+    "OPENVAS_HOST": true,
+    "OPENVAS_PORT": true,
+    "OPENVAS_SCAN_URL": true,
+    "OPENVAS_SCAN_ID": false
   },
   "environment_variables": [
 
   ],
   "check_cmds": [
-    "docker -v",
-    "docker images -q ictu/openvas-docker"
+    "omp --help"
   ],
   "cmd": "python3 {EXECUTOR_FILE_PATH}"
 }
