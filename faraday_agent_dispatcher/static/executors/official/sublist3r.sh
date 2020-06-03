@@ -7,7 +7,8 @@ die(){
     exit 1
 }
 
-which sublist3r.py >/dev/null 2>/dev/null || die "sublist3r.py binary not found. Aborting"
+which sublist3r.py >/dev/null 2>/dev/null || \
+  die "sublist3r.py binary not found. Add sublist3r directory to $PATH or sublist3r.py file to /usr/bin. Aborting"
 
 if [[ -z "${EXECUTOR_CONFIG_DOMAIN}" ]]; then
     die "Domain not defined. Please define the EXECUTOR_CONFIG_DOMAIN environment variable"
