@@ -28,7 +28,7 @@ def main():
         # Wait for the scan to finish
         while int(zap.spider.status(scanID)) < 100:
             time.sleep(1)
-        # I finish the scan and the xml is generated
+        # If finish the scan and the xml is generated
         zap_result = zap.core.xmlreport()
         plugin = PluginsManager().get_plugin("zap")
         plugin.parseOutputString(zap_result)
