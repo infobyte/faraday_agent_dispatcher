@@ -22,14 +22,17 @@ import json
 import asyncio
 from pathlib import Path
 from asyncio import Task
-from typing import List
+from typing import List, Dict
 
 import websockets
 from websockets.exceptions import ConnectionClosedError
-from aiohttp.client_exceptions import ClientResponseError
+from aiohttp import ClientTimeout
+from aiohttp.client_exceptions import ClientResponseError, ClientConnectorError, ClientConnectorCertificateError, \
+    ClientConnectorSSLError
 
 from faraday_agent_dispatcher.config import reset_config
 from faraday_agent_dispatcher.executor_helper import StdErrLineProcessor, StdOutLineProcessor
+from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
 import faraday_agent_dispatcher.logger as logging
 
@@ -70,7 +73,7 @@ class Dispatcher:
         ssl_cert_path = config[Sections.SERVER].get("ssl_cert", None)
         if not Path(ssl_cert_path).exists():
             raise ValueError(f"SSL cert does not exist in path {ssl_cert_path}")
-        self.api_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.api_ssl_enabled and ssl_cert_path else {}
+        self.api_kwargs: Dict[str, object] = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.api_ssl_enabled and ssl_cert_path else {}
         self.ws_kwargs = {"ssl": ssl.create_default_context(cafile=ssl_cert_path)} if self.ws_ssl_enabled and ssl_cert_path else {}
         self.execution_id = None
         self.executor_tasks: List[Task] = []
@@ -88,6 +91,8 @@ class Dispatcher:
         return websocket_token_json["token"]
 
     async def register(self):
+        if not await self.check_connection():
+            exit(1)
 
         if self.agent_token is None:
             registration_token = self.agent_token = config.get(Sections.TOKENS, "registration")
@@ -116,7 +121,10 @@ class Dispatcher:
                 else:
                     logger.info(f"Unexpected error: {e}")
                 logger.debug(msg="Exception raised", exc_info=e)
-                return
+                exit(1)
+            except ClientConnectorError as e:
+                logger.debug(msg="Connection con error failed", exc_info=e)
+                logger.error("Can connect to server")
 
         try:
             self.websocket_token = await self.reset_websocket_token()
@@ -128,7 +136,7 @@ class Dispatcher:
             logger.error(error_msg)
             self.agent_token = None
             logger.debug(msg="Exception raised", exc_info=e)
-            return
+            exit(1)
 
     async def connect(self, out_func=None):
 
@@ -336,13 +344,38 @@ class Dispatcher:
         return process
 
     async def close(self, signal):
-        await self.websocket.send(
-            json.dumps({
-                "action": "LEAVE_AGENT",
-                "token": self.websocket_token,
-                "reason": f"{signal} received",
-            })
-        )
-        for task in self.executor_tasks:
-            task.cancel()
-        await self.websocket.close(code=1000, reason=f"{signal} received")
+        if self.websocket and self.websocket.open:
+            await self.websocket.send(
+                json.dumps({
+                    "action": "LEAVE_AGENT",
+                    "token": self.websocket_token,
+                    "reason": f"{signal} received",
+                })
+            )
+            for task in self.executor_tasks:
+                task.cancel()
+            await self.websocket.close(code=1000, reason=f"{signal} received")
+
+    async def check_connection(self):
+        server_url = api_url(self.host, self.api_port, secure=self.api_ssl_enabled)
+        logger.debug(f"Validating server ssl certificate {server_url}")
+        try:
+            kwargs = self.api_kwargs.copy()
+            if 'DISPATCHER_TEST' in os.environ and os.environ['DISPATCHER_TEST'] == "True":
+                kwargs["timeout"] = ClientTimeout(total=1)
+            await self.session.get(server_url, **kwargs)
+        except (ClientConnectorCertificateError, ClientConnectorSSLError) as e:
+            logger.debug("Invalid SSL Certificate", exc_info=e)
+            print(f"{Bcolors.FAIL}Invalid SSL Certificate, use `faraday-dispatcher config-wizard` "
+                  f" and check the certificate configuration")
+            return False
+        except ClientConnectorError as e:
+            logger.error("Can not connect to Faraday server")
+            logger.debug("Connect failed traceback", exc_info=e)
+            return False
+        except asyncio.TimeoutError as e:
+            logger.error("Faraday server timed-out. TIP: Check ssl configuration")
+            logger.debug("Timeout error. Check ssl", exc_info=e)
+            return False
+        return True
+
