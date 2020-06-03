@@ -27,7 +27,7 @@ def generate_inputs():
         },
         # 1 SSL cert
         {
-            "dispatcher_input": DispatcherInput(ssl_cert='/home/lalal/asda.crt'),
+            "dispatcher_input": DispatcherInput(ssl_cert=Path(__file__).parent.parent / 'data' / 'mock.pub'),
             "exit_code": 0,
             "after_executors": set()
         },
@@ -49,7 +49,9 @@ def generate_inputs():
         {
             "dispatcher_input": DispatcherInput(ssl='false',host="127.0.0.1", api_port="13123", ws_port="1234",
                                                 workspace="aworkspace", agent_name="agent",
-                                                registration_token=["12345678901234567890", ""]),
+                                                registration_token=[
+                                                    "12345678901234567890", "1234567890123456789012345"
+                                                ]),
             "exit_code": 0,
             "expected_output": ["registration must be 25 character length"],
             "after_executors": set()
@@ -127,7 +129,23 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "ex3", "ex4"}
         },
-        # 7 Basic Mod Executors input
+        # 7 Basic Name with Comma Executors input
+        {
+            "dispatcher_input": DispatcherInput(ssl='false'),
+            "executors_input": [
+                    ExecutorInput(name="ex1",
+                                  error_name="ex,1",
+                                  cmd="cmd 1",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                   ],
+                                  adm_type=ADMType.ADD),
+                ],
+            "exit_code": 0,
+            "after_executors": {"ex1"}
+        },
+        # 8 Basic Mod Executors input
         {
             "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
@@ -178,7 +196,59 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": {"ex1", "ex2", "eX3"}
         },
-        # 8 Basic Del Executors input
+        # 9 Basic Mod Name with comma Executors input
+        {
+            "dispatcher_input": DispatcherInput(ssl='false'),
+            "executors_input": [
+                    ExecutorInput(name="ex1",
+                                  cmd="cmd 1",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                   ],
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex2",
+                                  cmd="cmd 2",
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                   ],
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex3", cmd="cmd 3",
+                                  params=[
+                                       ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD)
+                                   ],
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                   ],
+                                  adm_type=ADMType.ADD),
+                    ExecutorInput(name="ex1",
+                                  error_name="QWE",
+                                  cmd="exit 1",
+                                  params=[
+                                       ParamInput(name="mod_param1", value=True, adm_type=ADMType.ADD),
+                                       ParamInput(name="add_param1", value=False, adm_type=ADMType.MODIFY)
+                                   ],
+                                  adm_type=ADMType.MODIFY),
+                    ExecutorInput(name="ex2",
+                                  cmd="",
+                                  varenvs=[
+                                       VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)
+                                   ],
+                                  adm_type=ADMType.MODIFY),
+                    ExecutorInput(name="ex3",
+                                  new_error_name="eX,3",
+                                  new_name="eX3",
+                                  cmd="",
+                                  varenvs=[
+                                       VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)
+                                   ],
+                                  adm_type=ADMType.MODIFY),
+                ],
+            "exit_code": 0,
+            "after_executors": {"ex1", "ex2", "eX3"}
+        },
+        # 10 Basic Del Executors input
         {
             "dispatcher_input": DispatcherInput(ssl='false'),
             "executors_input": [
@@ -226,7 +296,7 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": {"ex1", "ex3"}
         },
-        # 9 Basic Repo Executors input
+        # 11 Basic Repo Executors input
         {
             "dispatcher_input": DispatcherInput(),
             "executors_input": [
@@ -249,6 +319,26 @@ def generate_inputs():
             "exit_code": 0,
             "after_executors": {"ex1"}
         },
+        # 12 Pass folder as SSL cert
+        {
+            "dispatcher_input": DispatcherInput(
+                wrong_ssl_cert="/tmp",
+                ssl_cert=Path(__file__).parent.parent / 'data' / 'mock.pub',
+                workspace="asd",
+                agent_name="asd"
+            ),
+            "exit_code": 0,
+            "after_executors": set()
+        },
+        # 13 Wrong SSL cert
+        {
+            "dispatcher_input": DispatcherInput(
+                wrong_ssl_cert="/asdasdasd.pub",
+                ssl_cert=Path(__file__).parent.parent / 'data' / 'mock.pub'
+            ),
+            "exit_code": 0,
+            "after_executors": set()
+        },
     ]
 
 
@@ -270,6 +360,10 @@ ini_configs = \
         {
             "dir": old_version_path() / '1.0.ini',
             "old_executors": {"test", "test2"}
+        },
+        {
+            "dir": old_version_path() / '1.2.ini',
+            "old_executors": {"test", "test2", "test3"}
         }
     ]
 error_ini_configs = \
@@ -385,7 +479,7 @@ def test_verify(ini_config):
 def test_with_agent_token(delete_token):
     runner = CliRunner()
 
-    content_path = old_version_path() / '1.0_with_agent_token.ini'
+    content_path = old_version_path() / '1.2_with_agent_token.ini'
 
     with open(content_path, 'r') as content_file:
         content = content_file.read()
