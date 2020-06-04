@@ -20,7 +20,7 @@ def main():
     port = os.environ.get('EXECUTOR_CONFIG_OPENVAS_PORT')
     scan_url = os.environ.get('EXECUTOR_CONFIG_OPENVAS_SCAN_URL')
     scan_id = os.environ.get('EXECUTOR_CONFIG_OPENVAS_SCAN_ID')
-
+    xml_format = 'a994b278-1f62-11e1-96ac-406186ea4fc5'
     if not user or not passw or not host or not port:
         print("Data config ['Host', 'Port', 'User', 'Passw'] OpenVas not provided",
               file=sys.stderr)
@@ -38,7 +38,7 @@ def main():
     cmd_create_task = [
         'omp',
         '-u', user,
-        '-w',passw,
+        '-w', passw,
         '-h', host,
         '-p', port,
         '-X', f'"<create_target><name>Suspect Host</name><hosts>{scan_url}</hosts></create_target>"'
@@ -54,13 +54,13 @@ def main():
     cmd_create_scan = [
         'omp',
         '-u', user,
-        '-w',passw,
+        '-w', passw,
         '-h', host,
         '-p', port,
         '-C',
         '-c', scan_id,
         '--name', '"ScanSuspectHost"',
-        '-target', task_id,
+        '--target', task_id,
     ]
     p_scan = subprocess.run(cmd_create_scan, stdout=subprocess.PIPE, shell=True)
     scan = p_scan.stdout.decode().split('\n')
@@ -84,11 +84,10 @@ def main():
         '-w', passw,
         '-h', host,
         '-p', port,
-        '--get-task'
+        '--get-task', scan[0],
     ]
-    status_level = -1
-
-    while status_level > -1:
+    status_level = 0
+    while status_level <= 0:
         p_status = subprocess.run(cmd_status, stdout=subprocess.PIPE, shell=True)
         status_level = p_status.stdout.decode().find('Done')
         time.sleep(10)
@@ -99,7 +98,8 @@ def main():
         '-w', passw,
         '-h', host,
         '-p', port,
-        '--get-report', id_for_xml[0]
+        '--get-report', id_for_xml[0],
+        '--format', xml_format,
     ]
     p_xml = subprocess.run(cmd_get_xml, stdout=subprocess.PIPE, shell=True)
     plugin = OpenvasPlugin()
