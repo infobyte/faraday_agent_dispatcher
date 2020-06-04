@@ -1,0 +1,1 @@
+Escape user-controlled executor parameters in order to prevent OS argument injection (not command injection)
