@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 import os
 import sys
-from faraday_plugins.plugins.repo.openvas.plugin import OpenvasPlugin
-import subprocess
-import tempfile
-from pathlib import Path
-import xml.etree.ElementTree as ET
 import time
+import subprocess
+import xml.etree.ElementTree as ET
+from faraday_plugins.plugins.repo.openvas.plugin import OpenvasPlugin
 
 
 def main():
