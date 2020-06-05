@@ -39,7 +39,7 @@ def main():
         '-w', passw,
         '-h', host,
         '-p', port,
-        '-X', f'"<create_target><name>Suspect Host</name><hosts>{scan_url}</hosts></create_target>"'
+        '-X', f'"<create_target><name>Suspect Host</name><hosts>{scan_url}</hosts></create_target>"',
     ]
     p = subprocess.run(cmd_create_task, stdout=subprocess.PIPE, shell=True)
     task_create = ET.XML(p.stdout)
