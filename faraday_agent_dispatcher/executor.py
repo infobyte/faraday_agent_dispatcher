@@ -14,18 +14,6 @@ from faraday_agent_dispatcher.logger import get_logger
 logger = get_logger()
 
 
-def get_repo_path(repo_name):
-
-    folder = executor_folder()
-    chosen = Path(repo_name)
-    chosen_metadata_path = folder / f"{chosen.stem}_manifest.json"
-    chosen_path = folder / chosen
-    with open(chosen_metadata_path) as metadata_file:
-        data = metadata_file.read()
-        metadata = json.loads(data)
-    return metadata["cmd"].format(EXECUTOR_FILE_PATH=chosen_path)
-
-
 class Executor:
     __control_dict = {
         Sections.EXECUTOR_DATA: {
