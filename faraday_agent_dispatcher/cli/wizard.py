@@ -10,7 +10,12 @@ from faraday_agent_dispatcher import config
 from faraday_agent_dispatcher.cli.utils.exceptions import WizardCanceledOption
 from faraday_agent_dispatcher.cli.utils.model_load import process_agent, process_var_envs, process_params, \
     process_repo_var_envs, set_repo_params
-from faraday_agent_dispatcher.utils.metadata_utils import executor_folder, executor_metadata, check_commands
+from faraday_agent_dispatcher.utils.metadata_utils import (
+    executor_folder,
+    executor_metadata,
+    check_commands,
+    check_metadata
+)
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.cli.utils.general_inputs import (
@@ -159,7 +164,7 @@ class Wizard:
                 try:
                     chosen = paged_executors[int(chosen)-1]
                     metadata = executor_metadata(chosen)
-                    if not self.check_metadata(metadata):
+                    if not check_metadata(metadata):
                         print(f"{Bcolors.WARNING}Invalid manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
                         chosen = None
                     else:
@@ -173,10 +178,6 @@ class Wizard:
                     chosen = None
 
         return metadata
-
-    @staticmethod
-    def check_metadata(metadata):
-        return all(k in metadata for k in ("cmd", "check_cmds", "arguments", "environment_variables"))
 
     async def new_repo_executor(self, name):
         try:

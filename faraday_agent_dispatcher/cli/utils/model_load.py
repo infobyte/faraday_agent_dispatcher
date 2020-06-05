@@ -9,7 +9,6 @@ from faraday_agent_dispatcher.cli.utils.general_prompts import (
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
-
 def ask_value(agent_dict, opt, section, ssl, control_opt=None):
     def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
     value = None
@@ -197,3 +196,4 @@ def set_repo_params(executor_name, metadata: dict):
     params: dict = metadata["arguments"]
     for param, value in params.items():
         config.instance.set(section, param, f"{value}")
+
