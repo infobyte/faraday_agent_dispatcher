@@ -33,15 +33,16 @@ def main():
         scan_id = 'daba56c8-73ec-11df-a475-002264764cea'
 
     # Create task and get task_id
+    xml_create_task = f'"<create_target><name>Suspect Host</name><hosts>{scan_url}</hosts></create_target>'
     cmd_create_task = [
         'omp',
         '-u', user,
         '-w', passw,
         '-h', host,
         '-p', port,
-        '-X', f'"<create_target><name>Suspect Host</name><hosts>{scan_url}</hosts></create_target>"',
+        '-X', xml_create_task,
     ]
-    p = subprocess.run(cmd_create_task, stdout=subprocess.PIPE, shell=True)
+    p = subprocess.run(cmd_create_task, stdout=subprocess.PIPE, shell=False)
     task_create = ET.XML(p.stdout)
     task_id = task_create.get('id')
     if task_id is None:
@@ -60,7 +61,7 @@ def main():
         '--name', '"ScanSuspectHost"',
         '--target', task_id,
     ]
-    p_scan = subprocess.run(cmd_create_scan, stdout=subprocess.PIPE, shell=True)
+    p_scan = subprocess.run(cmd_create_scan, stdout=subprocess.PIPE, shell=False)
     scan = p_scan.stdout.decode().split('\n')
 
     # Start task get id for use report XML
@@ -73,7 +74,7 @@ def main():
         '-S', scan[0],
     ]
 
-    p_start_scan = subprocess.run(cmd_start_scan, stdout=subprocess.PIPE, shell=True)
+    p_start_scan = subprocess.run(cmd_start_scan, stdout=subprocess.PIPE, shell=False)
     id_for_xml = p_start_scan.stdout.decode().split('\n')
 
     cmd_status = [
@@ -86,9 +87,9 @@ def main():
     ]
     status_level = 0
     while status_level <= 0:
-        p_status = subprocess.run(cmd_status, stdout=subprocess.PIPE, shell=True)
+        p_status = subprocess.run(cmd_status, stdout=subprocess.PIPE, shell=False)
         status_level = p_status.stdout.decode().find('Done')
-        time.sleep(10)
+        time.sleep(5)
 
     cmd_get_xml = [
         'omp',
@@ -99,7 +100,7 @@ def main():
         '--get-report', id_for_xml[0],
         '--format', xml_format,
     ]
-    p_xml = subprocess.run(cmd_get_xml, stdout=subprocess.PIPE, shell=True)
+    p_xml = subprocess.run(cmd_get_xml, stdout=subprocess.PIPE, shell=False)
     plugin = OpenvasPlugin()
     plugin.parseOutputString(p_xml.stdout)
     print(plugin.get_json())
