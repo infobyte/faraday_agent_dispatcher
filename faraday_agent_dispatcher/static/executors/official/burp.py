@@ -128,7 +128,7 @@ def main():
             issues = rg_issues.json()
             scan_status = issues['scan_status']
             # Before checking back, wait 15 seconds.
-            time.sleep(15)
+            time.sleep(5)
 
         generate_xml(issues, name_result, json_issue_definitions)
         plugin = BurpPlugin()
