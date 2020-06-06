@@ -33,7 +33,7 @@ def main():
         scan_id = 'daba56c8-73ec-11df-a475-002264764cea'
 
     # Create task and get task_id
-    xml_create_task = f'"<create_target><name>Suspect Host</name><hosts>{scan_url}</hosts></create_target>'
+    xml_create_task = f'<create_target><name>Suspect Host</name><hosts>{scan_url}</hosts></create_target>'
     cmd_create_task = [
         'omp',
         '-u', user,
@@ -83,9 +83,9 @@ def main():
         '-w', passw,
         '-h', host,
         '-p', port,
-        '--get-task', scan[0],
+        '--get-tasks', scan[0],
     ]
-    status_level = 0
+    status_level = -1
     while status_level <= 0:
         p_status = subprocess.run(cmd_status, stdout=subprocess.PIPE, shell=False)
         status_level = p_status.stdout.decode().find('Done')
