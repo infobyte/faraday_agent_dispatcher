@@ -27,7 +27,7 @@ def main():
         ]
         if url_port:
             cmd += [
-                '-o',
+                '-p',
                 url_port,
             ]
 
