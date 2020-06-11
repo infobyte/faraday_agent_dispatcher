@@ -43,8 +43,7 @@ services:
         - apt-get install openssl
         - virtualenv faraday_venv
         - source faraday_venv/bin/activate
-        - pip install pytest pytest-cov pytest-aiohttp
-        - python setup.py install
+        - pip install .[test]
         - openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -keyout tests/data/ok.key -out tests/data/ok.crt -subj "/CN=localhost"
         - openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -keyout tests/data/other.key -out tests/data/wrong.crt -subj "/CN=localhost"
         - mkdir run_from
