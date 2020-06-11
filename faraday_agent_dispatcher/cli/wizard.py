@@ -130,7 +130,8 @@ class Wizard:
         executors = [
             f"{executor}"
             for executor in os.listdir(executor_folder())
-            if re.match(".*_manifest.json", executor) is None]
+            if re.match("(.*_manifest.json|__pycache__)", executor) is None
+        ]
         max_page = int(math.ceil(len(executors) / REPO_EXECUTOR_PAGE_SIZE))
         chosen = None
         metadata = None
