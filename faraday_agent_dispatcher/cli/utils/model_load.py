@@ -101,7 +101,7 @@ def process_agent():
                         continue
             elif opt == "ssl_cert":
                 if ssl:
-                    if confirm_prompt("Default SSL CA?"):
+                    if confirm_prompt("Default SSL behavior?"):
                         path = ""
                     else:
                         path = None
