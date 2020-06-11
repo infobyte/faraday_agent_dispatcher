@@ -12,9 +12,8 @@ def command_create(lista_target):
         "-oX", "-",
         "--",
     ]
+    cmd += lista_target
 
-    for target in lista_target:
-        cmd += [target,]
     return cmd
 
 
@@ -25,6 +24,8 @@ def main():
         lista_target = targets.split(" ")
     elif ',' in targets:
         lista_target = targets.split(",")
+    else:
+        lista_target = [targets]
 
     cmd = command_create(lista_target)
     results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
