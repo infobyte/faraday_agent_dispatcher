@@ -347,25 +347,28 @@ def old_version_path():
 
 
 inputs = generate_inputs()
-ini_configs = \
-    [
-        {
-            "dir": "",
-            "old_executors": set()
-        },
-        {
-            "dir": old_version_path() / '0.1.ini',
-            "old_executors": {config_mod.DEFAULT_EXECUTOR_VERIFY_NAME}
-        },
-        {
-            "dir": old_version_path() / '1.0.ini',
-            "old_executors": {"test", "test2"}
-        },
+
+no_ssl_ini_configs = [
+    {
+        "dir": "",
+        "old_executors": set()
+    },
+    {
+        "dir": old_version_path() / '0.1.ini',
+        "old_executors": {config_mod.DEFAULT_EXECUTOR_VERIFY_NAME}
+    },
+    {
+        "dir": old_version_path() / '1.0.ini',
+        "old_executors": {"test", "test2"}
+    },
+]
+ssl_ini_configs = [
         {
             "dir": old_version_path() / '1.2.ini',
             "old_executors": {"test", "test2", "test3"}
         }
     ]
+all_ini_configs = no_ssl_ini_configs + ssl_ini_configs
 error_ini_configs = \
     [
         {
@@ -400,7 +403,7 @@ def parse_inputs(testing_inputs: Dict):
 )
 @pytest.mark.parametrize(
     "ini_config",
-    ini_configs
+    all_ini_configs
 )
 def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
     runner = CliRunner()
