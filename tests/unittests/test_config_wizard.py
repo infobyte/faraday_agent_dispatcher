@@ -507,7 +507,7 @@ def test_override_ssl_cert_with_default(ini_config):
                 "dispatcher_input": DispatcherInput(ssl_cert=Path(__file__).parent.parent / 'data' / 'mock.pub'),
             },
             {
-                "dispatcher_input": DispatcherInput(override_with_default_ssl_cert=True),
+                "dispatcher_input": DispatcherInput(ssl_cert=""),
             },
         ]
 
@@ -528,10 +528,7 @@ def test_override_ssl_cert_with_default(ini_config):
         expected_executors_set = ini_config["old_executors"]
 
         config_mod.reset_config(path)
-        executor_config_set = set(config_mod.instance.get(config_mod.Sections.AGENT, "executors").split(","))
-        if '' in executor_config_set:
-            executor_config_set.remove('')
-        assert executor_config_set == expected_executors_set
+        assert config_mod.instance.get(config_mod.Sections.SERVER, "ssl_cert") == ""
 
 
 @pytest.mark.parametrize(

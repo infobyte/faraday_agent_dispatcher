@@ -163,8 +163,7 @@ class RepoExecutorInput:
 class DispatcherInput:
     def __init__(self, host=None, api_port=None, ws_port=None, workspace=None,
                  ssl=None, ssl_cert=None, wrong_ssl_cert=None, agent_name=None,
-                 registration_token=None, delete_agent_token: bool = None, empty=False,
-                 override_with_default_ssl_cert=None):
+                 registration_token=None, delete_agent_token: bool = None, empty=False):
         self.ssl = ssl is None or ssl.lower() != "false"
         self.server_input = {
             "ssl": ssl or "",
@@ -175,7 +174,7 @@ class DispatcherInput:
             "ssl_cert": ssl_cert or ""
         }
         self.wrong_ssl_cert = wrong_ssl_cert
-        self.override_with_default_ssl_cert = override_with_default_ssl_cert
+        self.override_with_default_ssl_cert = self.server_input['ssl_cert'] == ""
         self.agent = agent_name or ""
         self.registration_token = registration_token or "ACorrectTokenHas25CharLen"
         self.delete_agent_token = delete_agent_token
