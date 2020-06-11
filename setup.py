@@ -42,8 +42,6 @@ requirements = [
     'websockets',
     'aiohttp<4.0.0',
     'syslog_rfc5424_formatter',
-    'pytest',
-    'pytest-asyncio',
     'requests',
     'itsdangerous',
     'faraday-plugins',
@@ -54,6 +52,11 @@ setup_requirements = ['pytest-runner', 'click', 'setuptools_scm']
 extra_req = {
         'dev': [
             'giteasychangelog'
+        ],
+        'test': [
+            'pytest',
+            'pytest-cov',
+            'pytest-asyncio',
         ]
     }
 
