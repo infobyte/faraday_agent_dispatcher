@@ -8,6 +8,10 @@ from faraday_plugins.plugins.repo.openvas.plugin import OpenvasPlugin
 
 
 def main():
+    """
+    Openvas Port: web: 9392  , openvasmd: 9390
+    Openvas Scan takes a while
+    """
     # If the script is run outside the dispatcher the environment variables are checked.
     # ["EXECUTOR_CONFIG_OPENVAS_USER", "EXECUTOR_CONFIG_OPENVAS_PASSW",
     # "EXECUTOR_CONFIG_OPENVAS_HOST", "EXECUTOR_CONFIG_OPENVAS_PORT",
