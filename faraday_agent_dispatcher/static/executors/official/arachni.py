@@ -25,8 +25,9 @@ def main():
     os.chdir(path_arachni)
     name_result = Path(path_arachni) / 'report.afr'
     cmd = ['./arachni',
-            f'{url_analyze}',
-            f'--report-save-path={name_result}'
+            url_analyze,
+            '--report-save-path',
+            name_result
     ]
     arachni_command = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -37,8 +38,9 @@ def main():
 
     cmd = [
         './arachni_reporter',
-        f'{name_result}',
-        '--reporter=xml:outfile=xml_arachni_report.xml'
+        name_result,
+        '--reporter',
+        'xml:outfile=xml_arachni_report.xml'
     ]
 
     arachni_reporter_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
