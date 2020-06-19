@@ -30,6 +30,7 @@ stages:
     - testing
     - post_testing
     - publish
+    - deploy
 
 services:
     - postgres:latest
@@ -114,3 +115,6 @@ publish_pypi:
 #        variables:
 #            - $CI_COMMIT_REF_NAME =~ /^(dev|master)$/
 #            - $INTEGRATION
+
+include:
+  - local: docs/.gitlab-ci.yml
