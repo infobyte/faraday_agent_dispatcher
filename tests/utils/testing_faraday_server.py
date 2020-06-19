@@ -1,11 +1,14 @@
 import json
 import os
 import shutil
+import ssl
+
 import pytest
 import random
 import pathlib
 from aiohttp import web
 from aiohttp.web_request import Request
+from aiohttp.test_utils import TestClient, TestServer
 from itsdangerous import TimestampSigner
 import logging
 from logging import StreamHandler
@@ -31,6 +34,7 @@ class FaradayTestConfig:
         self.agent_id = random.randint(1, 1000)
         self.websocket_port = random.randint(1025, 65535)
         self.client = None
+        self.ssl_client = None
         self.app_config = {
             "SECURITY_TOKEN_AUTHENTICATION_HEADER": 'Authorization',
             "SECRET_KEY": 'SECRET_KEY',
@@ -43,8 +47,8 @@ class FaradayTestConfig:
             'action': 'RUN',
         })
 
-    async def generate_client(self, aiohttp_client, aiohttp_server):
-        self.client = await aiohttp_faraday_client(aiohttp_client, aiohttp_server, self)
+    async def generate_client(self):
+        self.client, self.ssl_client = await aiohttp_faraday_client(self)
 
 
 def get_agent_registration(test_config: FaradayTestConfig):
@@ -90,6 +94,12 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
     return agent_websocket_token
 
 
+def get_base(test_config: FaradayTestConfig):
+    async def base(request):
+        return web.HTTPOk()
+    return base
+
+
 def get_bulk_create(test_config: FaradayTestConfig):
     async def bulk_create(request):
         error = verify_token(test_config, request)
@@ -117,10 +127,12 @@ def get_bulk_create(test_config: FaradayTestConfig):
 
 
 @pytest.fixture
-async def test_config(aiohttp_client, aiohttp_server, loop):
+async def test_config():
     config = FaradayTestConfig()
-    await config.generate_client(aiohttp_client, aiohttp_server)
-    return config
+    await config.generate_client()
+    yield config
+    await config.client.close()
+    await config.ssl_client.close()
 
 
 class TmpConfig:
@@ -151,17 +163,25 @@ def tmp_custom_config(config=None):
     os.remove(config.config_file_path)
 
 
-async def aiohttp_faraday_client(aiohttp_client, aiohttp_server, test_config: FaradayTestConfig):
+async def aiohttp_faraday_client(test_config: FaradayTestConfig):
     app = web.Application()
+    app.router.add_get("/", get_base(test_config))
     app.router.add_post(f"/_api/v2/ws/{test_config.workspace}/agent_registration/",
                         get_agent_registration(test_config))
     app.router.add_post('/_api/v2/agent_websocket_token/', get_agent_websocket_token(test_config))
     app.router.add_post(f"/_api/v2/ws/{test_config.workspace}/bulk_create/", get_bulk_create(test_config))
     app.router.add_post(f"/_api/v2/ws/error500/bulk_create/", get_bulk_create(test_config))
     app.router.add_post(f"/_api/v2/ws/error429/bulk_create/", get_bulk_create(test_config))
-    server = await aiohttp_server(app)
-    client = await aiohttp_client(server, raise_for_status=True)
-    return client
+    server = TestServer(app)
+    await server.start_server()
+    ssl_cert_path = Path(__file__).parent.parent / 'data'
+    ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    ssl_context.load_cert_chain(ssl_cert_path / 'ok.crt', ssl_cert_path / 'ok.key')
+    ssl_server = TestServer(app)
+    await ssl_server.start_server(ssl=ssl_context)
+    client = TestClient(server, raise_for_status=True)
+    ssl_client = TestClient(ssl_server, raise_for_status=True)
+    return client, ssl_client
 
 
 class TestLoggerHandler(StreamHandler):
