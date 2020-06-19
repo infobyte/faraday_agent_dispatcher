@@ -12,7 +12,7 @@ Just run `pip3 install faraday_agent_dispatcher` and you should see the
 
 To setup a development environment (this is, to change code of the dispatcher
 itself, not to write your own integrations), you should clone this repo and run
-`python setup.py develop`.
+`pip install -e .`.
 
 # Running Faraday Agent Dispatcher for first time
 
@@ -46,7 +46,7 @@ Otherwise, the dispatcher will complain because you supplied invalid
 data to it.
 
 If you want to debug your executor, the simplest way to do it is by
-running it directly instead of with the Dispatcher. Since the executor
+running it directly instead of running with the Dispatcher. Since the executor
 just prints JSON data to stdout, you will be able to see all
 information it wants to send to Faraday, but without actually sending
 it.
@@ -67,7 +67,10 @@ environment variables set and ask for the arguments.
 
 # Bulk Create JSON format
 
-TODO
+The data published to [faraday][faraday] must correspond to the
+[bulk_create][bulk_create] endpoint of the Faraday's REST API
+
+[bulk_create]: https://apidocs.faradaysec.com/
 
 # Running multiple dispatchers
 
@@ -79,10 +82,32 @@ configuration files for each one (for example,
 Dispatcher instances with `faraday-dispatcher --config-file
 PATH_TO_A_CONFIG_FILE`.
 
-# Contributed executors
+# Executors
 
-Inside the [`contrib/`][contrib] directory you can find some already
-created executors. Here is a short description of each one:
+Inside the [executors][executors] directory you can find the already
+created executors. 
+
+## Official
+
+The [official executors][official_executors] are the collection of ready-to-go
+executors (with minimum configuration with the wizard). They have a manifest 
+JSON file, which gives details about the uses of the executor and helps with
+the configuration of them.
+
+The current official executors are:
+
+* [Nessus][nessus]
+* [Nikto][nikto]
+* [Nmap][nmap]
+* [Sublist3r][sublist3r]
+* [W3af][w3af]
+* [Wpscan][wpscan]
+
+## Development
+
+The [development executors][dev_executors] are the collection of executors we 
+do **not** fully maintain, we have examples of use, conceptual, and in 
+development executors. The most important of them are:
 
 * `basic_example.py`: The Hello World of Faraday executors. It will
   create a host with an associeted vulnerability to it
@@ -90,25 +115,32 @@ created executors. Here is a short description of each one:
   your Heroku account
 * `prowlerSample.py`: Run the [**prowler**][prowler] command and send
   its output to Faraday
-* `responder.py`: Run [**Responder**][responder] and send its output
-  to Faraday
 * `brainfuck.sh`: A proof-of-concept to demonstrate you can create
   an executor in any programming language, including [Brainfuck][brainfuck]!
 
-[contrib]: https://github.com/infobyte/faraday_agent_dispatcher/tree/master/contrib
+[executors]: https://github.com/infobyte/faraday_agent_dispatcher/tree/master/faraday_agent_dispatcher/static/executors
+[official_executors]: https://github.com/infobyte/faraday_agent_dispatcher/tree/master/faraday_agent_dispatcher/static/executors/official
+[dev_executors]: https://github.com/infobyte/faraday_agent_dispatcher/tree/master/faraday_agent_dispatcher/static/executors/dev
 [brainfuck]: https://en.wikipedia.org/wiki/Brainfuck
 [prowler]: https://github.com/toniblyx/prowler
-[responder]: https://github.com/lgandx/Responder
+[nessus]: https://www.nessus.org
+[nikto]: https://cirt.net/Nikto2
+[nmap]: https://nmap.org
+[sublist3r]: https://github.com/aboul3la/Sublist3r
+[w3af]: http://w3af.org/
+[wpscan]: https://wpscan.org/
 
 # Roadmap
 
 We are currently working on new executors, apart from improving the
 experience using the agents.
 
-Currently, you have to manually add each parameter and environment
-variable when adding a `contrib` executor. It will be possible to add
-them quicker in a automatic way.
-
-We would also like to give some agents read access to their workspace,
+We would like to give some agents read access to their workspace,
 so they can benefit of the existing data in order to find more valuable
 information.
+
+# Documentation
+
+For more info you can check our [documentation][doc]
+
+[doc]: https://infobyte.github.io/faraday_agent_dispatcher/.
