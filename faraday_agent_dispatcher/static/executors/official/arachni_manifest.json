@@ -1,0 +1,12 @@
+{
+  "arguments": {
+    "NAME_URL": true
+  },
+  "environment_variables": [
+    "ARACHNI_PATH"
+  ],
+  "check_cmds": [
+
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}
