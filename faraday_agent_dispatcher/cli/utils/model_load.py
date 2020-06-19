@@ -101,12 +101,14 @@ def process_agent():
                         continue
             elif opt == "ssl_cert":
                 if ssl:
-                    path = None
-                    while path is None:
-                        value = ask_value(agent_dict, opt, section, ssl)
-                        if value is "" or Path(value).exists():
-                            path = value
-
+                    if confirm_prompt("Default SSL behavior?"):
+                        path = ""
+                    else:
+                        path = None
+                        while path is None:
+                            value = ask_value(agent_dict, opt, section, ssl)
+                            if value != "" and Path(value).exists():
+                                path = value
                     config.instance.set(section, opt, str(path))
             else:
                 value = ask_value(agent_dict, opt, section, ssl)

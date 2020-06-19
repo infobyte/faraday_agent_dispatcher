@@ -347,25 +347,28 @@ def old_version_path():
 
 
 inputs = generate_inputs()
-ini_configs = \
-    [
-        {
-            "dir": "",
-            "old_executors": set()
-        },
-        {
-            "dir": old_version_path() / '0.1.ini',
-            "old_executors": {config_mod.DEFAULT_EXECUTOR_VERIFY_NAME}
-        },
-        {
-            "dir": old_version_path() / '1.0.ini',
-            "old_executors": {"test", "test2"}
-        },
+
+no_ssl_ini_configs = [
+    {
+        "dir": "",
+        "old_executors": set()
+    },
+    {
+        "dir": old_version_path() / '0.1.ini',
+        "old_executors": {config_mod.DEFAULT_EXECUTOR_VERIFY_NAME}
+    },
+    {
+        "dir": old_version_path() / '1.0.ini',
+        "old_executors": {"test", "test2"}
+    },
+]
+ssl_ini_configs = [
         {
             "dir": old_version_path() / '1.2.ini',
             "old_executors": {"test", "test2", "test3"}
         }
     ]
+all_ini_configs = no_ssl_ini_configs + ssl_ini_configs
 error_ini_configs = \
     [
         {
@@ -400,7 +403,7 @@ def parse_inputs(testing_inputs: Dict):
 )
 @pytest.mark.parametrize(
     "ini_config",
-    ini_configs
+    all_ini_configs
 )
 def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
     runner = CliRunner()
@@ -470,6 +473,62 @@ def test_verify(ini_config):
         result = runner.invoke(config_wizard, args=["-c", path], env=env)
         assert result.exit_code == 1, result.exception
         assert ini_config["exception_message"] in result.output
+
+@pytest.mark.parametrize(
+    "ini_config",
+    ssl_ini_configs
+)
+def test_override_ssl_cert_with_default(ini_config):
+    runner = CliRunner()
+
+    content = None
+    content_path = ini_config["dir"]
+
+    if content_path != "":
+        with open(content_path, 'r') as content_file:
+            content = content_file.read()
+
+    with runner.isolated_filesystem() as file_system:
+
+        if content:
+            path = Path(file_system) / "dispatcher.ini"
+            with path.open(mode="w") as content_file:
+                content_file.write(content)
+        else:
+            path = Path(file_system)
+        ''' 
+        The in_data variable will be consumed for the cli command, but in order to avoid unexpected inputs with no
+        data (and a infinite wait), a \0\n block of input is added at the end of the input. Furthermore the \0 is added
+        as a possible choice of the ones and should exit with error.
+        '''
+
+        testing_inputs = [
+            {
+                "dispatcher_input": DispatcherInput(ssl_cert=Path(__file__).parent.parent / 'data' / 'mock.pub'),
+            },
+            {
+                "dispatcher_input": DispatcherInput(ssl_cert=""),
+            },
+        ]
+
+        in_data0 = parse_inputs(testing_inputs[0]) + "\0\n" * 1000
+        env = os.environ
+        env["DEBUG_INPUT_MODE"] = "True"
+        result = runner.invoke(config_wizard, args=["-c", path], input=in_data0, env=env)
+        assert result.exit_code == 0, result.exception
+        assert '\0\n' not in result.output  # Control '\0' is not passed in the output, as the input is echoed
+
+        in_data1 = parse_inputs(testing_inputs[1]) + "\0\n" * 1000
+        env = os.environ
+        env["DEBUG_INPUT_MODE"] = "True"
+        result = runner.invoke(config_wizard, args=["-c", path], input=in_data1, env=env)
+        assert result.exit_code == 0, result.exception
+        assert '\0\n' not in result.output  # Control '\0' is not passed in the output, as the input is echoed
+
+        expected_executors_set = ini_config["old_executors"]
+
+        config_mod.reset_config(path)
+        assert config_mod.instance.get(config_mod.Sections.SERVER, "ssl_cert") == ""
 
 
 @pytest.mark.parametrize(
