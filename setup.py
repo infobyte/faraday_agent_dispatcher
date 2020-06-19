@@ -37,14 +37,28 @@ with open('README.md') as readme_file:
 with open('RELEASE.md') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', 'websockets', 'aiohttp<4.0.0', 'syslog_rfc5424_formatter',
-                'pytest', 'pytest-aiohttp', 'requests', 'itsdangerous', 'faraday-plugins']
+
+requirements = [
+    'Click>=6.0',
+    'websockets',
+    'aiohttp<4.0.0',
+    'syslog_rfc5424_formatter',
+    'requests',
+    'itsdangerous',
+    'faraday-plugins',
+    'python-owasp-zap-v2.4',
+]
 
 setup_requirements = ['pytest-runner', 'click', 'setuptools_scm']
 
 extra_req = {
         'dev': [
             'giteasychangelog'
+        ],
+        'test': [
+            'pytest',
+            'pytest-cov',
+            'pytest-asyncio',
         ]
     }
 

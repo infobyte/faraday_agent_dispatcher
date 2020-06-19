@@ -1,5 +1,3 @@
-import asyncio
-import json
 import math
 import os
 import re
@@ -11,7 +9,13 @@ from pathlib import Path
 from faraday_agent_dispatcher import config
 from faraday_agent_dispatcher.cli.utils.exceptions import WizardCanceledOption
 from faraday_agent_dispatcher.cli.utils.model_load import process_agent, process_var_envs, process_params, \
-    process_repo_var_envs, set_repo_params, executor_folder, executor_metadata
+    process_repo_var_envs, set_repo_params
+from faraday_agent_dispatcher.utils.metadata_utils import (
+    executor_folder,
+    executor_metadata,
+    check_commands,
+    check_metadata
+)
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.cli.utils.general_inputs import (
@@ -102,17 +106,20 @@ class Wizard:
             else:
                 end = True
 
-    def check_executors_name(self):
-        name = click.prompt("Name")
-        if name in self.executors_list:
+    def check_executors_name(self, show_text: str, default=None):
+        name = click.prompt(show_text, default=default)
+        if name in self.executors_list and name != default:
             print(f"{Bcolors.WARNING}The executor {name} already exists{Bcolors.ENDC}")
             return
-        self.executors_list.append(name)
+        if ',' in name:
+            print(f"{Bcolors.WARNING}The executor cannot contain \',\' in its name{Bcolors.ENDC}")
+            return
         return name
 
     async def new_executor(self):
-        name = self.check_executors_name()
+        name = self.check_executors_name("Name")
         if name:
+            self.executors_list.append(name)
             custom_executor = confirm_prompt("Is a custom executor?", default=False)
             if custom_executor:
                 self.new_custom_executor(name)
@@ -157,11 +164,11 @@ class Wizard:
                 try:
                     chosen = paged_executors[int(chosen)-1]
                     metadata = executor_metadata(chosen)
-                    if not self.check_metadata(metadata):
+                    if not check_metadata(metadata):
                         print(f"{Bcolors.WARNING}Invalid manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
                         chosen = None
                     else:
-                        if not await self.check_commands(metadata):
+                        if not await check_commands(metadata):
                             print(f"{Bcolors.WARNING}Invalid bash dependency for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
                             chosen = None
                         else:
@@ -171,34 +178,6 @@ class Wizard:
                     chosen = None
 
         return metadata
-
-    @staticmethod
-    def check_metadata(metadata):
-        return all(k in metadata for k in ("cmd", "check_cmds", "arguments", "environment_variables"))
-
-
-    @staticmethod
-    async def check_commands(metadata):
-
-        async def run_check_command(cmd):
-            proc = await asyncio.create_subprocess_shell(cmd,
-                                                         stdout=asyncio.subprocess.PIPE,
-                                                         stderr=asyncio.subprocess.PIPE
-                                                         )
-            while True:
-                stdout, stderr = await proc.communicate()
-                if len(stdout) > 0:
-                    logger.debug(f"Dependency check prints: {stdout}")
-                if len(stderr) > 0:
-                    logger.debug(f"Dependency check error: {stderr}")
-                if len(stdout) == 0 and len(stderr) == 0:
-                    break
-
-            return proc.returncode
-
-        check_coros = [run_check_command(cmd) for cmd in metadata["check_cmds"]]
-        responses = await asyncio.gather(*check_coros)
-        return all(response == 0 for response in responses)
 
     async def new_repo_executor(self, name):
         try:
@@ -235,10 +214,7 @@ class Wizard:
             return
         new_name = None
         while new_name is None:
-            new_name = click.prompt("New name", default=name)
-            if new_name in self.executors_list and name != new_name:
-                print(f"{Bcolors.WARNING}The executor {name} already exists{Bcolors.ENDC}")
-                new_name = None
+            new_name = self.check_executors_name("New name", default=name)
         if new_name != name:
             for unformatted_section in Wizard.EXECUTOR_SECTIONS:
                 section = unformatted_section.format(new_name)
