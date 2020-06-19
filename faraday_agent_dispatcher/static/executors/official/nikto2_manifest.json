@@ -1,0 +1,13 @@
+{
+  "arguments": {
+    "TARGET_URL": true,
+    "TARGET_PORT": false
+  },
+  "environment_variables": [
+
+  ],
+  "check_cmds": [
+    "nikto -Version"
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}
