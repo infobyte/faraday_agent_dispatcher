@@ -38,9 +38,9 @@ with open('RELEASE.md') as history_file:
     history = history_file.read()
 
 requirements = [
-    'Click>=6.0',
+    'Click',
     'websockets',
-    'aiohttp<4.0.0',
+    'aiohttp',
     'syslog_rfc5424_formatter',
     'requests',
     'itsdangerous',
