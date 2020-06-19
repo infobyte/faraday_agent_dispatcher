@@ -28,8 +28,7 @@ def main():
             f'{url_analyze}',
             f'--report-save-path={name_result}'
     ]
-    arachni_command = subprocess.run(cmd, shell=True,
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    arachni_command = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if len(arachni_command.stdout) > 0:
         print(f"Arachni stdout: {arachni_command.stdout.decode('utf-8')}", file=sys.stderr)
@@ -42,8 +41,7 @@ def main():
         '--reporter=xml:outfile=xml_arachni_report.xml'
     ]
 
-    arachni_reporter_process = subprocess.run(cmd, shell=True,
-                                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    arachni_reporter_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if len(arachni_reporter_process.stdout) > 0:
         print(f"Arachni stdout: {arachni_reporter_process.stdout.decode('utf-8')}", file=sys.stderr)
     if len(arachni_reporter_process.stderr) > 0:
