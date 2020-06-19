@@ -24,7 +24,11 @@ def main():
 
     os.chdir(path_arachni)
     name_result = Path(path_arachni) / 'report.afr'
-    arachni_command = subprocess.run([f'./arachni {url_analyze} --report-save-path={name_result}'], shell=True,
+    cmd = ['./arachni',
+            f'{url_analyze}',
+            f'--report-save-path={name_result}'
+    ]
+    arachni_command = subprocess.run(cmd, shell=True,
                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if len(arachni_command.stdout) > 0:
@@ -32,8 +36,13 @@ def main():
     if len(arachni_command.stderr) > 0:
         print(f"Arachni stderr: {arachni_command.stderr.decode('utf-8')}", file=sys.stderr)
 
-    arachni_reporter_process = subprocess.run([f'./arachni_reporter {name_result} '
-                                               f'--reporter=xml:outfile=xml_arachni_report.xml'], shell=True,
+    cmd = [
+        './arachni_reporter',
+        f'{name_result}',
+        '--reporter=xml:outfile=xml_arachni_report.xml'
+    ]
+
+    arachni_reporter_process = subprocess.run(cmd, shell=True,
                                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if len(arachni_reporter_process.stdout) > 0:
         print(f"Arachni stdout: {arachni_reporter_process.stdout.decode('utf-8')}", file=sys.stderr)
