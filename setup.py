@@ -59,6 +59,10 @@ extra_req = {
             'pytest',
             'pytest-cov',
             'pytest-asyncio',
+        ],
+        'docs': [
+            'mkdocs',
+            'mkdocs-material',
         ]
     }
 
