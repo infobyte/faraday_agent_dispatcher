@@ -37,7 +37,12 @@ def main():
                 sys.exit()
 
             if os.path.isfile('w3af_console'):
-                w3af_process = subprocess.run(f'python2 w3af_console -s {name_result}', shell=True, stdout=subprocess.PIPE,
+                cmd = [
+                    './w3af_console',
+                    '-s',
+                    name_result,
+                ]
+                w3af_process = subprocess.run(cmd, stdout=subprocess.PIPE,
                                               stderr=subprocess.PIPE)
                 if len(w3af_process.stdout) > 0:
                     print(f"W3AF stdout: {w3af_process.stdout.decode('utf-8')}", file=sys.stderr)

@@ -19,6 +19,7 @@
 """Tests for `faraday_agent_dispatcher` package."""
 
 import json
+import os
 import pytest
 import sys
 
@@ -139,8 +140,16 @@ from tests.utils.testing_faraday_server import FaradayTestConfig, test_config, t
                            "expected_exception": ValueError
                            },
                           {"remove": {},
-                           "replace": {}}
-                          ])
+                           "replace": {}
+                           },
+                          # X SSL cert is not an existent file
+                          {
+                            "remove": {},
+                            "replace": {Sections.SERVER: {"ssl": "True","ssl_cert": "/tmp/sarasa.pub"}},
+                            "expected_exception": ValueError
+                          },
+                          ],
+                         )
 def test_basic_built(tmp_custom_config, config_changes_dict):
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
@@ -180,7 +189,8 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                           f"`faraday-dispatcher config-wizard`"
                                       },
                                  ],
-                                 "expected_exception": ClientResponseError
+                                 "use_ssl_server": False,
+                                 "expected_exception": SystemExit
                              },
                              # 1
                              {
@@ -198,7 +208,8 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                                 f"`faraday-dispatcher config-wizard`"
                                       },
                                  ],
-                                 "expected_exception": ClientResponseError
+                                 "use_ssl_server": False,
+                                 "expected_exception": SystemExit
                              },
                              # 2
                              {
@@ -206,13 +217,92 @@ def test_basic_built(tmp_custom_config, config_changes_dict):
                                  "logs": [
                                      {"levelname": "INFO", "msg": "Registered successfully"},
                                  ],
+                                 "use_ssl_server": False,
+                             },
+                             # 3 OK SSL
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "host": "localhost",
+                                         "ssl": "True",
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.crt')
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "INFO", "msg": "Registered successfully"},
+                                 ],
+                                 "use_ssl_server": True,
+                             },
+                             # 4 Cannot conect
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "host": "cizfyteurbsc06aolxe0qtzsr2mftvy7bwvvd47e.com"
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "ERROR", "msg": "Can not connect to Faraday server"},
+                                 ],
+                                 "use_ssl_server": False,
+                                 "expected_exception": SystemExit
+                             },
+                             # 5 SSL to port with http
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "ssl": "True",
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "ERROR", "msg": "Faraday server timed-out. TIP: Check ssl configuration"},
+                                     {"levelname": "DEBUG", "msg": "Timeout error. Check ssl"},
+                                 ],
+                                 "optional_logs": [
+                                     {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
+                                 ],
+                                 "use_ssl_server": False,
+                                 "expected_exception": SystemExit
+                             },
+                             # 6 Invalid SSL
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "host": "localhost",
+                                         "ssl": "True",
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'wrong.crt')
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
+                                 ],
+                                 "use_ssl_server": True,
+                                 "expected_exception": SystemExit
+                             },
+                             # 7 Correct SSL but to 127.0.0.1, not to localhost
+                             {
+                                 "replace_data": {
+                                     Sections.SERVER: {
+                                         "ssl": "True",
+                                         "ssl_cert": str(Path(__file__).parent.parent / 'data' / 'ok.crt')
+                                     }
+                                 },
+                                 "logs": [
+                                     {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
+                                 ],
+                                 "use_ssl_server": True,
+                                 "expected_exception": SystemExit
                              }
                          ])
+@pytest.mark.asyncio
 async def test_start_and_register(register_options, test_config: FaradayTestConfig, tmp_default_config,
-                                     test_logger_handler):
+                                  test_logger_handler):
+    os.environ['DISPATCHER_TEST'] = "True"
+
+    client = test_config.ssl_client if register_options["use_ssl_server"] else test_config.client
+
     # Config
-    configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
-    configuration.set(Sections.SERVER, "host", test_config.client.host)
+    configuration.set(Sections.SERVER, "api_port", str(client.port))
+    configuration.set(Sections.SERVER, "host", client.host)
     configuration.set(Sections.SERVER, "workspace", test_config.workspace)
     configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
     configuration.set(Sections.EXECUTOR_DATA.format("ex1"), "cmd", 'exit 1')
@@ -226,26 +316,46 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
     tmp_default_config.save()
 
     # Init and register it
-    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
-
-    await dispatcher.register()
+    dispatcher = Dispatcher(client.session, tmp_default_config.config_file_path)
 
     if "expected_exception" not in register_options:
+        await dispatcher.register()
         # Control tokens
         assert dispatcher.agent_token == test_config.agent_token
 
         signer = TimestampSigner(test_config.app_config['SECRET_KEY'], salt="websocket_agent")
         agent_id = int(signer.unsign(dispatcher.websocket_token).decode('utf-8'))
         assert test_config.agent_id == agent_id
+    else:
+        with pytest.raises(register_options["expected_exception"]):
+            await dispatcher.register()
 
     history = test_logger_handler.history
 
-    for l in register_options["logs"]:
+    logs_ok, failed_logs = await check_logs(history, register_options["logs"])
+
+    if "optional_logs" in register_options and not logs_ok:
+        logs_ok, new_failed_logs = await check_logs(history, register_options["optional_logs"])
+        failed_logs = {"logs": failed_logs, "optional_logs": new_failed_logs}
+
+    assert logs_ok, failed_logs
+
+
+async def check_logs(history, logs):
+    logs_ok = True
+    failed_logs = []
+    for l in logs:
         min_count = 1 if "min_count" not in l else l["min_count"]
         max_count = sys.maxsize if "max_count" not in l else l["max_count"]
-        assert max_count >= \
-            len(list(filter(lambda x: x.levelname == l["levelname"] and l["msg"] in x.message, history))) >= \
-            min_count, l["msg"]
+        log_ok = max_count >= \
+                   len(list(filter(lambda x: x.levelname == l["levelname"] and l["msg"] in x.message, history))) >= \
+                   min_count
+
+        if not log_ok:
+            failed_logs.append(l)
+
+        logs_ok &= log_ok
+    return logs_ok, failed_logs
 
 
 @pytest.mark.parametrize('executor_options',
@@ -817,6 +927,7 @@ async def test_start_and_register(register_options, test_config: FaradayTestConf
                                  "extra": ["add_ex1"]
                              },
                          ])
+@pytest.mark.asyncio
 async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
                         test_logger_folder, executor_options):
     # Config
@@ -870,7 +981,7 @@ async def test_run_once(test_config: FaradayTestConfig, tmp_default_config, test
             len(list(filter(lambda x: x.levelname == l["levelname"] and l["msg"] in x.message, history))) >= \
             min_count, l["msg"]
 
-
+@pytest.mark.asyncio
 async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_logger_handler,
                        test_logger_folder):
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
@@ -882,9 +993,9 @@ async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_
             Path(__file__).parent.parent /
             'data' / 'basic_executor.py'
     )
-    configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3")
+    configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3,ex4")
 
-    for executor_name in ["ex1","ex2","ex3"]:
+    for executor_name in ["ex1","ex3","ex4"]:
         executor_section = Sections.EXECUTOR_DATA.format(executor_name)
         params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
         for section in [executor_section, params_section]:
@@ -894,8 +1005,8 @@ async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_
 
     configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param1", "True")
     configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param2", "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex2"), "param3", "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex2"), "param4", "False")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param3", "False")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param4", "False")
     tmp_default_config.save()
     dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
 
@@ -914,12 +1025,19 @@ async def test_connect(test_config: FaradayTestConfig, tmp_default_config, test_
                         {
                             "executor_name": "ex2",
                             "args": {
+                                "port_list": True,
+                                "target": True
+                            }
+                        },
+                        {
+                            "executor_name": "ex3",
+                            "args": {
                                 "param3": False,
                                 "param4": False
                             }
                         },
                         {
-                            "executor_name": "ex3",
+                            "executor_name": "ex4",
                             "args": {}
                         }
                     ]
