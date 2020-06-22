@@ -96,12 +96,15 @@ the configuration of them.
 
 The current official executors are:
 
+* [Arachni][arachni]
 * [Nessus][nessus]
 * [Nikto][nikto]
 * [Nmap][nmap]
+* [Openvas][openvas]
 * [Sublist3r][sublist3r]
 * [W3af][w3af]
 * [Wpscan][wpscan]
+* [Zap][zap]
 
 ## Development
 
@@ -129,6 +132,9 @@ development executors. The most important of them are:
 [sublist3r]: https://github.com/aboul3la/Sublist3r
 [w3af]: http://w3af.org/
 [wpscan]: https://wpscan.org/
+[arachni]: https://www.arachni-scanner.com/
+[openvas]: https://www.openvas.org/
+[zap]: https://www.zaproxy.org/
 
 # Roadmap
 
