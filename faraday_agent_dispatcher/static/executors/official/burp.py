@@ -65,7 +65,7 @@ def generate_xml(issues, name_result, json_issue_definitions):
 def main():
     # If the script is run outside the dispatcher the environment variables are checked.
     # ['API_KEY', 'TARGET_URL', 'NAMED_CONFIGURATION', 'API_HOST']
-    host_api = os.environ.get('API_HOST')
+    host_api = os.environ.get('EXECUTOR_CONFIG_API_HOST')
     url_target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
     api_key = os.environ.get('EXECUTOR_CONFIG_API_KEY')
     named_configuration = os.environ.get('NAMED_CONFIGURATION')
