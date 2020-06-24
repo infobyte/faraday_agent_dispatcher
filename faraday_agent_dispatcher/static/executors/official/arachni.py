@@ -8,7 +8,8 @@ from faraday_plugins.plugins.manager import PluginsManager
 
 def main():
     my_envs = os.environ
-    # If the script is run outside the dispatcher the environment variables are checked.
+    # If the script is run outside the dispatcher the environment variables
+    # are checked.
     # ['EXECUTOR_CONFIG_NAME_URL', 'ARACHNI_PATH']
     if 'EXECUTOR_CONFIG_NAME_URL' in my_envs:
         url_analyze = os.environ.get('EXECUTOR_CONFIG_NAME_URL')
@@ -25,16 +26,26 @@ def main():
     os.chdir(path_arachni)
     name_result = Path(path_arachni) / 'report.afr'
     cmd = ['./arachni',
-            url_analyze,
-            '--report-save-path',
-            name_result
-    ]
-    arachni_command = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+           url_analyze,
+           '--report-save-path',
+           name_result
+           ]
+    arachni_command = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
 
     if len(arachni_command.stdout) > 0:
-        print(f"Arachni stdout: {arachni_command.stdout.decode('utf-8')}", file=sys.stderr)
+        print(
+            f"Arachni stdout: {arachni_command.stdout.decode('utf-8')}",
+            file=sys.stderr
+        )
     if len(arachni_command.stderr) > 0:
-        print(f"Arachni stderr: {arachni_command.stderr.decode('utf-8')}", file=sys.stderr)
+        print(
+            f"Arachni stderr: {arachni_command.stderr.decode('utf-8')}",
+            file=sys.stderr
+        )
 
     cmd = [
         './arachni_reporter',
@@ -43,11 +54,23 @@ def main():
         'xml:outfile=xml_arachni_report.xml'
     ]
 
-    arachni_reporter_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    arachni_reporter_process = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
     if len(arachni_reporter_process.stdout) > 0:
-        print(f"Arachni stdout: {arachni_reporter_process.stdout.decode('utf-8')}", file=sys.stderr)
+        print(
+            "Arachni stdout: "
+            f"{arachni_reporter_process.stdout.decode('utf-8')}",
+            file=sys.stderr
+        )
     if len(arachni_reporter_process.stderr) > 0:
-        print(f"Arachni stderr: {arachni_reporter_process.stderr.decode('utf-8')}", file=sys.stderr)
+        print(
+            "Arachni stderr: "
+            f"{arachni_reporter_process.stderr.decode('utf-8')}",
+            file=sys.stderr
+        )
 
     plugin = PluginsManager().get_plugin("arachni")
 

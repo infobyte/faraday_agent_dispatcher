@@ -28,7 +28,12 @@ def main():
         lista_target = [targets]
 
     cmd = command_create(lista_target)
-    results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    results = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
     nmap = NmapPlugin()
     nmap.parseOutputString(results.stdout)
     print(nmap.get_json())
