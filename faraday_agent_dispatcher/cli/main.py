@@ -44,7 +44,8 @@ def cli():
 
 def process_config_file(config_filepath: Path, logger):
     if config_filepath is None and not os.path.exists(config.CONFIG_FILENAME):
-        logger.info("Config file doesn't exist. Run the command `faraday-dispatcher config-wizard` to create one")
+        logger.info("Config file doesn't exist. Run the command "
+                    "`faraday-dispatcher config-wizard` to create one")
         exit(1)
     config_filepath = config_filepath or Path(config.CONFIG_FILENAME)
     config_filepath = Path(config_filepath)
@@ -69,7 +70,9 @@ async def main(config_file, logger):
         loop = asyncio.get_event_loop()
         for signame in ('SIGINT', 'SIGTERM'):
             loop.add_signal_handler(getattr(signal, signame),
-                                    lambda: asyncio.ensure_future(dispatcher.close(signame)))
+                                    lambda: asyncio.ensure_future(
+                                        dispatcher.close(signame)
+                                    ))
 
         await dispatcher.register()
         await dispatcher.connect()
@@ -78,10 +81,14 @@ async def main(config_file, logger):
 
 
 @click.command(help="faraday-dispatcher run")
-@click.option("-c", "--config-file", default=None, help="Path to config ini file")
+@click.option("-c", "--config-file", default=None,
+              help="Path to config ini file")
 @click.option("--logdir", default="~", help="Path to logger directory")
-@click.option("--log-level", default="info", help="Log level set = [notset|debug|info|warning|error|critical]")
-@click.option("--debug", is_flag=True, default=False, help="Set debug logging, overrides --log-level option")
+@click.option("--log-level", default="info",
+              help="Log level set = "
+                   "[notset|debug|info|warning|error|critical]")
+@click.option("--debug", is_flag=True, default=False,
+              help="Set debug logging, overrides --log-level option")
 def run(config_file, logdir, log_level, debug):
     logger = setting_logger(debug, log_level, logdir)
     try:
@@ -106,10 +113,14 @@ def setting_logger(debug, log_level, logdir):
 
 
 @click.command(help="faraday-dispatcher config_wizard")
-@click.option("-c", "--config-filepath", default=None, help="Path to config ini file")
+@click.option("-c", "--config-filepath", default=None,
+              help="Path to config ini file")
 @click.option("--logdir", default="~", help="Path to logger directory")
-@click.option("--log-level", default="info", help="Log level set = [notset|debug|info|warning|error|critical]")
-@click.option("--debug", is_flag=True, default=False, help="Set debug logging, overrides --log-level option")
+@click.option("--log-level", default="info",
+              help="Log level set = "
+                   "[notset|debug|info|warning|error|critical]")
+@click.option("--debug", is_flag=True, default=False,
+              help="Set debug logging, overrides --log-level option")
 def config_wizard(config_filepath, logdir, log_level, debug):
     setting_logger(debug, log_level, logdir)
 
