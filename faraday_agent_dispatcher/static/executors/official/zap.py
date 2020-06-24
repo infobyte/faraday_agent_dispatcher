@@ -8,7 +8,8 @@ from faraday_plugins.plugins.manager import PluginsManager
 
 
 def main():
-    # If the script is run outside the dispatcher the environment variables are checked.
+    # If the script is run outside the dispatcher the environment variables
+    # are checked.
     # ['EXECUTOR_CONFIG_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
     try:
         target = os.environ['EXECUTOR_CONFIG_TARGET_URL']

@@ -16,7 +16,6 @@
 import sys
 import time
 import random
-import os
 import json
 
 
@@ -41,12 +40,15 @@ vuln_data = {
 if __name__ == '__main__':
 
     for j in range(10):
-        print("This goes to stderr and doesn't need to be JSON", file=sys.stderr)
-        time.sleep(random.choice([i * 0.1 for i in range(5,7)]))
+        print(
+            "This goes to stderr and doesn't need to be JSON",
+            file=sys.stderr
+        )
+        time.sleep(random.choice([i * 0.1 for i in range(5, 7)]))
 
         host_data_ = host_data.copy()
         host_data_['ip'] = host_data_['ip'].format(j+10)
         host_data_['vulnerabilities'] = [vuln_data]
         data = dict(hosts=[host_data_])
         print(json.dumps(data))
-        time.sleep(random.choice([i * 0.1 for i in range(1,3)]))
+        time.sleep(random.choice([i * 0.1 for i in range(1, 3)]))

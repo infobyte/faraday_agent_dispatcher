@@ -53,7 +53,9 @@ setup_requirements = ['pytest-runner', 'click', 'setuptools_scm']
 
 extra_req = {
         'dev': [
-            'giteasychangelog'
+            'giteasychangelog',
+            'flake8',
+            'pre-commit',
         ],
         'test': [
             'pytest',
@@ -92,7 +94,9 @@ setup(
     include_package_data=True,
     keywords='faraday integration',
     name='faraday_agent_dispatcher',
-    packages=find_packages(include=['faraday_agent_dispatcher', 'faraday_agent_dispatcher.*']),
+    packages=find_packages(
+        include=['faraday_agent_dispatcher', 'faraday_agent_dispatcher.*']
+    ),
     use_scm_version=False,
     setup_requires=setup_requirements,
     url='https://github.com/infobyte/faraday_agent_dispatcher',

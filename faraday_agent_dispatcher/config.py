@@ -40,7 +40,10 @@ CONFIG_PATH = FARADAY_PATH / 'config'
 
 
 if not FARADAY_PATH.exists():
-    print(f"{Bcolors.WARNING}The configuration folder does not exists, creating it{Bcolors.ENDC}")
+    print(
+        f"{Bcolors.WARNING}The configuration folder does not exists, creating"
+        f" it{Bcolors.ENDC}"
+    )
     FARADAY_PATH.mkdir()
 if not LOGS_PATH.exists():
     LOGS_PATH.mkdir()
@@ -66,9 +69,13 @@ def reset_config(filepath: Path):
         filepath = filepath / "dispatcher.ini"
     try:
         if not instance.read(filepath):
-            raise ValueError(f'Unable to read config file located at {filepath}', False)
-    except DuplicateSectionError as e:
-        raise ValueError(f'The config in {filepath} contains duplicated sections', True)
+            raise ValueError(
+                f'Unable to read config file located at {filepath}', False
+            )
+    except DuplicateSectionError:
+        raise ValueError(
+            f'The config in {filepath} contains duplicated sections', True
+        )
 
 
 def check_filepath(filepath: str = None):
@@ -87,20 +94,33 @@ def save_config(filepath=None):
 
 
 def verify():
-    # This methods tries to adapt old versions, if its not possible, warns about it and exits with a proper error code
+    """
+    This methods tries to adapt old versions, if its not possible,
+    warns about it and exits with a proper error code
+    """
     should_be_empty = False
     if Sections.AGENT not in instance:
         if OldSections.EXECUTOR in instance:
             agent_name = instance.get(OldSections.EXECUTOR, "agent_name")
             executor_name = DEFAULT_EXECUTOR_VERIFY_NAME
-            instance.add_section(Sections.EXECUTOR_DATA.format(executor_name))
-            instance.add_section(Sections.EXECUTOR_VARENVS.format(executor_name))
-            instance.add_section(Sections.EXECUTOR_PARAMS.format(executor_name))
+            instance.add_section(
+                Sections.EXECUTOR_DATA.format(executor_name)
+            )
+            instance.add_section(
+                Sections.EXECUTOR_VARENVS.format(executor_name)
+            )
+            instance.add_section(
+                Sections.EXECUTOR_PARAMS.format(executor_name)
+            )
             instance.add_section(Sections.AGENT)
             instance.set(Sections.AGENT, "agent_name", agent_name)
             instance.set(Sections.AGENT, "executors", executor_name)
             cmd = instance.get(OldSections.EXECUTOR, "cmd")
-            instance.set(Sections.EXECUTOR_DATA.format(executor_name), "cmd", cmd)
+            instance.set(
+                Sections.EXECUTOR_DATA.format(executor_name),
+                "cmd",
+                cmd
+            )
             instance.remove_section(OldSections.EXECUTOR)
         else:
             should_be_empty = True
@@ -108,12 +128,19 @@ def verify():
         data = []
 
         if 'executors' in instance[Sections.AGENT]:
-            executor_list = instance.get(Sections.AGENT, 'executors').split(',')
+            executor_list = instance.\
+                get(Sections.AGENT, 'executors').\
+                split(',')
             if '' in executor_list:
                 executor_list.remove('')
             for executor_name in executor_list:
-                if Sections.EXECUTOR_DATA.format(executor_name) not in instance.sections():
-                    data.append(f"{Sections.EXECUTOR_DATA.format(executor_name)} section does not exists")
+                if Sections.EXECUTOR_DATA.format(executor_name) \
+                        not in instance.sections():
+
+                    data.append(
+                        f"{Sections.EXECUTOR_DATA.format(executor_name)} "
+                        "section does not exists"
+                    )
         else:
             data.append(f'executors option not in {Sections.AGENT} section')
 
@@ -167,7 +194,10 @@ def control_config():
     for section in __control_dict:
         for option in __control_dict[section]:
             if section not in instance:
-                err = f"Section {section} is an mandatory section in the config"
+                err = f"Section {section} is an mandatory section in the " \
+                      f"config"
                 raise ValueError(err)
-            value = instance.get(section, option) if option in instance[section] else None
+            value = instance.get(section, option) \
+                if option in instance[section] \
+                else None
             __control_dict[section][option](option, value)

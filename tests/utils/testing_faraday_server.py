@@ -55,19 +55,26 @@ def get_agent_registration(test_config: FaradayTestConfig):
     async def agent_registration(request: Request):
         data = await request.text()
         data = json.loads(data)
-        if 'token' not in data or data['token'] != test_config.registration_token:
+        if 'token' not in data \
+                or data['token'] != test_config.registration_token:
             return web.HTTPUnauthorized()
         response_dict = {"name": data["name"],
                          "token": test_config.agent_token,
                          "id": test_config.agent_id}
-        return web.HTTPCreated(text=json.dumps(response_dict), headers={'content-type': 'application/json'})
+        return web.HTTPCreated(
+            text=json.dumps(response_dict),
+            headers={'content-type': 'application/json'}
+        )
     return agent_registration
 
 
 def verify_token(test_config, request):
-    if test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] not in request.headers:
+    if test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] \
+            not in request.headers:
         return web.HTTPUnauthorized()
-    header = request.headers[test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER']]
+    header = request.headers[
+        test_config.app_config['SECURITY_TOKEN_AUTHENTICATION_HEADER']
+    ]
     try:
         (auth_type, token) = header.split(None, 1)
     except ValueError:
@@ -85,12 +92,18 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
         if error:
             return error
 
-        ########## Sing and send
-        signer = TimestampSigner(test_config.app_config['SECRET_KEY'], salt="websocket_agent")
+        # ######### Sing and send
+        signer = TimestampSigner(
+            test_config.app_config['SECRET_KEY'],
+            salt="websocket_agent"
+        )
         assert test_config.agent_id is not None
         token = signer.sign(str(test_config.agent_id))
         response_dict = {"token": token.decode()}
-        return web.Response(text=json.dumps(response_dict), headers={'content-type': 'application/json'})
+        return web.Response(
+            text=json.dumps(response_dict),
+            headers={'content-type': 'application/json'}
+        )
     return agent_websocket_token
 
 
@@ -150,6 +163,7 @@ def tmp_default_config():
     yield config
     os.remove(config.config_file_path)
 
+
 @pytest.fixture
 def tmp_custom_config(config=None):
     config = TmpConfig()
@@ -166,17 +180,34 @@ def tmp_custom_config(config=None):
 async def aiohttp_faraday_client(test_config: FaradayTestConfig):
     app = web.Application()
     app.router.add_get("/", get_base(test_config))
-    app.router.add_post(f"/_api/v2/ws/{test_config.workspace}/agent_registration/",
-                        get_agent_registration(test_config))
-    app.router.add_post('/_api/v2/agent_websocket_token/', get_agent_websocket_token(test_config))
-    app.router.add_post(f"/_api/v2/ws/{test_config.workspace}/bulk_create/", get_bulk_create(test_config))
-    app.router.add_post(f"/_api/v2/ws/error500/bulk_create/", get_bulk_create(test_config))
-    app.router.add_post(f"/_api/v2/ws/error429/bulk_create/", get_bulk_create(test_config))
+    app.router.add_post(
+        f"/_api/v2/ws/{test_config.workspace}/agent_registration/",
+        get_agent_registration(test_config)
+    )
+    app.router.add_post(
+        '/_api/v2/agent_websocket_token/',
+        get_agent_websocket_token(test_config)
+    )
+    app.router.add_post(
+        f"/_api/v2/ws/{test_config.workspace}/bulk_create/",
+        get_bulk_create(test_config)
+    )
+    app.router.add_post(
+        "/_api/v2/ws/error500/bulk_create/",
+        get_bulk_create(test_config)
+    )
+    app.router.add_post(
+        "/_api/v2/ws/error429/bulk_create/",
+        get_bulk_create(test_config)
+    )
     server = TestServer(app)
     await server.start_server()
     ssl_cert_path = Path(__file__).parent.parent / 'data'
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ssl_context.load_cert_chain(ssl_cert_path / 'ok.crt', ssl_cert_path / 'ok.key')
+    ssl_context.load_cert_chain(
+        ssl_cert_path / 'ok.crt',
+        ssl_cert_path / 'ok.key'
+    )
     ssl_server = TestServer(app)
     await ssl_server.start_server(ssl=ssl_context)
     client = TestClient(server, raise_for_status=True)
@@ -206,7 +237,9 @@ def test_logger_handler():
     logger = get_logger()
     logger_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s {%(threadName)s} [%(filename)s:%(lineno)s - %(funcName)s()]  %(message)s')
+        '%(asctime)s - %(name)s - %(levelname)s {%(threadName)s} '
+        '[%(filename)s:%(lineno)s - %(funcName)s()]  %(message)s'
+    )
     logger_handler.setFormatter(formatter)
     logger.addHandler(logger_handler)
     yield logger_handler

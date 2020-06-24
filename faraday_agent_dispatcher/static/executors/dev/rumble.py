@@ -25,16 +25,20 @@ try:
     OUTPUT_DIR = os.environ["RUMBLE_OUTPUT_DIR"]
     NETWORK_RANGE = os.environ["RUMBLE_NETWORK_RANGE"]
 except KeyError:
-    print("You must set the environment variables RUMBLE_BIN_PATH, RUMBLE_OUTPUT_DIR and RUMBLE_NETWORK_RANGE",
-          file=sys.stderr)
+    print(
+        "You must set the environment variables RUMBLE_BIN_PATH, "
+        "RUMBLE_OUTPUT_DIR and RUMBLE_NETWORK_RANGE",
+        file=sys.stderr
+    )
     sys.exit()
 
 
 def convert_rumble_assets(assets: list):
     """
-    Receives a list with all assets in the format rumble uses and converts it in a way
-    we can add all of it into Faraday
-    :return: dictionary with all assets data transformed in a way we can integrate with Faraday
+    Receives a list with all assets in the format rumble uses and converts it
+    in a way we can add all of it into Faraday
+    :return: dictionary with all assets data transformed in a way we can
+    integrate with Faraday
     """
 
     hosts = []
@@ -54,24 +58,35 @@ def convert_rumble_assets(assets: list):
 
             ip_address, port, ip_protocol = service.split("/")
             service_name_parts = []
-            data_keys = ["protocol", "service.product", "service.family", "service.vendor", "service.version", "banner"]
+            data_keys = [
+                "protocol",
+                "service.product",
+                "service.family",
+                "service.vendor",
+                "service.version",
+                "banner"
+            ]
             service_data = asset["services"][service]
-            
+
             for dk in data_keys:
                 if dk in service_data:
                     service_name_parts.append(service_data[dk])
 
             service_name = " ".join(service_name_parts).strip()
 
-            # we cannot send an empty service name or it won't be possible to view it in the webui
+            # we cannot send an empty service name or it won't be possible
+            # to view it in the webui
             if not service_name:
                 service_name = "unknown"
 
-            # limit the service name length to avoid issues displaying it in the webui
+            # limit the service name length to avoid issues displaying it in
+            # the webui
             if len(service_name) > 120:
                 service_name = service_name[:120]
 
-            services.append(dict(name=service_name, protocol=ip_protocol, port=port))
+            services.append(
+                dict(name=service_name, protocol=ip_protocol, port=port)
+            )
 
         host["services"] = services
 
@@ -87,15 +102,23 @@ async def main():
         os.mkdir(OUTPUT_DIR)
 
     # TODO: run with sudo for better results
-    scan_output = os.path.join(OUTPUT_DIR, NETWORK_RANGE.replace('/','_')) + "_" + str(int(time.time()))
+    scan_output = os.path.join(
+        OUTPUT_DIR,
+        NETWORK_RANGE.replace('/', '_')
+    ) + "_" + str(int(time.time()))
     command = f"{RUMBLE_BIN} {NETWORK_RANGE} -o {scan_output}"
-    rumble_proc = await asyncio.create_subprocess_shell(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    rumble_proc = await asyncio.create_subprocess_shell(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
     print(f"Running Rumble: {command}", file=sys.stderr)
-    exit_code = await rumble_proc.wait()
+    await rumble_proc.wait()
 
-    # after rumble finished the scanning we will have several files with different formats
-    # we only care about the json one:
-    # assets.jsonl: The new optimized format for correlated, fingerprinted assets.
+    # after rumble finished the scanning we will have several files with
+    # different formats we only care about the json one:
+    # assets.jsonl: The new optimized format for correlated, fingerprinted
+    # assets.
 
     assets = []
     try:
@@ -119,4 +142,3 @@ def main_sync():
 
 if __name__ == "__main__":
     main_sync()
-
