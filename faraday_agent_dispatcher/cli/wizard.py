@@ -33,12 +33,13 @@ import faraday_agent_dispatcher.logger as logging
 
 logger = logging.get_logger()
 
-REPO_EXECUTOR_PAGE_SIZE = 5
+DEFAULT_PAGE_SIZE = 5
 
 
 class Wizard:
 
     MAX_BUFF_SIZE = 1024
+    PAGE_SIZE = DEFAULT_PAGE_SIZE
     EXECUTOR_SECTIONS = [
         Sections.EXECUTOR_DATA,
         Sections.EXECUTOR_PARAMS,
@@ -164,7 +165,7 @@ class Wizard:
             for executor in os.listdir(executor_folder())
             if re.match("(.*_manifest.json|__pycache__)", executor) is None
         ]
-        max_page = int(math.ceil(len(executors) / REPO_EXECUTOR_PAGE_SIZE))
+        max_page = int(math.ceil(len(executors) / self.PAGE_SIZE))
         chosen = None
         metadata = None
         page = 0
@@ -172,9 +173,9 @@ class Wizard:
             print("The executors are:")
             paged_executors = \
                 executors[
-                              page*REPO_EXECUTOR_PAGE_SIZE:
+                              page * self.PAGE_SIZE:
                               min(
-                                  (page+1) * REPO_EXECUTOR_PAGE_SIZE,
+                                  (page+1) * self.PAGE_SIZE,
                                   len(executors)
                               )
                 ]
