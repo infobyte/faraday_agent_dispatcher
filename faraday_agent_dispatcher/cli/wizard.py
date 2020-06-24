@@ -8,8 +8,13 @@ from pathlib import Path
 
 from faraday_agent_dispatcher import config
 from faraday_agent_dispatcher.cli.utils.exceptions import WizardCanceledOption
-from faraday_agent_dispatcher.cli.utils.model_load import process_agent, process_var_envs, process_params, \
-    process_repo_var_envs, set_repo_params
+from faraday_agent_dispatcher.cli.utils.model_load import (
+    process_agent,
+    process_var_envs,
+    process_params,
+    process_repo_var_envs,
+    set_repo_params,
+)
 from faraday_agent_dispatcher.utils.metadata_utils import (
     executor_folder,
     executor_metadata,
@@ -34,7 +39,11 @@ REPO_EXECUTOR_PAGE_SIZE = 5
 class Wizard:
 
     MAX_BUFF_SIZE = 1024
-    EXECUTOR_SECTIONS = [Sections.EXECUTOR_DATA, Sections.EXECUTOR_PARAMS, Sections.EXECUTOR_VARENVS]
+    EXECUTOR_SECTIONS = [
+        Sections.EXECUTOR_DATA,
+        Sections.EXECUTOR_PARAMS,
+        Sections.EXECUTOR_VARENVS
+    ]
 
     def __init__(self, config_filepath: Path):
         self.config_filepath = config_filepath
@@ -43,7 +52,9 @@ class Wizard:
             config.reset_config(config_filepath)
         except ValueError as e:
             if e.args[1] or config_filepath.is_file():
-                raise e  # the filepath is either a file, or a folder containing a file, which can't be processed
+                # the filepath is either a file, or a folder containing a file,
+                # which can't be processed
+                raise e
         try:
             config.verify()
         except ValueError as e:
@@ -55,12 +66,17 @@ class Wizard:
     async def run(self):
         end = False
 
-        def_value, choices = get_default_value_and_choices("Q", ["A", "E", "Q"])
+        def_value, choices = get_default_value_and_choices("Q",
+                                                           ["A", "E", "Q"]
+                                                           )
 
         while not end:
-            value = click.prompt("Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?",
-                                 type=click.Choice(choices=choices, case_sensitive=False),
-                                 default=def_value)
+            value = click.prompt(
+                "Do you want to edit the [A]gent or the [E]xecutors? Do you "
+                "want to [Q]uit?",
+                type=click.Choice(choices=choices, case_sensitive=False),
+                default=def_value
+            )
             if value.upper() == "A":
                 process_agent()
             elif value.upper() == "E":
@@ -73,7 +89,8 @@ class Wizard:
                         config.control_config()
                         end = True
                     else:
-                        print(f"{Bcolors.FAIL}Add agent configuration{Bcolors.ENDC}")
+                        print(f"{Bcolors.FAIL}Add agent configuration"
+                              f"{Bcolors.ENDC}")
 
                 except ValueError as e:
                     print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
@@ -88,13 +105,18 @@ class Wizard:
                 self.executors_list.remove("")
 
     def save_executors(self):
-        config.instance.set(Sections.AGENT, "executors", ",".join(self.executors_list))
+        config.instance.set(
+            Sections.AGENT,
+            "executors",
+            ",".join(self.executors_list)
+        )
 
     async def process_executors(self):
         end = False
 
         while not end:
-            print(f"The actual configured {Bcolors.OKBLUE}{Bcolors.BOLD}executors{Bcolors.ENDC} are: {Bcolors.OKGREEN}"
+            print(f"The actual configured {Bcolors.OKBLUE}{Bcolors.BOLD}"
+                  f"executors{Bcolors.ENDC} are: {Bcolors.OKGREEN}"
                   f"{self.executors_list}{Bcolors.ENDC}")
             value = choose_adm("executor")
             if value.upper() == "A":
@@ -109,10 +131,17 @@ class Wizard:
     def check_executors_name(self, show_text: str, default=None):
         name = click.prompt(show_text, default=default)
         if name in self.executors_list and name != default:
-            print(f"{Bcolors.WARNING}The executor {name} already exists{Bcolors.ENDC}")
+            print(
+                f"{Bcolors.WARNING}The executor {name} already exists"
+                f"{Bcolors.ENDC}"
+            )
             return
         if ',' in name:
-            print(f"{Bcolors.WARNING}The executor cannot contain \',\' in its name{Bcolors.ENDC}")
+            print(
+                f"{Bcolors.WARNING}"
+                f"The executor cannot contain \',\' in its name"
+                f"{Bcolors.ENDC}"
+            )
             return
         return name
 
@@ -120,7 +149,10 @@ class Wizard:
         name = self.check_executors_name("Name")
         if name:
             self.executors_list.append(name)
-            custom_executor = confirm_prompt("Is a custom executor?", default=False)
+            custom_executor = confirm_prompt(
+                "Is a custom executor?",
+                default=False
+            )
             if custom_executor:
                 self.new_custom_executor(name)
             else:
@@ -138,11 +170,14 @@ class Wizard:
         page = 0
         while chosen is None:
             print("The executors are:")
-            paged_executors = executors[
-                              page*REPO_EXECUTOR_PAGE_SIZE
-                              :
-                              min((page+1) * REPO_EXECUTOR_PAGE_SIZE, len(executors))
-                              ]
+            paged_executors = \
+                executors[
+                              page*REPO_EXECUTOR_PAGE_SIZE:
+                              min(
+                                  (page+1) * REPO_EXECUTOR_PAGE_SIZE,
+                                  len(executors)
+                              )
+                ]
             for i, name in enumerate(paged_executors):
                 print(f"{Bcolors.OKGREEN}{i+1}: {name}{Bcolors.ENDC}")
             if page > 0:
@@ -151,31 +186,48 @@ class Wizard:
                 print(f"{Bcolors.OKBLUE}+: Next page{Bcolors.ENDC}")
             print(f"{Bcolors.OKBLUE}Q: Don't choose{Bcolors.ENDC}")
             chosen = click.prompt("Choose one")
-            if chosen not in [str(i) for i in range(1, len(paged_executors)+1)]:
+            if chosen not in [
+                str(i)
+                for i in range(1, len(paged_executors)+1)
+            ]:
                 if chosen == '+' and page < max_page - 1:
                     page += 1
                 elif chosen == '-' and page > 0:
                     page -= 1
                 elif chosen == "Q":
-                    raise WizardCanceledOption("Repository executor selection canceled")
+                    raise WizardCanceledOption(
+                        "Repository executor selection canceled"
+                    )
                 else:
-                    print(f"{Bcolors.WARNING}Invalid option {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
+                    print(
+                        f"{Bcolors.WARNING}Invalid option "
+                        f"{Bcolors.BOLD}{chosen}{Bcolors.ENDC}"
+                    )
                 chosen = None
             else:
                 try:
                     chosen = paged_executors[int(chosen)-1]
                     metadata = executor_metadata(chosen)
                     if not check_metadata(metadata):
-                        print(f"{Bcolors.WARNING}Invalid manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
+                        print(
+                            f"{Bcolors.WARNING}Invalid manifest for "
+                            f"{Bcolors.BOLD}{chosen}{Bcolors.ENDC}"
+                        )
                         chosen = None
                     else:
                         if not await check_commands(metadata):
-                            print(f"{Bcolors.WARNING}Invalid bash dependency for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
+                            print(
+                                f"{Bcolors.WARNING}Invalid bash dependency for"
+                                f" {Bcolors.BOLD}{chosen}{Bcolors.ENDC}"
+                                f"")
                             chosen = None
                         else:
                             metadata["name"] = chosen
-                except FileNotFoundError as e:
-                    print(f"{Bcolors.WARNING}Not existent manifest for {Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
+                except FileNotFoundError:
+                    print(
+                        f"{Bcolors.WARNING}Not existent manifest for "
+                        f"{Bcolors.BOLD}{chosen}{Bcolors.ENDC}"
+                    )
                     chosen = None
 
         return metadata
@@ -186,21 +238,38 @@ class Wizard:
             Wizard.set_generic_data(name, repo_executor_name=metadata["name"])
             process_repo_var_envs(name, metadata)
             set_repo_params(name, metadata)
-        except WizardCanceledOption as e:
-            print(f"{Bcolors.BOLD}New repository executor not added{Bcolors.ENDC}")
+        except WizardCanceledOption:
+            print(
+                f"{Bcolors.BOLD}New repository executor not added"
+                f"{Bcolors.ENDC}"
+            )
 
     @staticmethod
     def set_generic_data(name, cmd=None, repo_executor_name: str = None):
         max_buff_size = \
-            click.prompt("Max data sent to server", type=click.IntRange(min=Wizard.MAX_BUFF_SIZE), default=65536)
+            click.prompt("Max data sent to server",
+                         type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
+                         default=65536)
         for section in Wizard.EXECUTOR_SECTIONS:
             formatted_section = section.format(name)
             config.instance.add_section(formatted_section)
-        config.instance.set(Sections.EXECUTOR_DATA.format(name), "max_size", f"{max_buff_size}")
+        config.instance.set(
+            Sections.EXECUTOR_DATA.format(name),
+            "max_size",
+            f"{max_buff_size}"
+        )
         if repo_executor_name:
-            config.instance.set(Sections.EXECUTOR_DATA.format(name), "repo_executor", f"{repo_executor_name}")
+            config.instance.set(
+                Sections.EXECUTOR_DATA.format(name),
+                "repo_executor",
+                f"{repo_executor_name}"
+            )
         else:
-            config.instance.set(Sections.EXECUTOR_DATA.format(name), "cmd", cmd)
+            config.instance.set(
+                Sections.EXECUTOR_DATA.format(name),
+                "cmd",
+                cmd
+            )
 
     def new_custom_executor(self, name):
         cmd = click.prompt("Command to execute", default="exit 1")
@@ -211,7 +280,9 @@ class Wizard:
     def edit_executor(self):
         name = click.prompt("Name")
         if name not in self.executors_list:
-            print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
+            print(
+                f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}"
+            )
             return
         new_name = None
         while new_name is None:
@@ -230,16 +301,22 @@ class Wizard:
         section = Sections.EXECUTOR_DATA.format(name)
         repo_name = config.instance[section].get("repo_executor", None)
         if repo_name:
-            max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
-                                         default=config.instance.get(section, "max_size"))
+            max_buff_size = click.prompt(
+                "Max data sent to server",
+                type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
+                default=config.instance.get(section, "max_size")
+            )
             config.instance.set(section, "max_size", f"{max_buff_size}")
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(name, metadata)
         else:
             cmd = click.prompt("Command to execute",
                                default=config.instance.get(section, "cmd"))
-            max_buff_size = click.prompt("Max data sent to server", type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
-                                         default=config.instance.get(section, "max_size"))
+            max_buff_size = click.prompt(
+                "Max data sent to server",
+                type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
+                default=config.instance.get(section, "max_size")
+            )
             config.instance.set(section, "cmd", cmd)
             config.instance.set(section, "max_size", f"{max_buff_size}")
             process_var_envs(name)
@@ -248,7 +325,9 @@ class Wizard:
     def delete_executor(self):
         name = click.prompt("Name")
         if name not in self.executors_list:
-            print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
+            print(
+                f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}"
+            )
             return
         for section in Wizard.EXECUTOR_SECTIONS:
             config.instance.remove_section(section.format(name))
