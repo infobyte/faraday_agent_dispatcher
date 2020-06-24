@@ -25,7 +25,7 @@ import asyncio
 
 from aiohttp import ClientSession
 
-from faraday_agent_dispatcher.cli.wizard import Wizard
+from faraday_agent_dispatcher.cli.wizard import Wizard, DEFAULT_PAGE_SIZE
 from faraday_agent_dispatcher.dispatcher import Dispatcher
 from faraday_agent_dispatcher import config, __version__
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
@@ -121,12 +121,18 @@ def setting_logger(debug, log_level, logdir):
                    "[notset|debug|info|warning|error|critical]")
 @click.option("--debug", is_flag=True, default=False,
               help="Set debug logging, overrides --log-level option")
-def config_wizard(config_filepath, logdir, log_level, debug):
+@click.option("-p", "--page-size", default=DEFAULT_PAGE_SIZE,
+              type=click.types.IntRange(0, 20),
+              help="Size of paged options")
+def config_wizard(config_filepath, logdir, log_level, debug, page_size):
     setting_logger(debug, log_level, logdir)
 
     config_filepath = config_filepath or config.CONFIG_FILENAME
 
-    asyncio.run(Wizard(Path(config_filepath)).run())
+    wizard = Wizard(Path(config_filepath))
+    wizard.PAGE_SIZE = page_size
+
+    asyncio.run(wizard.run())
 
 
 cli.add_command(config_wizard)
