@@ -2,7 +2,10 @@ import click
 from pathlib import Path
 
 from faraday_agent_dispatcher import config
-from faraday_agent_dispatcher.cli.utils.general_inputs import confirm_prompt, choose_adm
+from faraday_agent_dispatcher.cli.utils.general_inputs import (
+    confirm_prompt,
+    choose_adm,
+)
 from faraday_agent_dispatcher.cli.utils.general_prompts import (
     get_new_name,
 )
@@ -11,12 +14,20 @@ from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 
 def ask_value(agent_dict, opt, section, ssl, control_opt=None):
-    def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
+    def_value = config.instance[section].get(opt, None) or \
+                agent_dict[section][opt]["default_value"](ssl)
     value = None
     while value is None:
-        value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
+        value = click.prompt(
+            f"{opt}",
+            default=def_value,
+            type=agent_dict[section][opt]["type"]
+        )
         if value == "":
-            print(f"{Bcolors.WARNING}Trying to save with empty value{Bcolors.ENDC}")
+            print(
+                f"{Bcolors.WARNING}Trying to save with empty value"
+                f"{Bcolors.ENDC}"
+            )
         try:
             if control_opt is None:
                 config.__control_dict[section][opt](opt, value)
@@ -89,9 +100,23 @@ def process_agent():
             elif section == Sections.SERVER and opt.__contains__("port"):
                 if opt == "ssl_port":
                     if ssl:
-                        value = ask_value(agent_dict, opt, section, ssl, 'api_port')
-                        config.instance.set(section, 'api_port', str(value))
-                        config.instance.set(section, 'websocket_port', str(value))
+                        value = ask_value(
+                            agent_dict,
+                            opt,
+                            section,
+                            ssl,
+                            'api_port'
+                        )
+                        config.instance.set(
+                            section,
+                            'api_port',
+                            str(value)
+                        )
+                        config.instance.set(
+                            section,
+                            'websocket_port',
+                            str(value)
+                        )
                     else:
                         continue
                 else:
@@ -102,12 +127,14 @@ def process_agent():
                         continue
             elif opt == "ssl_cert":
                 if ssl:
-                    path = None
-                    while path is None:
-                        value = ask_value(agent_dict, opt, section, ssl)
-                        if value is "" or Path(value).exists():
-                            path = value
-
+                    if confirm_prompt("Default SSL behavior?"):
+                        path = ""
+                    else:
+                        path = None
+                        while path is None:
+                            value = ask_value(agent_dict, opt, section, ssl)
+                            if value != "" and Path(value).exists():
+                                path = value
                     config.instance.set(section, opt, str(path))
             else:
                 value = ask_value(agent_dict, opt, section, ssl)
@@ -121,28 +148,48 @@ def process_var_envs(executor_name):
     section = Sections.EXECUTOR_VARENVS.format(executor_name)
 
     while not end:
-        print(f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name} executor's environment variables{Bcolors.ENDC}"
-              f" are: {Bcolors.OKGREEN}{config.instance.options(section)}{Bcolors.ENDC}")
+        print(
+            f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name}"
+            f" executor's environment variables{Bcolors.ENDC} are:"
+            f" {Bcolors.OKGREEN}{config.instance.options(section)}"
+            f"{Bcolors.ENDC}"
+        )
         value = choose_adm("environment variable")
         if value == "A":
             env_var = click.prompt("Environment variable name").lower()
             if env_var in config.instance.options(section):
-                print(f"{Bcolors.WARNING}The environment variable {env_var} already exists{Bcolors.ENDC}")
+                print(
+                    f"{Bcolors.WARNING}The environment variable {env_var} "
+                    f"already exists{Bcolors.ENDC}"
+                )
             else:
                 value = click.prompt("Environment variable value")
                 config.instance.set(section, env_var, value)
         elif value == "M":
             env_var = click.prompt("Environment variable name").lower()
             if env_var not in config.instance.options(section):
-                print(f"{Bcolors.WARNING}There is no {env_var} environment variable{Bcolors.ENDC}")
+                print(
+                    f"{Bcolors.WARNING}There is no {env_var} environment "
+                    f"variable{Bcolors.ENDC}"
+                )
             else:
-                def_value, env_var = get_new_name(env_var, section, "environment variable")
-                value = click.prompt("Environment variable value", default=def_value)
+                def_value, env_var = get_new_name(
+                    env_var,
+                    section,
+                    "environment variable"
+                )
+                value = click.prompt(
+                    "Environment variable value",
+                    default=def_value
+                )
                 config.instance.set(section, env_var, value)
         elif value == "D":
             env_var = click.prompt("Environment variable name").lower()
             if env_var not in config.instance.options(section):
-                print(f"{Bcolors.WARNING}There is no {env_var} environment variable{Bcolors.ENDC}")
+                print(
+                    f"{Bcolors.WARNING}There is no {env_var}"
+                    f"environment variable{Bcolors.ENDC}"
+                )
             else:
                 config.instance.remove_option(section, env_var)
         else:
@@ -154,20 +201,30 @@ def process_params(executor_name):
     section = Sections.EXECUTOR_PARAMS.format(executor_name)
 
     while not end:
-        print(f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name} executor's arguments{Bcolors.ENDC} are: "
-              f"{Bcolors.OKGREEN}{config.instance.options(section)}{Bcolors.ENDC}")
+        print(
+            f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name}"
+            f" executor's arguments{Bcolors.ENDC} are: "
+            f"{Bcolors.OKGREEN}{config.instance.options(section)}"
+            f"{Bcolors.ENDC}"
+        )
         value = choose_adm("argument")
         if value == "A":
             param = click.prompt("Argument name").lower()
             if param in config.instance.options(section):
-                print(f"{Bcolors.WARNING}The argument {param} already exists{Bcolors.ENDC}")
+                print(
+                    f"{Bcolors.WARNING}The argument {param} already exists"
+                    f"{Bcolors.ENDC}"
+                )
             else:
                 value = confirm_prompt("Is mandatory?")
                 config.instance.set(section, param, f"{value}")
         elif value == "M":
             param = click.prompt("Argument name").lower()
             if param not in config.instance.options(section):
-                print(f"{Bcolors.WARNING}There is no {param} argument{Bcolors.ENDC}")
+                print(
+                    f"{Bcolors.WARNING}There is no {param} argument"
+                    f"{Bcolors.ENDC}"
+                )
             else:
                 def_value, param = get_new_name(param, section, "argument")
                 value = confirm_prompt("Is mandatory?", default=def_value)
@@ -175,7 +232,10 @@ def process_params(executor_name):
         elif value == "D":
             param = click.prompt("Argument name").lower()
             if param not in config.instance.options(section):
-                print(f"{Bcolors.WARNING}There is no {param} argument{Bcolors.ENDC}")
+                print(
+                    f"{Bcolors.WARNING}There is no {param} argument"
+                    f"{Bcolors.ENDC}"
+                )
             else:
                 config.instance.remove_option(section, param)
         else:
@@ -188,7 +248,10 @@ def process_repo_var_envs(executor_name, metadata: dict):
 
     for env_var in env_vars:
         def_value = config.instance[section].get(env_var, None)
-        value = click.prompt(f"Environment variable {env_var} value", default=def_value)
+        value = click.prompt(
+            f"Environment variable {env_var} value",
+            default=def_value
+        )
         config.instance.set(section, env_var, value)
 
 
