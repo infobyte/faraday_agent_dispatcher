@@ -122,7 +122,7 @@ def setting_logger(debug, log_level, logdir):
 @click.option("--debug", is_flag=True, default=False,
               help="Set debug logging, overrides --log-level option")
 @click.option("-p", "--page-size", default=DEFAULT_PAGE_SIZE,
-              type=click.types.IntRange(0, 20),
+              type=click.types.IntRange(2, 20),
               help="Size of paged options")
 def config_wizard(config_filepath, logdir, log_level, debug, page_size):
     setting_logger(debug, log_level, logdir)
