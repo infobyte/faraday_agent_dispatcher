@@ -4,10 +4,19 @@ import sys
 import tempfile
 import requests
 import time
+import socket
 from pathlib import Path
 import xml.etree.cElementTree as ET
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.burp.plugin import BurpPlugin
+
+
+def get_ip(host_name):
+    try:
+        ip = socket.gethostbyname(host_name)
+    except socket.error:
+        ip = '0.0.0.0'
+    return ip
 
 
 def get_issue_data(issue_type_id, json_issue_definitions):
@@ -28,6 +37,7 @@ def get_issue_data(issue_type_id, json_issue_definitions):
 def generate_xml(issues, name_result, json_issue_definitions):
     xml_issues = ET.Element("issues")
     for issue in issues['issue_events']:
+        host_ip = get_ip(issue['issue']['origin'])
         info_issue = get_issue_data(issue['issue']['type_index'],
                                     json_issue_definitions)
 
@@ -37,7 +47,8 @@ def generate_xml(issues, name_result, json_issue_definitions):
         ET.SubElement(xml_issue, "type").text = \
             str(issue['issue']['type_index'])
         ET.SubElement(xml_issue, "name").text = issue['issue']['name']
-        ET.SubElement(xml_issue, "host").text = issue['issue']['origin']
+        ET.SubElement(xml_issue, "host", ip=host_ip).text = \
+            issue['issue']['origin']
         ET.SubElement(xml_issue, "path").text = issue['issue']['path']
         ET.SubElement(xml_issue, "location").text = issue['issue']['caption']
         ET.SubElement(xml_issue, "severity").text = issue['issue']['severity']
@@ -48,14 +59,16 @@ def generate_xml(issues, name_result, json_issue_definitions):
         ET.SubElement(xml_issue, "remediationBackground").text = \
             info_issue['remediationBackground']
         xml_request_response = ET.SubElement(xml_issue, "requestresponse")
-        evidence = issue['issue']['evidence'][0]['request_response']
+
         try:
-            request = evidence['request'][0]['data']
+            evidence = issue['issue']['evidence'][0]
+            request = evidence['request_response']['request'][0]['data']
         except IndexError:
             request = 'No information'
 
         try:
-            response = evidence['response'][0]['data']
+            evidence = issue['issue']['evidence'][0]
+            response = evidence['request_response']['response'][0]['data']
         except IndexError:
             response = 'No information'
 
