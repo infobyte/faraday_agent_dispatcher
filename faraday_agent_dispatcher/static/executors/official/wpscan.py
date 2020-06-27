@@ -8,7 +8,8 @@ from faraday_plugins.plugins.repo.wpscan.plugin import WPScanPlugin
 
 
 def main():
-    # If the script is run outside the dispatcher the environment variables are checked.
+    # If the script is run outside the dispatcher the environment variables
+    # are checked.
     # ['EXECUTOR_CONFIG_WPSCAN_TARGET_URL']
     url_target = os.environ.get('EXECUTOR_CONFIG_WPSCAN_TARGET_URL')
     if not url_target:
@@ -18,14 +19,31 @@ def main():
     with tempfile.TemporaryDirectory() as tempdirname:
         tempdir = Path(tempdirname)
         name_output_file = 'wpscan-output.json'
-        command = f'docker run --rm --mount type=bind,source={tempdirname},target=/output ' \
-                  f'wpscanteam/wpscan:latest -o /output/{name_output_file} --url {url_target} -f json'
+        cmd = [
+            'docker', 'run',
+            '--rm',
+            '--mount', f'type=bind,source={tempdirname},target=/output',
+            'wpscanteam/wpscan:latest',
+            '-o', f'/output/{name_output_file}',
+            '--url', url_target,
+            '-f', 'json',
+        ]
 
-        wpscan_process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        wpscan_process = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
         if len(wpscan_process.stdout) > 0:
-            print(f"Wpscan stdout: {wpscan_process.stdout.decode('utf-8')}", file=sys.stderr)
+            print(
+                f"Wpscan stdout: {wpscan_process.stdout.decode('utf-8')}",
+                file=sys.stderr
+            )
         if len(wpscan_process.stderr) > 0:
-            print(f"Wpscan stderr: {wpscan_process.stderr.decode('utf-8')}", file=sys.stderr)
+            print(
+                f"Wpscan stderr: {wpscan_process.stderr.decode('utf-8')}",
+                file=sys.stderr
+            )
 
         plugin = WPScanPlugin()
         out_file = tempdir / name_output_file

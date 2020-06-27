@@ -35,7 +35,8 @@ class Input:
 
 class VarEnvInput(Input):
 
-    def __init__(self, name: str, value: str, adm_type: ADMType, error_name=None, new_name=None):
+    def __init__(self, name: str, value: str, adm_type: ADMType,
+                 error_name=None, new_name=None):
         if adm_type == ADMType.ADD and value == "":
             raise ValueError("IF ADMTYPE = ADD, VALUE CAN NOT BE \"\"")
         self.name = name
@@ -67,8 +68,10 @@ class ParamInput(VarEnvInput):
 
 
 class ExecutorInput:
-    def __init__(self, name=None, error_name=None, cmd=None, max_size=None, varenvs: List[VarEnvInput] = None,
-                 params: List[ParamInput] = None, new_name: str = "", new_error_name=None, adm_type: ADMType = None):
+    def __init__(self, name=None, error_name=None, cmd=None, max_size=None,
+                 varenvs: List[VarEnvInput] = None,
+                 params: List[ParamInput] = None, new_name: str = "",
+                 new_error_name=None, adm_type: ADMType = None):
         self.name = name or ""
         self.error_name = error_name
         self.cmd = cmd or ""
@@ -123,8 +126,9 @@ class RepoVarEnvInput(Input):
 
 class RepoExecutorInput:
 
-    def __init__(self, base=None, name=None, error_name=None, max_size=None, varenvs: List[RepoVarEnvInput] = None,
-                 new_name: str = "", adm_type: ADMType = None):
+    def __init__(self, base=None, name=None, error_name=None, max_size=None,
+                 varenvs: List[RepoVarEnvInput] = None, new_name: str = "",
+                 adm_type: ADMType = None):
         self.name = name or ""
         self.error_name = error_name
         self.base = base or ""
@@ -163,7 +167,8 @@ class RepoExecutorInput:
 class DispatcherInput:
     def __init__(self, host=None, api_port=None, ws_port=None, workspace=None,
                  ssl=None, ssl_cert=None, wrong_ssl_cert=None, agent_name=None,
-                 registration_token=None, delete_agent_token: bool = None, empty=False):
+                 registration_token=None, delete_agent_token: bool = None,
+                 empty=False):
         self.ssl = ssl is None or ssl.lower() != "false"
         self.server_input = {
             "ssl": ssl or "",
@@ -174,8 +179,11 @@ class DispatcherInput:
             "ssl_cert": ssl_cert or ""
         }
         self.wrong_ssl_cert = wrong_ssl_cert
+        self.override_with_default_ssl_cert = \
+            self.server_input['ssl_cert'] == ""
         self.agent = agent_name or ""
-        self.registration_token = registration_token or "ACorrectTokenHas25CharLen"
+        self.registration_token = registration_token or "ACorrectTokenHas25" \
+                                                        "CharLen"
         self.delete_agent_token = delete_agent_token
         self.empty = empty
 
@@ -185,11 +193,17 @@ class DispatcherInput:
                         f"{self.server_input['host']}\n" \
                         f"{self.server_input['ssl']}\n" \
                         f"{self.server_input['api_port']}\n"
-            if self.wrong_ssl_cert:
+            if self.override_with_default_ssl_cert:
+                input_str = f"{input_str}Y\n"
+            else:
+                if self.override_with_default_ssl_cert is not None:
+                    input_str = f"{input_str}N\n"
+                if self.wrong_ssl_cert:
+                    input_str = f"{input_str}" \
+                                f"{self.wrong_ssl_cert}\n"
                 input_str = f"{input_str}" \
-                            f"{self.wrong_ssl_cert}\n"
+                            f"{self.server_input['ssl_cert']}\n"
             input_str = f"{input_str}" \
-                        f"{self.server_input['ssl_cert']}\n" \
                         f"{self.server_input['workspace']}\n"
         else:
             input_str = \
@@ -204,7 +218,8 @@ class DispatcherInput:
         for token in self.registration_token:
             input_str = f"{input_str}{token}\n"
         if self.delete_agent_token is not None:
-            input_str = f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
+            input_str = f"{input_str}" \
+                        f"{'Y' if self.delete_agent_token else 'N'}\n"
 
         return f"{input_str}" \
                f"{self.agent}\n"

@@ -37,14 +37,34 @@ with open('README.md') as readme_file:
 with open('RELEASE.md') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', 'websockets', 'aiohttp<4.0.0', 'syslog_rfc5424_formatter',
-                'pytest', 'pytest-asyncio', 'requests', 'itsdangerous', 'faraday-plugins']
+
+requirements = [
+    'Click',
+    'websockets',
+    'aiohttp',
+    'syslog_rfc5424_formatter',
+    'requests',
+    'itsdangerous',
+    'faraday-plugins',
+    'python-owasp-zap-v2.4',
+]
 
 setup_requirements = ['pytest-runner', 'click', 'setuptools_scm']
 
 extra_req = {
         'dev': [
-            'giteasychangelog'
+            'giteasychangelog',
+            'flake8',
+            'pre-commit',
+        ],
+        'test': [
+            'pytest',
+            'pytest-cov',
+            'pytest-asyncio',
+        ],
+        'docs': [
+            'mkdocs',
+            'mkdocs-material',
         ]
     }
 
@@ -74,7 +94,9 @@ setup(
     include_package_data=True,
     keywords='faraday integration',
     name='faraday_agent_dispatcher',
-    packages=find_packages(include=['faraday_agent_dispatcher', 'faraday_agent_dispatcher.*']),
+    packages=find_packages(
+        include=['faraday_agent_dispatcher', 'faraday_agent_dispatcher.*']
+    ),
     use_scm_version=False,
     setup_requires=setup_requirements,
     url='https://github.com/infobyte/faraday_agent_dispatcher',
