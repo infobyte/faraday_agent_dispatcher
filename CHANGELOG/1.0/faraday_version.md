@@ -1,0 +1,1 @@
+[Faraday][faraday] versions: 3.10, 3.10.1, 3.10.2

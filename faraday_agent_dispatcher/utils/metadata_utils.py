@@ -6,6 +6,14 @@ import faraday_agent_dispatcher.logger as logging
 
 logger = logging.get_logger()
 
+MANDATORY_METADATA_KEYS = [
+    "cmd",
+    "check_cmds",
+    "arguments",
+    "environment_variables"
+]
+INFO_METADATA_KEYS = []
+
 
 def executor_folder():
 
@@ -19,19 +27,28 @@ def executor_folder():
 def executor_metadata(executor_filename):
     chosen = Path(executor_filename)
     chosen_metadata_path = executor_folder() / f"{chosen.stem}_manifest.json"
-    chosen_path = executor_folder() / chosen
     with open(chosen_metadata_path) as metadata_file:
         data = metadata_file.read()
         metadata = json.loads(data)
     return metadata
 
 
+def check_metadata(metadata):
+    return all(k in metadata for k in MANDATORY_METADATA_KEYS)
+
+
+def full_check_metadata(metadata):
+    return all(k in metadata for k in INFO_METADATA_KEYS) and \
+        check_metadata(metadata)
+
+
 async def check_commands(metadata):
     async def run_check_command(cmd):
-        proc = await asyncio.create_subprocess_shell(cmd,
-                                                     stdout=asyncio.subprocess.PIPE,
-                                                     stderr=asyncio.subprocess.PIPE
-                                                     )
+        proc = await asyncio.create_subprocess_shell(
+            cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
         while True:
             stdout, stderr = await proc.communicate()
             if len(stdout) > 0:

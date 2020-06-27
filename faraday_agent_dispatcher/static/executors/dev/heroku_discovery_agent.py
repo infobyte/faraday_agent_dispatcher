@@ -32,9 +32,12 @@ import subprocess
 from subprocess import CalledProcessError
 import sys
 
-#to be replaced with urllib.parse. Each segment of the connstring is matched by /([^:\/?#\s]+)/
-MATCH_CONNSTRING = re.compile(r'^(?:([^:\/?#\s]+):\/{2})?(?:([^@\/?#\s]+)@)?([^\/?#\s]+)?:'
-                              r'(\d{2,5})(?:\/([^?#\s]*))?(?:[?]([^@#\s]+))?\S*$')
+# to be replaced with urllib.parse. Each segment of the connstring is matched
+# by /([^:\/?#\s]+)/
+MATCH_CONNSTRING = re.compile(
+    r'^(?:([^:\/?#\s]+):\/{2})?(?:([^@\/?#\s]+)@)?([^\/?#\s]+)?:'
+    r'(\d{2,5})(?:\/([^?#\s]*))?(?:[?]([^@#\s]+))?\S*$'
+)
 
 SERVICE_DATA = {
     "name": "",
@@ -51,25 +54,39 @@ HOST_DATA = {
 
 KNOWN_SERVICES = ['redis', 'postgres']
 
+
 def main():
     """ heroku cli user must be logged to run this agent"""
 
     try:
-        subprocess.run(['heroku', 'auth:whoami'], stdout=subprocess.DEVNULL, check=True)
+        subprocess.run(
+            ['heroku', 'auth:whoami'],
+            stdout=subprocess.DEVNULL,
+            check=True
+        )
     except CalledProcessError:
 
         sys.exit(1)
 
-
-    apps = json.loads(subprocess.run(['heroku', 'apps', '--json'],
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                     check=True).stdout.decode('utf-8'))
+    apps = json.loads(
+        subprocess.run(
+            ['heroku', 'apps', '--json'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True
+        ).stdout.decode('utf-8')
+    )
 
     for app in apps:
 
-        app_info = json.loads(subprocess.run(['heroku', 'config', '--app', app["name"], '--json'],
-                                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                             check=True).stdout.decode('utf-8'))
+        app_info = json.loads(
+            subprocess.run(
+                ['heroku', 'config', '--app', app["name"], '--json'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True
+            ).stdout.decode('utf-8')
+        )
 
         for _key, val in app_info.items():
             service_host_data = MATCH_CONNSTRING.match(val)
@@ -92,7 +109,10 @@ def main():
                 except socket.gaierror:
                     ipaddr = "0.0.0.0"
 
-                _host_data.update(ip=ipaddr, hostnames=[service_host_data.group(3)])
+                _host_data.update(
+                    ip=ipaddr,
+                    hostnames=[service_host_data.group(3)]
+                )
                 _host_data.update(services=[_service_data])
 
                 print(json.dumps(dict(hosts=[_host_data])))
@@ -100,4 +120,3 @@ def main():
 
 if __name__ == '__main__':
     main()
- 

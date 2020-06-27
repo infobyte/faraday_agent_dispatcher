@@ -1,1 +1,0 @@
-Now is possible to receive params from the [Faraday](faraday) server
