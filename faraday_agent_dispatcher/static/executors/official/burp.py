@@ -65,17 +65,23 @@ def generate_xml(issues, name_result, json_issue_definitions):
             request = evidence['request_response']['request'][0]['data']
         except IndexError:
             request = 'No information'
+        except KeyError:
+            request = 'No information'
 
         try:
             evidence = issue['issue']['evidence'][0]
             response = evidence['request_response']['response'][0]['data']
         except IndexError:
             response = 'No information'
+        except KeyError:
+            response = 'No information'
 
         try:
             evidence = issue['issue']['evidence'][0]['request_response']
             response_redirected = evidence['was_redirect_followed']
         except IndexError:
+            response_redirected = 'No information'
+        except KeyError:
             response_redirected = 'No information'
 
         ET.SubElement(xml_request_response, "request").text = request
