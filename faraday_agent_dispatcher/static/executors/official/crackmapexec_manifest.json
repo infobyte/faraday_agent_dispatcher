@@ -8,7 +8,7 @@
 
   ],
   "check_cmds": [
-    "cme -v"
+    "cme"
   ],
   "cmd": "python3 {EXECUTOR_FILE_PATH}"
 }
