@@ -1,14 +1,22 @@
 #!/usr/bin/env python
 import os
 import sys
+import string
+import random
 import subprocess
 from pathlib import Path
 from faraday_plugins.plugins.manager import PluginsManager
 
 
+def generate_hash():
+    name = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+    return name
+
+
 def main():
     my_envs = os.environ
-    # If the script is run outside the dispatcher the environment variables
+    # If the script is run outside the dispatcher
+    # the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_NAME_URL', 'ARACHNI_PATH']
     if 'EXECUTOR_CONFIG_NAME_URL' in my_envs:
@@ -24,7 +32,8 @@ def main():
         sys.exit()
 
     os.chdir(path_arachni)
-    name_result = Path(path_arachni) / 'report.afr'
+    name = generate_hash()
+    name_result = Path(path_arachni) / f'{name}.afr'
     cmd = ['./arachni',
            url_analyze,
            '--report-save-path',
@@ -46,12 +55,13 @@ def main():
             f"Arachni stderr: {arachni_command.stderr.decode('utf-8')}",
             file=sys.stderr
         )
-
+    name_xml = generate_hash()
+    name_xml = f'{name_xml}.xml'
     cmd = [
         './arachni_reporter',
         name_result,
         '--reporter',
-        'xml:outfile=xml_arachni_report.xml'
+        f'xml:outfile={name_xml}'
     ]
 
     arachni_reporter_process = subprocess.run(
@@ -74,12 +84,12 @@ def main():
 
     plugin = PluginsManager().get_plugin("arachni")
 
-    with open("xml_arachni_report.xml", 'r') as f:
+    with open(name_xml, 'r') as f:
         plugin.parseOutputString(f.read())
         print(plugin.get_json())
 
     os.remove(name_result)
-    os.remove("xml_arachni_report.xml")
+    os.remove(name_xml)
 
 
 if __name__ == '__main__':
