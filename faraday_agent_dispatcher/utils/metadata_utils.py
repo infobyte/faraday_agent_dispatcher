@@ -2,6 +2,8 @@ import asyncio
 import json
 import os
 from pathlib import Path
+from typing import Union
+
 import faraday_agent_dispatcher.logger as logging
 
 logger = logging.get_logger()
@@ -15,7 +17,8 @@ MANDATORY_METADATA_KEYS = [
 INFO_METADATA_KEYS = []
 
 
-def executor_folder():
+# Path can be treated as str
+def executor_folder() -> Union[Path, str]:
 
     folder = Path(__file__).parent.parent / 'static' / 'executors'
     if "WIZARD_DEV" in os.environ:
@@ -24,26 +27,26 @@ def executor_folder():
         return folder / "official"
 
 
-def executor_metadata(executor_filename):
+def executor_metadata(executor_filename: str) -> dict:
     chosen = Path(executor_filename)
     chosen_metadata_path = executor_folder() / f"{chosen.stem}_manifest.json"
-    with open(chosen_metadata_path) as metadata_file:
+    with chosen_metadata_path.open() as metadata_file:
         data = metadata_file.read()
         metadata = json.loads(data)
     return metadata
 
 
-def check_metadata(metadata):
+def check_metadata(metadata) -> bool:
     return all(k in metadata for k in MANDATORY_METADATA_KEYS)
 
 
-def full_check_metadata(metadata):
+def full_check_metadata(metadata) -> bool:
     return all(k in metadata for k in INFO_METADATA_KEYS) and \
         check_metadata(metadata)
 
 
-async def check_commands(metadata):
-    async def run_check_command(cmd):
+async def check_commands(metadata: dict) -> bool:
+    async def run_check_command(cmd: str) -> int:
         proc = await asyncio.create_subprocess_shell(
             cmd,
             stdout=asyncio.subprocess.PIPE,
@@ -60,8 +63,8 @@ async def check_commands(metadata):
 
         return proc.returncode
 
-    for cmd in metadata["check_cmds"]:
-        response = await run_check_command(cmd)
+    for check_cmd in metadata["check_cmds"]:
+        response = await run_check_command(check_cmd)
         if response != 0:
             return False
 

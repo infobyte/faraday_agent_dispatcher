@@ -1,7 +1,7 @@
-import math
 import os
 import re
 import sys
+from typing import Optional
 
 import click
 from pathlib import Path
@@ -27,7 +27,7 @@ from faraday_agent_dispatcher.cli.utils.general_inputs import (
     choose_adm,
     confirm_prompt,
     get_default_value_and_choices,
-    process_choice_errors
+    process_choice_errors, choice_paged_option
 )
 import faraday_agent_dispatcher.logger as logging
 
@@ -159,79 +159,40 @@ class Wizard:
             else:
                 await self.new_repo_executor(name)
 
-    async def get_base_repo(self):
+    async def get_base_repo(self) -> dict:
         executors = [
             f"{executor}"
             for executor in os.listdir(executor_folder())
             if re.match("(.*_manifest.json|__pycache__)", executor) is None
         ]
-        max_page = int(math.ceil(len(executors) / self.PAGE_SIZE))
-        chosen = None
-        metadata = None
-        page = 0
-        while chosen is None:
-            print("The executors are:")
-            paged_executors = \
-                executors[
-                              page * self.PAGE_SIZE:
-                              min(
-                                  (page+1) * self.PAGE_SIZE,
-                                  len(executors)
-                              )
-                ]
-            for i, name in enumerate(paged_executors):
-                print(f"{Bcolors.OKGREEN}{i+1}: {name}{Bcolors.ENDC}")
-            if page > 0:
-                print(f"{Bcolors.OKBLUE}-: Previous page{Bcolors.ENDC}")
-            if page < max_page - 1:
-                print(f"{Bcolors.OKBLUE}+: Next page{Bcolors.ENDC}")
-            print(f"{Bcolors.OKBLUE}Q: Don't choose{Bcolors.ENDC}")
-            chosen = click.prompt("Choose one")
-            if chosen not in [
-                str(i)
-                for i in range(1, len(paged_executors)+1)
-            ]:
-                if chosen == '+' and page < max_page - 1:
-                    page += 1
-                elif chosen == '-' and page > 0:
-                    page -= 1
-                elif chosen == "Q":
-                    raise WizardCanceledOption(
-                        "Repository executor selection canceled"
+
+        async def control_base_repo(chosen_option: str) -> Optional[dict]:
+            metadata = executor_metadata(chosen_option)
+            try:
+                if not check_metadata(metadata):
+                    print(
+                        f"{Bcolors.WARNING}Invalid manifest for "
+                        f"{Bcolors.BOLD}{chosen_option}{Bcolors.ENDC}"
                     )
                 else:
-                    print(
-                        f"{Bcolors.WARNING}Invalid option "
-                        f"{Bcolors.BOLD}{chosen}{Bcolors.ENDC}"
-                    )
-                chosen = None
-            else:
-                try:
-                    chosen = paged_executors[int(chosen)-1]
-                    metadata = executor_metadata(chosen)
-                    if not check_metadata(metadata):
+                    if not await check_commands(metadata):
                         print(
-                            f"{Bcolors.WARNING}Invalid manifest for "
-                            f"{Bcolors.BOLD}{chosen}{Bcolors.ENDC}"
-                        )
-                        chosen = None
+                            f"{Bcolors.WARNING}Invalid bash dependency for"
+                            f" {Bcolors.BOLD}{chosen_option}{Bcolors.ENDC}"
+                            f"")
                     else:
-                        if not await check_commands(metadata):
-                            print(
-                                f"{Bcolors.WARNING}Invalid bash dependency for"
-                                f" {Bcolors.BOLD}{chosen}{Bcolors.ENDC}"
-                                f"")
-                            chosen = None
-                        else:
-                            metadata["name"] = chosen
-                except FileNotFoundError:
-                    print(
-                        f"{Bcolors.WARNING}Not existent manifest for "
-                        f"{Bcolors.BOLD}{chosen}{Bcolors.ENDC}"
-                    )
-                    chosen = None
+                        metadata["name"] = chosen_option
+                        return metadata
+            except FileNotFoundError:
+                print(
+                    f"{Bcolors.WARNING}Not existent manifest for "
+                    f"{Bcolors.BOLD}{chosen_option}{Bcolors.ENDC}"
+                )
+            return None
 
-        return metadata
+        return await choice_paged_option(executors,
+                                         self.PAGE_SIZE,
+                                         control_base_repo)
 
     async def new_repo_executor(self, name):
         try:
