@@ -26,9 +26,14 @@ def get_issue_data(issue_type_id, json_issue_definitions):
         else:
             rem = "No information"
 
+        if "description" in info:
+            desc = info['description']
+        else:
+            desc = "No description"
+
         if info['issue_type_id'] == str(issue_type_id):
             json_issue = {
-                "issueBackground": info['description'],
+                "issueBackground": desc,
                 "remediationBackground": rem
             }
             return json_issue
@@ -100,7 +105,7 @@ def main():
     host_api = os.environ.get('EXECUTOR_CONFIG_API_HOST')
     url_target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
     api_key = os.environ.get('EXECUTOR_CONFIG_API_KEY')
-    named_configuration = os.environ.get('NAMED_CONFIGURATION')
+    named_configuration = os.environ.get('EXECUTOR_CONFIG_NAMED_CONFIGURATION')
     if not url_target:
         print("URL not provided", file=sys.stderr)
         sys.exit()
