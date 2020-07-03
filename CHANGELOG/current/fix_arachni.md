@@ -1,1 +1,1 @@
-Now the wizard page size can be customized
+CHANGE generate randon name
