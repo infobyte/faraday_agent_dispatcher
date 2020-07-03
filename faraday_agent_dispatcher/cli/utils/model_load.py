@@ -66,7 +66,7 @@ def process_agent():
                 "default_value": lambda _ssl: "443" if _ssl else "9000",
                 "type": click.IntRange(min=1, max=65535),
             },
-            "workspace": {
+            "workspaces": {
                 "default_value": lambda _: "workspace",
                 "type": click.STRING,
             }
@@ -136,8 +136,8 @@ def process_agent():
                             if value != "" and Path(value).exists():
                                 path = value
                     config.instance.set(section, opt, str(path))
-            # elif opt == "workspaces":
-            #    process_workspaces()
+            elif opt == "workspaces":
+                process_workspaces()
             else:
                 value = ask_value(agent_dict, opt, section, ssl)
                 if opt == "ssl":
@@ -145,8 +145,43 @@ def process_agent():
                 config.instance.set(section, opt, str(value))
 
 
-def process_workspaces():
-    pass
+def process_workspaces() -> None:
+    end = False
+    section = Sections.SERVER
+
+    workspaces = config.instance[Sections.SERVER].get("workspaces", "")
+    workspaces = workspaces.split(",")
+    if "" in workspaces:
+        workspaces.remove("")
+
+    while not end:
+        print(
+            f"The actual workspaces{Bcolors.ENDC} are:"
+            f" {Bcolors.OKGREEN}{workspaces}{Bcolors.ENDC}"
+        )
+        value = choose_adm("workspace")
+        if value == "A":
+            workspace_name = click.prompt("Workspace name")
+            if workspace_name in workspaces:
+                print(
+                    f"{Bcolors.WARNING}The workspace {workspace_name} already "
+                    f"exists{Bcolors.ENDC}"
+                )
+            else:
+                workspaces.append(workspace_name)
+        elif value == "D":
+            workspace_name = click.prompt("workspace name")
+            if workspace_name not in workspaces:
+                print(
+                    f"{Bcolors.WARNING}There is no {workspace_name}"
+                    f"workspace{Bcolors.ENDC}"
+                )
+            else:
+                workspaces.remove(workspace_name)
+        else:
+            end = True
+
+    config.instance.set(section, "workspaces", ",".join(workspaces))
 
 
 def process_var_envs(executor_name):

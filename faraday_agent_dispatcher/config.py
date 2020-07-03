@@ -144,6 +144,17 @@ def verify():
         else:
             data.append(f'executors option not in {Sections.AGENT} section')
 
+        if 'workspace' in instance[Sections.SERVER]:
+            instance.set(
+                section=Sections.SERVER,
+                option="workspaces",
+                value=instance.get(
+                    section=Sections.SERVER,
+                    option="workspace"
+                )
+            )
+            instance.remove_option(Sections.SERVER, "workspace")
+
         if len(data) > 0:
             raise ValueError('\n'.join(data))
 
@@ -177,7 +188,7 @@ __control_dict = {
             "ssl_cert": control_str(nullable=True),
             "api_port": control_int(),
             "websocket_port": control_int(),
-            "workspace": control_str(),
+            "workspaces": control_list(can_repeat=False),
         },
         Sections.TOKENS: {
             "registration": control_registration_token,
