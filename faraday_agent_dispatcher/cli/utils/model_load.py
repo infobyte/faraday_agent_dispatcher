@@ -136,11 +136,17 @@ def process_agent():
                             if value != "" and Path(value).exists():
                                 path = value
                     config.instance.set(section, opt, str(path))
+            # elif opt == "workspaces":
+            #    process_workspaces()
             else:
                 value = ask_value(agent_dict, opt, section, ssl)
                 if opt == "ssl":
                     ssl = str(value).lower() == "true"
                 config.instance.set(section, opt, str(value))
+
+
+def process_workspaces():
+    pass
 
 
 def process_var_envs(executor_name):
