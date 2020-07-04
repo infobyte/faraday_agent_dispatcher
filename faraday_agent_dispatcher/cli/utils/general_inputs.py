@@ -32,11 +32,10 @@ def process_choice_errors(value):
         raise click.exceptions.Abort()
 
 
-def choose_adm(subject):
-    def_value, choices = get_default_value_and_choices(
-        "Q",
-        ["A", "M", "D", "Q"]
-    )
+def choose_adm(subject: str, ignore: List[str] = None) -> str:
+    ignore = ignore if ignore is not None else []
+    values = [value for value in ["A", "M", "D", "Q"] if value not in ignore]
+    def_value, choices = get_default_value_and_choices("Q", values)
     value = click.prompt(
         f"Do you want to [A]dd, [M]odify or [D]elete an {subject}? Do you "
         f"want to [Q]uit?",

@@ -159,7 +159,7 @@ def process_workspaces() -> None:
             f"The actual workspaces{Bcolors.ENDC} are:"
             f" {Bcolors.OKGREEN}{workspaces}{Bcolors.ENDC}"
         )
-        value = choose_adm("workspace")
+        value = choose_adm("workspace", ignore=["M"])
         if value == "A":
             workspace_name = click.prompt("Workspace name")
             if workspace_name in workspaces:

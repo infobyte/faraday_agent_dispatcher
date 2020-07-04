@@ -619,6 +619,61 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
+        # 14 Add multiple and delete one
+        {
+            "dispatcher_input": DispatcherInput(
+                workspaces=[
+                    WorkspaceInput(name="aworkspace1", adm_type=ADMType.ADD),
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
+                    WorkspaceInput(name="aworkspace1", adm_type=ADMType.DELETE)
+                ]
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
+        },
+        # 15 Add and delete and add one
+        {
+            "dispatcher_input": DispatcherInput(
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.DELETE),
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
+                ]
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
+        },
+        # 16 Delete an inexistent one (Test modify do nothing)
+        {
+            "dispatcher_input": DispatcherInput(
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
+                    WorkspaceInput(name="not_exist", adm_type=ADMType.DELETE),
+                    WorkspaceInput(name="not_exist", adm_type=ADMType.MODIFY),
+                ]
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
+        },
+        # 17 Try add an existent one
+        {
+            "dispatcher_input": DispatcherInput(
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
+                    WorkspaceInput(
+                        name="second",
+                        adm_type=ADMType.ADD,
+                        error_name="aworkspace"
+                    ),
+                ]
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace", "second"}
+        },
     ]
 
 
