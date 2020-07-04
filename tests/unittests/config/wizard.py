@@ -29,7 +29,8 @@ def generate_inputs():
                 ]
             ),
             "exit_code": 0,
-            "after_executors": set()
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
         },
         # 1 SSL cert
         {
@@ -40,7 +41,8 @@ def generate_inputs():
                 ]
             ),
             "exit_code": 0,
-            "after_executors": set()
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
         },
         # 2 All default with ssl false
         {
@@ -51,7 +53,8 @@ def generate_inputs():
                 ]
             ),
             "exit_code": 0,
-            "after_executors": set()
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
         },
         # 3 Dispatcher input
         {
@@ -64,7 +67,8 @@ def generate_inputs():
                 ]
             ),
             "exit_code": 0,
-            "after_executors": set()
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
         },
         # 4 Bad token input
         {
@@ -80,7 +84,8 @@ def generate_inputs():
             ),
             "exit_code": 0,
             "expected_output": ["registration must be 25 character length"],
-            "after_executors": set()
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
         },
         # 5 Basic Executors input
         {
@@ -140,7 +145,8 @@ def generate_inputs():
                                   adm_type=ADMType.ADD),
                 ],
             "exit_code": 0,
-            "after_executors": {"ex1", "ex2", "ex3"}
+            "after_executors": {"ex1", "ex2", "ex3"},
+            "after_workspaces": {"aworkspace"}
         },
         # 6 Basic Bad Executors input
         {
@@ -223,7 +229,8 @@ def generate_inputs():
                                   adm_type=ADMType.ADD),
                 ],
             "exit_code": 0,
-            "after_executors": {"ex1", "ex2", "ex3", "ex4"}
+            "after_executors": {"ex1", "ex2", "ex3", "ex4"},
+            "after_workspaces": {"aworkspace"}
         },
         # 7 Basic Name with Comma Executors input
         {
@@ -252,7 +259,8 @@ def generate_inputs():
                                   adm_type=ADMType.ADD),
                 ],
             "exit_code": 0,
-            "after_executors": {"ex1"}
+            "after_executors": {"ex1"},
+            "after_workspaces": {"aworkspace"}
         },
         # 8 Basic Mod Executors input
         {
@@ -347,7 +355,8 @@ def generate_inputs():
                                   adm_type=ADMType.MODIFY),
                 ],
             "exit_code": 0,
-            "after_executors": {"ex1", "ex2", "eX3"}
+            "after_executors": {"ex1", "ex2", "eX3"},
+            "after_workspaces": {"aworkspace"}
         },
         # 9 Basic Mod Name with comma Executors input
         {
@@ -444,7 +453,8 @@ def generate_inputs():
                                   adm_type=ADMType.MODIFY),
                 ],
             "exit_code": 0,
-            "after_executors": {"ex1", "ex2", "eX3"}
+            "after_executors": {"ex1", "ex2", "eX3"},
+            "after_workspaces": {"aworkspace"}
         },
         # 10 Basic Del Executors input
         {
@@ -533,7 +543,8 @@ def generate_inputs():
                                   adm_type=ADMType.MODIFY),
                 ],
             "exit_code": 0,
-            "after_executors": {"ex1", "ex3"}
+            "after_executors": {"ex1", "ex3"},
+            "after_workspaces": {"aworkspace"}
         },
         # 11 Basic Repo Executors input
         {
@@ -578,7 +589,8 @@ def generate_inputs():
                                       adm_type=ADMType.MODIFY),
                 ],
             "exit_code": 0,
-            "after_executors": {"ex1"}
+            "after_executors": {"ex1"},
+            "after_workspaces": {"aworkspace"}
         },
         # 12 Pass folder as SSL cert
         {
@@ -591,7 +603,8 @@ def generate_inputs():
                 agent_name="asd"
             ),
             "exit_code": 0,
-            "after_executors": set()
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
         },
         # 13 Wrong SSL cert
         {
@@ -603,7 +616,8 @@ def generate_inputs():
                 ]
             ),
             "exit_code": 0,
-            "after_executors": set()
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"}
         },
     ]
 
@@ -612,15 +626,18 @@ def generate_no_ssl_ini_configs():
     return [
         {
             "dir": "",
-            "old_executors": set()
+            "old_executors": set(),
+            "old_workspaces": set()
         },
         {
             "dir": old_version_path() / '0.1.ini',
-            "old_executors": {config_mod.DEFAULT_EXECUTOR_VERIFY_NAME}
+            "old_executors": {config_mod.DEFAULT_EXECUTOR_VERIFY_NAME},
+            "old_workspaces": {"workspace"}
         },
         {
             "dir": old_version_path() / '1.0.ini',
-            "old_executors": {"test", "test2"}
+            "old_executors": {"test", "test2"},
+            "old_workspaces": {"workspace"}
         },
     ]
 
@@ -629,7 +646,8 @@ def generate_ssl_ini_configs():
     return [
         {
             "dir": old_version_path() / '1.2.ini',
-            "old_executors": {"test", "test2", "test3"}
+            "old_executors": {"test", "test2", "test3"},
+            "old_workspaces": {"workspace"}
         }
     ]
 

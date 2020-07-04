@@ -84,6 +84,10 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
             ini_config["old_executors"],
             testing_inputs["after_executors"]
         )
+        expected_workspaces_set = set.union(
+            ini_config["old_workspaces"],
+            testing_inputs["after_workspaces"]
+        )
 
         config_mod.reset_config(path)
         executor_config_set = set(
@@ -95,6 +99,15 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         if '' in executor_config_set:
             executor_config_set.remove('')
         assert executor_config_set == expected_executors_set
+        workspace_config_set = set(
+            config_mod.instance.get(
+                config_mod.Sections.SERVER,
+                "workspaces"
+            ).split(",")
+        )
+        if '' in workspace_config_set:
+            workspace_config_set.remove('')
+        assert workspace_config_set == expected_workspaces_set
 
 
 @pytest.mark.parametrize(
