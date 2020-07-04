@@ -9,7 +9,7 @@ from tests.unittests.wizard_input import (
     ADMType,
     VarEnvInput,
     RepoExecutorInput,
-    RepoVarEnvInput
+    RepoVarEnvInput, WorkspaceInput
 )
 
 DATA_FOLDER = Path(__file__).parent.parent.parent / 'data'
@@ -23,21 +23,33 @@ def generate_inputs():
     return [
         # 0 All default
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
+            ),
             "exit_code": 0,
             "after_executors": set()
         },
         # 1 SSL cert
         {
             "dispatcher_input": DispatcherInput(
-                ssl_cert=DATA_FOLDER / 'mock.pub'
+                ssl_cert=DATA_FOLDER / 'mock.pub',
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
             ),
             "exit_code": 0,
             "after_executors": set()
         },
         # 2 All default with ssl false
         {
-            "dispatcher_input": DispatcherInput(ssl='false'),
+            "dispatcher_input": DispatcherInput(
+                ssl='false',
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
+            ),
             "exit_code": 0,
             "after_executors": set()
         },
@@ -45,8 +57,11 @@ def generate_inputs():
         {
             "dispatcher_input": DispatcherInput(
                 ssl='false', host="127.0.0.1", api_port="13123",
-                ws_port="1234", workspace="aworkspace", agent_name="agent",
-                registration_token="1234567890123456789012345"
+                ws_port="1234", agent_name="agent",
+                registration_token="1234567890123456789012345",
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
             ),
             "exit_code": 0,
             "after_executors": set()
@@ -55,7 +70,10 @@ def generate_inputs():
         {
             "dispatcher_input": DispatcherInput(
                 ssl='false', host="127.0.0.1", api_port="13123",
-                ws_port="1234", workspace="aworkspace", agent_name="agent",
+                ws_port="1234", agent_name="agent",
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ],
                 registration_token=[
                     "12345678901234567890", "1234567890123456789012345"
                 ]
@@ -66,7 +84,12 @@ def generate_inputs():
         },
         # 5 Basic Executors input
         {
-            "dispatcher_input": DispatcherInput(ssl='false'),
+            "dispatcher_input": DispatcherInput(
+                ssl='false',
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
+            ),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -121,7 +144,12 @@ def generate_inputs():
         },
         # 6 Basic Bad Executors input
         {
-            "dispatcher_input": DispatcherInput(ssl='false'),
+            "dispatcher_input": DispatcherInput(
+                ssl='false',
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
+            ),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -199,7 +227,12 @@ def generate_inputs():
         },
         # 7 Basic Name with Comma Executors input
         {
-            "dispatcher_input": DispatcherInput(ssl='false'),
+            "dispatcher_input": DispatcherInput(
+                ssl='false',
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
+            ),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   error_name="ex,1",
@@ -223,7 +256,12 @@ def generate_inputs():
         },
         # 8 Basic Mod Executors input
         {
-            "dispatcher_input": DispatcherInput(ssl='false'),
+            "dispatcher_input": DispatcherInput(
+                ssl='false',
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
+            ),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -313,7 +351,12 @@ def generate_inputs():
         },
         # 9 Basic Mod Name with comma Executors input
         {
-            "dispatcher_input": DispatcherInput(ssl='false'),
+            "dispatcher_input": DispatcherInput(
+                ssl='false',
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
+            ),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -405,7 +448,12 @@ def generate_inputs():
         },
         # 10 Basic Del Executors input
         {
-            "dispatcher_input": DispatcherInput(ssl='false'),
+            "dispatcher_input": DispatcherInput(
+                ssl='false',
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
+            ),
             "executors_input": [
                     ExecutorInput(name="ex1",
                                   cmd="cmd 1",
@@ -489,7 +537,11 @@ def generate_inputs():
         },
         # 11 Basic Repo Executors input
         {
-            "dispatcher_input": DispatcherInput(),
+            "dispatcher_input": DispatcherInput(
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
+            ),
             "executors_input": [
                     RepoExecutorInput(name="ex1",
                                       base="2",
@@ -533,7 +585,9 @@ def generate_inputs():
             "dispatcher_input": DispatcherInput(
                 wrong_ssl_cert="/tmp",
                 ssl_cert=DATA_FOLDER / 'mock.pub',
-                workspace="asd",
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ],
                 agent_name="asd"
             ),
             "exit_code": 0,
@@ -543,7 +597,10 @@ def generate_inputs():
         {
             "dispatcher_input": DispatcherInput(
                 wrong_ssl_cert="/asdasdasd.pub",
-                ssl_cert=DATA_FOLDER / 'mock.pub'
+                ssl_cert=DATA_FOLDER / 'mock.pub',
+                workspaces=[
+                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                ]
             ),
             "exit_code": 0,
             "after_executors": set()

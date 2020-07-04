@@ -144,6 +144,12 @@ def verify():
         else:
             data.append(f'executors option not in {Sections.AGENT} section')
 
+        if len(data) > 0:
+            raise ValueError('\n'.join(data))
+
+    if should_be_empty:
+        assert len(instance.sections()) == 0
+    else:
         if 'workspace' in instance[Sections.SERVER]:
             instance.set(
                 section=Sections.SERVER,
@@ -155,12 +161,6 @@ def verify():
             )
             instance.remove_option(Sections.SERVER, "workspace")
 
-        if len(data) > 0:
-            raise ValueError('\n'.join(data))
-
-    if should_be_empty:
-        assert len(instance.sections()) == 0
-    else:
         if 'ssl' not in instance[Sections.SERVER]:
             instance.set(Sections.SERVER, "ssl", "True")
         if 'ssl_cert' not in instance[Sections.SERVER]:
