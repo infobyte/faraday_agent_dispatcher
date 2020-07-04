@@ -227,8 +227,8 @@ class DispatcherInput:
     def process_input_workspaces(self):
         cli_input = ""
         for workspace_input in self.workspaces:
-            cli_input = f"{workspace_input.input_str()}\nQ\n"
-        return cli_input
+            cli_input = f"{cli_input}{workspace_input.input_str()}\n"
+        return f"{cli_input}Q\n"
 
 
 class WorkspaceInput(Input):
