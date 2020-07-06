@@ -20,23 +20,27 @@ def get_ip(host_name):
 
 
 def get_issue_data(issue_type_id, json_issue_definitions):
-    for info in json_issue_definitions:
-        if "remediation" in info:
-            rem = info['remediation']
-        else:
-            rem = "No information"
+    desc = 'No information'
+    rem = 'No information'
 
-        if "description" in info:
-            desc = info['description']
-        else:
-            desc = "No description"
+    info_list = [
+        info for info in json_issue_definitions
+        if info['issue_type_id'] == str(issue_type_id)
+    ]
 
-        if info['issue_type_id'] == str(issue_type_id):
-            json_issue = {
-                "issueBackground": desc,
-                "remediationBackground": rem
-            }
-            return json_issue
+    if len(info_list) == 1:
+        if "remediation" in info_list[0]:
+            rem = info_list[0]['remediation']
+
+        if "description" in info_list[0]:
+            desc = info_list[0]['description']
+
+    json_issue = {
+        "issueBackground": desc,
+        "remediationBackground": rem
+    }
+
+    return json_issue
 
 
 def generate_xml(issues, name_result, json_issue_definitions):
