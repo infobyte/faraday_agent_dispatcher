@@ -79,7 +79,7 @@ def main():
         sys.exit()
 
     command = [
-        'cme',
+        'crackmapexec',
         'smw', f"{ip}/24",
     ]
 
