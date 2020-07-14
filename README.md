@@ -68,9 +68,7 @@ environment variables set and ask for the arguments.
 # Bulk Create JSON format
 
 The data published to [faraday][faraday] must correspond to the
-[bulk_create][bulk_create] endpoint of the Faraday's REST API
-
-[bulk_create]: https://apidocs.faradaysec.com/
+`bulk_create` endpoint of the [Faraday's REST API][API]
 
 # Running multiple dispatchers
 
@@ -85,12 +83,12 @@ PATH_TO_A_CONFIG_FILE`.
 # Executors
 
 Inside the [executors][executors] directory you can find the already
-created executors. 
+created executors.
 
 ## Official
 
 The [official executors][official_executors] are the collection of ready-to-go
-executors (with minimum configuration with the wizard). They have a manifest 
+executors (with minimum configuration with the wizard). They have a manifest
 JSON file, which gives details about the uses of the executor and helps with
 the configuration of them.
 
@@ -108,8 +106,8 @@ The current official executors are:
 
 ## Development
 
-The [development executors][dev_executors] are the collection of executors we 
-do **not** fully maintain, we have examples of use, conceptual, and in 
+The [development executors][dev_executors] are the collection of executors we
+do **not** fully maintain, we have examples of use, conceptual, and in
 development executors. The most important of them are:
 
 * `basic_example.py`: The Hello World of Faraday executors. It will
@@ -150,3 +148,4 @@ information.
 For more info you can check our [documentation][doc]
 
 [doc]: https://infobyte.github.io/faraday_agent_dispatcher/.
+[API]: https://api.faradaysec.com/
