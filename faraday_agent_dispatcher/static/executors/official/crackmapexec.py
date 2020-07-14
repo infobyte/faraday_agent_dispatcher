@@ -80,7 +80,7 @@ def main():
 
     command = [
         'crackmapexec',
-        'smw', f"{ip}/24",
+        'smb', f"{ip}/24",
     ]
 
     if user and passw:
