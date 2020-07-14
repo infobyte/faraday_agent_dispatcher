@@ -5,6 +5,7 @@ import string
 import random
 import subprocess
 from pathlib import Path
+from urllib.parse import urlparse
 from faraday_plugins.plugins.manager import PluginsManager
 
 
@@ -21,6 +22,9 @@ def main():
     # ['EXECUTOR_CONFIG_NAME_URL', 'ARACHNI_PATH']
     if 'EXECUTOR_CONFIG_NAME_URL' in my_envs:
         url_analyze = os.environ.get('EXECUTOR_CONFIG_NAME_URL')
+        url = urlparse(url_analyze)
+        if url.scheme != 'http' and url.scheme != 'https':
+            url_analyze = f'http://{url_analyze}'
     else:
         print("Param NAME_URL no passed", file=sys.stderr)
         sys.exit()
