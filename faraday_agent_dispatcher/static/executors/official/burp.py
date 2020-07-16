@@ -106,9 +106,9 @@ def main():
     # If the script is run outside the dispatcher
     # the environment variables are checked.
     # ['API_KEY', 'TARGET_URL', 'NAMED_CONFIGURATION', 'API_HOST']
-    host_api = os.environ.get('EXECUTOR_CONFIG_API_HOST')
-    url_target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
+    api_host = os.environ.get('EXECUTOR_CONFIG_API_HOST')
     api_key = os.environ.get('EXECUTOR_CONFIG_API_KEY')
+    url_target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
     named_configuration = os.environ.get('EXECUTOR_CONFIG_NAMED_CONFIGURATION')
     if not url_target:
         print("URL not provided", file=sys.stderr)
@@ -121,15 +121,15 @@ def main():
     if not named_configuration:
         named_configuration = 'Crawl strategy - fastest'
 
-    if not host_api:
+    if not api_host:
         print("API HOST not provided", file=sys.stderr)
         sys.exit()
 
-    url_host = urlparse(host_api)
+    url_host = urlparse(api_host)
     if url_host.scheme != 'http' and url_host.scheme != 'https':
-        host_api = f'http://{host_api}'
+        api_host = f'http://{api_host}'
 
-    check_api = requests.get(f'{host_api}/{api_key}/v0.1')
+    check_api = requests.get(f'{api_host}/{api_key}/v0.1')
     if check_api.status_code != 200:
         print(f"API gets no response. Status code: {check_api.status_code}",
               file=sys.stderr)
@@ -138,7 +138,7 @@ def main():
     with tempfile.TemporaryDirectory() as tempdirname:
         tmpdir = Path(tempdirname)
         name_result = tmpdir / 'output.xml'
-        issue_def = f'{host_api}/{api_key}' \
+        issue_def = f'{api_host}/{api_key}' \
                     f'/v0.1/knowledge_base/issue_definitions'
         rg_issue_definitions = requests.get(issue_def)
         json_issue_definitions = rg_issue_definitions.json()
@@ -163,13 +163,13 @@ def main():
             "urls": [url_target]
         }
 
-        rp_scan = requests.post(f'{host_api}/{api_key}/v0.1/scan',
+        rp_scan = requests.post(f'{api_host}/{api_key}/v0.1/scan',
                                 json=json_scan)
         get_location = rp_scan.headers['Location']
         scan_status = ''
         while scan_status != 'succeeded':
             try:
-                rg_issues = requests.get(f'{host_api}/{api_key}'
+                rg_issues = requests.get(f'{api_host}/{api_key}'
                                          f'/v0.1/scan/{get_location}')
             except ConnectionError:
                 print("API gets no response.", file=sys.stderr)
