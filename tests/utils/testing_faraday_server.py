@@ -63,6 +63,8 @@ def get_agent_registration(test_config: FaradayTestConfig):
         if 'token' not in data \
                 or data['token'] != test_config.registration_token:
             return web.HTTPUnauthorized()
+        if 'workspaces' not in data:
+            return web.HTTPBadRequest()
         response_dict = {"name": data["name"],
                          "token": test_config.agent_token,
                          "id": test_config.agent_id}

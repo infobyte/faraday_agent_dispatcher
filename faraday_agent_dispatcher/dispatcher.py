@@ -150,7 +150,8 @@ class Dispatcher:
                     token_registration_url,
                     json={
                         'token': registration_token,
-                        'name': self.agent_name
+                        'name': self.agent_name,
+                        'workspaces': self.workspaces,
                     },
                     **self.api_kwargs
                 )
