@@ -54,7 +54,7 @@ def generate_basic_built_config():
                    }
                },  # None error as parse int
                {
-                   "remove": {Sections.SERVER: ["workspace"]},
+                   "remove": {Sections.SERVER: ["workspaces"]},
                    "replace": {},
                    "expected_exception": ValueError
                },
@@ -313,7 +313,7 @@ def generate_register_options():
             ],
             "use_ssl_server": True,
         },
-        # 4 Cannot conect
+        # 4 Cannot connect
         {
             "replace_data": {
                 Sections.SERVER: {
@@ -942,7 +942,7 @@ def generate_executor_options():
                     "msg": "Executor ex1 finished successfully"
                 }
             ],
-            "workspace": "error500",
+            "workspaces": "error500",
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
@@ -982,7 +982,7 @@ def generate_executor_options():
                     "msg": "Executor ex1 finished successfully"
                 }
             ],
-            "workspace": "error429",
+            "workspaces": "error429",
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
@@ -1153,10 +1153,10 @@ def generate_executor_options():
     ]
 
 
-def connect_ws_responses(workspace):
+def connect_ws_responses(workspaces):
     return [{
         'action': 'JOIN_AGENT',
-        'workspace': workspace,
+        'workspaces': workspaces,
         'token': None,
         'executors': [
             {

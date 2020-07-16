@@ -55,6 +55,13 @@ logger = logging.get_logger()
 logging.setup_logging()
 
 
+def _parse_list(list_str: str) -> List[str]:
+    str_list = list_str.split(",")
+    if "" in str_list:
+        str_list.remove("")
+    return str_list
+
+
 class Dispatcher:
 
     def __init__(self, session, config_path=None):
@@ -68,21 +75,21 @@ class Dispatcher:
         self.host = config.get(Sections.SERVER, "host")
         self.api_port = config.get(Sections.SERVER, "api_port")
         self.websocket_port = config.get(Sections.SERVER, "websocket_port")
-        self.workspace = config.get(Sections.SERVER, "workspace")
         self.agent_token = config[Sections.TOKENS].get("agent", None)
         self.agent_name = config.get(Sections.AGENT, "agent_name")
         self.session = session
         self.websocket = None
         self.websocket_token = None
-        executors_list_str = config[Sections.AGENT]\
-            .get("executors", [])\
-            .split(",")
-        if "" in executors_list_str:
-            executors_list_str.remove("")
+        self.workspaces = _parse_list(
+            config.get(Sections.SERVER, "workspaces")
+        )
+
         self.executors = {
             executor_name:
                 Executor(executor_name, config)
-                for executor_name in executors_list_str
+                for executor_name in _parse_list(
+                    config[Sections.AGENT].get("executors", "")
+                )
         }
         self.ws_ssl_enabled = self.api_ssl_enabled = \
             config[Sections.SERVER].get("ssl", "False").lower() \
@@ -134,7 +141,7 @@ class Dispatcher:
             token_registration_url = api_url(
                 self.host,
                 self.api_port,
-                postfix=f"/_api/v2/ws/{self.workspace}/agent_registration/",
+                postfix="/_api/v2/agent_registration/",
                 secure=self.api_ssl_enabled
             )
             logger.info(f"token_registration_url: {token_registration_url}")
@@ -154,8 +161,7 @@ class Dispatcher:
             except ClientResponseError as e:
                 if e.status == 404:
                     logger.error(
-                        '404 HTTP ERROR received: Workspace '
-                        f'"{self.workspace}" not found'
+                        "404 HTTP ERROR received: Can't connect to the server"
                     )
                 elif e.status == 401:
                     logger.error(
@@ -192,7 +198,7 @@ class Dispatcher:
 
         connected_data = json.dumps({
                     'action': 'JOIN_AGENT',
-                    'workspace': self.workspace,
+                    'workspaces': self.workspaces,
                     'token': self.websocket_token,
                     'executors': [
                         {
