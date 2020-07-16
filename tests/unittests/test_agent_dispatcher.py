@@ -97,7 +97,9 @@ async def test_start_and_register(register_options,
     # Config
     configuration.set(Sections.SERVER, "api_port", str(client.port))
     configuration.set(Sections.SERVER, "host", client.host)
-    configuration.set(Sections.SERVER, "workspace", test_config.workspace)
+    configuration.set(Sections.SERVER, "workspaces",
+                      test_config.workspaces_str()
+                      )
     configuration.set(
         Sections.TOKENS,
         "registration",
@@ -188,13 +190,13 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
                         test_logger_folder, # noqa F811
                         executor_options):
     # Config
-    workspace = test_config.workspace \
-        if "workspace" not in executor_options \
-        else executor_options["workspace"]
+    workspaces = test_config.workspaces_str() \
+        if "workspaces" not in executor_options \
+        else executor_options["workspaces"]
     configuration.set(Sections.SERVER, "api_port",
                       str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.SERVER, "workspace", workspace)
+    configuration.set(Sections.SERVER, "workspaces", workspaces)
     configuration.set(Sections.TOKENS, "registration",
                       test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
@@ -262,7 +264,10 @@ async def test_connect(test_config: FaradayTestConfig, # noqa F811
     configuration.set(Sections.SERVER, "api_port",
                       str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.SERVER, "workspace", test_config.workspace)
+    configuration.set(Sections.SERVER,
+                      "workspaces",
+                      test_config.workspaces_str()
+                      )
     configuration.set(Sections.TOKENS, "registration",
                       test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
@@ -292,7 +297,7 @@ async def test_connect(test_config: FaradayTestConfig, # noqa F811
     dispatcher = Dispatcher(test_config.client.session,
                             tmp_default_config.config_file_path)
 
-    ws_responses = connect_ws_responses(test_config.workspace)
+    ws_responses = connect_ws_responses(test_config.workspaces)
 
     async def ws_messages_checker(msg):
         msg_ = json.loads(msg)
