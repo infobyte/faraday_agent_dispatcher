@@ -438,6 +438,7 @@ def generate_executor_options():
                      "execution_id": 1,
                      "agent_id": 1,
                      "executor": "ex1",
+                     "workspace": "{}",
                      "args": {"out": "json"}},
             "logs": [
                 {"levelname": "INFO", "msg": "Running ex1 executor"},
@@ -468,6 +469,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
+                "workspace": "{}",
                 "args": {"out": "json", "count": "5"}
             },
             "logs": [
@@ -508,6 +510,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
+                "workspace": "{}",
                 "args": {"out": "json", "count": "5", "spare": "T"}
             },
             "logs": [
@@ -544,6 +547,7 @@ def generate_executor_options():
                 "action": "RUN",
                 "agent_id": 1,
                 "execution_id": 1,
+                "workspace": "{}",
                 "executor": "ex1",
                 "args": {"out": "json", "spaced_before": "T"}
             },
@@ -575,6 +579,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
+                "workspace": "{}",
                 "args": {
                     "out": "json",
                     "spaced_middle": "T",
@@ -615,6 +620,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "execution_id": 1,
+                "workspace": "{}",
                 "executor": "ex1", "args": {"out": "bad_json"}
             },
             "logs": [
@@ -654,6 +660,7 @@ def generate_executor_options():
         {  # 9
             "data": {
                 "action": "RUN", "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "executor": "ex1", "args": {"out": "str"}
             },
@@ -695,6 +702,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
+                "workspace": "{}",
                 "args": {"out": "none", "err": "T"}
             },
             "logs": [
@@ -735,6 +743,7 @@ def generate_executor_options():
         {  # 11
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
+                "workspace": "{}",
                 "execution_id": 1,
                 "args": {"out": "none", "fails": "T"}
             },
@@ -775,6 +784,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
+                "workspace": "{}",
                 "executor": "ex1",
                 "execution_id": 1,
                 "args": {"out": "none", "err": "T", "fails": "T"}
@@ -817,6 +827,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
+                "workspace": "{}",
                 "executor": "ex1",
                 "execution_id": 1,
                 "args": {"out": "json"}
@@ -856,6 +867,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "executor": "ex1",
                 "args": {"err": "T", "fails": "T"},
@@ -882,6 +894,7 @@ def generate_executor_options():
         {  # 15
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
+                "workspace": "{}",
                 "execution_id": 1,
                 "args": {"out": "json", "WTF": "T"}
             },
@@ -922,6 +935,7 @@ def generate_executor_options():
         {  # 16
             "data": {
                 "action": "RUN", "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "executor": "ex1", "args": {"out": "json"}
             },
@@ -964,6 +978,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "execution_id": 1,
+                "workspace": "{}",
                 "executor": "ex1", "args": {"out": "json"}
             },
             "logs": [
@@ -1002,6 +1017,7 @@ def generate_executor_options():
         },
         {  # 18
             "data": {"action": "RUN", "agent_id": 1,
+                     "workspace": "{}",
                      "execution_id": 1,
                      "executor": "ex1", "args": {"out": "json"}},
             "logs": [
@@ -1042,6 +1058,7 @@ def generate_executor_options():
         {  # 19
             "data": {
                 "action": "RUN", "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "args": {"out": "json"}
             },
@@ -1081,6 +1098,7 @@ def generate_executor_options():
         {  # 20
             "data": {
                 "action": "RUN", "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "executor": "NOT_4N_CORRECT_EXECUTOR",
                 "args": {"out": "json"}
@@ -1121,6 +1139,7 @@ def generate_executor_options():
         },
         {  # 21
             "data": {"action": "RUN", "agent_id": 1,
+                     "workspace": "{}",
                      "execution_id": 1,
                      "executor": "add_ex1", "args": {"out": "json"}},
             "logs": [
@@ -1149,6 +1168,25 @@ def generate_executor_options():
                 }
             ],
             "extra": ["add_ex1"]
+        },
+        {  # 22
+            "data": {
+                "action": "RUN",
+                "agent_id": 1,
+                "execution_id": 1,
+                "executor": "ex1",
+                "args": {"out": "json"}
+            },
+            "logs": [
+                {"levelname": "INFO", "msg": "Data not contains workspace "
+                                             "name"},
+            ],
+            "ws_responses": [
+                {
+                    "error": "'workspace' key is mandatory in this "
+                             "websocket connection"
+                }
+            ]
         },
     ]
 
