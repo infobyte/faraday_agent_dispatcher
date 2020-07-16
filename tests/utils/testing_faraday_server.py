@@ -29,7 +29,7 @@ from tests.utils.text_utils import fuzzy_string
 class FaradayTestConfig:
     def __init__(self):
         self.workspaces = [
-            fuzzy_string(8) for _ in range(0, random.randint(1, 5))
+            fuzzy_string(8) for _ in range(0, random.randint(2, 6))
         ]
         self.registration_token = fuzzy_string(25)
         self.agent_token = fuzzy_string(64)

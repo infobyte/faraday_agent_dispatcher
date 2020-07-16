@@ -283,6 +283,20 @@ class Dispatcher:
             return
         self.execution_id = data_dict["execution_id"]
 
+        if "workspace" not in data_dict:
+            logger.info("Data not contains workspace name")
+            await out_func(
+                json.dumps(
+                    {
+                        "error":
+                            "'workspace' key is mandatory in this "
+                            "websocket connection"
+                    }
+                )
+            )
+            return
+        workspace_selected = data_dict["workspace"]
+
         if data_dict["action"] == "RUN":
             if "executor" not in data_dict:
                 logger.error("No executor selected")
@@ -381,6 +395,7 @@ class Dispatcher:
                         process,
                         self.session,
                         self.execution_id,
+                        workspace_selected,
                         self.api_ssl_enabled,
                         self.api_kwargs
                     ).process_f(),
