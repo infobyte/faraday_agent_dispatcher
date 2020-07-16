@@ -1188,6 +1188,75 @@ def generate_executor_options():
                 }
             ]
         },
+        {  # 23 JUST in WS wrong workspace
+            "data": {"action": "RUN",
+                     "execution_id": 1,
+                     "agent_id": 1,
+                     "executor": "ex1",
+                     "workspace": "asd{}",
+                     "args": {"out": "json"}},
+            "logs": [
+                {
+                    "levelname": "INFO",
+                    "msg": "Running ex1 executor",
+                    "max_count": 0,
+                    "min_count": 0
+                },
+                {"levelname": "ERROR", "msg": "Invalid workspace passed"},
+            ],
+            "ws_responses": [
+                {
+                    "action": "RUN_STATUS",
+                    "execution_id": 1,
+                    "running": False,
+                    "message": "Invalid workspace passed to unnamed_agent "
+                               "agent"
+                }
+            ]
+        },
+        {  # 24 Post to other workspace
+            "data": {"action": "RUN",
+                     "execution_id": 1,
+                     "agent_id": 1,
+                     "executor": "ex1",
+                     "workspace": "{}",
+                     "args": {"out": "json"}},
+            "logs": [
+
+                {"levelname": "INFO", "msg": "Running ex1 executor"},
+                {
+                    "levelname": "INFO",
+                    "msg": "Data sent to bulk create",
+                    "min_count": 0,
+                    "max_count": 0
+                },
+                {
+                    "levelname": "ERROR",
+                    "msg": "Invalid data supplied by the executor to the bulk"
+                           " create endpoint. Server responded: "},
+                {
+                    "levelname": "INFO",
+                    "msg": "Executor ex1 finished successfully"
+                }
+            ],
+            "workspaces": "other_workspace",
+            "ws_responses": [
+                {
+                    "action": "RUN_STATUS",
+                    "executor_name": "ex1",
+                    "execution_id": 1,
+                    "running": True,
+                    "message": "Running ex1 executor from unnamed_agent agent"
+                }, {
+                    "action": "RUN_STATUS",
+                    "executor_name": "ex1",
+                    "execution_id": 1,
+                    "successful": True,
+                    "message": "Executor ex1 from unnamed_agent finished "
+                               "successfully"
+                }
+            ]
+        },
     ]
 
 
