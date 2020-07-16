@@ -109,7 +109,8 @@ def main():
     api_host = os.environ.get('EXECUTOR_CONFIG_API_HOST')
     api_key = os.environ.get('EXECUTOR_CONFIG_API_KEY')
     url_target = os.environ.get('EXECUTOR_CONFIG_TARGET_URL')
-    named_configuration = os.environ.get('EXECUTOR_CONFIG_NAMED_CONFIGURATION')
+    named_configuration = os.environ.get('EXECUTOR_CONFIG_NAMED_CONFIGURATION',
+                                         None)
     if not url_target:
         print("URL not provided", file=sys.stderr)
         sys.exit()
