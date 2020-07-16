@@ -311,6 +311,21 @@ class Dispatcher:
                 )
                 return
 
+            if workspace_selected not in self.workspaces:
+                logger.error("Invalid workspace passed")
+                await out_func(
+                    json.dumps(
+                        {
+                            "action": f"{data_dict['action']}_STATUS",
+                            "execution_id": self.execution_id,
+                            "running": False,
+                            "message": "Invalid workspace passed to "
+                                       f"{self.agent_name} agent"
+                        }
+                    )
+                )
+                return
+
             if data_dict["executor"] not in self.executors:
                 logger.error("The selected executor not exists")
                 await out_func(
