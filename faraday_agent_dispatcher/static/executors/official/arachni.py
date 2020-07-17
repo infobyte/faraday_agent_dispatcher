@@ -3,8 +3,8 @@ import os
 import sys
 import string
 import random
+import tempfile
 import subprocess
-from pathlib import Path
 from urllib.parse import urlparse
 from faraday_plugins.plugins.manager import PluginsManager
 
@@ -34,15 +34,15 @@ def main():
     else:
         print("Environment variable ARACHNI_PATH no set", file=sys.stderr)
         sys.exit()
-
     os.chdir(path_arachni)
-    name = generate_hash()
-    name_result = Path(path_arachni) / f'{name}.afr'
+    file_afr = tempfile.NamedTemporaryFile(mode="w", suffix='.afr')
+
     cmd = ['./arachni',
            url_analyze,
            '--report-save-path',
-           name_result
+           file_afr.name
            ]
+
     arachni_command = subprocess.run(
         cmd,
         stdout=subprocess.PIPE,
@@ -59,13 +59,13 @@ def main():
             f"Arachni stderr: {arachni_command.stderr.decode('utf-8')}",
             file=sys.stderr
         )
-    name_xml = generate_hash()
-    name_xml = f'{name_xml}.xml'
+    name_xml = tempfile.NamedTemporaryFile(mode="w", suffix='.afr')
+
     cmd = [
         './arachni_reporter',
-        name_result,
+        file_afr.name,
         '--reporter',
-        f'xml:outfile={name_xml}'
+        f'xml:outfile={name_xml.name}'
     ]
 
     arachni_reporter_process = subprocess.run(
@@ -88,12 +88,12 @@ def main():
 
     plugin = PluginsManager().get_plugin("arachni")
 
-    with open(name_xml, 'r') as f:
+    with open(name_xml.name, 'r') as f:
         plugin.parseOutputString(f.read())
         print(plugin.get_json())
 
-    os.remove(name_result)
-    os.remove(name_xml)
+    name_xml.close()
+    file_afr.close()
 
 
 if __name__ == '__main__':
