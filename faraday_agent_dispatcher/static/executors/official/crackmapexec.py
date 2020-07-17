@@ -88,6 +88,8 @@ def main():
         ]
 
     else:
+        print("Username or Password not provided."
+              "Run command without parameter", file=sys.stderr)
         command += [
             '-u', "",
             '-p', "",
