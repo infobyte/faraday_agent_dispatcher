@@ -265,6 +265,7 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
                min_count, log["msg"]
 
 
+# This test merging "workspace" & "workspaces" in config to "workspaces"
 @pytest.mark.asyncio
 async def test_connect(test_config: FaradayTestConfig, # noqa F811
                        tmp_default_config, # noqa F811

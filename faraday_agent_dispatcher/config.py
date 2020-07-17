@@ -12,6 +12,8 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from typing import NoReturn
+
 from faraday_agent_dispatcher.utils.control_values_utils import (
     control_int,
     control_str,
@@ -134,6 +136,7 @@ def verify():
             if '' in executor_list:
                 executor_list.remove('')
             for executor_name in executor_list:
+                executor_name = executor_name.strip()
                 if Sections.EXECUTOR_DATA.format(executor_name) \
                         not in instance.sections():
 
@@ -147,17 +150,40 @@ def verify():
         if len(data) > 0:
             raise ValueError('\n'.join(data))
 
+    if Sections.SERVER not in instance:
+        should_be_empty = True
+
     if should_be_empty:
-        assert len(instance.sections()) == 0
+        if len(instance.sections()) != 0:
+            report_sections_differences()
     else:
         if 'workspace' in instance[Sections.SERVER]:
+            workspace_loaded_value = instance.get(
+                section=Sections.SERVER,
+                option="workspace"
+            )
+            workspaces_value = workspace_loaded_value
+
+            if 'workspaces' in instance[Sections.SERVER]:
+                print(
+                    f"{Bcolors.WARNING}Both section {Bcolors.BOLD}workspace "
+                    f"{Bcolors.ENDC}{Bcolors.WARNING}and "
+                    f"{Bcolors.BOLD}workspaces{Bcolors.ENDC}"
+                    f"{Bcolors.WARNING} found. Merging them"
+                )
+                logging.warning("Both section workspace and workspaces "
+                                "found. Merging them")
+                workspaces_loaded_value = instance.get(
+                    section=Sections.SERVER,
+                    option="workspaces"
+                )
+                if len(workspaces_value) >= 0:
+                    workspaces_value = f"{workspaces_value}," \
+                                       f"{workspaces_loaded_value}"
             instance.set(
                 section=Sections.SERVER,
                 option="workspaces",
-                value=instance.get(
-                    section=Sections.SERVER,
-                    option="workspace"
-                )
+                value=workspaces_value
             )
             instance.remove_option(Sections.SERVER, "workspace")
 
@@ -166,6 +192,38 @@ def verify():
         if 'ssl_cert' not in instance[Sections.SERVER]:
             instance.set(Sections.SERVER, "ssl_cert", "")
         control_config()
+
+
+def report_sections_differences() -> NoReturn:
+    actual_sections = {
+        Sections.AGENT,
+        Sections.SERVER,
+        Sections.TOKENS
+    }
+    config_section = set(instance.sections())
+    lacking_sections = actual_sections.difference(config_section)
+    extra_sections = config_section.difference(actual_sections)
+    if Sections.AGENT in instance.sections() and \
+            'executors' in instance[Sections.AGENT]:
+        extra_sections.difference_update(
+            {
+                section.format(executor_name)
+                for executor_name in instance.get(Sections.AGENT, "executors")
+                for section in {
+                    Sections.EXECUTOR_DATA,
+                    Sections.EXECUTOR_PARAMS,
+                    Sections.EXECUTOR_VARENVS
+                }
+            }
+        )
+    msg_phrases = [
+        "The lacking sections are:",
+        f"{Bcolors.BOLD}{','.join(lacking_sections)}{Bcolors.ENDC}"
+        "Can not process the config file, the extra sections are:",
+        f"{Bcolors.BOLD}{','.join(extra_sections)}{Bcolors.ENDC}",
+        ]
+    logging.error(" ".join(msg_phrases))
+    raise ValueError("\n".join(msg_phrases))
 
 
 class OldSections:
@@ -205,9 +263,7 @@ def control_config():
     for section in __control_dict:
         for option in __control_dict[section]:
             if section not in instance:
-                err = f"Section {section} is an mandatory section in the " \
-                      f"config"
-                raise ValueError(err)
+                report_sections_differences()
             value = instance.get(section, option) \
                 if option in instance[section] \
                 else None

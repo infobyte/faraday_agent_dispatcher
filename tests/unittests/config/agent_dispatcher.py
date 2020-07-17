@@ -1263,7 +1263,8 @@ def generate_executor_options():
 def connect_ws_responses(workspaces):
     return [{
         'action': 'JOIN_AGENT',
-        'workspaces': workspaces,
+        # The example workspace come from merging configs
+        'workspaces': ["example"]+workspaces,
         'token': None,
         'executors': [
             {
