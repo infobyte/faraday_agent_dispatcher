@@ -1,17 +1,10 @@
 #!/usr/bin/env python
 import os
 import sys
-import string
-import random
 import tempfile
 import subprocess
 from urllib.parse import urlparse
 from faraday_plugins.plugins.manager import PluginsManager
-
-
-def generate_hash():
-    name = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-    return name
 
 
 def main():
