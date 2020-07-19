@@ -35,7 +35,7 @@ def main():
         text=True
     )
     nmap = NmapPlugin()
-    nmap.parseOutputString(results.stdout)
+    nmap.parseOutputString(results.stdout.encode())
     print(nmap.get_json())
 
 
