@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import os
-import sys
-import subprocess
-import socket
 import re
+import sys
+import json
+import socket
+import subprocess
 
 
 def report(output):
@@ -13,9 +14,9 @@ def report(output):
         ip_port = re.findall(r'[0-9]+(?:\.[0-9]+){3}(?:\:[0-9]+)', line)
         operating_system = []
         credential_passw = ''
+        port = 0
 
         if ip:
-
             if line.find('Unix'):
                 operating_system.append('Unix')
             elif line.find('Windows'):
@@ -32,9 +33,9 @@ def report(output):
             faraday_host_info = {
                 "hosts": [{
                     "ip": ip[0],
-                    "description":'CrackMapExec',
-                    "hostnames": None,
-                    "os": operating_system,
+                    "description":"CrackMapExec",
+                    "hostnames": [],
+                    "os": operating_system[0],
                     "credentials": [
                         {
                             "name": "credential",
@@ -43,16 +44,14 @@ def report(output):
                     ],
                     "services": [
                         {
-                            "name": "",
+                            "name": "CME",
                             "port": int(port),
-                            "protocol": ""
+                            "protocol": "TCP"
                         }
                     ],
-                    "vulnerabilities": None
                 }]}
 
             faraday_host.append(faraday_host_info)
-
     return faraday_host
 
 
@@ -116,7 +115,7 @@ def main():
     cme_process = subprocess.run(command, stdout=subprocess.PIPE, shell=False)
     output = cme_process.stdout.decode('utf-8')
     faraday_json = report(output)
-    print(faraday_json)
+    print(json.dumps(faraday_json[0]))
 
 
 if __name__ == '__main__':
