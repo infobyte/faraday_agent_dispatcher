@@ -1,3 +1,5 @@
+import tempfile
+
 from faraday_agent_dispatcher.config import (
     instance as config,
     reset_config,
@@ -31,10 +33,6 @@ USER = os.getenv("FARADAY_USER")
 EMAIL = os.getenv("FARADAY_EMAIL")
 PASS = os.getenv("FARADAY_PASSWORD")
 
-CONFIG_DIR = Path(__file__).parent.parent.parent \
-             / 'data' \
-             / 'old_version_inis' \
-             / '1.0.ini'
 LOGGER_DIR = Path("./logs")
 
 agent_ok_status_keys_set = {'create_date',
@@ -77,7 +75,7 @@ def test_execute_agent():
     # Config set up
     config.set(Sections.TOKENS, "registration", token)
     config.remove_option(Sections.TOKENS, "agent")
-    config.set(Sections.SERVER, "workspace", WORKSPACE)
+    config.set(Sections.SERVER, "workspaces", WORKSPACE)
     config.set(Sections.SERVER, "ssl", SSL)
     config.set(Sections.AGENT, "agent_name", AGENT_NAME)
     config.set(Sections.AGENT, "executors", EXECUTOR_NAME)
@@ -101,88 +99,91 @@ def test_execute_agent():
     [config.set(params_section, param, "False") for param in [
         "count", "spare", "spaced_before", "spaced_middle", "err", "fails"]]
 
-    save_config(CONFIG_DIR)
+    with tempfile.TemporaryDirectory() as tempdirfile:
+        config_pathfile = Path(tempdirfile)
+        save_config(config_pathfile)
 
-    # Init dispatcher!
-    command = [
-        'faraday-dispatcher',
-        'run',
-        f'--config-file={CONFIG_DIR}',
-        f'--logdir={LOGGER_DIR}'
-    ]
-    p = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    time.sleep(2)  # If fails check time
-
-    # Checking dispatcher connection
-    res = session.get(
-        api_url(HOST, API_PORT, postfix=f'/_api/v2/ws/{WORKSPACE}/agents/')
-    )
-    assert res.status_code == 200, res.text
-    res_data = res.json()
-    assert len(res_data) == 1, p.communicate(timeout=0.1)
-    agent = res_data[0]
-    agent_id = agent["id"]
-    if agent_ok_status_keys_set != set(agent.keys()):
-        print(
-            "Keys set from agent endpoint differ from expected ones, "
-            "checking if its a superset"
+        # Init dispatcher!
+        command = [
+            'faraday-dispatcher',
+            'run',
+            f'--config-file={config_pathfile}',
+            f'--logdir={LOGGER_DIR}'
+        ]
+        p = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
-        assert agent_ok_status_keys_set.issubset(set(agent.keys()))
-    for key in agent_ok_status_dict:
-        assert agent[key] == agent_ok_status_dict[key], \
-            [agent, agent_ok_status_dict]
+        time.sleep(2)  # If fails check time
 
-    # Run executor!
-    res = session.post(api_url(
-        HOST,
-        API_PORT,
-        postfix=f'/_api/v2/ws/{WORKSPACE}/agents/{agent["id"]}/run/'),
-        json={
-            'csrf_token': session_res.json()['csrf_token'],
-            'executorData': {
-                "agent_id": agent_id,
-                "executor": EXECUTOR_NAME,
-                "args": {"out": "json"}
-            }
-        })
-    assert res.status_code == 200, res.text
-    time.sleep(2)  # If fails check time
+        # Checking dispatcher connection
+        res = session.get(
+            api_url(HOST, API_PORT, postfix=f'/_api/v2/ws/{WORKSPACE}/agents/')
+        )
+        assert res.status_code == 200, res.text
+        res_data = res.json()
+        assert len(res_data) == 1, p.communicate(timeout=0.1)
+        agent = res_data[0]
+        agent_id = agent["id"]
+        if agent_ok_status_keys_set != set(agent.keys()):
+            print(
+                "Keys set from agent endpoint differ from expected ones, "
+                "checking if its a superset"
+            )
+            assert agent_ok_status_keys_set.issubset(set(agent.keys()))
+        for key in agent_ok_status_dict:
+            assert agent[key] == agent_ok_status_dict[key], \
+                [agent, agent_ok_status_dict]
 
-    # Test results
-    res = session.get(
-        api_url(
+        # Run executor!
+        res = session.post(api_url(
             HOST,
             API_PORT,
-            postfix=f'/_api/v2/ws/{WORKSPACE}/hosts'
-        )
-    )
-    host_dict = res.json()
-    assert host_dict["total_rows"] == 1, (res.text, host_dict)
-    host = host_dict["rows"][0]["value"]
-    for key in host_data:
-        if key == "hostnames":
-            assert set(host[key]) == set(host_data[key])
-        else:
-            assert host[key] == host_data[key]
-    assert host["vulns"] == 1
+            postfix=f'/_api/v2/ws/{WORKSPACE}/agents/{agent["id"]}/run/'),
+            json={
+                'csrf_token': session_res.json()['csrf_token'],
+                'executorData': {
+                    "agent_id": agent_id,
+                    "executor": EXECUTOR_NAME,
+                    "args": {"out": "json"}
+                }
+            })
+        assert res.status_code == 200, res.text
+        time.sleep(2)  # If fails check time
 
-    res = session.get(
-        api_url(HOST, API_PORT, postfix=f'/_api/v2/ws/{WORKSPACE}/vulns')
-    )
-    vuln_dict = res.json()
-    assert vuln_dict["count"] == 1
-    vuln = vuln_dict["vulnerabilities"][0]["value"]
-    for key in vuln_data:
-        if key == 'impact':
-            for k_key in vuln['impact']:
-                if k_key in vuln_data['impact']:
-                    assert vuln['impact'][k_key] == vuln_data['impact'][k_key]
-                else:
-                    assert not vuln['impact'][k_key]
-        else:
-            assert vuln[key] == vuln_data[key]
-    assert vuln["target"] == host_data['ip']
+        # Test results
+        res = session.get(
+            api_url(
+                HOST,
+                API_PORT,
+                postfix=f'/_api/v2/ws/{WORKSPACE}/hosts'
+            )
+        )
+        host_dict = res.json()
+        assert host_dict["total_rows"] == 1, (res.text, host_dict)
+        host = host_dict["rows"][0]["value"]
+        for key in host_data:
+            if key == "hostnames":
+                assert set(host[key]) == set(host_data[key])
+            else:
+                assert host[key] == host_data[key]
+        assert host["vulns"] == 1
+
+        res = session.get(
+            api_url(HOST, API_PORT, postfix=f'/_api/v2/ws/{WORKSPACE}/vulns')
+        )
+        vuln_dict = res.json()
+        assert vuln_dict["count"] == 1
+        vuln = vuln_dict["vulnerabilities"][0]["value"]
+        for key in vuln_data:
+            if key == 'impact':
+                for k_key in vuln['impact']:
+                    if k_key in vuln_data['impact']:
+                        assert vuln['impact'][k_key] == \
+                               vuln_data['impact'][k_key]
+                    else:
+                        assert not vuln['impact'][k_key]
+            else:
+                assert vuln[key] == vuln_data[key]
+        assert vuln["target"] == host_data['ip']

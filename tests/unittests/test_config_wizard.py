@@ -14,7 +14,7 @@ from tests.unittests.config.wizard import (
     generate_error_ini_configs, parse_inputs, old_version_path,
 )
 from tests.unittests.wizard_input import (
-    DispatcherInput,
+    DispatcherInput, WorkspaceInput, ADMType,
 )
 
 
@@ -84,6 +84,10 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
             ini_config["old_executors"],
             testing_inputs["after_executors"]
         )
+        expected_workspaces_set = set.union(
+            ini_config["old_workspaces"],
+            testing_inputs["after_workspaces"]
+        )
 
         config_mod.reset_config(path)
         executor_config_set = set(
@@ -95,6 +99,15 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         if '' in executor_config_set:
             executor_config_set.remove('')
         assert executor_config_set == expected_executors_set
+        workspace_config_set = set(
+            config_mod.instance.get(
+                config_mod.Sections.SERVER,
+                "workspaces"
+            ).split(",")
+        )
+        if '' in workspace_config_set:
+            workspace_config_set.remove('')
+        assert workspace_config_set == expected_workspaces_set
 
 
 @pytest.mark.parametrize(
@@ -154,11 +167,19 @@ def test_override_ssl_cert_with_default(ini_config):
         testing_inputs = [
             {
                 "dispatcher_input": DispatcherInput(
+                    workspaces=[
+                        WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                    ],
                     ssl_cert=Path(__file__).parent.parent / 'data' / 'mock.pub'
                 ),
             },
             {
-                "dispatcher_input": DispatcherInput(ssl_cert=""),
+                "dispatcher_input": DispatcherInput(
+                    ssl_cert="",
+                    workspaces=[
+                        WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+                    ]
+                ),
             },
         ]
 
@@ -215,7 +236,10 @@ def test_with_agent_token(delete_token):
         env = os.environ
         env["DEBUG_INPUT_MODE"] = "True"
         input_str = DispatcherInput(
-            delete_agent_token=delete_token
+            delete_agent_token=delete_token,
+            workspaces=[
+                WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
+            ]
         ).input_str()
         input_str = f"A\n{input_str}Q\n"
         escape_string = "\0\n"*1000

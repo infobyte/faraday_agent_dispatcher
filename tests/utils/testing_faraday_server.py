@@ -28,7 +28,9 @@ from tests.utils.text_utils import fuzzy_string
 
 class FaradayTestConfig:
     def __init__(self):
-        self.workspace = fuzzy_string(8)
+        self.workspaces = [
+            fuzzy_string(8) for _ in range(0, random.randint(2, 6))
+        ]
         self.registration_token = fuzzy_string(25)
         self.agent_token = fuzzy_string(64)
         self.agent_id = random.randint(1, 1000)
@@ -40,6 +42,9 @@ class FaradayTestConfig:
             "SECRET_KEY": 'SECRET_KEY',
         }
         self.changes_queue = Queue()
+
+    def workspaces_str(self) -> str:
+        return ",".join(self.workspaces)
 
     def run_agent_to_websocket(self):
         self.changes_queue.put({
@@ -58,6 +63,8 @@ def get_agent_registration(test_config: FaradayTestConfig):
         if 'token' not in data \
                 or data['token'] != test_config.registration_token:
             return web.HTTPUnauthorized()
+        if 'workspaces' not in data:
+            return web.HTTPBadRequest()
         response_dict = {"name": data["name"],
                          "token": test_config.agent_token,
                          "id": test_config.agent_id}
@@ -107,8 +114,8 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
     return agent_websocket_token
 
 
-def get_base(test_config: FaradayTestConfig):
-    async def base(request):
+def get_base(_: FaradayTestConfig):
+    async def base(_):
         return web.HTTPOk()
     return base
 
@@ -124,7 +131,10 @@ def get_bulk_create(test_config: FaradayTestConfig):
         if "error429" in request.url.path:
             return web.HTTPTooManyRequests()
 
-        if test_config.workspace not in request.url.path:
+        if all(
+                workspace not in request.url.path
+                for workspace in test_config.workspaces
+        ):
             return web.HTTPNotFound()
         _host_data = host_data.copy()
         _host_data["vulnerabilities"] = [vuln_data.copy()]
@@ -165,7 +175,7 @@ def tmp_default_config():
 
 
 @pytest.fixture
-def tmp_custom_config(config=None):
+def tmp_custom_config():
     config = TmpConfig()
     ini_path = (
         pathlib.Path(__file__).parent.parent /
@@ -181,17 +191,18 @@ async def aiohttp_faraday_client(test_config: FaradayTestConfig):
     app = web.Application()
     app.router.add_get("/", get_base(test_config))
     app.router.add_post(
-        f"/_api/v2/ws/{test_config.workspace}/agent_registration/",
+        "/_api/v2/agent_registration/",
         get_agent_registration(test_config)
     )
     app.router.add_post(
         '/_api/v2/agent_websocket_token/',
         get_agent_websocket_token(test_config)
     )
-    app.router.add_post(
-        f"/_api/v2/ws/{test_config.workspace}/bulk_create/",
-        get_bulk_create(test_config)
-    )
+    for workspace in test_config.workspaces:
+        app.router.add_post(
+            f"/_api/v2/ws/{workspace}/bulk_create/",
+            get_bulk_create(test_config)
+        )
     app.router.add_post(
         "/_api/v2/ws/error500/bulk_create/",
         get_bulk_create(test_config)
