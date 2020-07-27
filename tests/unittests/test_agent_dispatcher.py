@@ -21,6 +21,7 @@
 import json
 import os
 from pathlib import Path
+import random
 
 import pytest
 import sys
@@ -97,7 +98,9 @@ async def test_start_and_register(register_options,
     # Config
     configuration.set(Sections.SERVER, "api_port", str(client.port))
     configuration.set(Sections.SERVER, "host", client.host)
-    configuration.set(Sections.SERVER, "workspace", test_config.workspace)
+    configuration.set(Sections.SERVER, "workspaces",
+                      test_config.workspaces_str()
+                      )
     configuration.set(
         Sections.TOKENS,
         "registration",
@@ -188,13 +191,17 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
                         test_logger_folder, # noqa F811
                         executor_options):
     # Config
-    workspace = test_config.workspace \
-        if "workspace" not in executor_options \
-        else executor_options["workspace"]
+    if "workspaces" not in executor_options:
+        workspaces = test_config.workspaces
+        workspaces_str = test_config.workspaces_str()
+    else:
+        workspaces = executor_options["workspaces"].split(",")
+        workspaces_str = ",".join(workspaces)
+
     configuration.set(Sections.SERVER, "api_port",
                       str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.SERVER, "workspace", workspace)
+    configuration.set(Sections.SERVER, "workspaces", workspaces_str)
     configuration.set(Sections.TOKENS, "registration",
                       test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
@@ -238,8 +245,12 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
     # Init and register it
     dispatcher = Dispatcher(test_config.client.session,
                             tmp_default_config.config_file_path)
-    await dispatcher.run_once(json.dumps(executor_options["data"]),
-                              ws_messages_checker)
+    selected_workspace = random.choice(workspaces)
+    run_data = executor_options["data"]
+    if 'workspace' in run_data:
+        run_data['workspace'] = \
+            run_data['workspace'].format(selected_workspace)
+    await dispatcher.run_once(json.dumps(run_data), ws_messages_checker)
     history = test_logger_handler.history
     assert len(executor_options["ws_responses"]) == 0
     for log in executor_options["logs"]:
@@ -254,6 +265,7 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
                min_count, log["msg"]
 
 
+# This test merging "workspace" & "workspaces" in config to "workspaces"
 @pytest.mark.asyncio
 async def test_connect(test_config: FaradayTestConfig, # noqa F811
                        tmp_default_config, # noqa F811
@@ -262,7 +274,10 @@ async def test_connect(test_config: FaradayTestConfig, # noqa F811
     configuration.set(Sections.SERVER, "api_port",
                       str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.SERVER, "workspace", test_config.workspace)
+    configuration.set(Sections.SERVER,
+                      "workspaces",
+                      test_config.workspaces_str()
+                      )
     configuration.set(Sections.TOKENS, "registration",
                       test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
@@ -292,7 +307,7 @@ async def test_connect(test_config: FaradayTestConfig, # noqa F811
     dispatcher = Dispatcher(test_config.client.session,
                             tmp_default_config.config_file_path)
 
-    ws_responses = connect_ws_responses(test_config.workspace)
+    ws_responses = connect_ws_responses(test_config.workspaces)
 
     async def ws_messages_checker(msg):
         msg_ = json.loads(msg)

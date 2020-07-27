@@ -1,0 +1,2 @@
+[flake8]
+min_python_version = 3.7.0

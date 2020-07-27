@@ -54,7 +54,7 @@ def generate_basic_built_config():
                    }
                },  # None error as parse int
                {
-                   "remove": {Sections.SERVER: ["workspace"]},
+                   "remove": {Sections.SERVER: ["workspaces"]},
                    "replace": {},
                    "expected_exception": ValueError
                },
@@ -313,7 +313,7 @@ def generate_register_options():
             ],
             "use_ssl_server": True,
         },
-        # 4 Cannot conect
+        # 4 Cannot connect
         {
             "replace_data": {
                 Sections.SERVER: {
@@ -438,6 +438,7 @@ def generate_executor_options():
                      "execution_id": 1,
                      "agent_id": 1,
                      "executor": "ex1",
+                     "workspace": "{}",
                      "args": {"out": "json"}},
             "logs": [
                 {"levelname": "INFO", "msg": "Running ex1 executor"},
@@ -468,6 +469,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
+                "workspace": "{}",
                 "args": {"out": "json", "count": "5"}
             },
             "logs": [
@@ -508,6 +510,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
+                "workspace": "{}",
                 "args": {"out": "json", "count": "5", "spare": "T"}
             },
             "logs": [
@@ -544,6 +547,7 @@ def generate_executor_options():
                 "action": "RUN",
                 "agent_id": 1,
                 "execution_id": 1,
+                "workspace": "{}",
                 "executor": "ex1",
                 "args": {"out": "json", "spaced_before": "T"}
             },
@@ -575,6 +579,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
+                "workspace": "{}",
                 "args": {
                     "out": "json",
                     "spaced_middle": "T",
@@ -615,6 +620,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "execution_id": 1,
+                "workspace": "{}",
                 "executor": "ex1", "args": {"out": "bad_json"}
             },
             "logs": [
@@ -654,6 +660,7 @@ def generate_executor_options():
         {  # 9
             "data": {
                 "action": "RUN", "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "executor": "ex1", "args": {"out": "str"}
             },
@@ -695,6 +702,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
+                "workspace": "{}",
                 "args": {"out": "none", "err": "T"}
             },
             "logs": [
@@ -735,6 +743,7 @@ def generate_executor_options():
         {  # 11
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
+                "workspace": "{}",
                 "execution_id": 1,
                 "args": {"out": "none", "fails": "T"}
             },
@@ -775,6 +784,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
+                "workspace": "{}",
                 "executor": "ex1",
                 "execution_id": 1,
                 "args": {"out": "none", "err": "T", "fails": "T"}
@@ -817,6 +827,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
+                "workspace": "{}",
                 "executor": "ex1",
                 "execution_id": 1,
                 "args": {"out": "json"}
@@ -856,6 +867,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "executor": "ex1",
                 "args": {"err": "T", "fails": "T"},
@@ -882,6 +894,7 @@ def generate_executor_options():
         {  # 15
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
+                "workspace": "{}",
                 "execution_id": 1,
                 "args": {"out": "json", "WTF": "T"}
             },
@@ -922,6 +935,7 @@ def generate_executor_options():
         {  # 16
             "data": {
                 "action": "RUN", "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "executor": "ex1", "args": {"out": "json"}
             },
@@ -942,7 +956,7 @@ def generate_executor_options():
                     "msg": "Executor ex1 finished successfully"
                 }
             ],
-            "workspace": "error500",
+            "workspaces": "error500",
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
@@ -964,6 +978,7 @@ def generate_executor_options():
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "execution_id": 1,
+                "workspace": "{}",
                 "executor": "ex1", "args": {"out": "json"}
             },
             "logs": [
@@ -982,7 +997,7 @@ def generate_executor_options():
                     "msg": "Executor ex1 finished successfully"
                 }
             ],
-            "workspace": "error429",
+            "workspaces": "error429",
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
@@ -1002,6 +1017,7 @@ def generate_executor_options():
         },
         {  # 18
             "data": {"action": "RUN", "agent_id": 1,
+                     "workspace": "{}",
                      "execution_id": 1,
                      "executor": "ex1", "args": {"out": "json"}},
             "logs": [
@@ -1042,6 +1058,7 @@ def generate_executor_options():
         {  # 19
             "data": {
                 "action": "RUN", "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "args": {"out": "json"}
             },
@@ -1081,6 +1098,7 @@ def generate_executor_options():
         {  # 20
             "data": {
                 "action": "RUN", "agent_id": 1,
+                "workspace": "{}",
                 "execution_id": 1,
                 "executor": "NOT_4N_CORRECT_EXECUTOR",
                 "args": {"out": "json"}
@@ -1121,6 +1139,7 @@ def generate_executor_options():
         },
         {  # 21
             "data": {"action": "RUN", "agent_id": 1,
+                     "workspace": "{}",
                      "execution_id": 1,
                      "executor": "add_ex1", "args": {"out": "json"}},
             "logs": [
@@ -1150,13 +1169,102 @@ def generate_executor_options():
             ],
             "extra": ["add_ex1"]
         },
+        {  # 22
+            "data": {
+                "action": "RUN",
+                "agent_id": 1,
+                "execution_id": 1,
+                "executor": "ex1",
+                "args": {"out": "json"}
+            },
+            "logs": [
+                {"levelname": "INFO", "msg": "Data not contains workspace "
+                                             "name"},
+            ],
+            "ws_responses": [
+                {
+                    "error": "'workspace' key is mandatory in this "
+                             "websocket connection"
+                }
+            ]
+        },
+        {  # 23 JUST in WS wrong workspace
+            "data": {"action": "RUN",
+                     "execution_id": 1,
+                     "agent_id": 1,
+                     "executor": "ex1",
+                     "workspace": "asd{}",
+                     "args": {"out": "json"}},
+            "logs": [
+                {
+                    "levelname": "INFO",
+                    "msg": "Running ex1 executor",
+                    "max_count": 0,
+                    "min_count": 0
+                },
+                {"levelname": "ERROR", "msg": "Invalid workspace passed"},
+            ],
+            "ws_responses": [
+                {
+                    "action": "RUN_STATUS",
+                    "execution_id": 1,
+                    "running": False,
+                    "message": "Invalid workspace passed to unnamed_agent "
+                               "agent"
+                }
+            ]
+        },
+        {  # 24 Post to other workspace
+            "data": {"action": "RUN",
+                     "execution_id": 1,
+                     "agent_id": 1,
+                     "executor": "ex1",
+                     "workspace": "{}",
+                     "args": {"out": "json"}},
+            "logs": [
+
+                {"levelname": "INFO", "msg": "Running ex1 executor"},
+                {
+                    "levelname": "INFO",
+                    "msg": "Data sent to bulk create",
+                    "min_count": 0,
+                    "max_count": 0
+                },
+                {
+                    "levelname": "ERROR",
+                    "msg": "Invalid data supplied by the executor to the bulk"
+                           " create endpoint. Server responded: "},
+                {
+                    "levelname": "INFO",
+                    "msg": "Executor ex1 finished successfully"
+                }
+            ],
+            "workspaces": "other_workspace",
+            "ws_responses": [
+                {
+                    "action": "RUN_STATUS",
+                    "executor_name": "ex1",
+                    "execution_id": 1,
+                    "running": True,
+                    "message": "Running ex1 executor from unnamed_agent agent"
+                }, {
+                    "action": "RUN_STATUS",
+                    "executor_name": "ex1",
+                    "execution_id": 1,
+                    "successful": True,
+                    "message": "Executor ex1 from unnamed_agent finished "
+                               "successfully"
+                }
+            ]
+        },
     ]
 
 
-def connect_ws_responses(workspace):
+def connect_ws_responses(workspaces):
     return [{
         'action': 'JOIN_AGENT',
-        'workspace': workspace,
+        # The example workspace come from merging configs
+        'workspaces': ["example"]+workspaces,
         'token': None,
         'executors': [
             {
