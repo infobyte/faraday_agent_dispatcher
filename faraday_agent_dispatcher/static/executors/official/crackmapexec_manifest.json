@@ -1,0 +1,16 @@
+{
+  "arguments": {
+    "CRACKMAPEXEC_IP":  true,
+    "CRACKMAPEXEC_USER": false,
+    "CRACKMAPEXEC_PASS": false,
+    "CRACKMAPEXEC_LPORT": false,
+    "CRACKMAPEXEC_LHOST": false
+  },
+  "environment_variables": [
+
+  ],
+  "check_cmds": [
+    "crackmapexec --help"
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}
