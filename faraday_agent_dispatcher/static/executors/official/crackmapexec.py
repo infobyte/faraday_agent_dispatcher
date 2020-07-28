@@ -50,7 +50,6 @@ def report(output):
                         }
                     ],
                 }]}
-
             faraday_host.append(faraday_host_info)
     return faraday_host
 
@@ -115,7 +114,10 @@ def main():
     cme_process = subprocess.run(command, stdout=subprocess.PIPE, shell=False)
     output = cme_process.stdout.decode('utf-8')
     faraday_json = report(output)
-    print(json.dumps(faraday_json[0]))
+    if len(faraday_json) == 0:
+        print("IP provided not generate result", file=sys.stderr)
+    else:
+        print(json.dumps(faraday_json[0]))
 
 
 if __name__ == '__main__':
