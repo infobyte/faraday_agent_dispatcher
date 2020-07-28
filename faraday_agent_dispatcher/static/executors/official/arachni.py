@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 import os
 import sys
+import tempfile
 import subprocess
-from pathlib import Path
+from urllib.parse import urlparse
 from faraday_plugins.plugins.manager import PluginsManager
 
 
 def main():
     my_envs = os.environ
-    # If the script is run outside the dispatcher the environment variables
+    # If the script is run outside the dispatcher
+    # the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_NAME_URL', 'ARACHNI_PATH']
     if 'EXECUTOR_CONFIG_NAME_URL' in my_envs:
         url_analyze = os.environ.get('EXECUTOR_CONFIG_NAME_URL')
+        url = urlparse(url_analyze)
+        if url.scheme != 'http' and url.scheme != 'https':
+            url_analyze = f'http://{url_analyze}'
     else:
         print("Param NAME_URL no passed", file=sys.stderr)
         sys.exit()
@@ -22,14 +27,15 @@ def main():
     else:
         print("Environment variable ARACHNI_PATH no set", file=sys.stderr)
         sys.exit()
-
     os.chdir(path_arachni)
-    name_result = Path(path_arachni) / 'report.afr'
+    file_afr = tempfile.NamedTemporaryFile(mode="w", suffix='.afr')
+
     cmd = ['./arachni',
            url_analyze,
            '--report-save-path',
-           name_result
+           file_afr.name
            ]
+
     arachni_command = subprocess.run(
         cmd,
         stdout=subprocess.PIPE,
@@ -46,12 +52,13 @@ def main():
             f"Arachni stderr: {arachni_command.stderr.decode('utf-8')}",
             file=sys.stderr
         )
+    name_xml = tempfile.NamedTemporaryFile(mode="w", suffix='.afr')
 
     cmd = [
         './arachni_reporter',
-        name_result,
+        file_afr.name,
         '--reporter',
-        'xml:outfile=xml_arachni_report.xml'
+        f'xml:outfile={name_xml.name}'
     ]
 
     arachni_reporter_process = subprocess.run(
@@ -74,12 +81,12 @@ def main():
 
     plugin = PluginsManager().get_plugin("arachni")
 
-    with open("xml_arachni_report.xml", 'r') as f:
+    with open(name_xml.name, 'r') as f:
         plugin.parseOutputString(f.read())
         print(plugin.get_json())
 
-    os.remove(name_result)
-    os.remove("xml_arachni_report.xml")
+    name_xml.close()
+    file_afr.close()
 
 
 if __name__ == '__main__':
