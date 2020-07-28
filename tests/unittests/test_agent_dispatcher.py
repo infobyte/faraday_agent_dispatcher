@@ -47,6 +47,7 @@ from tests.utils.testing_faraday_server import (  # noqa: F401
     test_logger_handler,
     test_logger_folder,
 )
+from tests.utils.text_utils import fuzzy_string
 
 
 @pytest.mark.parametrize('config_changes_dict',
@@ -265,7 +266,6 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
                min_count, log["msg"]
 
 
-# This test merging "workspace" & "workspaces" in config to "workspaces"
 @pytest.mark.asyncio
 async def test_connect(test_config: FaradayTestConfig, # noqa F811
                        tmp_default_config, # noqa F811
@@ -308,6 +308,68 @@ async def test_connect(test_config: FaradayTestConfig, # noqa F811
                             tmp_default_config.config_file_path)
 
     ws_responses = connect_ws_responses(test_config.workspaces)
+
+    async def ws_messages_checker(msg):
+        msg_ = json.loads(msg)
+        assert msg_ in ws_responses
+        ws_responses.remove(msg_)
+
+    await dispatcher.connect(ws_messages_checker)
+
+    assert len(ws_responses) == 0
+
+
+# This test merging "workspace" & "workspaces" in config to "workspaces"
+# Based in test_connect
+@pytest.mark.asyncio
+async def test_merge_config(test_config: FaradayTestConfig, # noqa F811
+                            tmp_default_config, # noqa F811
+                            test_logger_handler, # noqa F811
+                            test_logger_folder): # noqa F811
+    configuration.set(Sections.SERVER, "api_port",
+                      str(test_config.client.port))
+    configuration.set(Sections.SERVER, "host", test_config.client.host)
+    configuration.set(Sections.SERVER,
+                      "workspaces",
+                      test_config.workspaces_str()
+                      )
+    random_workspace_name = fuzzy_string(15)
+    configuration.set(Sections.SERVER,
+                      "workspace",
+                      random_workspace_name
+                      )
+    configuration.set(Sections.TOKENS, "registration",
+                      test_config.registration_token)
+    configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
+    path_to_basic_executor = (
+            Path(__file__).parent.parent /
+            'data' / 'basic_executor.py'
+    )
+    configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3,ex4")
+
+    for executor_name in ["ex1", "ex3", "ex4"]:
+        executor_section = Sections.EXECUTOR_DATA.format(executor_name)
+        params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
+        for section in [executor_section, params_section]:
+            if section not in configuration:
+                configuration.add_section(section)
+        configuration.set(executor_section, "cmd",
+                          "python {}".format(path_to_basic_executor))
+
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param1", "True")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param2",
+                      "False")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param3",
+                      "False")
+    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param4",
+                      "False")
+    tmp_default_config.save()
+    dispatcher = Dispatcher(test_config.client.session,
+                            tmp_default_config.config_file_path)
+
+    ws_responses = connect_ws_responses(
+        [random_workspace_name] + test_config.workspaces
+    )
 
     async def ws_messages_checker(msg):
         msg_ = json.loads(msg)

@@ -1264,7 +1264,7 @@ def connect_ws_responses(workspaces):
     return [{
         'action': 'JOIN_AGENT',
         # The example workspace come from merging configs
-        'workspaces': ["example"]+workspaces,
+        'workspaces': workspaces,
         'token': None,
         'executors': [
             {
