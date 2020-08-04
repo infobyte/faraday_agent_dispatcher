@@ -147,5 +147,5 @@ information.
 
 For more info you can check our [documentation][doc]
 
-[doc]: https://infobyte.github.io/faraday_agent_dispatcher/.
+[doc]: https://docs.agents.faradaysec.com
 [API]: https://api.faradaysec.com/
