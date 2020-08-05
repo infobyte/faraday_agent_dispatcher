@@ -58,7 +58,7 @@ class FaradayTestConfig:
 
     async def aiohttp_faraday_client(self):
         app = web.Application()
-        app.router.add_get(self.wrap_route(), get_base(self))
+        app.router.add_get(self.wrap_route("/"), get_base(self))
         app.router.add_post(
             self.wrap_route("/_api/v2/agent_registration/"),
             get_agent_registration(self)
@@ -95,7 +95,7 @@ class FaradayTestConfig:
         ssl_client = TestClient(ssl_server, raise_for_status=True)
         return client, ssl_client
 
-    def wrap_route(self, route: str = ""):
+    def wrap_route(self, route: str):
         if self.base_route is None:
             return f"{route}"
         return f"/{self.base_route}{route}"
