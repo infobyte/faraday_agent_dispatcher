@@ -27,7 +27,7 @@ from tests.utils.text_utils import fuzzy_string
 
 
 class FaradayTestConfig:
-    def __init__(self):
+    def __init__(self, has_base_route: bool = False):
         self.workspaces = [
             fuzzy_string(8) for _ in range(0, random.randint(2, 6))
         ]
@@ -37,6 +37,7 @@ class FaradayTestConfig:
         self.websocket_port = random.randint(1025, 65535)
         self.client = None
         self.ssl_client = None
+        self.base_route = f"/{fuzzy_string(24)}" if has_base_route else ""
         self.app_config = {
             "SECURITY_TOKEN_AUTHENTICATION_HEADER": 'Authorization',
             "SECRET_KEY": 'SECRET_KEY',
@@ -53,7 +54,49 @@ class FaradayTestConfig:
         })
 
     async def generate_client(self):
-        self.client, self.ssl_client = await aiohttp_faraday_client(self)
+        self.client, self.ssl_client = await self.aiohttp_faraday_client()
+
+    async def aiohttp_faraday_client(self):
+        app = web.Application()
+        app.router.add_get(self.wrap_route("/"), get_base(self))
+        app.router.add_post(
+            self.wrap_route("/_api/v2/agent_registration/"),
+            get_agent_registration(self)
+        )
+        app.router.add_post(
+            self.wrap_route('/_api/v2/agent_websocket_token/'),
+            get_agent_websocket_token(self)
+        )
+        for workspace in self.workspaces:
+            app.router.add_post(
+                self.wrap_route(f"/_api/v2/ws/{workspace}/bulk_create/"),
+                get_bulk_create(self)
+            )
+        app.router.add_post(
+            self.wrap_route("/_api/v2/ws/error500/bulk_create/"),
+            get_bulk_create(self)
+        )
+        app.router.add_post(
+            self.wrap_route("/_api/v2/ws/error429/bulk_create/"),
+            get_bulk_create(self)
+        )
+
+        server = TestServer(app)
+        await server.start_server()
+        ssl_cert_path = Path(__file__).parent.parent / 'data'
+        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_context.load_cert_chain(
+            ssl_cert_path / 'ok.crt',
+            ssl_cert_path / 'ok.key'
+        )
+        ssl_server = TestServer(app)
+        await ssl_server.start_server(ssl=ssl_context)
+        client = TestClient(server, raise_for_status=True)
+        ssl_client = TestClient(ssl_server, raise_for_status=True)
+        return client, ssl_client
+
+    def wrap_route(self, route):
+        return f"{self.base_route}{route}"
 
 
 def get_agent_registration(test_config: FaradayTestConfig):
@@ -149,9 +192,20 @@ def get_bulk_create(test_config: FaradayTestConfig):
     return bulk_create
 
 
-@pytest.fixture
-async def test_config():
-    config = FaradayTestConfig()
+test_config_params = [
+    {
+        # "is_ssl": is_ssl,
+        "has_base_route": has_base_route
+    }
+    # for is_ssl in [False, True]
+    for has_base_route in [False, True]
+]
+
+
+@pytest.fixture(params=test_config_params,
+                ids=lambda elem: json.dumps(elem))
+async def test_config(request):
+    config = FaradayTestConfig(**request.param)
     await config.generate_client()
     yield config
     await config.client.close()
@@ -185,45 +239,6 @@ def tmp_custom_config():
     reset_config(config.config_file_path)
     yield config
     os.remove(config.config_file_path)
-
-
-async def aiohttp_faraday_client(test_config: FaradayTestConfig):
-    app = web.Application()
-    app.router.add_get("/", get_base(test_config))
-    app.router.add_post(
-        "/_api/v2/agent_registration/",
-        get_agent_registration(test_config)
-    )
-    app.router.add_post(
-        '/_api/v2/agent_websocket_token/',
-        get_agent_websocket_token(test_config)
-    )
-    for workspace in test_config.workspaces:
-        app.router.add_post(
-            f"/_api/v2/ws/{workspace}/bulk_create/",
-            get_bulk_create(test_config)
-        )
-    app.router.add_post(
-        "/_api/v2/ws/error500/bulk_create/",
-        get_bulk_create(test_config)
-    )
-    app.router.add_post(
-        "/_api/v2/ws/error429/bulk_create/",
-        get_bulk_create(test_config)
-    )
-    server = TestServer(app)
-    await server.start_server()
-    ssl_cert_path = Path(__file__).parent.parent / 'data'
-    ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ssl_context.load_cert_chain(
-        ssl_cert_path / 'ok.crt',
-        ssl_cert_path / 'ok.key'
-    )
-    ssl_server = TestServer(app)
-    await ssl_server.start_server(ssl=ssl_context)
-    client = TestClient(server, raise_for_status=True)
-    ssl_client = TestClient(ssl_server, raise_for_status=True)
-    return client, ssl_client
 
 
 class TestLoggerHandler(StreamHandler):

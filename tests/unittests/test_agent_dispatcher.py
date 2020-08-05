@@ -20,6 +20,7 @@
 
 import json
 import os
+from copy import deepcopy
 from pathlib import Path
 import random
 
@@ -95,6 +96,11 @@ async def test_start_and_register(register_options,
     client = test_config.ssl_client \
         if register_options["use_ssl_server"] \
         else test_config.client
+
+    if test_config.base_route:
+        configuration.set(Sections.SERVER,
+                          "base_route",
+                          test_config.base_route)
 
     # Config
     configuration.set(Sections.SERVER, "api_port", str(client.port))
@@ -199,6 +205,11 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
         workspaces = executor_options["workspaces"].split(",")
         workspaces_str = ",".join(workspaces)
 
+    if test_config.base_route:
+        configuration.set(Sections.SERVER,
+                          "base_route",
+                          test_config.base_route)
+
     configuration.set(Sections.SERVER, "api_port",
                       str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
@@ -237,23 +248,25 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
         configuration.set(executor_section, "max_size", max_size)
 
     tmp_default_config.save()
+    ws_responses = deepcopy(executor_options["ws_responses"])
 
     async def ws_messages_checker(msg):
         msg_ = json.loads(msg)
-        assert msg_ in executor_options["ws_responses"]
-        executor_options["ws_responses"].remove(msg_)
+        assert msg_ in ws_responses
+        ws_responses.remove(msg_)
 
     # Init and register it
     dispatcher = Dispatcher(test_config.client.session,
                             tmp_default_config.config_file_path)
     selected_workspace = random.choice(workspaces)
-    run_data = executor_options["data"]
+    print(selected_workspace)
+    run_data = deepcopy(executor_options["data"])
     if 'workspace' in run_data:
         run_data['workspace'] = \
             run_data['workspace'].format(selected_workspace)
     await dispatcher.run_once(json.dumps(run_data), ws_messages_checker)
     history = test_logger_handler.history
-    assert len(executor_options["ws_responses"]) == 0
+    assert len(ws_responses) == 0
     for log in executor_options["logs"]:
         min_count = 1 if "min_count" not in log else log["min_count"]
         max_count = sys.maxsize if "max_count" not in log else log["max_count"]
@@ -272,6 +285,8 @@ async def test_connect(test_config: FaradayTestConfig, # noqa F811
                        test_logger_handler, # noqa F811
                        test_logger_folder): # noqa F811
     configuration.set(Sections.SERVER, "api_port",
+                      str(test_config.client.port))
+    configuration.set(Sections.SERVER, "websocket_port",
                       str(test_config.client.port))
     configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER,
