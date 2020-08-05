@@ -37,7 +37,7 @@ class FaradayTestConfig:
         self.websocket_port = random.randint(1025, 65535)
         self.client = None
         self.ssl_client = None
-        self.base_route = f"/{fuzzy_string(24)}" if has_base_route else ""
+        self.base_route = f"{fuzzy_string(24)}" if has_base_route else None
         self.app_config = {
             "SECURITY_TOKEN_AUTHENTICATION_HEADER": 'Authorization',
             "SECRET_KEY": 'SECRET_KEY',
@@ -58,7 +58,7 @@ class FaradayTestConfig:
 
     async def aiohttp_faraday_client(self):
         app = web.Application()
-        app.router.add_get(self.wrap_route("/"), get_base(self))
+        app.router.add_get(self.wrap_route(), get_base(self))
         app.router.add_post(
             self.wrap_route("/_api/v2/agent_registration/"),
             get_agent_registration(self)
@@ -95,8 +95,10 @@ class FaradayTestConfig:
         ssl_client = TestClient(ssl_server, raise_for_status=True)
         return client, ssl_client
 
-    def wrap_route(self, route):
-        return f"{self.base_route}{route}"
+    def wrap_route(self, route: str = ""):
+        if self.base_route is None:
+            return f"{route}"
+        return f"/{self.base_route}{route}"
 
 
 def get_agent_registration(test_config: FaradayTestConfig):

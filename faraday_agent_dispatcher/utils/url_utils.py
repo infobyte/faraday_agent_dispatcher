@@ -1,6 +1,13 @@
+from faraday_agent_dispatcher.config import instance, Sections
 
-def __get_url(host, port):
-    return f"{host}:{port}"
+
+def __get_url(host: str, port: int, base_route: str = None):
+    if base_route is None:
+        base_route = instance[Sections.SERVER].get("base_route", None)
+    if base_route is None:
+        return f"{host}:{port}"
+    else:
+        return f"{host}:{port}/{base_route}"
 
 
 def api_url(host, port, postfix: str = "", secure=False):
