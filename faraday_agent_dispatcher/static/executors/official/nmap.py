@@ -12,8 +12,21 @@ def command_create(lista_target):
         "-oX", "-",
         "--",
     ]
-    cmd += lista_target
 
+    cmd += '' if os.environ.get('EXECUTOR_CONFIG_OPTION_SC', None) is None\
+        else ['-sC']
+    cmd += '' if os.environ.get('EXECUTOR_CONFIG_OPTION_SV', None) is None \
+        else ['-sV']
+    cmd += '' if os.environ.get('EXECUTOR_CONFIG_OPTION_PN', None) is None \
+        else ['-Pn']
+    cmd += '' \
+        if os.environ.get('EXECUTOR_CONFIG_SCRIPT_TIMEOUT', None) is None \
+        else [f'--script-timeout '
+              f'{os.environ.get("EXECUTOR_CONFIG_SCRIPT_TIMEOUT")}']
+    cmd += '' if os.environ.get('EXECUTOR_CONFIG_HOST_TIMEOUT', None) is None \
+        else [f'--host-timeout '
+              f'{os.environ.get("EXECUTOR_CONFIG_HOST_TIMEOUT")}']
+    cmd += lista_target
     return cmd
 
 
