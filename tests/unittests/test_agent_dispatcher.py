@@ -52,7 +52,8 @@ from tests.utils.text_utils import fuzzy_string
 
 
 @pytest.mark.parametrize('config_changes_dict',
-                         generate_basic_built_config())
+                         generate_basic_built_config(),
+                         ids=lambda elem: elem["id_str"])
 def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:

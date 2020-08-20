@@ -6,15 +6,18 @@ from faraday_agent_dispatcher.config import Sections
 def generate_basic_built_config():
     return [
                {
+                   "id_str": "Error: No host",
                    "remove": {Sections.SERVER: ["host"]},
                    "replace": {},
                    "expected_exception": ValueError},
                {
+                   "id_str": "Error: No API port",
                    "remove": {Sections.SERVER: ["api_port"]},
                    "replace": {},
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: API port not number",
                    "remove": {},
                    "replace": {
                        Sections.SERVER: {
@@ -24,6 +27,7 @@ def generate_basic_built_config():
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "OK: API port number",
                    "remove": {},
                    "replace": {
                        Sections.SERVER: {
@@ -31,12 +35,14 @@ def generate_basic_built_config():
                    }
                },  # None error as parse int
                {
+                   "id_str": "Error: No WS port not number",
                    "remove": {
                        Sections.SERVER: ["websocket_port"]
                    },
                    "replace": {},
                    "expected_exception": ValueError},
                {
+                   "id_str": "Error: WS port not number",
                    "remove": {},
                    "replace": {
                        Sections.SERVER: {
@@ -46,6 +52,7 @@ def generate_basic_built_config():
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "OK: WS port number",
                    "remove": {},
                    "replace": {
                        Sections.SERVER: {
@@ -54,16 +61,19 @@ def generate_basic_built_config():
                    }
                },  # None error as parse int
                {
+                   "id_str": "Error: No workspaces",
                    "remove": {Sections.SERVER: ["workspaces"]},
                    "replace": {},
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: No registration token",
                    "remove": {Sections.TOKENS: ["registration"]},
                    "replace": {},
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: registration token length",
                    "remove": {},
                    "replace": {
                        Sections.TOKENS: {
@@ -73,6 +83,7 @@ def generate_basic_built_config():
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: registration token length (after strip)",
                    "remove": {},
                    "replace": {
                        Sections.TOKENS: {
@@ -82,6 +93,7 @@ def generate_basic_built_config():
                    },
                    "expected_exception": ValueError},
                {
+                   "id_str": "OK: registration token",
                    "remove": {},
                    "replace": {
                        Sections.TOKENS: {
@@ -91,6 +103,7 @@ def generate_basic_built_config():
                    }
                },
                {
+                   "id_str": "Error: agent token length",
                    "remove": {},
                    "replace": {
                        Sections.TOKENS: {
@@ -99,6 +112,7 @@ def generate_basic_built_config():
                    },
                    "expected_exception": ValueError},
                {
+                   "id_str": "Error: agent token length (after strip)",
                    "remove": {},
                    "replace": {
                        Sections.TOKENS: {
@@ -111,6 +125,7 @@ def generate_basic_built_config():
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "OK: agent token",
                    "remove": {},
                    "replace": {
                        Sections.TOKENS: {
@@ -122,6 +137,7 @@ def generate_basic_built_config():
                    }
                },
                {
+                   "id_str": "OK: executor without cmd",
                    "remove": {
                        Sections.EXECUTOR_DATA.format("ex1"):
                            ["cmd"]
@@ -129,6 +145,7 @@ def generate_basic_built_config():
                    "replace": {}
                },
                {
+                   "id_str": "Error: executor max_size port not number",
                    "remove": {},
                    "replace": {
                        Sections.EXECUTOR_DATA.format("ex1"):
@@ -136,6 +153,7 @@ def generate_basic_built_config():
                    },
                    "expected_exception": ValueError},
                {
+                   "id_str": "Error: executor param not bool (str)",
                    "remove": {},
                    "replace": {
                        Sections.EXECUTOR_PARAMS.format("ex1"):
@@ -144,6 +162,7 @@ def generate_basic_built_config():
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: executor param not bool (number)",
                    "remove": {},
                    "replace": {
                        Sections.EXECUTOR_PARAMS.format("ex1"):
@@ -151,6 +170,7 @@ def generate_basic_built_config():
                    },
                    "expected_exception": ValueError},
                {
+                   "id_str": "OK: executor param is bool",
                    "remove": {},
                    "replace": {
                        Sections.EXECUTOR_PARAMS.format("ex1"):
@@ -158,10 +178,12 @@ def generate_basic_built_config():
                    }
                },
                {
+                   "id_str": "Error: No agent_name",
                    "remove": {Sections.AGENT: ["agent_name"]},
                    "replace": {},
                    "expected_exception": ValueError},
                {
+                   "id_str": "Error: executor repeated",
                    "remove": {},
                    "replace": {
                        Sections.AGENT: {"executors": "ex1,ex1"}
@@ -169,27 +191,32 @@ def generate_basic_built_config():
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: No agent section",
                    "remove": {Sections.AGENT: ["section"]},
                    "replace": {},
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: No token section",
                    "remove": {Sections.TOKENS: ["section"]},
                    "replace": {},
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: No server section",
                    "remove": {Sections.SERVER: ["section"]},
                    "replace": {},
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: Duplicated section",
                    "remove": {},
                    "replace": {},
                    "duplicate_exception": True,
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "OK: different executors (mid-split)",
                    "remove": {},
                    "replace": {
                        Sections.AGENT:
@@ -197,18 +224,21 @@ def generate_basic_built_config():
                    },
                },
                {
+                   "id_str": "OK: different executors (end-split)",
                    "remove": {},
                    "replace": {
                        Sections.AGENT: {"executors": "ex1,ex2 "}
                    },
                },
                {
+                   "id_str": "OK: different executors (begin-split)",
                    "remove": {},
                    "replace": {
                        Sections.AGENT: {"executors": " ex1,ex2"}
                    },
                },
                {
+                   "id_str": "OK: different executors (mid-split)",
                    "remove": {},
                    "replace": {
                        Sections.AGENT: {
@@ -217,6 +247,7 @@ def generate_basic_built_config():
                    },
                },
                {
+                   "id_str": "Error: different executors (spaced name)",
                    "remove": {},
                    "replace": {
                        Sections.AGENT:
@@ -225,6 +256,7 @@ def generate_basic_built_config():
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "Error: Executor not configured",
                    "remove": {},
                    "replace": {
                        Sections.AGENT: {
@@ -234,11 +266,12 @@ def generate_basic_built_config():
                    "expected_exception": ValueError
                },
                {
+                   "id_str": "OK: All default",
                    "remove": {},
                    "replace": {}
                },
-               # X SSL cert is not an existent file
                {
+                   "id_str": "Error: ssl crt do not exists",
                    "remove": {},
                    "replace": {
                        Sections.SERVER: {
@@ -530,7 +563,7 @@ def generate_executor_options():
             ]
         },
         {
-            "id_str": "OK (\\n before the data)",
+            "id_str": "OK (\n before the data)",
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
@@ -564,7 +597,7 @@ def generate_executor_options():
             ]
         },
         {
-            "id_str": "OK, just 1 (1 json + 2\\n + N-1 in N-1 line)",
+            "id_str": "OK, just 1 (1 json + 2\n + N-1 in N-1 line)",
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
