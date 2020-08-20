@@ -27,11 +27,13 @@ error_ini_configs = generate_error_ini_configs()
 
 @pytest.mark.parametrize(
     "testing_inputs",
-    inputs
+    inputs,
+    ids=lambda elem: elem["id_str"]
 )
 @pytest.mark.parametrize(
     "ini_config",
-    all_ini_configs
+    all_ini_configs,
+    ids=lambda elem: elem["id_str"]
 )
 def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
     runner = CliRunner()
@@ -112,7 +114,8 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
 
 @pytest.mark.parametrize(
     "ini_config",
-    error_ini_configs
+    error_ini_configs,
+    ids=lambda elem: elem["id_str"]
 )
 def test_verify(ini_config):
     runner = CliRunner()
@@ -136,7 +139,8 @@ def test_verify(ini_config):
 
 @pytest.mark.parametrize(
     "ini_config",
-    ssl_ini_configs
+    ssl_ini_configs,
+    ids=lambda elem: elem["id_str"]
 )
 def test_override_ssl_cert_with_default(ini_config):
     runner = CliRunner()
