@@ -253,8 +253,8 @@ def generate_basic_built_config():
 
 def generate_register_options():
     return [
-        # 0
         {
+            "id_str": "Bad registration token",
             "replace_data": {Sections.TOKENS: {"registration": "NotOk" * 5}},
             "logs": [
                 {"levelname": "ERROR",
@@ -265,11 +265,10 @@ def generate_register_options():
                      "`faraday-dispatcher config-wizard`"
                  },
             ],
-            "use_ssl_server": False,
             "expected_exception": SystemExit
         },
-        # 1
         {
+            "id_str": "Bad agent token",
             "replace_data": {
                 Sections.TOKENS: {
                     "agent":
@@ -286,35 +285,17 @@ def generate_register_options():
                            "`faraday-dispatcher config-wizard`"
                 },
             ],
-            "use_ssl_server": False,
             "expected_exception": SystemExit
         },
-        # 2
         {
+            "id_str": "OK",
             "replace_data": {},
             "logs": [
                 {"levelname": "INFO", "msg": "Registered successfully"},
             ],
-            "use_ssl_server": False,
         },
-        # 3 OK SSL
         {
-            "replace_data": {
-                Sections.SERVER: {
-                    "host": "localhost",
-                    "ssl": "True",
-                    "ssl_cert": str(
-                        Path(__file__).parent.parent.parent / 'data' / 'ok.crt'
-                    )
-                }
-            },
-            "logs": [
-                {"levelname": "INFO", "msg": "Registered successfully"},
-            ],
-            "use_ssl_server": True,
-        },
-        # 4 Cannot connect
-        {
+            "id_str": "Non-existent host",
             "replace_data": {
                 Sections.SERVER: {
                     "host": "cizfyteurbsc06aolxe0qtzsr2mftvy7bwvvd47e.com"
@@ -326,11 +307,11 @@ def generate_register_options():
                     "msg": "Can not connect to Faraday server"
                 },
             ],
-            "use_ssl_server": False,
             "expected_exception": SystemExit
         },
         # 5 SSL to port with http
         {
+            "id_str": "Trying SSL over HTTP",
             "replace_data": {
                 Sections.SERVER: {
                     "ssl": "True",
@@ -350,14 +331,13 @@ def generate_register_options():
             "optional_logs": [
                 {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
             ],
-            "use_ssl_server": False,
+            "use_ssl": False,
             "expected_exception": SystemExit
         },
-        # 6 Invalid SSL
         {
+            "id_str": "Wrong SSL crt",
             "replace_data": {
                 Sections.SERVER: {
-                    "host": "localhost",
                     "ssl": "True",
                     "ssl_cert": str(
                         Path(__file__).parent.parent.parent
@@ -369,13 +349,14 @@ def generate_register_options():
             "logs": [
                 {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
             ],
-            "use_ssl_server": True,
+            "use_ssl": True,
             "expected_exception": SystemExit
         },
-        # 7 Correct SSL but to 127.0.0.1, not to localhost
         {
+            "id_str": "Bad host within SSL cert",
             "replace_data": {
                 Sections.SERVER: {
+                    "host": "127.0.0.1",
                     "ssl": "True",
                     "ssl_cert": str(
                         Path(__file__).parent.parent.parent
@@ -387,7 +368,7 @@ def generate_register_options():
             "logs": [
                 {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
             ],
-            "use_ssl_server": True,
+            "use_ssl": True,
             "expected_exception": SystemExit
         }
     ]
@@ -395,7 +376,8 @@ def generate_register_options():
 
 def generate_executor_options():
     return [
-        {  # 0
+        {
+            "id_str": "No action in ws",
             "data": {"agent_id": 1},
             "logs": [
                 {"levelname": "INFO", "msg": "Data not contains action to do"},
@@ -407,7 +389,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 1
+        {
+            "id_str": "Bad action in ws",
             "data": {"action": "CUT", "agent_id": 1},
             "logs": [
                 {"levelname": "INFO", "msg": "Unrecognized action"},
@@ -416,7 +399,8 @@ def generate_executor_options():
                 {"CUT_RESPONSE": "Error: Unrecognized action"}
             ]
         },
-        {  # 2
+        {
+            "id_str": "No execution id in ws",
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
@@ -433,7 +417,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 3
+        {
+            "id_str": "OK",
             "data": {"action": "RUN",
                      "execution_id": 1,
                      "agent_id": 1,
@@ -465,7 +450,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 4
+        {
+            "id_str": "OK, but extra data log (N json in 1 line)",
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
@@ -506,7 +492,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 5
+        {
+            "id_str": "OK (N json in N lines)",
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
@@ -542,7 +529,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 6
+        {
+            "id_str": "OK (\\n before the data)",
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
@@ -575,7 +563,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 7
+        {
+            "id_str": "OK, just 1 (1 json + 2\\n + N-1 in N-1 line)",
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
@@ -616,7 +605,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 8
+        {
+            "id_str": "Error in data sent to the server",
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "execution_id": 1,
@@ -657,7 +647,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 9
+        {
+            "id_str": "Send str, not JSON",
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "workspace": "{}",
@@ -698,7 +689,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 10
+        {
+            "id_str": "Bad parameter and error log",
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "execution_id": 1,
@@ -740,7 +732,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 11
+        {
+            "id_str": "Bad parameter and failing executor",
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "workspace": "{}",
@@ -780,7 +773,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 12
+        {
+            "id_str": "Bad parameter, error log and failed executor",
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
@@ -823,7 +817,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 13
+        {
+            "id_str": "Var env effect",  # TODO check the print to STDERR
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
@@ -863,7 +858,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 14
+        {
+            "id_str": "Missing mandatory argument",
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
@@ -891,7 +887,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 15
+        {
+            "id_str": "Extra parameter",
             "data": {
                 "action": "RUN", "agent_id": 1, "executor": "ex1",
                 "workspace": "{}",
@@ -932,7 +929,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 16
+        {
+            "id_str": "Server response: 500",
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "workspace": "{}",
@@ -974,7 +972,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 17
+        {
+            "id_str": "Server response: 429",
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "execution_id": 1,
@@ -1015,7 +1014,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 18
+        {
+            "id_str": "Bad configuration over data size",
             "data": {"action": "RUN", "agent_id": 1,
                      "workspace": "{}",
                      "execution_id": 1,
@@ -1055,7 +1055,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 19
+        {
+            "id_str": "No executor selected",
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "workspace": "{}",
@@ -1095,7 +1096,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 20
+        {
+            "id_str": "Bad executor name",
             "data": {
                 "action": "RUN", "agent_id": 1,
                 "workspace": "{}",
@@ -1137,7 +1139,8 @@ def generate_executor_options():
                                "not exists in unnamed_agent agent"}
             ]
         },
-        {  # 21
+        {
+            "id_str": "OK, running other executor",
             "data": {"action": "RUN", "agent_id": 1,
                      "workspace": "{}",
                      "execution_id": 1,
@@ -1169,7 +1172,8 @@ def generate_executor_options():
             ],
             "extra": ["add_ex1"]
         },
-        {  # 22
+        {
+            "id_str": "Not workspace selected",
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
@@ -1188,7 +1192,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 23 JUST in WS wrong workspace
+        {
+            "id_str": "JUST in WS wrong workspace",
             "data": {"action": "RUN",
                      "execution_id": 1,
                      "agent_id": 1,
@@ -1214,7 +1219,8 @@ def generate_executor_options():
                 }
             ]
         },
-        {  # 24 Post to other workspace
+        {
+            "id_str": "Post to other workspace",
             "data": {"action": "RUN",
                      "execution_id": 1,
                      "agent_id": 1,
