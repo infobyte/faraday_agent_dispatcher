@@ -85,17 +85,23 @@ def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
 
 
 @pytest.mark.parametrize('register_options',
-                         generate_register_options())
+                         generate_register_options(),
+                         ids=lambda elem: elem["id_str"])
 @pytest.mark.asyncio
 async def test_start_and_register(register_options,
                                   test_config: FaradayTestConfig,  # noqa F811
                                   tmp_default_config,  # noqa F811
                                   test_logger_handler):  # noqa F811
     os.environ['DISPATCHER_TEST'] = "True"
+    if "use_ssl" in register_options:
+        if (register_options["use_ssl"] and not test_config.is_ssl) or \
+                (not register_options["use_ssl"] and test_config.is_ssl):
+            pytest.skip(
+                f"This test should be skipped: server_ssl:{test_config.is_ssl}"
+                f" and config_use_ssl:f {register_options['use_ssl']}"
+            )
 
-    client = test_config.ssl_client \
-        if register_options["use_ssl_server"] \
-        else test_config.client
+    client = test_config.client
 
     if test_config.base_route:
         configuration.set(Sections.SERVER,
@@ -103,8 +109,17 @@ async def test_start_and_register(register_options,
                           test_config.base_route)
 
     # Config
+    configuration.set(Sections.SERVER, "ssl", str(test_config.is_ssl))
+    if test_config.is_ssl:
+        configuration.set(Sections.SERVER,
+                          "ssl_cert",
+                          str(test_config.ssl_cert_path / "ok.crt")
+                          )
+        configuration.set(Sections.SERVER, "host", "localhost")
+    else:
+        configuration.set(Sections.SERVER, "host", client.host)
+
     configuration.set(Sections.SERVER, "api_port", str(client.port))
-    configuration.set(Sections.SERVER, "host", client.host)
     configuration.set(Sections.SERVER, "workspaces",
                       test_config.workspaces_str()
                       )
@@ -189,8 +204,10 @@ async def check_logs(history, logs):
     return logs_ok, failed_logs
 
 
+# TODO: FROM HERE NOT CHECKED YET
 @pytest.mark.parametrize('executor_options',
-                         generate_executor_options())
+                         generate_executor_options(),
+                         ids=lambda elem: elem["id_str"])
 @pytest.mark.asyncio
 async def test_run_once(test_config: FaradayTestConfig, # noqa F811
                         tmp_default_config, # noqa F811
@@ -212,11 +229,19 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
 
     configuration.set(Sections.SERVER, "api_port",
                       str(test_config.client.port))
-    configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER, "workspaces", workspaces_str)
     configuration.set(Sections.TOKENS, "registration",
                       test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
+    configuration.set(Sections.SERVER, "ssl", str(test_config.is_ssl))
+    if test_config.is_ssl:
+        configuration.set(Sections.SERVER,
+                          "ssl_cert",
+                          str(test_config.ssl_cert_path / "ok.crt")
+                          )
+        configuration.set(Sections.SERVER, "host", "localhost")
+    else:
+        configuration.set(Sections.SERVER, "host", test_config.client.host)
     path_to_basic_executor = (
             Path(__file__).parent.parent /
             'data' / 'basic_executor.py'
