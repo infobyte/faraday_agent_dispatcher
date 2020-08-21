@@ -1299,37 +1299,28 @@ def generate_executor_options():
     ]
 
 
-def connect_ws_responses(workspaces):
-    return [{
-        'action': 'JOIN_AGENT',
-        # The example workspace come from merging configs
-        'workspaces': workspaces,
-        'token': None,
-        'executors': [
-            {
-                "executor_name": "ex1",
-                "args": {
-                    "param1": True,
-                    "param2": False
-                }
-            },
-            {
-                "executor_name": "ex2",
-                "args": {
-                    "port_list": True,
-                    "target": True
-                }
-            },
-            {
-                "executor_name": "ex3",
-                "args": {
-                    "param3": False,
-                    "param4": False
-                }
-            },
-            {
-                "executor_name": "ex4",
-                "args": {}
+def get_merge_executors():
+    return [
+        {
+            'executor_name': 'ex1',
+            'args': {
+                'param1': True,
+                'param2': False
             }
-        ]
-    }]
+        }, {
+            'executor_name': 'ex2',
+            'args': {
+                'port_list': True,
+                'target': True
+            }
+        }, {
+            'executor_name': 'ex3',
+            'args': {
+                'param3': False,
+                'param4': False
+            }
+        }, {
+            'executor_name': 'ex4',
+            'args': {}
+        }
+    ]

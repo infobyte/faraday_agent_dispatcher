@@ -18,7 +18,6 @@
 
 """Tests for `faraday_agent_dispatcher` package."""
 
-import json
 import os
 from copy import deepcopy
 from pathlib import Path
@@ -38,7 +37,7 @@ from tests.unittests.config.agent_dispatcher import (
     generate_basic_built_config,
     generate_executor_options,
     generate_register_options,
-    connect_ws_responses,
+    get_merge_executors
 )
 from tests.utils.testing_faraday_server import (  # noqa: F401
     FaradayTestConfig,
@@ -250,6 +249,7 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
     executor_names = ["ex1"] + (
         [] if "extra" not in executor_options else executor_options["extra"])
     configuration.set(Sections.AGENT, "executors", ",".join(executor_names))
+    test_config.executors = []
     for executor_name in executor_names:
         executor_section = Sections.EXECUTOR_DATA.format(executor_name)
         params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
@@ -260,10 +260,11 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
 
         configuration.set(executor_section, "cmd",
                           "python {}".format(path_to_basic_executor))
+        false_params = ["count", "spare", "spaced_before", "spaced_middle",
+                        "err", "fails"]
+        [configuration.set(params_section, param, "False") for param in
+         false_params]
         configuration.set(params_section, "out", "True")
-        [configuration.set(params_section, param, "False") for param in [
-            "count", "spare", "spaced_before", "spaced_middle", "err",
-            "fails"]]
         if "varenvs" in executor_options:
             for varenv in executor_options["varenvs"]:
                 configuration.set(varenvs_section, varenv,
@@ -272,6 +273,16 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
         max_size = str(64 * 1024) if "max_size" not in executor_options else \
             executor_options["max_size"]
         configuration.set(executor_section, "max_size", max_size)
+        executor_metadata = {
+                "executor_name": executor_name,
+                "args": {
+                    param: False for param in false_params
+                }
+            }
+        executor_metadata["args"]["out"] = True
+        test_config.executors.append(
+            executor_metadata
+        )
 
     tmp_default_config.save()
 
@@ -308,63 +319,7 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
                min_count, log["msg"]
 
 
-@pytest.mark.asyncio
-async def test_connect(test_config: FaradayTestConfig, # noqa F811
-                       tmp_default_config, # noqa F811
-                       test_logger_handler, # noqa F811
-                       test_logger_folder): # noqa F811
-    configuration.set(Sections.SERVER, "api_port",
-                      str(test_config.client.port))
-    configuration.set(Sections.SERVER, "websocket_port",
-                      str(test_config.client.port))
-    configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.SERVER,
-                      "workspaces",
-                      test_config.workspaces_str()
-                      )
-    configuration.set(Sections.TOKENS, "registration",
-                      test_config.registration_token)
-    configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
-    path_to_basic_executor = (
-            Path(__file__).parent.parent /
-            'data' / 'basic_executor.py'
-    )
-    configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3,ex4")
-
-    for executor_name in ["ex1", "ex3", "ex4"]:
-        executor_section = Sections.EXECUTOR_DATA.format(executor_name)
-        params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
-        for section in [executor_section, params_section]:
-            if section not in configuration:
-                configuration.add_section(section)
-        configuration.set(executor_section, "cmd",
-                          "python {}".format(path_to_basic_executor))
-
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param1", "True")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param2",
-                      "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param3",
-                      "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param4",
-                      "False")
-    tmp_default_config.save()
-    dispatcher = Dispatcher(test_config.client.session,
-                            tmp_default_config.config_file_path)
-
-    ws_responses = connect_ws_responses(test_config.workspaces)
-
-    async def ws_messages_checker(msg):
-        msg_ = json.loads(msg)
-        assert msg_ in ws_responses
-        ws_responses.remove(msg_)
-
-    await dispatcher.connect(ws_messages_checker)
-
-    assert len(ws_responses) == 0
-
-
 # This test merging "workspace" & "workspaces" in config to "workspaces"
-# Based in test_connect
 @pytest.mark.asyncio
 async def test_merge_config(test_config: FaradayTestConfig, # noqa F811
                             tmp_default_config, # noqa F811
@@ -372,7 +327,21 @@ async def test_merge_config(test_config: FaradayTestConfig, # noqa F811
                             test_logger_folder): # noqa F811
     configuration.set(Sections.SERVER, "api_port",
                       str(test_config.client.port))
-    configuration.set(Sections.SERVER, "host", test_config.client.host)
+    configuration.set(Sections.SERVER, "websocket_port",
+                      str(test_config.client.port))
+    if test_config.base_route:
+        configuration.set(Sections.SERVER,
+                          "base_route",
+                          test_config.base_route)
+    configuration.set(Sections.SERVER, "ssl", str(test_config.is_ssl))
+    if test_config.is_ssl:
+        configuration.set(Sections.SERVER,
+                          "ssl_cert",
+                          str(test_config.ssl_cert_path / "ok.crt")
+                          )
+        configuration.set(Sections.SERVER, "host", "localhost")
+    else:
+        configuration.set(Sections.SERVER, "host", test_config.client.host)
     configuration.set(Sections.SERVER,
                       "workspaces",
                       test_config.workspaces_str()
@@ -382,6 +351,8 @@ async def test_merge_config(test_config: FaradayTestConfig, # noqa F811
                       "workspace",
                       random_workspace_name
                       )
+
+    test_config.workspaces = [random_workspace_name] + test_config.workspaces
     configuration.set(Sections.TOKENS, "registration",
                       test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
@@ -411,15 +382,13 @@ async def test_merge_config(test_config: FaradayTestConfig, # noqa F811
     dispatcher = Dispatcher(test_config.client.session,
                             tmp_default_config.config_file_path)
 
-    ws_responses = connect_ws_responses(
-        [random_workspace_name] + test_config.workspaces
-    )
+    test_config.ws_data["run_data"] = {"agent_id": 1}
+    test_config.ws_data["ws_responses"] = [{
+        "error": "'action' key is mandatory in this websocket connection"
+    }]
+    test_config.executors = get_merge_executors()
 
-    async def ws_messages_checker(msg):
-        msg_ = json.loads(msg)
-        assert msg_ in ws_responses
-        ws_responses.remove(msg_)
+    await dispatcher.register()
+    await dispatcher.connect()
 
-    await dispatcher.connect(ws_messages_checker)
-
-    assert len(ws_responses) == 0
+    assert len(test_config.ws_data["ws_responses"]) == 0
