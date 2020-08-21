@@ -216,12 +216,10 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
                         test_logger_folder, # noqa F811
                         executor_options):
     # Config
-    if "workspaces" not in executor_options:
-        workspaces = test_config.workspaces
-        workspaces_str = test_config.workspaces_str()
-    else:
-        workspaces = executor_options["workspaces"].split(",")
-        workspaces_str = ",".join(workspaces)
+    if "workspaces" in executor_options:
+        test_config.workspaces = executor_options["workspaces"].split(",")
+    workspaces = test_config.workspaces
+    workspaces_str = test_config.workspaces_str()
 
     if test_config.base_route:
         configuration.set(Sections.SERVER,
@@ -229,6 +227,8 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
                           test_config.base_route)
 
     configuration.set(Sections.SERVER, "api_port",
+                      str(test_config.client.port))
+    configuration.set(Sections.SERVER, "websocket_port",
                       str(test_config.client.port))
     configuration.set(Sections.SERVER, "workspaces", workspaces_str)
     configuration.set(Sections.TOKENS, "registration",
@@ -274,25 +274,28 @@ async def test_run_once(test_config: FaradayTestConfig, # noqa F811
         configuration.set(executor_section, "max_size", max_size)
 
     tmp_default_config.save()
-    ws_responses = deepcopy(executor_options["ws_responses"])
-
-    async def ws_messages_checker(msg):
-        msg_ = json.loads(msg)
-        assert msg_ in ws_responses
-        ws_responses.remove(msg_)
 
     # Init and register it
     dispatcher = Dispatcher(test_config.client.session,
                             tmp_default_config.config_file_path)
     selected_workspace = random.choice(workspaces)
     print(selected_workspace)
+
+    ws_responses = deepcopy(executor_options["ws_responses"])
     run_data = deepcopy(executor_options["data"])
     if 'workspace' in run_data:
         run_data['workspace'] = \
             run_data['workspace'].format(selected_workspace)
-    await dispatcher.run_once(json.dumps(run_data), ws_messages_checker)
+    test_config.ws_data = {
+        "run_data": run_data,
+        "ws_responses": ws_responses
+    }
+
+    await dispatcher.register()
+    await dispatcher.connect()
+
     history = test_logger_handler.history
-    assert len(ws_responses) == 0
+    assert len(test_config.ws_data["ws_responses"]) == 0
     for log in executor_options["logs"]:
         min_count = 1 if "min_count" not in log else log["min_count"]
         max_count = sys.maxsize if "max_count" not in log else log["max_count"]
