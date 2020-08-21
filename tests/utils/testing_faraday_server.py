@@ -44,6 +44,7 @@ class FaradayTestConfig:
             "SECRET_KEY": 'SECRET_KEY',
         }
         self.changes_queue = Queue()
+        self.ws_data = {}
 
     def workspaces_str(self) -> str:
         return ",".join(self.workspaces)
@@ -80,6 +81,10 @@ class FaradayTestConfig:
         app.router.add_post(
             self.wrap_route("/_api/v2/ws/error429/bulk_create/"),
             get_bulk_create(self)
+        )
+        app.router.add_get(
+            self.wrap_route("/websockets"),
+            get_ws_handler(self)
         )
 
         server = TestServer(app)
@@ -150,8 +155,8 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
             salt="websocket_agent"
         )
         assert test_config.agent_id is not None
-        token = signer.sign(str(test_config.agent_id))
-        response_dict = {"token": token.decode()}
+        test_config.ws_token = signer.sign(str(test_config.agent_id)).decode()
+        response_dict = {"token": test_config.ws_token}
         return web.Response(
             text=json.dumps(response_dict),
             headers={'content-type': 'application/json'}
@@ -192,6 +197,32 @@ def get_bulk_create(test_config: FaradayTestConfig):
         return web.HTTPCreated()
 
     return bulk_create
+
+
+def get_ws_handler(test_config: FaradayTestConfig):
+    async def websocket_handler(request):
+
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+
+        async for msg in ws:
+            msg_ = json.loads(msg.data)
+            if 'action' in msg_ and msg_['action'] == 'JOIN_AGENT':
+                assert test_config.workspaces == msg_["workspaces"]
+                assert test_config.ws_token == msg_["token"]
+                await ws.send_json(
+                    test_config.ws_data["run_data"]
+                )
+            else:
+                assert msg_ in test_config.ws_data['ws_responses']
+                test_config.ws_data['ws_responses'].remove(msg_)
+                if len(test_config.ws_data['ws_responses']) == 0:
+                    await ws.close()
+                    break
+
+        return ws
+
+    return websocket_handler
 
 
 test_config_params = [

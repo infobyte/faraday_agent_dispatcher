@@ -25,7 +25,7 @@ from asyncio import Task
 from typing import List, Dict
 
 import websockets
-from websockets.exceptions import ConnectionClosedError
+from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from aiohttp import ClientTimeout
 from aiohttp.client_exceptions import (
     ClientResponseError,
@@ -239,6 +239,9 @@ class Dispatcher:
                 executor_task = asyncio.create_task(self.run_once(data))
                 self.executor_tasks.append(executor_task)
             except ConnectionClosedError:
+                logger.info("The connection unexpectedly")
+                break
+            except ConnectionClosedOK:
                 logger.info("The server ended connection")
                 break
 
