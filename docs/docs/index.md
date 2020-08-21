@@ -1,10 +1,10 @@
 # Easier integrations with Faraday Agents
-Integrating systems is an elusive but mandatory job in any software product's 
+Integrating systems is an elusive but mandatory job in any software product's
 life. Developers have to deal with languages they don't know, undocumented APIs
-or new paradigms. This leads to the fact that many product teams decide not to 
+or new paradigms. This leads to the fact that many product teams decide not to
 open the possibility to integrate to them.
 
-In [Faraday][faraday]’s case, we are aware that integrations with other security 
+In [Faraday][faraday]’s case, we are aware that integrations with other security
 tools are a critical part of our product. However, we’ve realized that our
  [Plugin system][plugins] wasn't as easy as we expected to develop some
  integrations: it required some level of interactivity (either running a
@@ -13,10 +13,11 @@ tools are a critical part of our product. However, we’ve realized that our
  even when the tool to integrate with wasn't programmed in Python, making it
  harder for the developer.
 
-To solve this problem, we have the **Faraday Agents**! You can use the [getting 
+To solve this problem, we have the **Faraday Agents**! You can use the [getting
 started guide](getting-started.md) to use one of our official executors, or code
- and use one custom executor. Otherwise, you can check our 
- [technical](technical/arch.md) section, to understand how the agents works. 
+ and use one custom executor. Otherwise, you can check our
+ [architecture](technical/arch.md) or [technical](technical/agents.md) section,
+ to understand how the agents works.
 
 [faraday]: https://github.com/infobyte/faraday
 [plugins]: https://github.com/infobyte/faraday_plugins
