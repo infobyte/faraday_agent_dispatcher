@@ -505,7 +505,7 @@ class Dispatcher:
             self.api_port,
             secure=self.api_ssl_enabled
         )
-        logger.debug(f"Validating server ssl certificate {server_url}")
+        logger.debug(f"Validating server connection with {server_url}")
         try:
             kwargs = self.api_kwargs.copy()
             if 'DISPATCHER_TEST' in os.environ and \

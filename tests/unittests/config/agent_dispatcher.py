@@ -382,6 +382,12 @@ def generate_register_options():
             "logs": [
                 {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
             ],
+            "optional_logs": [
+                {
+                    "levelname": "ERROR",
+                    "msg": "Can not connect to Faraday server"
+                },
+            ],
             "use_ssl": True,
             "expected_exception": SystemExit
         },
