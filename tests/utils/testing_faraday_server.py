@@ -210,6 +210,7 @@ def get_ws_handler(test_config: FaradayTestConfig):
             if 'action' in msg_ and msg_['action'] == 'JOIN_AGENT':
                 assert test_config.workspaces == msg_["workspaces"]
                 assert test_config.ws_token == msg_["token"]
+                assert test_config.executors == msg_["executors"]
                 await ws.send_json(
                     test_config.ws_data["run_data"]
                 )
