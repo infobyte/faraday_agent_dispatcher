@@ -27,7 +27,7 @@ from tests.utils.text_utils import fuzzy_string
 
 
 class FaradayTestConfig:
-    def __init__(self, has_base_route: bool = False):
+    def __init__(self, is_ssl: bool = False, has_base_route: bool = False):
         self.workspaces = [
             fuzzy_string(8) for _ in range(0, random.randint(2, 6))
         ]
@@ -35,14 +35,16 @@ class FaradayTestConfig:
         self.agent_token = fuzzy_string(64)
         self.agent_id = random.randint(1, 1000)
         self.websocket_port = random.randint(1025, 65535)
+        self.is_ssl = is_ssl
+        self.ssl_cert_path = Path(__file__).parent.parent / 'data'
         self.client = None
-        self.ssl_client = None
         self.base_route = f"{fuzzy_string(24)}" if has_base_route else None
         self.app_config = {
             "SECURITY_TOKEN_AUTHENTICATION_HEADER": 'Authorization',
             "SECRET_KEY": 'SECRET_KEY',
         }
         self.changes_queue = Queue()
+        self.ws_data = {}
 
     def workspaces_str(self) -> str:
         return ",".join(self.workspaces)
@@ -54,7 +56,7 @@ class FaradayTestConfig:
         })
 
     async def generate_client(self):
-        self.client, self.ssl_client = await self.aiohttp_faraday_client()
+        self.client = await self.aiohttp_faraday_client()
 
     async def aiohttp_faraday_client(self):
         app = web.Application()
@@ -80,20 +82,23 @@ class FaradayTestConfig:
             self.wrap_route("/_api/v2/ws/error429/bulk_create/"),
             get_bulk_create(self)
         )
+        app.router.add_get(
+            self.wrap_route("/websockets"),
+            get_ws_handler(self)
+        )
 
         server = TestServer(app)
-        await server.start_server()
-        ssl_cert_path = Path(__file__).parent.parent / 'data'
-        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        ssl_context.load_cert_chain(
-            ssl_cert_path / 'ok.crt',
-            ssl_cert_path / 'ok.key'
-        )
-        ssl_server = TestServer(app)
-        await ssl_server.start_server(ssl=ssl_context)
+        server_params = {}
+        if self.is_ssl:
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.load_cert_chain(
+                self.ssl_cert_path / 'ok.crt',
+                self.ssl_cert_path / 'ok.key'
+            )
+            server_params['ssl'] = ssl_context
+        await server.start_server(**server_params)
         client = TestClient(server, raise_for_status=True)
-        ssl_client = TestClient(ssl_server, raise_for_status=True)
-        return client, ssl_client
+        return client
 
     def wrap_route(self, route: str):
         if self.base_route is None:
@@ -150,8 +155,8 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
             salt="websocket_agent"
         )
         assert test_config.agent_id is not None
-        token = signer.sign(str(test_config.agent_id))
-        response_dict = {"token": token.decode()}
+        test_config.ws_token = signer.sign(str(test_config.agent_id)).decode()
+        response_dict = {"token": test_config.ws_token}
         return web.Response(
             text=json.dumps(response_dict),
             headers={'content-type': 'application/json'}
@@ -194,24 +199,51 @@ def get_bulk_create(test_config: FaradayTestConfig):
     return bulk_create
 
 
+def get_ws_handler(test_config: FaradayTestConfig):
+    async def websocket_handler(request):
+
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+
+        async for msg in ws:
+            msg_ = json.loads(msg.data)
+            if 'action' in msg_ and msg_['action'] == 'JOIN_AGENT':
+                assert test_config.workspaces == msg_["workspaces"]
+                assert test_config.ws_token == msg_["token"]
+                assert test_config.executors == msg_["executors"]
+                await ws.send_json(
+                    test_config.ws_data["run_data"]
+                )
+            else:
+                assert msg_ in test_config.ws_data['ws_responses']
+                test_config.ws_data['ws_responses'].remove(msg_)
+                if len(test_config.ws_data['ws_responses']) == 0:
+                    await ws.close()
+                    break
+
+        return ws
+
+    return websocket_handler
+
+
 test_config_params = [
     {
-        # "is_ssl": is_ssl,
+        "is_ssl": is_ssl,
         "has_base_route": has_base_route
     }
-    # for is_ssl in [False, True]
+    for is_ssl in [False, True]
     for has_base_route in [False, True]
 ]
 
 
 @pytest.fixture(params=test_config_params,
-                ids=lambda elem: json.dumps(elem))
+                ids=lambda elem: f"SSL: {elem['is_ssl']}, BaseRoute: "
+                                 f"{elem['has_base_route']}")
 async def test_config(request):
     config = FaradayTestConfig(**request.param)
     await config.generate_client()
     yield config
     await config.client.close()
-    await config.ssl_client.close()
 
 
 class TmpConfig:
