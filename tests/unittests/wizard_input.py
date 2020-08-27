@@ -35,7 +35,8 @@ class Input:
 
 class VarEnvInput(Input):
 
-    def __init__(self, name: str, value: str, adm_type: ADMType, error_name=None, new_name=None):
+    def __init__(self, name: str, value: str, adm_type: ADMType,
+                 error_name=None, new_name=None):
         if adm_type == ADMType.ADD and value == "":
             raise ValueError("IF ADMTYPE = ADD, VALUE CAN NOT BE \"\"")
         self.name = name
@@ -67,8 +68,10 @@ class ParamInput(VarEnvInput):
 
 
 class ExecutorInput:
-    def __init__(self, name=None, error_name=None, cmd=None, max_size=None, varenvs: List[VarEnvInput] = None,
-                 params: List[ParamInput] = None, new_name: str = "", new_error_name=None, adm_type: ADMType = None):
+    def __init__(self, name=None, error_name=None, cmd=None, max_size=None,
+                 varenvs: List[VarEnvInput] = None,
+                 params: List[ParamInput] = None, new_name: str = "",
+                 new_error_name=None, adm_type: ADMType = None):
         self.name = name or ""
         self.error_name = error_name
         self.cmd = cmd or ""
@@ -123,8 +126,9 @@ class RepoVarEnvInput(Input):
 
 class RepoExecutorInput:
 
-    def __init__(self, base=None, name=None, error_name=None, max_size=None, varenvs: List[RepoVarEnvInput] = None,
-                 new_name: str = "", adm_type: ADMType = None):
+    def __init__(self, base=None, name=None, error_name=None, max_size=None,
+                 varenvs: List[RepoVarEnvInput] = None, new_name: str = "",
+                 adm_type: ADMType = None):
         self.name = name or ""
         self.error_name = error_name
         self.base = base or ""
@@ -161,21 +165,25 @@ class RepoExecutorInput:
 
 
 class DispatcherInput:
-    def __init__(self, host=None, api_port=None, ws_port=None, workspace=None,
+    def __init__(self, host=None, api_port=None, ws_port=None, workspaces=None,
                  ssl=None, ssl_cert=None, wrong_ssl_cert=None, agent_name=None,
-                 registration_token=None, delete_agent_token: bool = None, empty=False):
+                 registration_token=None, delete_agent_token: bool = None,
+                 empty=False):
         self.ssl = ssl is None or ssl.lower() != "false"
         self.server_input = {
             "ssl": ssl or "",
             "host": host or "",
             "api_port": api_port or "",
             "ws_port": ws_port or "",
-            "workspace": workspace or "",
             "ssl_cert": ssl_cert or ""
         }
+        self.workspaces = workspaces
         self.wrong_ssl_cert = wrong_ssl_cert
+        self.override_with_default_ssl_cert = \
+            self.server_input['ssl_cert'] == ""
         self.agent = agent_name or ""
-        self.registration_token = registration_token or "ACorrectTokenHas25CharLen"
+        self.registration_token = registration_token or "ACorrectTokenHas25" \
+                                                        "CharLen"
         self.delete_agent_token = delete_agent_token
         self.empty = empty
 
@@ -185,26 +193,58 @@ class DispatcherInput:
                         f"{self.server_input['host']}\n" \
                         f"{self.server_input['ssl']}\n" \
                         f"{self.server_input['api_port']}\n"
-            if self.wrong_ssl_cert:
+            if self.override_with_default_ssl_cert:
+                input_str = f"{input_str}Y\n"
+            else:
+                if self.override_with_default_ssl_cert is not None:
+                    input_str = f"{input_str}N\n"
+                if self.wrong_ssl_cert:
+                    input_str = f"{input_str}" \
+                                f"{self.wrong_ssl_cert}\n"
                 input_str = f"{input_str}" \
-                            f"{self.wrong_ssl_cert}\n"
+                            f"{self.server_input['ssl_cert']}\n"
             input_str = f"{input_str}" \
-                        f"{self.server_input['ssl_cert']}\n" \
-                        f"{self.server_input['workspace']}\n"
+                        f"{self.process_input_workspaces()}\n"
         else:
             input_str = \
                      f"{self.server_input['host']}\n" \
                      f"{self.server_input['ssl']}\n" \
                      f"{self.server_input['api_port']}\n" \
                      f"{self.server_input['ws_port']}\n" \
-                     f"{self.server_input['workspace']}\n"
+                     f"{self.process_input_workspaces()}\n"
 
         if isinstance(self.registration_token, str):
             self.registration_token = [self.registration_token]
         for token in self.registration_token:
             input_str = f"{input_str}{token}\n"
         if self.delete_agent_token is not None:
-            input_str = f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
+            input_str = f"{input_str}" \
+                        f"{'Y' if self.delete_agent_token else 'N'}\n"
 
         return f"{input_str}" \
                f"{self.agent}\n"
+
+    def process_input_workspaces(self):
+        cli_input = ""
+        for workspace_input in self.workspaces:
+            cli_input = f"{cli_input}{workspace_input.input_str()}\n"
+        return f"{cli_input}Q\n"
+
+
+class WorkspaceInput(Input):
+
+    def __init__(self, name: str, adm_type: ADMType, error_name=None):
+        self.name = name
+        self.adm_type = adm_type
+        self.error_name = error_name
+
+    def input_str(self):
+        prefix = self.adm_type.name[0]
+        cli_input = f"{prefix}\n"
+        if self.adm_type == ADMType.MODIFY:
+            return cli_input
+
+        if self.error_name:
+            cli_input = f"{cli_input}{self.error_name}\n{prefix}\n"
+
+        return f"{cli_input}{self.name}\n"
