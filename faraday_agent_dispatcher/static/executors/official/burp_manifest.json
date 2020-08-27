@@ -1,0 +1,13 @@
+{
+  "arguments": {
+    "API_HOST": true,
+    "API_KEY": true,
+    "TARGET_URL": true,
+    "NAMED_CONFIGURATION": false
+  },
+  "environment_variables": [
+  ],
+  "check_cmds": [
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}

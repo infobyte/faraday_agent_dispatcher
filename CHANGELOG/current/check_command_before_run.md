@@ -1,1 +1,0 @@
-Now the dispatcher runs the check commands before running an executor
