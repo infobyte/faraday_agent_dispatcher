@@ -95,6 +95,8 @@ the configuration of them.
 The current official executors are:
 
 * [Arachni][arachni]
+* [Burp][burp]
+* [CrackMapExec][crackmap]
 * [Nessus][nessus]
 * [Nikto][nikto]
 * [Nmap][nmap]
@@ -133,6 +135,8 @@ development executors. The most important of them are:
 [arachni]: https://www.arachni-scanner.com/
 [openvas]: https://www.openvas.org/
 [zap]: https://www.zaproxy.org/
+[burp]: https://www.portswigger.net/burp
+[crackmap]: https://github.com/byt3bl33d3r/CrackMapExec
 
 # Roadmap
 

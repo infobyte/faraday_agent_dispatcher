@@ -34,7 +34,7 @@ publish_pages:
     stage: deploy
     before_script:
       - pip install .[docs]
-      - git remote add github https://${GH_TOKEN}@github.com/infobyte/faraday_agent_dispatcher.git
+      - git config remote.github.url >/dev/null || git remote add github https://${GH_TOKEN}@github.com/infobyte/faraday_agent_dispatcher.git
     script:
       - cd docs
       - mkdocs gh-deploy --remote-branch gh-pages --remote-name github --force
