@@ -120,6 +120,7 @@ class Dispatcher:
             Dispatcher.TaskLabels.EXECUTOR: [],
             Dispatcher.TaskLabels.CONNECTION_CHECK: [],
         }
+        self.sigterm_received = False
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
@@ -250,8 +251,8 @@ class Dispatcher:
             except ConnectionClosedError:
                 logger.info("The connection unexpectedly")
                 break
-            except ConnectionClosedOK:
-                logger.info("The server ended connection")
+            except ConnectionClosedOK as e:
+                logger.info(f"The server ended connection: {e.reason}")
                 break
 
     async def run_once(self, data: str = None, out_func=None):
@@ -496,6 +497,7 @@ class Dispatcher:
         return process
 
     async def close(self, signal):
+        self.sigterm_received = True
         if self.websocket and self.websocket.open:
             await self.websocket.send(
                 json.dumps({
@@ -524,12 +526,12 @@ class Dispatcher:
             if 'DISPATCHER_TEST' in os.environ and \
                     os.environ['DISPATCHER_TEST'] == "True":
                 kwargs["timeout"] = ClientTimeout(total=1)
-            await self.session.get(server_url, **kwargs)
-            # check_connection_task = asyncio.create_task(self.session.get(
-            # server_url, **kwargs))
-            # self.executor_tasks[
-            # Dispatcher.TaskLabels.CONNECTION_CHECK].append(check_connection_task)
-            # await check_connection_task
+            check_connection_task = asyncio.create_task(
+                self.session.get(server_url, **kwargs)
+            )
+            self.executor_tasks[Dispatcher.TaskLabels.CONNECTION_CHECK].\
+                append(check_connection_task)
+            await check_connection_task
 
         except (
                 ClientConnectorCertificateError,
