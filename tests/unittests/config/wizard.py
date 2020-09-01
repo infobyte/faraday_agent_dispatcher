@@ -21,8 +21,8 @@ def old_version_path():
 
 def generate_inputs():
     return [
-        # 0 All default
         {
+            "id_str": 'All default',
             "dispatcher_input": DispatcherInput(
                 workspaces=[
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
@@ -32,8 +32,8 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 1 SSL cert
         {
+            "id_str": 'SSL cert',
             "dispatcher_input": DispatcherInput(
                 ssl_cert=DATA_FOLDER / 'mock.pub',
                 workspaces=[
@@ -44,8 +44,8 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 2 All default with ssl false
         {
+            "id_str": 'All default with ssl false',
             "dispatcher_input": DispatcherInput(
                 ssl='false',
                 workspaces=[
@@ -56,8 +56,8 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 3 Dispatcher input
         {
+            "id_str": 'Dispatcher input',
             "dispatcher_input": DispatcherInput(
                 ssl='false', host="127.0.0.1", api_port="13123",
                 ws_port="1234", agent_name="agent",
@@ -70,8 +70,8 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 4 Bad token input
         {
+            "id_str": 'Bad token input',
             "dispatcher_input": DispatcherInput(
                 ssl='false', host="127.0.0.1", api_port="13123",
                 ws_port="1234", agent_name="agent",
@@ -87,8 +87,8 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 5 Basic Executors input
         {
+            "id_str": 'Basic Executors input',
             "dispatcher_input": DispatcherInput(
                 ssl='false',
                 workspaces=[
@@ -148,8 +148,8 @@ def generate_inputs():
             "after_executors": {"ex1", "ex2", "ex3"},
             "after_workspaces": {"aworkspace"}
         },
-        # 6 Basic Bad Executors input
         {
+            "id_str": 'Basic Bad Executors input',
             "dispatcher_input": DispatcherInput(
                 ssl='false',
                 workspaces=[
@@ -232,8 +232,8 @@ def generate_inputs():
             "after_executors": {"ex1", "ex2", "ex3", "ex4"},
             "after_workspaces": {"aworkspace"}
         },
-        # 7 Basic Name with Comma Executors input
         {
+            "id_str": 'Basic Name with Comma Executors input',
             "dispatcher_input": DispatcherInput(
                 ssl='false',
                 workspaces=[
@@ -262,8 +262,8 @@ def generate_inputs():
             "after_executors": {"ex1"},
             "after_workspaces": {"aworkspace"}
         },
-        # 8 Basic Mod Executors input
         {
+            "id_str": 'Basic Mod Executors input',
             "dispatcher_input": DispatcherInput(
                 ssl='false',
                 workspaces=[
@@ -358,8 +358,8 @@ def generate_inputs():
             "after_executors": {"ex1", "ex2", "eX3"},
             "after_workspaces": {"aworkspace"}
         },
-        # 9 Basic Mod Name with comma Executors input
         {
+            "id_str": 'Basic Mod Name with comma Executors input',
             "dispatcher_input": DispatcherInput(
                 ssl='false',
                 workspaces=[
@@ -456,8 +456,8 @@ def generate_inputs():
             "after_executors": {"ex1", "ex2", "eX3"},
             "after_workspaces": {"aworkspace"}
         },
-        # 10 Basic Del Executors input
         {
+            "id_str": 'Basic Del Executors input',
             "dispatcher_input": DispatcherInput(
                 ssl='false',
                 workspaces=[
@@ -546,8 +546,8 @@ def generate_inputs():
             "after_executors": {"ex1", "ex3"},
             "after_workspaces": {"aworkspace"}
         },
-        # 11 Basic Repo Executors input
         {
+            "id_str": 'Basic Repo Executors input',
             "dispatcher_input": DispatcherInput(
                 workspaces=[
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)
@@ -592,8 +592,8 @@ def generate_inputs():
             "after_executors": {"ex1"},
             "after_workspaces": {"aworkspace"}
         },
-        # 12 Pass folder as SSL cert
         {
+            "id_str": 'Pass folder as SSL cert',
             "dispatcher_input": DispatcherInput(
                 wrong_ssl_cert="/tmp",
                 ssl_cert=DATA_FOLDER / 'mock.pub',
@@ -606,8 +606,8 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 13 Wrong SSL cert
         {
+            "id_str": 'Non-existent SSL cert',
             "dispatcher_input": DispatcherInput(
                 wrong_ssl_cert="/asdasdasd.pub",
                 ssl_cert=DATA_FOLDER / 'mock.pub',
@@ -619,8 +619,8 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 14 Add multiple and delete one
         {
+            "id_str": 'Add multiple executors and delete one',
             "dispatcher_input": DispatcherInput(
                 workspaces=[
                     WorkspaceInput(name="aworkspace1", adm_type=ADMType.ADD),
@@ -632,8 +632,8 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 15 Add and delete and add one
         {
+            "id_str": 'Add an executor and delete and add one',
             "dispatcher_input": DispatcherInput(
                 workspaces=[
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
@@ -645,8 +645,9 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 16 Delete an inexistent one (Test modify do nothing)
         {
+            "id_str": 'Delete an non-existent executor (Test modify do '
+                      'nothing)',
             "dispatcher_input": DispatcherInput(
                 workspaces=[
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
@@ -658,8 +659,8 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace"}
         },
-        # 17 Try add an existent one
         {
+            "id_str": 'Try add an existent executor',
             "dispatcher_input": DispatcherInput(
                 workspaces=[
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
@@ -680,16 +681,19 @@ def generate_inputs():
 def generate_no_ssl_ini_configs():
     return [
         {
+            "id_str": 'no .ini',
             "dir": "",
             "old_executors": set(),
             "old_workspaces": set()
         },
         {
+            "id_str": '0.1.ini',
             "dir": old_version_path() / '0.1.ini',
             "old_executors": {config_mod.DEFAULT_EXECUTOR_VERIFY_NAME},
             "old_workspaces": {"workspace"}
         },
         {
+            "id_str": '1.0.ini',
             "dir": old_version_path() / '1.0.ini',
             "old_executors": {"test", "test2"},
             "old_workspaces": {"workspace"}
@@ -700,6 +704,7 @@ def generate_no_ssl_ini_configs():
 def generate_ssl_ini_configs():
     return [
         {
+            "id_str": '1.2.ini',
             "dir": old_version_path() / '1.2.ini',
             "old_executors": {"test", "test2", "test3"},
             "old_workspaces": {"workspace"}
@@ -710,11 +715,13 @@ def generate_ssl_ini_configs():
 def generate_error_ini_configs():
     return [
         {
+            "id_str": '1.0.ini missing a executor section',
             "dir": old_version_path() / '1.0_error0.ini',
             "exception_message": "notAConfiguredExecutor section does not "
                                  "exists"
         },
         {
+            "id_str": '1.0.ini missing executor option',
             "dir": old_version_path() / '1.0_error1.ini',
             "exception_message": "executors option not in agent section"
         }
