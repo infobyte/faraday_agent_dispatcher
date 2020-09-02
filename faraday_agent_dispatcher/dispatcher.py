@@ -65,6 +65,10 @@ def _parse_list(list_str: str) -> List[str]:
 
 class Dispatcher:
 
+    class TaskLabels:
+        CONNECTION_CHECK = "Connection check"
+        EXECUTOR = "EXECUTOR"
+
     def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
         try:
@@ -112,7 +116,11 @@ class Dispatcher:
             if self.ws_ssl_enabled and ssl_cert_path \
             else {}
         self.execution_id = None
-        self.executor_tasks: List[Task] = []
+        self.executor_tasks: Dict[str, List[Task]] = {
+            Dispatcher.TaskLabels.EXECUTOR: [],
+            Dispatcher.TaskLabels.CONNECTION_CHECK: [],
+        }
+        self.sigterm_received = False
 
     async def reset_websocket_token(self):
         # I'm built so I ask for websocket token
@@ -237,12 +245,15 @@ class Dispatcher:
             try:
                 data = await self.websocket.recv()
                 executor_task = asyncio.create_task(self.run_once(data))
-                self.executor_tasks.append(executor_task)
+                self.executor_tasks[Dispatcher.TaskLabels.EXECUTOR].append(
+                    executor_task
+                )
             except ConnectionClosedError:
                 logger.info("The connection unexpectedly")
                 break
-            except ConnectionClosedOK:
-                logger.info("The server ended connection")
+            except ConnectionClosedOK as e:
+                if e.reason:
+                    logger.info(f"The server ended connection: {e.reason}")
                 break
 
     async def run_once(self, data: str = None, out_func=None):
@@ -487,6 +498,7 @@ class Dispatcher:
         return process
 
     async def close(self, signal):
+        self.sigterm_received = True
         if self.websocket and self.websocket.open:
             await self.websocket.send(
                 json.dumps({
@@ -495,9 +507,13 @@ class Dispatcher:
                     "reason": f"{signal} received",
                 })
             )
-            for task in self.executor_tasks:
+            for task in self.executor_tasks[Dispatcher.TaskLabels.EXECUTOR]:
                 task.cancel()
             await self.websocket.close(code=1000, reason=f"{signal} received")
+        for task in \
+                self.executor_tasks[Dispatcher.TaskLabels.CONNECTION_CHECK]:
+            task.cancel()
+        await asyncio.sleep(0.25)
 
     async def check_connection(self):
         server_url = api_url(
@@ -511,7 +527,16 @@ class Dispatcher:
             if 'DISPATCHER_TEST' in os.environ and \
                     os.environ['DISPATCHER_TEST'] == "True":
                 kwargs["timeout"] = ClientTimeout(total=1)
+            # > The below code allows this get to be canceled,
+            # > But breaks only ours Gitlab CI tests (local OK)
+            # check_connection_task = asyncio.create_task(
+            #    self.session.get(server_url, **kwargs)
+            # )
+            # self.executor_tasks[Dispatcher.TaskLabels.CONNECTION_CHECK].\
+            #    append(check_connection_task)
+            # await check_connection_task
             await self.session.get(server_url, **kwargs)
+
         except (
                 ClientConnectorCertificateError,
                 ClientConnectorSSLError
@@ -529,5 +554,8 @@ class Dispatcher:
             logger.error("Faraday server timed-out. "
                          "TIP: Check ssl configuration")
             logger.debug("Timeout error. Check ssl", exc_info=e)
+            return False
+        except asyncio.CancelledError:
+            logger.info("User sent close signal")
             return False
         return True
