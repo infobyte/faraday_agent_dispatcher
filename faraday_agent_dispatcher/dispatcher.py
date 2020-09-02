@@ -252,7 +252,8 @@ class Dispatcher:
                 logger.info("The connection unexpectedly")
                 break
             except ConnectionClosedOK as e:
-                logger.info(f"The server ended connection: {e.reason}")
+                if e.reason:
+                    logger.info(f"The server ended connection: {e.reason}")
                 break
 
     async def run_once(self, data: str = None, out_func=None):
