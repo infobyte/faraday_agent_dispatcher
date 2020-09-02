@@ -526,12 +526,15 @@ class Dispatcher:
             if 'DISPATCHER_TEST' in os.environ and \
                     os.environ['DISPATCHER_TEST'] == "True":
                 kwargs["timeout"] = ClientTimeout(total=1)
-            check_connection_task = asyncio.create_task(
-                self.session.get(server_url, **kwargs)
-            )
-            self.executor_tasks[Dispatcher.TaskLabels.CONNECTION_CHECK].\
-                append(check_connection_task)
-            await check_connection_task
+            # > The below code allows this get to be canceled,
+            # > But breaks only ours Gitlab CI tests (local OK)
+            # check_connection_task = asyncio.create_task(
+            #    self.session.get(server_url, **kwargs)
+            # )
+            # self.executor_tasks[Dispatcher.TaskLabels.CONNECTION_CHECK].\
+            #    append(check_connection_task)
+            # await check_connection_task
+            await self.session.get(server_url, **kwargs)
 
         except (
                 ClientConnectorCertificateError,
