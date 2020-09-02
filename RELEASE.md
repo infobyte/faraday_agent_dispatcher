@@ -1,4 +1,19 @@
-1.2.1 [Jun 23rd, 2020]:
+1.3.0 [Sep 3rd, 2020]:
+---
+ * An Agent can post data to multiples workspaces
+ * The `run` command tries to migrate the configuration to the latest version from
+ others as the `config-wizard` does
+ * Improve agent signal management and server disconnection, affecting the exit code
+ * The wizard page size can be customized (See:
+`faraday-dispatcher config-wizard --help` )
+ * The new official executors are:
+    * burp
+    * crackmapexec
+ * Arachni executor generates reports in /tmp now
+ * Nmap executor updates use of nmap plugin (byte-string to string response)
+ * [Faraday][faraday] versions: 3.12.0
+
+1.2.1 [Jun 22nd, 2020]:
 ---
  * Now the dispatcher runs the check commands before running an executor
  * Fix error when connects with faraday fails when trying to access with SSL to not SSL server
@@ -7,14 +22,14 @@
  * Fix error attempting to create an executor with a comma in the name
  * Now the wizard ask if you want use the default SSL behavior
  * Started the process of [documentation][doc]
- * The new official executors are:  
+ * The new official executors are:
     * arachni
     * openvas
     * zap
  * Nmap executor now acepted multi target
  * Fix W3af executor now uses python2
  * Escape user-controlled executor parameters in order to prevent OS argument injection (not command injection)
- * [Faraday][faraday] versions: 3.11, 3.11.1
+ * [Faraday][faraday] versions: 3.11, 3.11.1, 3.11.2
 
 1.2 [May 27th, 2020]:
 ---
@@ -23,14 +38,14 @@
  * Fix error when server close connection
  * Fix error when ssl certificate does not exists
  * Fix error when folder `~/.faraday` does not exists, creating it
- * The new official executors are:  
+ * The new official executors are:
     * nessus
     * nikto
     * nmap
     * sublist3r
     * wpscan
     * w3af
- * [Faraday][faraday] versions: 3.11, 3.11.1
+ * [Faraday][faraday] versions: 3.11, 3.11.1, 3.11.2
 
 1.1 [Apr 22th, 2020]:
 ---
@@ -41,7 +56,7 @@
  * Better error management, now shows error and exceptions depending on log levels
  * Better management of invalid token errors
  * Add ssl support
- * [Faraday][faraday] versions: 3.11, 3.11.1
+ * [Faraday][faraday] versions: 3.11, 3.11.1, 3.11.2
 
 1.0 [Dec 17th, 2019]:
 ---
@@ -52,9 +67,9 @@
 
 0.1 [Oct 31th, 2019]:
 ---
- * First beta version published 
+ * First beta version published
  * Basic structure implemented, with executor with fixed values
  * [Faraday][faraday] versions: 3.9.2, 3.9.3
 
 [faraday]: https://github.com/infobyte/faraday
-[doc]: https://infobyte.github.io/faraday_agent_dispatcher/
+[doc]: https://docs.agents.faradaysec.com
