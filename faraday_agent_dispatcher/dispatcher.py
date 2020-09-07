@@ -106,14 +106,22 @@ class Dispatcher:
                 f"SSL cert does not exist in path {ssl_cert_path}"
             )
         self.api_kwargs: Dict[str, object] = {
-            "ssl": ssl.create_default_context(cafile=ssl_cert_path)
+            "ssl": ssl.create_default_context(cafile=ssl_cert_path) if
+            "HTTPS_PROXY" not in os.environ else False
         } \
             if self.api_ssl_enabled and ssl_cert_path \
             else {}
+        if "HTTPS_PROXY" in os.environ:
+            logger.info("HTTPS_PROXY is set; will not do SSL verify")
+            ws_ssl_context = ssl.create_default_context()
+            ws_ssl_context.check_hostname = False
+            ws_ssl_context.verify_mode = ssl.CERT_NONE
+        else:
+            ws_ssl_context = ssl.create_default_context(cafile=ssl_cert_path)
         self.ws_kwargs = {
-            "ssl": ssl.create_default_context(cafile=ssl_cert_path)
+            "ssl": ws_ssl_context
         } \
-            if self.ws_ssl_enabled and ssl_cert_path \
+            if self.ws_ssl_enabled \
             else {}
         self.execution_id = None
         self.executor_tasks: Dict[str, List[Task]] = {
