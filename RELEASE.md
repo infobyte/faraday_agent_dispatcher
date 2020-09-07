@@ -1,3 +1,9 @@
+1.3.1 [Sep 7th, 2020]:
+---
+ * Add proxy setup by HTTP_PROXY or HTTPS_PROXY environment variables
+ * Fix default report name with the nessus executor
+ * [Faraday][faraday] versions: 3.12.0
+
 1.3.0 [Sep 3rd, 2020]:
 ---
  * An Agent can post data to multiples workspaces

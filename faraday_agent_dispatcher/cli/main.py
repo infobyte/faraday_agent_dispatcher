@@ -57,7 +57,7 @@ async def main(config_file, logger):
 
     config_file = process_config_file(config_file, logger)
 
-    async with ClientSession(raise_for_status=True) as session:
+    async with ClientSession(raise_for_status=True, trust_env=True) as session:
         try:
             dispatcher = Dispatcher(session, config_file)
         except ValueError as ex:
