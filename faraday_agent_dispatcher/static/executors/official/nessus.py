@@ -93,7 +93,7 @@ def nessus_add_target(url, token, x_token='', target='', template='basic',
     else:
         print(
             f'Could not create scan. Response from server was '
-            f'{response.status_code}',
+            f'{response.status_code}, {response.text}',
             file=sys.stderr
         )
     return None
