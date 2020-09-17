@@ -18,6 +18,7 @@ nav:
     - Getting started: getting-started.md
     - Technical:
           - Architecture: technical/arch.md
+          - Agents: technical/agents.md
 markdown_extensions:
     - admonition
     - pymdownx.details
