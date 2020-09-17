@@ -3,11 +3,16 @@ import re
 import sys
 import time
 import requests
+import datetime
 
 from faraday_plugins.plugins.manager import PluginsManager
 
 MAX_TRIES = 3
 TIME_BETWEEN_TRIES = 5
+
+
+def get_report_name():
+    return f"{datetime.datetime.now().timestamp()}-faraday-agent"
 
 
 def nessus_login(url, user, password):
@@ -88,7 +93,7 @@ def nessus_add_target(url, token, x_token='', target='', template='basic',
     else:
         print(
             f'Could not create scan. Response from server was '
-            f'{response.status_code}',
+            f'{response.status_code}, {response.text}',
             file=sys.stderr
         )
     return None
@@ -234,7 +239,10 @@ def get_x_api_token(url, token):
 
 
 def main():
-    NESSUS_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_NAME", 'my_scan')
+    NESSUS_SCAN_NAME = os.getenv(
+        "EXECUTOR_CONFIG_NESSUS_SCAN_NAME",
+        get_report_name()
+    )
     NESSUS_URL = os.getenv("EXECUTOR_CONFIG_NESSUS_URL")  # https://nessus:port
     NESSUS_USERNAME = os.getenv("NESSUS_USERNAME")
     NESSUS_PASSWORD = os.getenv("NESSUS_PASSWORD")
