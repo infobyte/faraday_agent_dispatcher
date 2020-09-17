@@ -17,13 +17,13 @@ def main():
         report_name = os.environ.get('EXECUTOR_CONFIG_REPORT_NAME')
     else:
         print(
-            "Param REPORT_NAME no set",
+            "Argument REPORT_NAME no set",
             file=sys.stderr
         )
         sys.exit()
 
-    if 'REPORT_DIR' in my_envs:
-        report_dir = os.environ.get('REPORT_DIR')
+    if 'REPORTS_PATH' in my_envs:
+        report_dir = os.environ.get('REPORTS_PATH')
     else:
         print(
             "Environment variable REPORT_DIR no set",
@@ -31,17 +31,24 @@ def main():
         )
         sys.exit()
 
-    filename = Path(report_dir) / report_name
+    filepath = Path(report_dir) / report_name
     manager = PluginsManager()
 
     if tool is not None:
         plugin = manager.get_plugin(tool)
     else:
-        plugin = ReportAnalyzer(manager).get_plugin(filename)
+        plugin = ReportAnalyzer(manager).get_plugin(filepath)
+        print(
+            f"Detector found it as an {plugin} report",
+            file=sys.stderr
+        )
 
-    with open(filename, 'r') as f:
-        plugin.parseOutputString(f.read())
-        print(plugin.get_json())
+    print(
+        f"Parsing {filepath} report",
+        file=sys.stderr
+    )
+    plugin.processReport(filepath)
+    print(plugin.get_json())
 
 
 if __name__ == '__main__':
