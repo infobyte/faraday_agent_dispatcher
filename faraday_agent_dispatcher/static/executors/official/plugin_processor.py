@@ -47,7 +47,7 @@ def main():
         f"Parsing {filepath} report",
         file=sys.stderr
     )
-    plugin.processReport(filepath)
+    plugin.processReport(str(filepath))
     print(plugin.get_json())
 
 
