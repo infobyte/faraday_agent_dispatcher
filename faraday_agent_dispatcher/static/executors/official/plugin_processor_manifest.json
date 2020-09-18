@@ -1,0 +1,13 @@
+{
+  "arguments": {
+    "REPORT_NAME":  true,
+    "CONFIG_TOOL": false
+  },
+  "environment_variables": [
+    "REPORTS_PATH"
+  ],
+  "check_cmds": [
+
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}
