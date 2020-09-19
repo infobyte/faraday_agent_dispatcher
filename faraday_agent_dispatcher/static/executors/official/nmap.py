@@ -8,11 +8,12 @@ from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
 def command_create(lista_target):
     cmd = [
         "nmap",
-        "-p {}".format(os.environ.get('EXECUTOR_CONFIG_PORT_LIST')),
         "-oX", "-",
         "--",
     ]
 
+    cmd += '' if os.environ.get('EXECUTOR_CONFIG_PORT_LIST', None) is None\
+        else [f'-p {os.environ.get("EXECUTOR_CONFIG_PORT_LIST")}']
     cmd += '' if os.environ.get('EXECUTOR_CONFIG_OPTION_SC', None) is None\
         else ['-sC']
     cmd += '' if os.environ.get('EXECUTOR_CONFIG_OPTION_SV', None) is None \
