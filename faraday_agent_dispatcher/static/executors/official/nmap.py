@@ -34,7 +34,7 @@ def command_create(lista_target):
     #     cmd.append(f'--host-timeout '
     #                f'{os.environ.get("EXECUTOR_CONFIG_HOST_TIMEOUT")}')
 
-    port_list = my_envs.get('EXECUTOR_CONFIG_PORT_LIST', None)
+    port_list = my_envs.get('EXECUTOR_CONFIG_PORT_LIST')
     cmd += '' if not port_list else [f'-p {port_list}']
 
     cmd += '' if not my_envs.get('EXECUTOR_CONFIG_OPTION_SC') else ['-sC']
@@ -48,7 +48,7 @@ def command_create(lista_target):
         else [f'--script-timeout '
               f'{script_timeout}']
 
-    host_timeout = my_envs.get('EXECUTOR_CONFIG_HOST_TIMEOUT', None)
+    host_timeout = my_envs.get('EXECUTOR_CONFIG_HOST_TIMEOUT')
     cmd += '' if not host_timeout \
         else [f'--host-timeout '
               f'{host_timeout}']
