@@ -1,6 +1,5 @@
 import os
 import subprocess
-
 """You need to clone and install faraday plugins"""
 from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
 
@@ -8,9 +7,11 @@ from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
 def command_create(lista_target):
     my_envs = os.environ
     cmd = [
-        "nmap",
+        "nmap"
+    ]
+    cmd_end = [
         "-oX", "-",
-        "--",
+        "--"
     ]
 
     # when the frontend bug is solved leave it this way
@@ -45,14 +46,15 @@ def command_create(lista_target):
 
     script_timeout = my_envs.get('EXECUTOR_CONFIG_SCRIPT_TIMEOUT')
     cmd += '' if not script_timeout \
-        else [f'--script-timeout '
-              f'{script_timeout}']
+        else ['--script-timeout',
+              script_timeout]
 
     host_timeout = my_envs.get('EXECUTOR_CONFIG_HOST_TIMEOUT')
     cmd += '' if not host_timeout \
-        else [f'--host-timeout '
-              f'{host_timeout}']
+        else ['--host-timeout',
+              host_timeout]
 
+    cmd += cmd_end
     cmd += lista_target
     return cmd
 
