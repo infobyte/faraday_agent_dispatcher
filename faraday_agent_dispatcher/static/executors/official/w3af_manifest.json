@@ -6,7 +6,7 @@
     "W3AF_PATH"
   ],
   "check_cmds": [
-    "python2 --version"
+    "python2 --version 2>&1"
   ],
-  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+  "cmd": "python2 {EXECUTOR_FILE_PATH}"
 }
