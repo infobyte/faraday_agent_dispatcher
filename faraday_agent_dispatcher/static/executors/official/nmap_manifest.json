@@ -1,7 +1,12 @@
 {
   "arguments": {
-    "PORT_LIST": true,
-    "TARGET": true
+    "TARGET": true,
+    "PORT_LIST": false,
+    "OPTION_SC": false ,
+    "OPTION_SV": false ,
+    "OPTION_PN": false ,
+    "SCRIPT_TIMEOUT": false ,
+    "HOST_TIMEOUT": false
   },
   "environment_variables": [
 
