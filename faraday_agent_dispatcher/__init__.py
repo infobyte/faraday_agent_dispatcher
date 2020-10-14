@@ -19,5 +19,5 @@
 """Top-level package for faraday_agent_dispatcher."""
 
 __author__ = """Eric Horvat"""
-__email__ = 'erich@infobytesec.com'
-__version__ = '1.3.1'
+__email__ = "erich@infobytesec.com"
+__version__ = "1.3.1"

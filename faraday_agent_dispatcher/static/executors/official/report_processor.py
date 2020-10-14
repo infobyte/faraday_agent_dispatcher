@@ -11,24 +11,18 @@ def main():
     # the environment variables
     # are checked.
 
-    tool = os.environ.get('EXECUTOR_CONFIG_TOOL', None)
+    tool = os.environ.get("EXECUTOR_CONFIG_TOOL", None)
 
-    if 'EXECUTOR_CONFIG_REPORT_NAME' in my_envs:
-        report_name = os.environ.get('EXECUTOR_CONFIG_REPORT_NAME')
+    if "EXECUTOR_CONFIG_REPORT_NAME" in my_envs:
+        report_name = os.environ.get("EXECUTOR_CONFIG_REPORT_NAME")
     else:
-        print(
-            "Argument REPORT_NAME no set",
-            file=sys.stderr
-        )
+        print("Argument REPORT_NAME no set", file=sys.stderr)
         sys.exit()
 
-    if 'REPORTS_PATH' in my_envs:
-        report_dir = os.environ.get('REPORTS_PATH')
+    if "REPORTS_PATH" in my_envs:
+        report_dir = os.environ.get("REPORTS_PATH")
     else:
-        print(
-            "Environment variable REPORT_DIR no set",
-            file=sys.stderr
-        )
+        print("Environment variable REPORT_DIR no set", file=sys.stderr)
         sys.exit()
 
     filepath = Path(report_dir) / report_name
@@ -38,18 +32,12 @@ def main():
         plugin = manager.get_plugin(tool)
     else:
         plugin = ReportAnalyzer(manager).get_plugin(filepath)
-        print(
-            f"Detector found it as an {plugin} report",
-            file=sys.stderr
-        )
+        print(f"Detector found it as an {plugin} report", file=sys.stderr)
 
-    print(
-        f"Parsing {filepath} report",
-        file=sys.stderr
-    )
+    print(f"Parsing {filepath} report", file=sys.stderr)
     plugin.processReport(str(filepath))
     print(plugin.get_json())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
