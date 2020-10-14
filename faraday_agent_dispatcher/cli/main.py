@@ -33,19 +33,18 @@ import faraday_agent_dispatcher.logger as logging
 from pathlib import Path
 
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.version_option(__version__, '-v', '--version')
+@click.version_option(__version__, "-v", "--version")
 def cli():
     pass
 
 
 def process_config_file(config_filepath: Path, logger):
     if config_filepath is None and not os.path.exists(config.CONFIG_FILENAME):
-        logger.info("Config file doesn't exist. Run the command "
-                    "`faraday-dispatcher config-wizard` to create one")
+        logger.info("Config file doesn't exist. Run the command " "`faraday-dispatcher config-wizard` to create one")
         exit(1)
     config_filepath = config_filepath or Path(config.CONFIG_FILENAME)
     config_filepath = Path(config_filepath)
@@ -61,18 +60,16 @@ async def main(config_file, logger):
         try:
             dispatcher = Dispatcher(session, config_file)
         except ValueError as ex:
-            print(f'{Bcolors.FAIL}Error configuring dispatcher: '
-                  f'{Bcolors.BOLD}{str(ex)}{Bcolors.ENDC}')
-            print(f'Try checking your config file located at {Bcolors.BOLD}'
-                  f'{config.CONFIG_FILENAME}{Bcolors.ENDC}')
+            print(f"{Bcolors.FAIL}Error configuring dispatcher: " f"{Bcolors.BOLD}{str(ex)}{Bcolors.ENDC}")
+            print(f"Try checking your config file located at {Bcolors.BOLD}" f"{config.CONFIG_FILENAME}{Bcolors.ENDC}")
             return 1
 
         loop = asyncio.get_event_loop()
-        for signame in ('SIGINT', 'SIGTERM'):
-            loop.add_signal_handler(getattr(signal, signame),
-                                    lambda: asyncio.ensure_future(
-                                        dispatcher.close(signame)
-                                    ))
+        for signame in ("SIGINT", "SIGTERM"):
+            loop.add_signal_handler(
+                getattr(signal, signame),
+                lambda: asyncio.ensure_future(dispatcher.close(signame)),
+            )
 
         await dispatcher.register()
         await dispatcher.connect()
@@ -81,14 +78,19 @@ async def main(config_file, logger):
 
 
 @click.command(help="faraday-dispatcher run")
-@click.option("-c", "--config-file", default=None,
-              help="Path to config ini file")
+@click.option("-c", "--config-file", default=None, help="Path to config ini file")
 @click.option("--logdir", default="~", help="Path to logger directory")
-@click.option("--log-level", default="info",
-              help="Log level set = "
-                   "[notset|debug|info|warning|error|critical]")
-@click.option("--debug", is_flag=True, default=False,
-              help="Set debug logging, overrides --log-level option")
+@click.option(
+    "--log-level",
+    default="info",
+    help="Log level set = " "[notset|debug|info|warning|error|critical]",
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Set debug logging, overrides --log-level option",
+)
 def run(config_file, logdir, log_level, debug):
     logger = setting_logger(debug, log_level, logdir)
     try:
@@ -113,17 +115,26 @@ def setting_logger(debug, log_level, logdir):
 
 
 @click.command(help="faraday-dispatcher config_wizard")
-@click.option("-c", "--config-filepath", default=None,
-              help="Path to config ini file")
+@click.option("-c", "--config-filepath", default=None, help="Path to config ini file")
 @click.option("--logdir", default="~", help="Path to logger directory")
-@click.option("--log-level", default="info",
-              help="Log level set = "
-                   "[notset|debug|info|warning|error|critical]")
-@click.option("--debug", is_flag=True, default=False,
-              help="Set debug logging, overrides --log-level option")
-@click.option("-p", "--page-size", default=DEFAULT_PAGE_SIZE,
-              type=click.types.IntRange(2, 20),
-              help="Size of paged options")
+@click.option(
+    "--log-level",
+    default="info",
+    help="Log level set = " "[notset|debug|info|warning|error|critical]",
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Set debug logging, overrides --log-level option",
+)
+@click.option(
+    "-p",
+    "--page-size",
+    default=DEFAULT_PAGE_SIZE,
+    type=click.types.IntRange(2, 20),
+    help="Size of paged options",
+)
 def config_wizard(config_filepath, logdir, log_level, debug, page_size):
     setting_logger(debug, log_level, logdir)
 
@@ -138,6 +149,6 @@ def config_wizard(config_filepath, logdir, log_level, debug, page_size):
 cli.add_command(config_wizard)
 cli.add_command(run)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     cli()

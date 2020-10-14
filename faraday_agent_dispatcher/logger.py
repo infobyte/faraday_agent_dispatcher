@@ -24,14 +24,12 @@ from syslog_rfc5424_formatter import RFC5424Formatter
 
 
 def log_file():
-    return os.path.expanduser(
-        os.path.join(config.LOGS_PATH, 'faraday-dispatcher.log')
-    )
+    return os.path.expanduser(os.path.join(config.LOGS_PATH, "faraday-dispatcher.log"))
 
 
-MAX_LOG_FILE_SIZE = 5 * 1024 * 1024     # 5 MB
+MAX_LOG_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 MAX_LOG_FILE_BACKUP_COUNT = 5
-ROOT_LOGGER = u'faraday_agent_dispatcher'
+ROOT_LOGGER = u"faraday_agent_dispatcher"
 LOGGING_HANDLERS = []
 LVL_SETTABLE_HANDLERS = []
 
@@ -46,8 +44,8 @@ def setup_logging():
         formatter = RFC5424Formatter()
     else:
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s {%(threadName)s} '
-            '[%(filename)s:%(lineno)s - %(funcName)s()]  %(message)s'
+            "%(asctime)s - %(name)s - %(levelname)s {%(threadName)s} "
+            "[%(filename)s:%(lineno)s - %(funcName)s()]  %(message)s"
         )
     setup_console_logging(formatter)
     setup_file_logging(formatter)
@@ -65,9 +63,7 @@ def setup_console_logging(formatter):
 def setup_file_logging(formatter):
     create_logging_path()
     file_handler = logging.handlers.RotatingFileHandler(
-        log_file(),
-        maxBytes=MAX_LOG_FILE_SIZE,
-        backupCount=MAX_LOG_FILE_BACKUP_COUNT
+        log_file(), maxBytes=MAX_LOG_FILE_SIZE, backupCount=MAX_LOG_FILE_BACKUP_COUNT
     )
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)
@@ -86,19 +82,19 @@ def add_handler(handler):
 
 def get_logger(obj=None):
     """Creates a logger named by a string or an object's class name.
-     Allowing logger to additionally accept strings as names
-     for non-class loggings."""
+    Allowing logger to additionally accept strings as names
+    for non-class loggings."""
     if obj is None:
         logger = logging.getLogger(ROOT_LOGGER)
         logger.setLevel(config.LOGGING_LEVEL)
     elif isinstance(obj, str):
         if obj != ROOT_LOGGER:
-            logger = logging.getLogger(u'{}.{}'.format(ROOT_LOGGER, obj))
+            logger = logging.getLogger(u"{}.{}".format(ROOT_LOGGER, obj))
         else:
             logger = logging.getLogger(obj)
     else:
         cls_name = obj.__class__.__name__
-        logger = logging.getLogger(u'{}.{}'.format(ROOT_LOGGER, cls_name))
+        logger = logging.getLogger(u"{}.{}".format(ROOT_LOGGER, cls_name))
     return logger
 
 
@@ -125,5 +121,5 @@ def reset_logger(logger_folder=None):
 def get_level(loglevel: str):
     numeric_level = getattr(logging, loglevel.upper(), None)
     if not isinstance(numeric_level, int):
-        raise ValueError('Invalid log level: %s' % loglevel)
+        raise ValueError("Invalid log level: %s" % loglevel)
     return numeric_level
