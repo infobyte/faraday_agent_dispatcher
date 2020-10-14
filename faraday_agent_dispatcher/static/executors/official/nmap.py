@@ -8,8 +8,9 @@ from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
 def command_create(lista_target):
     cmd = [
         "nmap",
-        "-p {}".format(os.environ.get('EXECUTOR_CONFIG_PORT_LIST')),
-        "-oX", "-",
+        "-p {}".format(os.environ.get("EXECUTOR_CONFIG_PORT_LIST")),
+        "-oX",
+        "-",
         "--",
     ]
     cmd += lista_target
@@ -18,26 +19,21 @@ def command_create(lista_target):
 
 
 def main():
-    targets = os.environ.get('EXECUTOR_CONFIG_TARGET')
+    targets = os.environ.get("EXECUTOR_CONFIG_TARGET")
 
-    if ' ' in targets:
+    if " " in targets:
         lista_target = targets.split(" ")
-    elif ',' in targets:
+    elif "," in targets:
         lista_target = targets.split(",")
     else:
         lista_target = [targets]
 
     cmd = command_create(lista_target)
-    results = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
+    results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     nmap = NmapPlugin()
     nmap.parseOutputString(results.stdout.encode())
     print(nmap.get_json())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

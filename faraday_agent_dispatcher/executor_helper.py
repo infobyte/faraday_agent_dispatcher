@@ -27,7 +27,6 @@ logger = logging.get_logger()
 
 
 class FileLineProcessor:
-
     @staticmethod
     async def _process_lines(line_getter, process_f, logger_f, name):
         while True:
@@ -39,10 +38,7 @@ class FileLineProcessor:
                 else:
                     break
             except ValueError:
-                logger.error(
-                    f"ValueError raised processing {name}, try with bigger "
-                    "limiting size in config"
-                )
+                logger.error(f"ValueError raised processing {name}, try with bigger " "limiting size in config")
         print(f"{Bcolors.WARNING}{name} sent empty data, {Bcolors.ENDC}")
 
     def __init__(self, name):
@@ -58,18 +54,19 @@ class FileLineProcessor:
         raise NotImplementedError("Must be implemented")
 
     async def process_f(self):
-        return await FileLineProcessor._process_lines(
-            self.next_line,
-            self.processing,
-            self.log,
-            self.name
-        )
+        return await FileLineProcessor._process_lines(self.next_line, self.processing, self.log, self.name)
 
 
 class StdOutLineProcessor(FileLineProcessor):
-
-    def __init__(self, process, session: ClientSession, execution_id: int,
-                 workspace: str, api_ssl_enabled, api_kwargs):
+    def __init__(
+        self,
+        process,
+        session: ClientSession,
+        execution_id: int,
+        workspace: str,
+        api_ssl_enabled,
+        api_kwargs,
+    ):
         super().__init__("stdout")
         self.process = process
         self.execution_id = execution_id
@@ -80,31 +77,24 @@ class StdOutLineProcessor(FileLineProcessor):
 
     async def next_line(self):
         line = await self.process.stdout.readline()
-        line = line.decode('utf-8')
+        line = line.decode("utf-8")
         return line[:-1]
 
     def post_url(self):
-        host = config.get('server', 'host')
-        port = config.get('server', 'api_port')
+        host = config.get("server", "host")
+        port = config.get("server", "api_port")
         return api_url(
             host,
             port,
-            postfix="/_api/v2/ws/"
-                    f"{self.workspace}/"
-                    "bulk_create/",
-            secure=self.api_ssl_enabled
+            postfix="/_api/v2/ws/" f"{self.workspace}/" "bulk_create/",
+            secure=self.api_ssl_enabled,
         )
 
     async def processing(self, line):
         try:
             loaded_json = json.loads(line)
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
-            headers = [
-                (
-                    "authorization",
-                    f"agent {config.get('tokens', 'agent')}"
-                )
-            ]
+            headers = [("authorization", f"agent {config.get('tokens', 'agent')}")]
             loaded_json["execution_id"] = self.execution_id
 
             res = await self.__session.post(
@@ -112,7 +102,7 @@ class StdOutLineProcessor(FileLineProcessor):
                 json=loaded_json,
                 headers=headers,
                 raise_for_status=False,
-                ** self.api_kwargs
+                **self.api_kwargs,
             )
             if res.status == 201:
                 logger.info("Data sent to bulk create")
@@ -121,7 +111,7 @@ class StdOutLineProcessor(FileLineProcessor):
                     "Invalid data supplied by the executor to the bulk create "
                     f"endpoint. Server responded: {res.status} "
                     f"{await res.text()}"
-                    )
+                )
 
         except JSONDecodeError as e:
             logger.error("JSON Parsing error: {}".format(e))
@@ -132,14 +122,13 @@ class StdOutLineProcessor(FileLineProcessor):
 
 
 class StdErrLineProcessor(FileLineProcessor):
-
     def __init__(self, process):
         super().__init__("stderr")
         self.process = process
 
     async def next_line(self):
         line = await self.process.stderr.readline()
-        line = line.decode('utf-8')
+        line = line.decode("utf-8")
         return line[:-1]
 
     async def processing(self, line):

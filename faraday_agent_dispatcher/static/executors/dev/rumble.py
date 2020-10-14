@@ -26,9 +26,8 @@ try:
     NETWORK_RANGE = os.environ["RUMBLE_NETWORK_RANGE"]
 except KeyError:
     print(
-        "You must set the environment variables RUMBLE_BIN_PATH, "
-        "RUMBLE_OUTPUT_DIR and RUMBLE_NETWORK_RANGE",
-        file=sys.stderr
+        "You must set the environment variables RUMBLE_BIN_PATH, " "RUMBLE_OUTPUT_DIR and RUMBLE_NETWORK_RANGE",
+        file=sys.stderr,
     )
     sys.exit()
 
@@ -43,12 +42,14 @@ def convert_rumble_assets(assets: list):
 
     hosts = []
     for asset in assets:
-        host = dict(ip=asset["addresses"][0],
-                    description="",
-                    os="",
-                    mac="",
-                    hostnames=asset["names"],
-                    services=[])
+        host = dict(
+            ip=asset["addresses"][0],
+            description="",
+            os="",
+            mac="",
+            hostnames=asset["names"],
+            services=[],
+        )
 
         if asset["macs"]:
             host["mac"] = asset["macs"][0]
@@ -64,7 +65,7 @@ def convert_rumble_assets(assets: list):
                 "service.family",
                 "service.vendor",
                 "service.version",
-                "banner"
+                "banner",
             ]
             service_data = asset["services"][service]
 
@@ -84,9 +85,7 @@ def convert_rumble_assets(assets: list):
             if len(service_name) > 120:
                 service_name = service_name[:120]
 
-            services.append(
-                dict(name=service_name, protocol=ip_protocol, port=port)
-            )
+            services.append(dict(name=service_name, protocol=ip_protocol, port=port))
 
         host["services"] = services
 
@@ -102,16 +101,9 @@ async def main():
         os.mkdir(OUTPUT_DIR)
 
     # TODO: run with sudo for better results
-    scan_output = os.path.join(
-        OUTPUT_DIR,
-        NETWORK_RANGE.replace('/', '_')
-    ) + "_" + str(int(time.time()))
+    scan_output = os.path.join(OUTPUT_DIR, NETWORK_RANGE.replace("/", "_")) + "_" + str(int(time.time()))
     command = f"{RUMBLE_BIN} {NETWORK_RANGE} -o {scan_output}"
-    rumble_proc = await asyncio.create_subprocess_shell(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    rumble_proc = await asyncio.create_subprocess_shell(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print(f"Running Rumble: {command}", file=sys.stderr)
     await rumble_proc.wait()
 
@@ -122,12 +114,11 @@ async def main():
 
     assets = []
     try:
-        with open(os.path.join(scan_output, "assets.jsonl"), 'r') as f:
+        with open(os.path.join(scan_output, "assets.jsonl"), "r") as f:
             for line in f.readlines():
                 assets.append(json.loads(line))
     except FileNotFoundError:
-        print("Could not find assets.jsonl scan output!",
-              file=sys.stderr)
+        print("Could not find assets.jsonl scan output!", file=sys.stderr)
         sys.exit()
 
     faraday_assets = convert_rumble_assets(assets)
