@@ -29,7 +29,7 @@ if sys.version_info.major < 3 or sys.version_info.minor < 7:
 
 
 with open("faraday_agent_dispatcher/__init__.py", "rt", encoding="utf8") as f:
-    version = search(r"__version__ = \'(.*?)\'", f.read()).group(1)
+    version = search(r"__version__ = \"(.*?)\"", f.read()).group(1)
 
 with open("README.md") as readme_file:
     readme = readme_file.read()
