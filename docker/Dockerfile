@@ -4,10 +4,10 @@ RUN apk update && \
     apk add --no-cache git wget tar 
 
 # Getting nikto2 code
-RUN git clone https://github.com/sullo/nikto.git nikto2
+RUN git clone --depth 1 https://github.com/sullo/nikto.git nikto2
 
 # Getting Sublist3r code
-RUN git clone https://github.com/aboul3la/Sublist3r.git Sublist3r
+RUN git clone --depth 1 https://github.com/aboul3la/Sublist3r.git Sublist3r
 
 # Getting arachni tar file (v1.5.1) 
 RUN mkdir ./temp
@@ -21,8 +21,8 @@ RUN rm ./temp/arachni-1.5.1-0.5.12-linux-x86_64.tar.gz
 RUN git clone --recursive https://github.com/byt3bl33d3r/CrackMapExec CrackMapExec
 
 # Getting OpenVas
-RUN git clone https://github.com/greenbone/openvas.git OpenVas
-RUN git clone https://github.com/greenbone/gvm-libs.git gvmLibs
+RUN git clone --depth 1 --branch v20.8.0 https://github.com/greenbone/openvas.git OpenVas
+RUN git clone --depth 1 --branch v20.8.0 https://github.com/greenbone/gvm-libs.git gvmLibs
 # Needs cmake to compile openvas
 RUN mkdir ./cmake
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.18.3/cmake-3.18.3.tar.gz \
