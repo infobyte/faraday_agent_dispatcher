@@ -38,7 +38,9 @@ RUN apt-get update && \
         # libs for wpscan
         libffi-dev \
         # SSL Support for nikto
-        libnet-ssleay-perl && \
+        libnet-ssleay-perl \
+        # openvas 
+        openvas && \
 # Clean commands
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /var/cache/apt && \
