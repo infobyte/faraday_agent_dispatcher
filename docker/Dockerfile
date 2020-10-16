@@ -17,9 +17,6 @@ RUN wget https://github.com/Arachni/arachni/releases/download/v1.5.1/arachni-1.5
 RUN tar -xvzf ./temp/arachni-1.5.1-0.5.12-linux-x86_64.tar.gz --directory ./arachni 
 RUN rm ./temp/arachni-1.5.1-0.5.12-linux-x86_64.tar.gz
 
-# Getting CrackMapExec code
-RUN git clone --recursive https://github.com/byt3bl33d3r/CrackMapExec CrackMapExec
-
 # Getting OpenVas
 RUN git clone --depth 1 --branch v20.8.0 https://github.com/greenbone/openvas.git OpenVas
 RUN git clone --depth 1 --branch v20.8.0 https://github.com/greenbone/gvm-libs.git gvmLibs
@@ -37,11 +34,13 @@ FROM kalilinux/kali-rolling as FINAL
 RUN apt-get update && \ 
 # Installing packages
     apt-get install --yes --no-install-recommends \ 
-        build-essential \
+        build-essential git \
         # Python
-        python3.8 python3-pip \
+        python3.8 python3-pip python3-venv \
         # Installing Nmap 
         nmap \
+        # Needs for sublist3r
+        jq \
         # Ruby for wpscan (nokogiri and misc prerequisites)
         ruby-full ruby-dev curl patch zlib1g-dev liblzma-dev \
         # cpan for perl 
@@ -59,13 +58,32 @@ RUN apt-get update && \
     rm -rf /var/cache/apt && \
     apt-get purge --auto-remove && \
     apt-get clean
-        
+
+
+# Installing CrackMapExec
+RUN python3 -m pip install pipx
+RUN pipx ensurepath
+RUN pipx install crackmapexec
+
+
+# Getting arachni from GETTER
+COPY --from=GETTER /arachni/arachni-1.5.1-0.5.12/ /usr/local/src/arachni
+# Adding to env PATH    
+ENV PATH=${PATH}:/usr/local/src/arachni/bin
+ENV ARACHNI_PATH=/usr/local/src/arachni/bin
+
+
 # Getting nikto from GETTER
 COPY --from=GETTER /nikto2/program /usr/local/src/nikto2
 # Installing perl modules for nikto2
 RUN cpan -i install Time::Local Net::hostent TIME::HiRes \
     # For SSL support
     Net::SSLeay
+# Adding to env PATH    
+ENV PATH=${PATH}:/usr/local/src/nikto2
+# @TODO Alias nikto
+RUN alias nikto='nikto.pl'
+
 
 # Installing dependencies for Sublist3r 
 COPY --from=GETTER /Sublist3r/requirements.txt /usr/local/src/Sublist3r/requirements.txt
@@ -73,24 +91,16 @@ WORKDIR /usr/local/src/Sublist3r
 RUN pip3 --no-cache install -r requirements.txt
 # Getting Sublist3r from GETTER
 COPY --from=GETTER /Sublist3r /usr/local/src/Sublist3r
+# Adding to env PATH    
+ENV PATH=${PATH}:/usr/local/src/Sublist3r
 
-# Getting arachni from GETTER
-COPY --from=GETTER /arachni/arachni-1.5.1-0.5.12/ /usr/local/src/arachni
-
-# Getting CrackMapExec from GETTER
-COPY --from=GETTER /CrackMapExec /usr/local/src/CrackMapExec
-# Installing CrackMapExec
-WORKDIR /usr/local/src/CrackMapExec
-RUN pip install poetry
-RUN poetry install
-# Configure first run
-RUN poetry run crackmapexec --help
 
 # Installing wpscan
 RUN gem install nokogiri
 RUN gem install wpscan
 # Updating wpscan
 RUN wpscan --update
+
 
 # Getting openvas from GETTER
 COPY --from=GETTER /OpenVas /usr/local/src/OpenVas
