@@ -50,12 +50,14 @@ RUN apt-get update && \
 # Installing CrackMapExec
 RUN python3 -m pip install pipx
 RUN pipx ensurepath
+ENV PIPX_BIN_DIR=/usr/local/bin
 RUN pipx install crackmapexec
 
 # Getting arachni from GETTER
 COPY --from=GETTER /arachni/arachni-1.5.1-0.5.12/ /usr/local/src/arachni
 # Adding to env PATH    
 ENV PATH=${PATH}:/usr/local/src/arachni/bin
+ENV OPENSSL_CONF=/etc/ssl/
 ENV ARACHNI_PATH=/usr/local/src/arachni/bin
 
 # Getting nikto from GETTER
@@ -77,6 +79,7 @@ RUN pip3 --no-cache install -r requirements.txt
 COPY --from=GETTER /Sublist3r /usr/local/src/Sublist3r
 # Adding to env PATH    
 ENV PATH=${PATH}:/usr/local/src/Sublist3r
+RUN echo 'alias python="python3"' >> ~/.bashrc
 
 # Installing wpscan
 RUN gem install nokogiri
