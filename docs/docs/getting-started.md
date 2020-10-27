@@ -41,42 +41,42 @@ Examples:
 
 === "https"
     !!! example
-        $ **faraday-dispatcher config-wizard**
-        Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?
-         (A, E, Q) [Q]: **A**
-        _Section: server_
-        host [127.0.0.1]:
-        ssl [True]:
-        ssl_port [443]:
-        Default SSL behavior? (Y, N): **N**
-        ssl_cert []:
-        _Trying to save with empty value_
-        ssl_cert []: **/home/path/to/the/cert.pub**
-        workspace [workspace]: **sslWorkspace**
-        _Section: tokens_
-        registration [ACorrectTokenIs25CharLen]: **1234567890123456789012345**
-        _Section: agent_
-        agent_name [agent]: **sslAgent**
-        Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?
-         (A, E, Q) [Q]: **Q**
+        $ **faraday-dispatcher config-wizard**  
+        Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?  
+         (A, E, Q) [Q]: **A**  
+        _Section: server_  
+        host [127.0.0.1]:  
+        ssl [True]:  
+        ssl_port [443]:  
+        Default SSL behavior? (Y, N): **N**  
+        ssl_cert []:  
+        _Trying to save with empty value_  
+        ssl_cert []: **/home/path/to/the/cert.pub**  
+        workspace [workspace]: **sslWorkspace**  
+        _Section: tokens_  
+        registration [ACorrectTokenIs25CharLen]: **1234567890123456789012345**  
+        _Section: agent_  
+        agent_name [agent]: **sslAgent**  
+        Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?  
+         (A, E, Q) [Q]: **Q**  
 
 === "http"
     !!! example
-        $ **faraday-dispatcher config-wizard**
-        Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?
-         (A, E, Q) [Q]: **A**
-        _Section: server_
-        host [127.0.0.1]:
-        ssl [True]: **False**
-        api_port [5985]:
-        websocket_port [9000]:
-        workspace [workspace]: **sslFalseWorkspace**
-        _Section: tokens_
-        registration [ACorrectTokenIs25CharLen]: **1234567890123456789012345**
-        _Section: agent_
-        agent_name [agent]: **sslFalseAgent**
-        Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?
-        (A, E, Q) [Q]: **Q**
+        $ **faraday-dispatcher config-wizard**  
+        Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?  
+         (A, E, Q) [Q]: **A**  
+        _Section: server_  
+        host [127.0.0.1]:  
+        ssl [True]: **False**  
+        api_port [5985]:  
+        websocket_port [9000]:  
+        workspace [workspace]: **sslFalseWorkspace**  
+        _Section: tokens_  
+        registration [ACorrectTokenIs25CharLen]: **1234567890123456789012345**  
+        _Section: agent_  
+        agent_name [agent]: **sslFalseAgent**  
+        Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?  
+        (A, E, Q) [Q]: **Q**  
 
         !!! warning
             We stronglly recommend to use `https` if not using within localhost
@@ -92,97 +92,97 @@ official and custom executor:
 
 === "Official"
     ???+ example
-        $ **faraday-dispatcher config-wizard**
-        Do you want to edit the [A]gent or the [E]xecutors? Do you want to
-        [Q]uit? (A, E, Q) [Q]: **E**
-        The actual configured executors are: _[]_
-        Do you want to [A]dd, [M]odify or [D]elete an executor? Do you want to
-        [Q]uit? (A, M, D, Q) [Q]: **A**
-        Name: **official**
-        Is a custom executor? (Y, N) [N]: **N**
-        The executors are:
-        _1: wpscan.py_
-        _2: sublist3r.sh_
-        _3: nikto2.py_
-        _4: nessus.py_
-        _5: w3af.py_
-        _+: Next page_
-        _Q: Don't choose_
-        Choose one: **4**
-        Max data sent to server [65536]: **65536**
-        Environment variable NESSUS_USERNAME value: **username**
-        Environment variable NESSUS_PASSWORD value: **password**
-        Environment variable NESSUS_URL value: **https://nessus_url.com**
-        The actual configured executors are: _['official']_
-        Do you want to [A]dd, [M]odify or [D]elete an executor? Do you want to
-        [Q]uit? (A, M, D, Q) [Q]: **Q**
-        Do you want to edit the [A]gent or the [E]xecutors? Do you want to
-        [Q]uit? (A, E, Q) [Q]: **Q**
+        $ **faraday-dispatcher config-wizard**  
+        Do you want to edit the [A]gent or the [E]xecutors? Do you want to  
+        [Q]uit? (A, E, Q) [Q]: **E**  
+        The actual configured executors are: _[]_  
+        Do you want to [A]dd, [M]odify or [D]elete an executor? Do you want to  
+        [Q]uit? (A, M, D, Q) [Q]: **A**  
+        Name: **official**  
+        Is a custom executor? (Y, N) [N]: **N**  
+        The executors are:  
+        _1: wpscan.py_  
+        _2: sublist3r.sh_  
+        _3: nikto2.py_  
+        _4: nessus.py_  
+        _5: w3af.py_  
+        _+: Next page_  
+        _Q: Don't choose_  
+        Choose one: **4**  
+        Max data sent to server [65536]: **65536**  
+        Environment variable NESSUS_USERNAME value: **username**  
+        Environment variable NESSUS_PASSWORD value: **password**  
+        Environment variable NESSUS_URL value: **https://nessus_url.com**  
+        The actual configured executors are: _['official']_  
+        Do you want to [A]dd, [M]odify or [D]elete an executor? Do you want to  
+        [Q]uit? (A, M, D, Q) [Q]: **Q**  
+        Do you want to edit the [A]gent or the [E]xecutors? Do you want to  
+        [Q]uit? (A, E, Q) [Q]: **Q**  
 
 === "Custom"
     ???+ example
-        $ **faraday-dispatcher config-wizard**
+        $ **faraday-dispatcher config-wizard**  
         Do you want to edit the [A]gent or the [E]xecutors? Do you want to
-        [Q]uit? (A, E, Q) [Q]: **E**
-        The actual configured executors are: _[]_
+        [Q]uit? (A, E, Q) [Q]: **E**  
+        The actual configured executors are: _[]_  
         Do you want to [A]dd, [M]odify or [D]elete an executor? Do you want to
-        [Q]uit? (A, M, D, Q) [Q]: **A**
-        Name: **custom**
-        Is a custom executor? (Y, N) [N]: **Y**
+        [Q]uit? (A, M, D, Q) [Q]: **A**  
+        Name: **custom**  
+        Is a custom executor? (Y, N) [N]: **Y**  
         Command to execute [exit 1]: **python3
-        {REPO_FOLDER}/faraday_agent_dispatcher/static/executors/official/nessus.py**
-        Max data sent to server [65536]: **65536**
-        The actual custom executor's environment variables are: _[]_
+        {REPO_FOLDER}/faraday_agent_dispatcher/static/executors/official/nessus.py**  
+        Max data sent to server [65536]: **65536**  
+        The actual custom executor's environment variables are: _[]_  
         Do you want to [A]dd, [M]odify or [D]elete an environment variable? Do you
-         want to [Q]uit? (A, M, D, Q) [Q]: **A**
-        Environment variable name: **NESSUS_USERNAME**
-        Environment variable value: **username**
-        The actual custom executor's environment variables are: __['nessus_username']__
+         want to [Q]uit? (A, M, D, Q) [Q]: **A**  
+        Environment variable name: **NESSUS_USERNAME**  
+        Environment variable value: **username**  
+        The actual custom executor's environment variables are: __['nessus_username']__  
         Do you want to [A]dd, [M]odify or [D]elete an environment variable? Do you
-         want to [Q]uit? (A, M, D, Q) [Q]: **A**
-        Environment variable name: **NESSUS_PASSWORD**
-        Environment variable value: **password**
+         want to [Q]uit? (A, M, D, Q) [Q]: **A**  
+        Environment variable name: **NESSUS_PASSWORD**  
+        Environment variable value: **password**  
         The actual custom executor's environment variables are: _['nessus_username',
-         'nessus_password']_
+         'nessus_password']_  
         Do you want to [A]dd, [M]odify or [D]elete an environment variable? Do you
-         want to [Q]uit? (A, M, D, Q) [Q]: **A**
-        Environment variable name: **NESSUS_URL**
-        Environment variable value: **https://nessus_url.com**
+         want to [Q]uit? (A, M, D, Q) [Q]: **A**  
+        Environment variable name: **NESSUS_URL**  
+        Environment variable value: **https://nessus_url.com**  
         The actual custom executor's environment variables are: _['nessus_username',
-         'nessus_password', 'nessus_url']_
+         'nessus_password', 'nessus_url']_  
         Do you want to [A]dd, [M]odify or [D]elete an environment variable? Do you
-         want to [Q]uit? (A, M, D, Q) [Q]: **Q**
-        The actual custom executor's arguments are: _[]_
+         want to [Q]uit? (A, M, D, Q) [Q]: **Q**  
+        The actual custom executor's arguments are: _[]_  
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
-         [Q]uit? (A, M, D, Q) [Q]: **A**
-        Argument name: **NESSUS_SCAN_NAME**
-        Is mandatory? (Y, N): **N**
-        The actual custom executor's arguments are: _['nessus_scan_name']_
+         [Q]uit? (A, M, D, Q) [Q]: **A**  
+        Argument name: **NESSUS_SCAN_NAME**  
+        Is mandatory? (Y, N): **N**  
+        The actual custom executor's arguments are: _['nessus_scan_name']_  
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
-         [Q]uit? (A, M, D, Q) [Q]: **A**
-        Argument name: **NESSUS_URL**
-        Is mandatory? (Y, N): **N**
+         [Q]uit? (A, M, D, Q) [Q]: **A**  
+        Argument name: **NESSUS_URL**  
+        Is mandatory? (Y, N): **N**  
         The actual custom executor's arguments are: _['nessus_scan_name',
-         'nessus_url']_
+         'nessus_url']_  
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
-         [Q]uit? (A, M, D, Q) [Q]: **A**
-        Argument name: **NESSUS_SCAN_TARGET**
-        Is mandatory? (Y, N): **Y**
+         [Q]uit? (A, M, D, Q) [Q]: **A**  
+        Argument name: **NESSUS_SCAN_TARGET**  
+        Is mandatory? (Y, N): **Y**  
         The actual custom executor's arguments are: _['nessus_scan_name',
-        'nessus_url', 'nessus_scan_target']_
+        'nessus_url', 'nessus_scan_target']_  
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
-         [Q]uit? (A, M, D, Q) [Q]: **A**
-        Argument name: **NESSUS_SCAN_TEMPLATE**
-        Is mandatory? (Y, N): **N**
+         [Q]uit? (A, M, D, Q) [Q]: **A**  
+        Argument name: **NESSUS_SCAN_TEMPLATE**  
+        Is mandatory? (Y, N): **N**  
         The actual custom executor's arguments are: _['nessus_scan_name',
-        'nessus_url', 'nessus_scan_target', 'nessus_scan_template']_
+        'nessus_url', 'nessus_scan_target', 'nessus_scan_template']_  
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
-         [Q]uit? (A, M, D, Q) [Q]: **Q**
-        The actual configured executors are: _['custom']_
+         [Q]uit? (A, M, D, Q) [Q]: **Q**  
+        The actual configured executors are: _['custom']_  
         Do you want to [A]dd, [M]odify or [D]elete an executor? Do you want to
-         [Q]uit? (A, M, D, Q) [Q]: **Q**
+         [Q]uit? (A, M, D, Q) [Q]: **Q**  
         Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?
-         (A, E, Q) [Q]: **Q**
+         (A, E, Q) [Q]: **Q**  
 
         !!! warning
             Compared to the official executor example, this is more complex and
