@@ -109,8 +109,12 @@ unit_test 3.8:
     image: python:3.8
 
 unit_test 3.9:
+  extends: .latest_unit_test_base
+  image: python:3.9
+
+unit_test 3.10:
     extends: .latest_unit_test_base
-    image: python:3.9-rc
+    image: python:3.10-rc
     allow_failure: true
 
 alpha_unit_test 3.7:
@@ -123,7 +127,11 @@ alpha_unit_test 3.8:
 
 alpha_unit_test 3.9:
     extends: .alpha_unit_test_base
-    image: python:3.9-rc
+    image: python:3.9
+
+alpha_unit_test 3.10:
+    extends: .alpha_unit_test_base
+    image: python:3.10-rc
 
 integration_faraday:
     stage: post_testing
