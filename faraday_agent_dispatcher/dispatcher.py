@@ -171,7 +171,9 @@ class Dispatcher:
                         "Invalid registration token, please reset and retry. "
                         "If the error persist, you should try to edit the "
                         "registration token with the wizard command "
-                        "`faraday-dispatcher config-wizard`"
+                        "`faraday-dispatcher config-wizard`\nHint: If the faraday "
+                        "version is not the expected this could fail, check "
+                        "https://github.com/infobyte/faraday_agent_dispatcher/blob/master/RELEASE.md"
                     )
                 else:
                     logger.info(f"Unexpected error: {e}")
