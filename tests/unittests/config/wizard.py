@@ -473,6 +473,72 @@ def generate_inputs():
             "after_executors": set(),
             "after_workspaces": {"aworkspace", "second"},
         },
+        {
+            "id_str": "Basic Name with Comma Executors input",
+            "dispatcher_input": DispatcherInput(
+                ssl="false",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "executors_input": [
+                ExecutorInput(
+                    name="ex1",
+                    error_name="ex,1",
+                    cmd="cmd 1",
+                    params=[
+                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
+                    ],
+                    adm_type=ADMType.ADD,
+                ),
+            ],
+            "exit_code": 0,
+            "after_executors": {"ex1"},
+            "after_workspaces": {"aworkspace"},
+        },
+        {
+            "id_str": "Basic Name with backslash Executors input",
+            "dispatcher_input": DispatcherInput(
+                ssl="false",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "executors_input": [
+                ExecutorInput(
+                    name="ex1",
+                    error_name="ex\\1",
+                    cmd="cmd 1",
+                    params=[
+                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
+                    ],
+                    adm_type=ADMType.ADD,
+                ),
+            ],
+            "exit_code": 0,
+            "after_executors": {"ex1"},
+            "after_workspaces": {"aworkspace"},
+        },
+        {
+            "id_str": "Basic Name with slash Executors input",
+            "dispatcher_input": DispatcherInput(
+                ssl="false",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "executors_input": [
+                ExecutorInput(
+                    name="ex1",
+                    error_name="ex/1",
+                    cmd="cmd 1",
+                    params=[
+                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
+                    ],
+                    adm_type=ADMType.ADD,
+                ),
+            ],
+            "exit_code": 0,
+            "after_executors": {"ex1"},
+            "after_workspaces": {"aworkspace"},
+        },
     ]
 
 
