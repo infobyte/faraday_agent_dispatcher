@@ -23,7 +23,7 @@ import asyncio
 host_data = {
     "ip": "AWS - ",
     "description": "AWS test",
-    "hostnames": ["aws-test.com", "aws-test2.org"]
+    "hostnames": ["aws-test.com", "aws-test2.org"],
 }
 
 level_map = {
@@ -36,26 +36,24 @@ MIN = 5
 
 
 def get_check(control_str: str):
-    a = control_str.split(']')
+    a = control_str.split("]")
     return a[0][1:]
 
 
 def vuln_parse(json_str: str):
     dic = json.loads(json_str)
-    if dic['Status'] == "Pass":
+    if dic["Status"] == "Pass":
         return None
     vuln = dict()
-    vuln['name'] = dic['Control']
-    vuln['desc'] = dic['Message']
-    vuln['severity'] = level_map[dic['Level']]
-    vuln['type'] = 'Vulnerability'
-    vuln['impact'] = {
-        'accountability': True,
-        'availability': False,
+    vuln["name"] = dic["Control"]
+    vuln["desc"] = dic["Message"]
+    vuln["severity"] = level_map[dic["Level"]]
+    vuln["type"] = "Vulnerability"
+    vuln["impact"] = {
+        "accountability": True,
+        "availability": False,
     }
-    vuln['policy_violations'] = [
-        f"{get_check(dic['Control'])}:{dic['Control ID']}"
-    ]
+    vuln["policy_violations"] = [f"{get_check(dic['Control'])}:{dic['Control ID']}"]
     return vuln
 
 
@@ -63,28 +61,19 @@ REGION = None
 
 
 def process_bytes_line(line):
-    parts = line.decode('utf-8').split('\n')
+    parts = line.decode("utf-8").split("\n")
     parts = list(filter(len, parts))
     global REGION
     if len(parts):
         if REGION is None:
             REGION = json.loads(parts[0])["Region"]
-        return list(
-            filter(
-                lambda v: v is not None,
-                [vuln_parse(part) for part in parts]
-            )
-        )
+        return list(filter(lambda v: v is not None, [vuln_parse(part) for part in parts]))
 
 
 async def main():
 
     command = f"{os.path.expanduser('~/tools/prowler/prowler')} -b -M json"
-    prowler_cmd = await asyncio.create_subprocess_shell(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    prowler_cmd = await asyncio.create_subprocess_shell(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     to_send_vulns = []
     end = False
     while not end:
@@ -96,8 +85,8 @@ async def main():
 
         if len(to_send_vulns) >= MIN or (end and len(to_send_vulns) > 0):
             host_data_ = host_data.copy()
-            host_data_['ip'] = f"{host_data_['ip']}{REGION}"
-            host_data_['vulnerabilities'] = to_send_vulns
+            host_data_["ip"] = f"{host_data_['ip']}{REGION}"
+            host_data_["vulnerabilities"] = to_send_vulns
             data = dict(hosts=[host_data_])
             print(json.dumps(data))
             to_send_vulns = []

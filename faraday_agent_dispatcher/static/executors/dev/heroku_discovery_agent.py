@@ -35,8 +35,7 @@ import sys
 # to be replaced with urllib.parse. Each segment of the connstring is matched
 # by /([^:\/?#\s]+)/
 MATCH_CONNSTRING = re.compile(
-    r'^(?:([^:\/?#\s]+):\/{2})?(?:([^@\/?#\s]+)@)?([^\/?#\s]+)?:'
-    r'(\d{2,5})(?:\/([^?#\s]*))?(?:[?]([^@#\s]+))?\S*$'
+    r"^(?:([^:\/?#\s]+):\/{2})?(?:([^@\/?#\s]+)@)?([^\/?#\s]+)?:" r"(\d{2,5})(?:\/([^?#\s]*))?(?:[?]([^@#\s]+))?\S*$"
 )
 
 SERVICE_DATA = {
@@ -49,43 +48,39 @@ HOST_DATA = {
     "ip": "",
     "description": "heroku resource",
     "hostnames": [],
-    "services": []
+    "services": [],
 }
 
-KNOWN_SERVICES = ['redis', 'postgres']
+KNOWN_SERVICES = ["redis", "postgres"]
 
 
 def main():
     """ heroku cli user must be logged to run this agent"""
 
     try:
-        subprocess.run(
-            ['heroku', 'auth:whoami'],
-            stdout=subprocess.DEVNULL,
-            check=True
-        )
+        subprocess.run(["heroku", "auth:whoami"], stdout=subprocess.DEVNULL, check=True)
     except CalledProcessError:
 
         sys.exit(1)
 
     apps = json.loads(
         subprocess.run(
-            ['heroku', 'apps', '--json'],
+            ["heroku", "apps", "--json"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            check=True
-        ).stdout.decode('utf-8')
+            check=True,
+        ).stdout.decode("utf-8")
     )
 
     for app in apps:
 
         app_info = json.loads(
             subprocess.run(
-                ['heroku', 'config', '--app', app["name"], '--json'],
+                ["heroku", "config", "--app", app["name"], "--json"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                check=True
-            ).stdout.decode('utf-8')
+                check=True,
+            ).stdout.decode("utf-8")
         )
 
         for _key, val in app_info.items():
@@ -98,9 +93,11 @@ def main():
                 if service_name in KNOWN_SERVICES:
                     protocol = "tcp"
 
-                _service_data.update(name=service_name,
-                                     port=service_host_data.group(4),
-                                     protocol=protocol)
+                _service_data.update(
+                    name=service_name,
+                    port=service_host_data.group(4),
+                    protocol=protocol,
+                )
 
                 _host_data = HOST_DATA.copy()
 
@@ -109,14 +106,11 @@ def main():
                 except socket.gaierror:
                     ipaddr = "0.0.0.0"
 
-                _host_data.update(
-                    ip=ipaddr,
-                    hostnames=[service_host_data.group(3)]
-                )
+                _host_data.update(ip=ipaddr, hostnames=[service_host_data.group(3)])
                 _host_data.update(services=[_service_data])
 
                 print(json.dumps(dict(hosts=[_host_data])))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

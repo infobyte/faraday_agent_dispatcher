@@ -40,9 +40,15 @@ flake8:
     image: python:3
     stage: .pre
     script:
-      - pip install .[dev]
+      - pip install flake8
       - flake8 .
 
+black:
+    image: python:3
+    stage: .pre
+    script:
+      - pip install black
+      - black --line-length=119 --check .
 
 .unit_tests_base:
     stage: testing
@@ -103,8 +109,12 @@ unit_test 3.8:
     image: python:3.8
 
 unit_test 3.9:
+  extends: .latest_unit_test_base
+  image: python:3.9
+
+.unit_test 3.10: # To reactivate in beta (May 3rd 2021)
     extends: .latest_unit_test_base
-    image: python:3.9-rc
+    image: python:3.10-rc
     allow_failure: true
 
 alpha_unit_test 3.7:
@@ -117,14 +127,18 @@ alpha_unit_test 3.8:
 
 alpha_unit_test 3.9:
     extends: .alpha_unit_test_base
-    image: python:3.9-rc
+    image: python:3.9
+
+.alpha_unit_test 3.10: # To reactivate in beta (May 3rd 2021)
+    extends: .alpha_unit_test_base
+    image: python:3.10-rc
 
 integration_faraday:
     stage: post_testing
     variables:
         DISPATCHER_REF: $CI_COMMIT_REF_NAME
     trigger:
-        project: faradaysec/integrationrepo
+        project: faradaysec/devops
         strategy: depend
     rules:
         - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'

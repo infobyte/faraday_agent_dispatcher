@@ -8,19 +8,14 @@ import faraday_agent_dispatcher.logger as logging
 
 logger = logging.get_logger()
 
-MANDATORY_METADATA_KEYS = [
-    "cmd",
-    "check_cmds",
-    "arguments",
-    "environment_variables"
-]
+MANDATORY_METADATA_KEYS = ["cmd", "check_cmds", "arguments", "environment_variables"]
 INFO_METADATA_KEYS = []
 
 
 # Path can be treated as str
 def executor_folder() -> Union[Path, str]:
 
-    folder = Path(__file__).parent.parent / 'static' / 'executors'
+    folder = Path(__file__).parent.parent / "static" / "executors"
     if "WIZARD_DEV" in os.environ:
         return folder / "dev"
     else:
@@ -41,16 +36,13 @@ def check_metadata(metadata) -> bool:
 
 
 def full_check_metadata(metadata) -> bool:
-    return all(k in metadata for k in INFO_METADATA_KEYS) and \
-        check_metadata(metadata)
+    return all(k in metadata for k in INFO_METADATA_KEYS) and check_metadata(metadata)
 
 
 async def check_commands(metadata: dict) -> bool:
     async def run_check_command(cmd: str) -> int:
         proc = await asyncio.create_subprocess_shell(
-            cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         while True:
             stdout, stderr = await proc.communicate()
