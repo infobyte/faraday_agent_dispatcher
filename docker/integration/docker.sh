@@ -11,7 +11,7 @@ function help {
     echo -e "\t|t-h, help\t print this help"
     echo ""
 
- 
+
 }
 
 if [[ $# -ne 1 ]]; then
