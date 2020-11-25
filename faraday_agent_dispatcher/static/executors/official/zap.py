@@ -12,16 +12,16 @@ def main():
     # are checked.
     # ['EXECUTOR_CONFIG_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
     try:
-        target = os.environ['EXECUTOR_CONFIG_TARGET_URL']
-        api_key = os.environ['EXECUTOR_CONFIG_API_KEY']
+        target = os.environ["EXECUTOR_CONFIG_TARGET_URL"]
+        api_key = os.environ["EXECUTOR_CONFIG_API_KEY"]
     except KeyError:
         print("environment variable not found", file=sys.stderr)
         sys.exit()
 
     # zap is required to be started
-    zap_run = subprocess.check_output('pgrep -f zap', shell=True)
+    zap_run = subprocess.check_output("pgrep -f zap", shell=True)
 
-    if len(zap_run.decode('utf-8').split('\n')) > 3:
+    if len(zap_run.decode("utf-8").split("\n")) > 3:
         # the apikey from ZAP->Tools->Options-API
         zap = ZAPv2(apikey=api_key)
         # it passes the url to scan and starts
@@ -40,5 +40,5 @@ def main():
         sys.exit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

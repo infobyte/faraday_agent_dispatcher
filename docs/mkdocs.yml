@@ -12,7 +12,7 @@ theme:
     favicon: images/favicon.png
     language: en
     features:
-        - tabs
+        - navigation.tabs
 nav:
     - Home: index.md
     - Getting started: getting-started.md
