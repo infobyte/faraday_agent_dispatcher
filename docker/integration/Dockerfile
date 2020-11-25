@@ -76,4 +76,4 @@ RUN wpscan --update
 
 # Setting default folder and bash for entrypoint
 WORKDIR /home/
-ENTRYPOINT [ "/bin/bash" ]
+# ENTRYPOINT [ "/bin/bash" , "-l", "-c"]
