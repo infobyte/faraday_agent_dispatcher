@@ -1,0 +1,38 @@
+- credentials: []
+  description: ''
+  hostnames:
+  - www.scanme.org
+  - scanme.nmap.org
+  ip: 45.33.32.156
+  mac: 00:00:00:00:00:00
+  os: unknown
+  services:
+  - credentials: []
+    description: ssh
+    name: ssh
+    port: 22
+    protocol: tcp
+    status: open
+    tags: []
+    version: ''
+    vulnerabilities: []
+  - credentials: []
+    description: http
+    name: http
+    port: 80
+    protocol: tcp
+    status: open
+    tags: []
+    version: ''
+    vulnerabilities: []
+  - credentials: []
+    description: nping-echo
+    name: nping-echo
+    port: 9929
+    protocol: tcp
+    status: open
+    tags: []
+    version: ''
+    vulnerabilities: []
+  tags: []
+  vulnerabilities: []
