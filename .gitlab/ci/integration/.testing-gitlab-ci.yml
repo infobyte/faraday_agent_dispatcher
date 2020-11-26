@@ -9,6 +9,11 @@ integration_executor_testing:
     - pip install .[test]
     - pip install pytest_regressions
     - cd tests/regression
-    - pytest .
+    - pytest . --capture=sys -v --color=yes --disable-warnings
   rules:
     - when: always
+  artifacts:
+    paths:
+      - tests/regression/test_executors/*
+    expire_in: 7 days
+    when: always
