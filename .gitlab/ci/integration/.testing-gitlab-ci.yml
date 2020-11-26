@@ -3,15 +3,10 @@ integration_executor_testing:
   stage: testing
   script:
     - apt-get update
-    - apt-get install openssl
     - pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
     - pip install .[test]
-    - openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -keyout tests/data/ok.key -out tests/data/ok.crt -subj "/CN=localhost"
-    - openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -keyout tests/data/other.key -out tests/data/wrong.crt -subj "/CN=localhost"
-    - mkdir run_from
-    - cd run_from && mkdir logs && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --cov-config=../tests/unittests/.coveragerc --color=yes --disable-warnings --junitxml=report.xml
     - export EXECUTOR_CONFIG_PORT_LIST=1-10000
     - export EXECUTOR_CONFIG_TARGET=www.scanme.org
     - python3 faraday_agent_dispatcher/static/executors/official/nmap.py
