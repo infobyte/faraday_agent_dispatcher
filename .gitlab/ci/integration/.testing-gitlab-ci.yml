@@ -7,8 +7,8 @@ integration_executor_testing:
     - virtualenv venv
     - source venv/bin/activate
     - pip install .[test]
-    - export EXECUTOR_CONFIG_PORT_LIST=1-10000
-    - export EXECUTOR_CONFIG_TARGET=www.scanme.org
-    - python3 faraday_agent_dispatcher/static/executors/official/nmap.py
+    - pip install pytest_regressions
+    - cd tests/regression
+    - pytest .
   rules:
     - when: always
