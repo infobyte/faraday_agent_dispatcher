@@ -1,6 +1,6 @@
 integration_executor_testing:
   image: registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:dispatcher-testing
-  stage: testing
+  stage: regression-test
   script:
     - apt-get update
     - pip install virtualenv
