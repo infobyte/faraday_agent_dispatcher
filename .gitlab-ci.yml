@@ -29,6 +29,8 @@ before_script:
 stages:
     - testing
     - post_testing
+    - regression-build
+    - regression-test
     - publish
     - deploy
 
