@@ -9,3 +9,4 @@ docker-integration-build:
     - shell
   rules:
     - when: manual
+      allow_failure: true

@@ -75,6 +75,6 @@ def test_executors(executor_data, data_regression):
     for response in responses_list:
         assert "hosts" in response, response
     responses_list = [sort_dict_multilevel(response["hosts"]) for response in responses_list]
-    if "regression" in executor_data and executor_data["regression"]:
+    if "regression" not in executor_data or executor_data["regression"]:
         data_regression.check(responses_list)
     assert len(responses_list) > 0
