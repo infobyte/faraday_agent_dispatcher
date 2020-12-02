@@ -42,6 +42,7 @@ executors_to_test = [
         "cmd": "bash",
         "script": "sublist3r.sh",
         "varenvs": {"EXECUTOR_CONFIG_DOMAIN": "google.com"},
+        "regression": False,  # Google probably change, but always sth should be found (scanme & other fails sometimes)
     },
 ]
 

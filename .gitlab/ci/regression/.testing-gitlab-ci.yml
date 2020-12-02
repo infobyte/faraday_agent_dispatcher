@@ -1,0 +1,42 @@
+.integration_executor_testing_base:
+  stage: regression-test
+  script:
+    - apt-get update
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install .[test]
+    - pip install pytest_regressions
+    - cd tests/regression
+    - pytest . --capture=sys -v --color=yes --disable-warnings
+  artifacts:
+    paths:
+      - tests/regression/test_executors/*
+    expire_in: 7 days
+    when: always
+
+integration_executor_testing_branch:
+  extends: .integration_executor_testing_base
+  variables:
+    IMAGE_TAG: "regression-testing-$CI_COMMIT_BRANCH"
+  image: registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG
+  rules:
+    - if: '$CI_COMMIT_REF_NAME !~ /^(dev|master)$/'
+      when: manual
+      allow_failure: true
+    - when: never
+  needs:
+    - job: docker-integration-build-branch
+
+integration_executor_testing_main:
+  extends: .integration_executor_testing_base
+  image: registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:base
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
+      when: manual
+      allow_failure: true
+    - if: '$FULL_CI'
+      when: on_success
+    - when: never
+  needs:
+    - job: docker-integration-build-main
