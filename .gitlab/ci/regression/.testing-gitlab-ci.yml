@@ -25,8 +25,6 @@ integration_executor_testing_branch:
       when: manual
       allow_failure: true
     - when: never
-  needs:
-    - job: docker-integration-build-branch
 
 integration_executor_testing_main:
   extends: .integration_executor_testing_base
@@ -38,5 +36,3 @@ integration_executor_testing_main:
     - if: '$FULL_CI'
       when: on_success
     - when: never
-  needs:
-    - job: docker-integration-build-main
