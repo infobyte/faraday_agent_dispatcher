@@ -1,0 +1,32 @@
+.docker-build-base:
+  stage: build
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - docker build -f docker/publish/Dockerfile --tag $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG .
+    - docker push $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG
+  tags:
+    - shell
+  rules:
+    - when: never
+
+docker-build-branch:
+  extends: .docker-build-base
+  variables:
+    IMAGE_TAG: "$CI_COMMIT_BRANCH"
+  rules:
+    - if: '$CI_COMMIT_REF_NAME !~ /^(dev|master)$/'
+      when: manual
+      allow_failure: true
+    - when: never
+
+docker-build-main:
+  extends: .docker-build-base
+  variables:
+    IMAGE_TAG: "faraday-agent-dispatcher"
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
+      when: manual
+      allow_failure: true
+    - if: '$FULL_CI'
+      when: on_success
+    - when: never
