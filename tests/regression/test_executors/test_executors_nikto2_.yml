@@ -1,0 +1,252 @@
+- - credentials: []
+    description: ''
+    hostnames:
+    - www.scanme.org
+    ip: 45.33.32.156
+    mac: null
+    os: unknown
+    services:
+    - credentials: []
+      description: ''
+      name: http
+      port: 80
+      protocol: tcp
+      status: open
+      tags: []
+      version: unknown
+      vulnerabilities:
+      - category: ''
+        confirmed: false
+        custom_fields: {}
+        data: ''
+        desc: ''
+        easeofresolution: null
+        external_id: null
+        impact: {}
+        method: GET
+        name: The anti-clickjacking X-Frame-Options header is not present.
+        params: ''
+        path: /
+        pname: ''
+        policyviolations: []
+        query: ''
+        refs: []
+        request: ''
+        resolution: ''
+        response: ''
+        severity: info
+        status: opened
+        status_code: null
+        tags: []
+        type: VulnerabilityWeb
+        website: http://www.scanme.org:80
+      - category: ''
+        confirmed: false
+        custom_fields: {}
+        data: ''
+        desc: ''
+        easeofresolution: null
+        external_id: null
+        impact: {}
+        method: GET
+        name: The X-XSS-Protection header is not defined. This header can hint to
+          the user agent to protect against some forms of XSS
+        params: ''
+        path: /
+        pname: ''
+        policyviolations: []
+        query: ''
+        refs: []
+        request: ''
+        resolution: ''
+        response: ''
+        severity: info
+        status: opened
+        status_code: null
+        tags: []
+        type: VulnerabilityWeb
+        website: http://www.scanme.org:80
+      - category: ''
+        confirmed: false
+        custom_fields: {}
+        data: ''
+        desc: ''
+        easeofresolution: null
+        external_id: null
+        impact: {}
+        method: GET
+        name: The X-Content-Type-Options header is not set. This could allow the user
+          agent to render the content of the site in a different fashion to the MIME
+          type
+        params: ''
+        path: /
+        pname: ''
+        policyviolations: []
+        query: ''
+        refs: []
+        request: ''
+        resolution: ''
+        response: ''
+        severity: info
+        status: opened
+        status_code: null
+        tags: []
+        type: VulnerabilityWeb
+        website: http://www.scanme.org:80
+      - category: ''
+        confirmed: false
+        custom_fields: {}
+        data: ''
+        desc: ''
+        easeofresolution: null
+        external_id: null
+        impact: {}
+        method: HEAD
+        name: Apache/2.4.7 appears to be outdated (current is at least Apache/2.4.37).
+          Apache 2.2.34 is the EOL for the 2.x branch.
+        params: ''
+        path: /
+        pname: ''
+        policyviolations: []
+        query: ''
+        refs: []
+        request: ''
+        resolution: ''
+        response: ''
+        severity: info
+        status: opened
+        status_code: null
+        tags: []
+        type: VulnerabilityWeb
+        website: http://www.scanme.org:80
+      - category: ''
+        confirmed: false
+        custom_fields: {}
+        data: ''
+        desc: ''
+        easeofresolution: null
+        external_id: null
+        impact: {}
+        method: GET
+        name: 'Uncommon header ''tcn'' found, with contents: list'
+        params: ''
+        path: /index
+        pname: ''
+        policyviolations: []
+        query: ''
+        refs: []
+        request: ''
+        resolution: ''
+        response: ''
+        severity: info
+        status: opened
+        status_code: null
+        tags: []
+        type: VulnerabilityWeb
+        website: http://www.scanme.org:80
+      - category: ''
+        confirmed: false
+        custom_fields: {}
+        data: ''
+        desc: ''
+        easeofresolution: null
+        external_id: null
+        impact: {}
+        method: GET
+        name: 'Apache mod_negotiation is enabled with MultiViews, which allows attackers
+          to easily brute force file names. See http://www.wisec.it/sectou.php?id=4698ebdc59d15.
+          The following alternatives for ''index'' were found: index.html'
+        params: ''
+        path: /index
+        pname: ''
+        policyviolations: []
+        query: ''
+        refs: []
+        request: ''
+        resolution: ''
+        response: ''
+        severity: info
+        status: opened
+        status_code: null
+        tags: []
+        type: VulnerabilityWeb
+        website: http://www.scanme.org:80
+      - category: ''
+        confirmed: false
+        custom_fields: {}
+        data: ''
+        desc: ''
+        easeofresolution: null
+        external_id: null
+        impact: {}
+        method: OPTIONS
+        name: 'Allowed HTTP Methods: GET, HEAD, POST, OPTIONS '
+        params: ''
+        path: /
+        pname: ''
+        policyviolations: []
+        query: ''
+        refs: []
+        request: ''
+        resolution: ''
+        response: ''
+        severity: info
+        status: opened
+        status_code: null
+        tags: []
+        type: VulnerabilityWeb
+        website: http://www.scanme.org:80
+      - category: ''
+        confirmed: false
+        custom_fields: {}
+        data: ''
+        desc: ''
+        easeofresolution: null
+        external_id: null
+        impact: {}
+        method: GET
+        name: '/images/: Directory indexing found.'
+        params: ''
+        path: /images/
+        pname: ''
+        policyviolations: []
+        query: ''
+        refs:
+        - 'OSVDB-ID: 3268'
+        request: ''
+        resolution: ''
+        response: ''
+        severity: info
+        status: opened
+        status_code: null
+        tags: []
+        type: VulnerabilityWeb
+        website: http://www.scanme.org:80
+      - category: ''
+        confirmed: false
+        custom_fields: {}
+        data: ''
+        desc: ''
+        easeofresolution: null
+        external_id: null
+        impact: {}
+        method: GET
+        name: '/icons/README: Apache default file found.'
+        params: ''
+        path: /icons/README
+        pname: ''
+        policyviolations: []
+        query: ''
+        refs:
+        - 'OSVDB-ID: 3233'
+        request: ''
+        resolution: ''
+        response: ''
+        severity: info
+        status: opened
+        status_code: null
+        tags: []
+        type: VulnerabilityWeb
+        website: http://www.scanme.org:80
+    tags: []
+    vulnerabilities: []

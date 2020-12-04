@@ -1,0 +1,17 @@
+.gitlab/
+CHANGELOG/
+docker/
+docs/
+tests/
+.flake8
+.gitignore
+.gitlab-ci.yml
+.pre-commit-config.yaml
+.pre-push-config.yaml
+AUTHORS.rst
+CONTRIBUTING.rst
+COPYING
+HISTORY.rst
+Makefile
+setup.cfg
+tox.ini
