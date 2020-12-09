@@ -7,14 +7,14 @@ from faraday_plugins.plugins.manager import PluginsManager
 
 
 def main():
-    # separate the target list with blanks
+    # separate the target list with comma
     NUCLEI_TARGET = os.getenv("EXECUTOR_CONFIG_NUCLEI_TARGET")
-    # separate the exclude list with blanks
+    # separate the exclude list with comma
     NUCLEI_EXCLUDE = os.getenv("EXECUTOR_CONFIG_NUCLEI_EXCLUDE")
     NUCLEI_TEMPLATES = os.getenv("NUCLEI_TEMPLATES")
 
-    lista_target = NUCLEI_TARGET.split(" ")
-    lista_exclude = NUCLEI_EXCLUDE.split(" ")
+    lista_target = NUCLEI_TARGET.split(",")
+    lista_exclude = NUCLEI_EXCLUDE.split(",")
     with tempfile.TemporaryDirectory() as tempdirname:
         name_urls = Path(tempdirname) / "urls.txt"
         name_output = Path(tempdirname) / "output.json"
