@@ -20,6 +20,7 @@ import ssl
 import json
 
 import asyncio
+from datetime import datetime
 from pathlib import Path
 from asyncio import Task
 from typing import List, Dict
@@ -380,6 +381,16 @@ class Dispatcher:
                 logger.info("Running {} executor".format(executor.name))
 
                 process = await self.create_process(executor, passed_params)
+                start_date = datetime.now()
+                command_json = {
+                    "tool": self.agent_name,
+                    "command": executor.name,
+                    "user": "",
+                    "hostname": "",
+                    "params": ", ".join([f"{key}={value}" for (key, value) in passed_params.items()]),
+                    "import_source": "agent",
+                    "start_date": str(start_date),
+                }
                 tasks = [
                     StdOutLineProcessor(
                         process,
@@ -388,6 +399,8 @@ class Dispatcher:
                         workspace_selected,
                         self.api_ssl_enabled,
                         self.api_kwargs,
+                        command_json,
+                        start_date,
                     ).process_f(),
                     StdErrLineProcessor(process).process_f(),
                 ]
