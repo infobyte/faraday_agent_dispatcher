@@ -44,6 +44,23 @@ executors_to_test = [
         "varenvs": {"EXECUTOR_CONFIG_DOMAIN": "google.com"},
         "regression": False,  # Google probably change, but always sth should be found (scanme & other fails sometimes)
     },
+    {
+        "name": "nuclei",
+        "script": "nuclei.py",
+        "varenvs": {
+            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
+            "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
+        },
+    },
+    {
+        "name": "nuclei_exclude",
+        "script": "nuclei.py",
+        "varenvs": {
+            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
+            "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
+            "NUCLEI_EXCLUDE": "files/",
+        },
+    },
 ]
 
 executors_path = Path(__file__).parent.parent.parent / "faraday_agent_dispatcher" / "static" / "executors" / "official"
