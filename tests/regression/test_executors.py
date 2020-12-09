@@ -51,6 +51,7 @@ executors_to_test = [
             "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
         },
+        "regression": False,
     },
     {
         "name": "nuclei_multi",
@@ -59,6 +60,7 @@ executors_to_test = [
             "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org,https://grafana.faradaysec.com",
         },
+        "regression": False,
     },
     {
         "name": "nuclei_exclude",
@@ -68,6 +70,7 @@ executors_to_test = [
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
             "NUCLEI_EXCLUDE": "files/",
         },
+        "regression": False,
     },
 ]
 
