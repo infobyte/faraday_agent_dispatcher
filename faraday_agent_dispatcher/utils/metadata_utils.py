@@ -47,9 +47,9 @@ async def check_commands(metadata: dict) -> bool:
         while True:
             stdout, stderr = await proc.communicate()
             if len(stdout) > 0:
-                logger.debug(f"Dependency check {cmd} prints: {stdout}")
+                logger.debug(f"Dependency check {cmd} prints: {stdout.decode()}")
             if len(stderr) > 0:
-                logger.error(f"Dependency check error of {cmd}: {stderr}")
+                logger.error(f"Dependency check {cmd} prints to error: {stderr.decode()}")
             if len(stdout) == 0 and len(stderr) == 0:
                 break
 
@@ -60,6 +60,7 @@ async def check_commands(metadata: dict) -> bool:
         if response != 0:
             return False
 
+    logger.info("Dependency check ended. Ready to go")
     return True
     # Async check if needed
     # check_coros = [run_check_command(cmd) for cmd in metadata["check_cmds"]]
