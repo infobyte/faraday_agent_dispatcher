@@ -53,6 +53,14 @@ executors_to_test = [
         },
     },
     {
+        "name": "nuclei_multi",
+        "script": "nuclei.py",
+        "varenvs": {
+            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
+            "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org,https://grafana.faradaysec.com",
+        },
+    },
+    {
         "name": "nuclei_exclude",
         "script": "nuclei.py",
         "varenvs": {
