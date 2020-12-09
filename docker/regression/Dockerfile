@@ -25,6 +25,8 @@ RUN apt-get update && \
         build-essential git \
         # Python
         python3.8 python3-pip python3-venv \
+        # Go
+        golang \
         # Installing Nikto
         nikto \
         # Installing Nmap
@@ -73,6 +75,11 @@ RUN gem install nokogiri
 RUN gem install wpscan
 # Updating wpscan
 RUN wpscan --update
+
+# Installing Nuclei
+RUN cd /usr/local/src && git clone https://github.com/projectdiscovery/nuclei.git
+RUN cd /usr/local/src/nuclei/v2/cmd/nuclei/ &&  go build && mv nuclei /usr/local/bin/ && nuclei -version
+RUN cd /usr/local/src/nuclei/v2/cmd/nuclei/ && git clone https://github.com/projectdiscovery/nuclei-templates.git
 
 # Setting default folder and bash for entrypoint
 WORKDIR /home/
