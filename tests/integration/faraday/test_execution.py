@@ -151,7 +151,36 @@ def test_execute_agent():
             },
         )
         assert res.status_code == 200, res.text
+
+        command_id = res.json()["command_id"]
+
+        # Command ID should be in progress!
+        res = session.get(
+            api_url(
+                HOST,
+                API_PORT,
+                postfix=f"/_api/v2/ws/{WORKSPACE}/commands/{command_id}/",
+            ),
+        )
+        assert res.status_code == 200, res.text
+        command_check_response = res.json()
+        assert command_check_response["import_source"] == "agent"
+        assert command_check_response["creator"] is None
+        assert command_check_response["duration"] == "In progress"
+
         time.sleep(2)  # If fails check time
+
+        # Command ID should not be in progress!
+        res = session.get(
+            api_url(
+                HOST,
+                API_PORT,
+                postfix=f"/_api/v2/ws/{WORKSPACE}/commands/{command_id}/",
+            ),
+        )
+        assert res.status_code == 200, res.text
+        command_check_response = res.json()
+        assert command_check_response["duration"] != "In progress"
 
         # Test results
         res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v2/ws/{WORKSPACE}/hosts"))
