@@ -65,7 +65,7 @@ def test_execute_agent():
         json={"email": USER, "password": PASS},
     )
     assert res.status_code == 200, res.text
-    session_res = session.get(api_url(HOST, API_PORT, postfix="/_api/session"))
+    # session_res = session.get(api_url(HOST, API_PORT, postfix="/_api/session"))
     res = session.post(api_url(HOST, API_PORT, postfix="/_api/v2/ws/"), json={"name": WORKSPACE})
     assert res.status_code == 201, res.text
     res = session.get(api_url(HOST, API_PORT, postfix="/_api/v2/agent_token/"))
@@ -145,7 +145,7 @@ def test_execute_agent():
                 postfix=f'/_api/v2/ws/{WORKSPACE}/agents/{agent["id"]}/run/',
             ),
             json={
-                "csrf_token": session_res.json()["csrf_token"],
+                # "csrf_token": session_res.json()["csrf_token"],
                 "executorData": {
                     "agent_id": agent_id,
                     "executor": EXECUTOR_NAME,
