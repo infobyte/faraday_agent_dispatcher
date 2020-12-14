@@ -45,6 +45,7 @@ agent_ok_status_keys_set = {
     "active",
     "status",
     "update_date",
+    "executors",
 }
 
 agent_ok_status_dict = {
@@ -126,7 +127,9 @@ def test_execute_agent():
         agent = res_data[0]
         agent_id = agent["id"]
         if agent_ok_status_keys_set != set(agent.keys()):
-            print("Keys set from agent endpoint differ from expected ones, " "checking if its a superset")
+            print("Keys set from agent endpoint differ from expected ones, checking if its a superset")
+            print(f"agent_ok_status_keys_set= {agent_ok_status_keys_set}")
+            print(f"agent.keys() = {agent.keys()}")
             assert agent_ok_status_keys_set.issubset(set(agent.keys()))
         for key in agent_ok_status_dict:
             assert agent[key] == agent_ok_status_dict[key], [
