@@ -1,10 +1,19 @@
 import os
+import re
 import sys
 import tempfile
 import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 from faraday_plugins.plugins.manager import PluginsManager
+
+
+def is_ip(url):
+    ip = re.findall(r"[0-9]+(?:\.[0-9]+){3}", url)
+    if not ip:
+        return False
+    else:
+        return True
 
 
 def main():
@@ -21,14 +30,18 @@ def main():
     with tempfile.TemporaryDirectory() as tempdirname:
         name_urls = Path(tempdirname) / "urls.txt"
         name_output = Path(tempdirname) / "output.json"
+
         if len(lista_target) > 1:
             with open(name_urls, "w") as f:
                 for url in lista_target:
-                    url_parse = urlparse(url)
-                    if not url_parse.scheme:
-                        f.write(f"http://{url}\n")
+                    if is_ip(url):
+                        print(f"Is {url} not valid.", file=sys.stderr)
                     else:
-                        f.write(f"{url}\n")
+                        url_parse = urlparse(url)
+                        if not url_parse.scheme:
+                            f.write(f"http://{url}\n")
+                        else:
+                            f.write(f"{url}\n")
             cmd = [
                 "nuclei",
                 "-l",
@@ -38,18 +51,22 @@ def main():
             ]
 
         else:
-            url_parse = urlparse(NUCLEI_TARGET)
-            if not url_parse.scheme:
-                url = f"http://{NUCLEI_TARGET}"
+            if is_ip(NUCLEI_TARGET):
+                print(f"Is {NUCLEI_TARGET} not valid.", file=sys.stderr)
+                sys.exit()
             else:
-                url = f"{NUCLEI_TARGET}"
-            cmd = [
-                "nuclei",
-                "-target",
-                url,
-                "-t",
-                NUCLEI_TEMPLATES,
-            ]
+                url_parse = urlparse(NUCLEI_TARGET)
+                if not url_parse.scheme:
+                    url = f"http://{NUCLEI_TARGET}"
+                else:
+                    url = f"{NUCLEI_TARGET}"
+                cmd = [
+                    "nuclei",
+                    "-target",
+                    url,
+                    "-t",
+                    NUCLEI_TEMPLATES,
+                ]
 
         if NUCLEI_EXCLUDE:
             if len(lista_exclude) > 1:
