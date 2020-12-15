@@ -1,7 +1,7 @@
 import os
-import re
 import sys
 import tempfile
+import ipaddress
 import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
@@ -9,11 +9,11 @@ from faraday_plugins.plugins.manager import PluginsManager
 
 
 def is_ip(url):
-    ip = re.findall(r"[0-9]+(?:\.[0-9]+){3}", url)
-    if not ip:
-        return False
-    else:
+    try:
+        ipaddress.ip_address(url)
         return True
+    except ValueError:
+        return False
 
 
 def main():
@@ -34,10 +34,10 @@ def main():
         if len(lista_target) > 1:
             with open(name_urls, "w") as f:
                 for url in lista_target:
-                    if is_ip(url):
+                    url_parse = urlparse(url)
+                    if is_ip(url_parse.netloc) or is_ip(url_parse.path):
                         print(f"Is {url} not valid.", file=sys.stderr)
                     else:
-                        url_parse = urlparse(url)
                         if not url_parse.scheme:
                             f.write(f"http://{url}\n")
                         else:
@@ -51,11 +51,11 @@ def main():
             ]
 
         else:
-            if is_ip(NUCLEI_TARGET):
+            url_parse = urlparse(NUCLEI_TARGET)
+            if is_ip(url_parse.hostname) or is_ip(url_parse.path):
                 print(f"Is {NUCLEI_TARGET} not valid.", file=sys.stderr)
                 sys.exit()
             else:
-                url_parse = urlparse(NUCLEI_TARGET)
                 if not url_parse.scheme:
                     url = f"http://{NUCLEI_TARGET}"
                 else:
