@@ -1,0 +1,21 @@
+{
+  "arguments": {
+    "SCAN_URL": true,
+    "PORT_LIST_ID": false,
+    "SCAN_ID": false
+  },
+  "environment_variables": [
+    "CONNECTION_TYPE",
+    "SOCKET_PATH",
+    "USER_GVM",
+    "PASSW_GVM",
+    "USER_SSH",
+    "PASSW_SSH",
+    "HOST",
+    "PORT"
+  ],
+  "check_cmds": [
+    "gvm-script -h"
+  ],
+  "cmd": "python3 {EXECUTOR_FILE_PATH}"
+}
