@@ -23,17 +23,15 @@ def main():
     NUCLEI_EXCLUDE = os.getenv("EXECUTOR_CONFIG_NUCLEI_EXCLUDE", None)
     NUCLEI_TEMPLATES = os.getenv("NUCLEI_TEMPLATES")
 
-    lista_target = NUCLEI_TARGET.split(",")
-    if NUCLEI_EXCLUDE is not None:
-        lista_exclude = NUCLEI_EXCLUDE.split(",")
+    target_list = NUCLEI_TARGET.split(",")
 
     with tempfile.TemporaryDirectory() as tempdirname:
         name_urls = Path(tempdirname) / "urls.txt"
         name_output = Path(tempdirname) / "output.json"
 
-        if len(lista_target) > 1:
+        if len(target_list) > 1:
             with open(name_urls, "w") as f:
-                for url in lista_target:
+                for url in target_list:
                     url_parse = urlparse(url)
                     if is_ip(url_parse.netloc) or is_ip(url_parse.path):
                         print(f"Is {url} not valid.", file=sys.stderr)
@@ -68,12 +66,11 @@ def main():
                     NUCLEI_TEMPLATES,
                 ]
 
-        if NUCLEI_EXCLUDE:
-            if len(lista_exclude) > 1:
-                for exclude in lista_exclude:
-                    cmd += ["-exclude", exclude]
-            else:
-                cmd += ["-exclude", NUCLEI_EXCLUDE]
+        if NUCLEI_EXCLUDE is not None:
+            exclude_list = NUCLEI_EXCLUDE.split(",")
+            for exclude in exclude_list:
+                cmd += ["-exclude", str(Path(NUCLEI_TEMPLATES) / exclude)]
+
         cmd += ["-json", "-o", name_output]
 
         nuclei_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
