@@ -6,7 +6,8 @@
     "OPTION_SV": false ,
     "OPTION_PN": false ,
     "SCRIPT_TIMEOUT": false ,
-    "HOST_TIMEOUT": false
+    "HOST_TIMEOUT": false ,
+    "TOP_PORTS": false
   },
   "environment_variables": [
 

@@ -32,7 +32,10 @@ def command_create(lista_target):
     #                f'{os.environ.get("EXECUTOR_CONFIG_HOST_TIMEOUT")}')
 
     port_list = my_envs.get("EXECUTOR_CONFIG_PORT_LIST")
-    cmd += "" if not port_list else [f"-p {port_list}"]
+    cmd += "" if not port_list else ["-p", f"{port_list}"]
+
+    top_ports = my_envs.get("EXECUTOR_CONFIG_TOP_PORTS")
+    cmd += "" if not top_ports else ["--top-ports", f"{top_ports}"]
 
     cmd += "" if not my_envs.get("EXECUTOR_CONFIG_OPTION_SC") else ["-sC"]
 
