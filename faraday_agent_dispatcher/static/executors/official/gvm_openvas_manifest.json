@@ -1,21 +1,25 @@
 {
   "arguments": {
-    "SCAN_URL": true,
+    "SCAN_TARGET": true,
     "PORT_LIST_ID": false,
     "SCAN_ID": false
   },
   "environment_variables": [
     "CONNECTION_TYPE",
-    "SOCKET_PATH",
-    "USER_GVM",
-    "PASSW_GVM",
-    "USER_SSH",
-    "PASSW_SSH",
+    "GVM_USER",
+    "GVM_PASSW",
     "HOST",
-    "PORT"
+    "PORT",
+    "SOCKET_PATH",
+    "SSH_USER",
+    "SSH_PASSW",
+    "TLS_CERTFILE_PATH",
+    "TLS_CAFILE_PATH",
+    "TLS_KEYFILE_PATH",
+    "TLS_PKEY_PASSW"
   ],
   "check_cmds": [
-    "gvm-script -h"
+    "python3 -m pip show python-gvm"
   ],
   "cmd": "python3 {EXECUTOR_FILE_PATH}"
 }
