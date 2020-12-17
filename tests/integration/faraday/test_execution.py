@@ -45,6 +45,7 @@ agent_ok_status_keys_set = {
     "active",
     "status",
     "update_date",
+    "executors",
 }
 
 agent_ok_status_dict = {
@@ -64,7 +65,7 @@ def test_execute_agent():
         json={"email": USER, "password": PASS},
     )
     assert res.status_code == 200, res.text
-    session_res = session.get(api_url(HOST, API_PORT, postfix="/_api/session"))
+    # session_res = session.get(api_url(HOST, API_PORT, postfix="/_api/session"))
     res = session.post(api_url(HOST, API_PORT, postfix="/_api/v2/ws/"), json={"name": WORKSPACE})
     assert res.status_code == 201, res.text
     res = session.get(api_url(HOST, API_PORT, postfix="/_api/v2/agent_token/"))
@@ -126,7 +127,9 @@ def test_execute_agent():
         agent = res_data[0]
         agent_id = agent["id"]
         if agent_ok_status_keys_set != set(agent.keys()):
-            print("Keys set from agent endpoint differ from expected ones, " "checking if its a superset")
+            print("Keys set from agent endpoint differ from expected ones, checking if its a superset")
+            print(f"agent_ok_status_keys_set= {agent_ok_status_keys_set}")
+            print(f"agent.keys() = {agent.keys()}")
             assert agent_ok_status_keys_set.issubset(set(agent.keys()))
         for key in agent_ok_status_dict:
             assert agent[key] == agent_ok_status_dict[key], [
@@ -142,7 +145,7 @@ def test_execute_agent():
                 postfix=f'/_api/v2/ws/{WORKSPACE}/agents/{agent["id"]}/run/',
             ),
             json={
-                "csrf_token": session_res.json()["csrf_token"],
+                # "csrf_token": session_res.json()["csrf_token"],
                 "executorData": {
                     "agent_id": agent_id,
                     "executor": EXECUTOR_NAME,
