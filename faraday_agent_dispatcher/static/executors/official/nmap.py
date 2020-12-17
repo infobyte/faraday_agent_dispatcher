@@ -1,5 +1,6 @@
 import os
 import subprocess
+from urllib.parse import urlparse
 
 """You need to clone and install faraday plugins"""
 from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
@@ -50,6 +51,7 @@ def command_create(lista_target):
     cmd += "" if not host_timeout else ["--host-timeout", host_timeout]
 
     cmd += cmd_end
+
     cmd += lista_target
     return cmd
 
@@ -64,7 +66,15 @@ def main():
     else:
         lista_target = [targets]
 
-    cmd = command_create(lista_target)
+    urls = []
+    for target in lista_target:
+        url = urlparse(target)
+        if url.scheme:
+            urls.append(url.hostname)
+        else:
+            urls.append(target)
+
+    cmd = command_create(lista_target=urls)
     results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     nmap = NmapPlugin()
     nmap.parseOutputString(results.stdout.encode())
