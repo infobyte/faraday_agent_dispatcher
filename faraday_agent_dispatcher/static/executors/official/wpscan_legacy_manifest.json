@@ -6,7 +6,8 @@
 
   ],
   "check_cmds": [
-    "wpscan --version"
+    "docker -v",
+    "docker images -q wpscanteam/wpscan"
   ],
   "cmd": "python3 {EXECUTOR_FILE_PATH}"
 }
