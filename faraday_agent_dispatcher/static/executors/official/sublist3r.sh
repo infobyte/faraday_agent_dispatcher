@@ -29,6 +29,6 @@ resolve_domains(){
     done
 }
 
-cat "${OUTPUT_FILE}" | resolve_domains | jq -Rc '{hosts: [{ip: (. | split(",") | .[0]), description: "Generado por sublist3r", hostnames: [(. | split(",") | .[1])]}]}'
+cat "${OUTPUT_FILE}" | resolve_domains | jq -Rc '{hosts: [{ip: (. | split(",") | .[0]), description: "Discovered using Sublist3r", hostnames: [(. | split(",") | .[1])]}]}'
 
 rm $OUTPUT_FILE
