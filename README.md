@@ -3,6 +3,7 @@ Faraday Agents Dispatcher helps user develop integrations with
 blogpost][blogpost] or continue reading. -->
 
 [faraday]: https://github.com/infobyte/faraday/
+[plugins]: https://github.com/infobyte/faraday_plugins
 [blogpost]: https://medium.com/faraday
 
 # Installation
@@ -100,7 +101,9 @@ The current official executors are:
 * [Nessus][nessus]
 * [Nikto][nikto]
 * [Nmap][nmap]
+* [Nuclei][nuclei]
 * [Openvas][openvas]
+* Report processor: Consumes a local report where the dispatcher is with the [faraday plugins][plugins]
 * [Sublist3r][sublist3r]
 * [W3af][w3af]
 * [Wpscan][wpscan]
@@ -129,6 +132,7 @@ development executors. The most important of them are:
 [nessus]: https://www.nessus.org
 [nikto]: https://cirt.net/Nikto2
 [nmap]: https://nmap.org
+[nuclei]: https://github.com/projectdiscovery/nuclei
 [sublist3r]: https://github.com/aboul3la/Sublist3r
 [w3af]: http://w3af.org/
 [wpscan]: https://wpscan.org/
