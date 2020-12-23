@@ -1,0 +1,32 @@
+.integration_executor_testing_base:
+  stage: integration-test
+  script:
+    - apt-get update
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install .[test]
+    - cd tests/plugins-docker
+    - pytest . --capture=sys -v --color=yes --disable-warnings
+
+integration_executor_testing_branch:
+  extends: .integration_executor_testing_base
+  variables:
+    IMAGE_TAG: "plugins-testing-$CI_COMMIT_BRANCH"
+  image: registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG
+  rules:
+    - if: '$CI_COMMIT_REF_NAME !~ /^(dev|master)$/'
+      when: manual
+      allow_failure: true
+    - when: never
+
+integration_executor_testing_main:
+  extends: .integration_executor_testing_base
+  image: registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:base
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
+      when: manual
+      allow_failure: true
+    - if: '$FULL_CI'
+      when: on_success
+    - when: never

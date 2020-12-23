@@ -14,6 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
+from datetime import datetime
 from json import JSONDecodeError
 
 from faraday_agent_dispatcher import logger as logging
@@ -28,7 +29,7 @@ logger = logging.get_logger()
 
 class FileLineProcessor:
     @staticmethod
-    async def _process_lines(line_getter, process_f, logger_f, name):
+    async def _process_lines(line_getter, process_f, logger_f, end_f, name):
         while True:
             try:
                 line = await line_getter()
@@ -39,6 +40,7 @@ class FileLineProcessor:
                     break
             except ValueError:
                 logger.error(f"ValueError raised processing {name}, try with bigger " "limiting size in config")
+        await end_f()
         print(f"{Bcolors.WARNING}{name} sent empty data, {Bcolors.ENDC}")
 
     def __init__(self, name):
@@ -53,8 +55,11 @@ class FileLineProcessor:
     async def next_line(self):
         raise NotImplementedError("Must be implemented")
 
+    async def end_f(self):
+        raise NotImplementedError("Must be implemented")
+
     async def process_f(self):
-        return await FileLineProcessor._process_lines(self.next_line, self.processing, self.log, self.name)
+        return await FileLineProcessor._process_lines(self.next_line, self.processing, self.log, self.end_f, self.name)
 
 
 class StdOutLineProcessor(FileLineProcessor):
@@ -66,6 +71,8 @@ class StdOutLineProcessor(FileLineProcessor):
         workspace: str,
         api_ssl_enabled,
         api_kwargs,
+        command_json: dict,
+        start_date: datetime,
     ):
         super().__init__("stdout")
         self.process = process
@@ -74,6 +81,8 @@ class StdOutLineProcessor(FileLineProcessor):
         self.api_kwargs = api_kwargs
         self.workspace = workspace
         self.api_ssl_enabled = api_ssl_enabled
+        self.command_json = command_json
+        self.start_date = start_date
 
     async def next_line(self):
         line = await self.process.stdout.readline()
@@ -96,6 +105,7 @@ class StdOutLineProcessor(FileLineProcessor):
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
             headers = [("authorization", f"agent {config.get('tokens', 'agent')}")]
             loaded_json["execution_id"] = self.execution_id
+            loaded_json["command"] = self.command_json
 
             res = await self.__session.post(
                 self.post_url(),
@@ -120,6 +130,27 @@ class StdOutLineProcessor(FileLineProcessor):
     def log(self, line):
         logger.debug(f"Output line: {line}")
 
+    async def end_f(self):
+        loaded_json = {"hosts": [], "execution_id": self.execution_id, "command": self.command_json}
+        headers = [("authorization", f"agent {config.get('tokens', 'agent')}")]
+        loaded_json["command"]["duration"] = (datetime.now() - self.start_date).total_seconds() * 1000000  # microsecs
+
+        res = await self.__session.post(
+            self.post_url(),
+            json=loaded_json,
+            headers=headers,
+            raise_for_status=False,
+            **self.api_kwargs,
+        )
+        if res.status == 201:
+            logger.info("Data sent to bulk create")
+        else:
+            logger.error(
+                "Invalid data supplied by the executor to the bulk create "
+                f"endpoint. Server responded: {res.status} "
+                f"{await res.text()}"
+            )
+
 
 class StdErrLineProcessor(FileLineProcessor):
     def __init__(self, process):
@@ -136,3 +167,6 @@ class StdErrLineProcessor(FileLineProcessor):
 
     def log(self, line):
         logger.debug(f"Error line: {line}")
+
+    async def end_f(self):
+        pass

@@ -1,3 +1,16 @@
+1.4.0 [Dec 23rd, 2020]:
+---
+ * A base_route can be added before the root of the server (e.g:
+https://my.company.com/faraday/ as / of faraday)
+ * Add duration to bulk_create to be set correctly
+ * The new official executors are:
+    * [nuclei](https://github.com/projectdiscovery/nuclei)
+    * reports: local report consumed by faraday-plugins
+ * Add new flags for nmap executor: `-sC`,`-sV`,`-Pn`,`--script-timeout`,`--host-timeout`,`--top-ports`
+ * Fix bug nmap and nessus executors to execute with the dispatcher environment
+ * Fix nmap executor when http(s) scheme passed as target
+ * [Faraday][faraday] versions: 3.14.0
+
 1.3.1 [Sep 7th, 2020]:
 ---
  * Add proxy setup by HTTP_PROXY or HTTPS_PROXY environment variables
@@ -28,7 +41,7 @@
  * Fix error attempting to create an executor with a comma in the name
  * Now the wizard ask if you want use the default SSL behavior
  * Started the process of [documentation][doc]
- * The new official executors are:
+ * The new official executors are:  
     * arachni
     * openvas
     * zap
@@ -44,7 +57,7 @@
  * Fix error when server close connection
  * Fix error when ssl certificate does not exists
  * Fix error when folder `~/.faraday` does not exists, creating it
- * The new official executors are:
+ * The new official executors are:  
     * nessus
     * nikto
     * nmap
