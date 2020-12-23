@@ -29,6 +29,9 @@ before_script:
 stages:
     - testing
     - post_testing
+    - integration-build
+    - integration-test
+    - build
     - publish
     - deploy
 
@@ -174,3 +177,6 @@ publish_pypi:
 
 include:
   - local: docs/.gitlab-ci.yml
+  - local: .gitlab/ci/plugins-integration/.build-gitlab-ci.yml
+  - local: .gitlab/ci/plugins-integration/.testing-gitlab-ci.yml
+  - local: .gitlab/ci/build_ci/.build-gitlab-ci.yml
