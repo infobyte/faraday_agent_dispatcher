@@ -169,28 +169,6 @@ def generate_inputs():
             "after_workspaces": {"aworkspace"},
         },
         {
-            "id_str": "Basic Name with Comma Executors input",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
-            ),
-            "executors_input": [
-                ExecutorInput(
-                    name="ex1",
-                    error_name="ex,1",
-                    cmd="cmd 1",
-                    params=[
-                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
-                    ],
-                    adm_type=ADMType.ADD,
-                ),
-            ],
-            "exit_code": 0,
-            "after_executors": {"ex1"},
-            "after_workspaces": {"aworkspace"},
-        },
-        {
             "id_str": "Basic Mod Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
@@ -240,67 +218,6 @@ def generate_inputs():
                 ),
                 ExecutorInput(
                     name="ex3",
-                    new_name="eX3",
-                    cmd="",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
-                    adm_type=ADMType.MODIFY,
-                ),
-            ],
-            "exit_code": 0,
-            "after_executors": {"ex1", "ex2", "eX3"},
-            "after_workspaces": {"aworkspace"},
-        },
-        {
-            "id_str": "Basic Mod Name with comma Executors input",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
-            ),
-            "executors_input": [
-                ExecutorInput(
-                    name="ex1",
-                    cmd="cmd 1",
-                    params=[
-                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
-                    ],
-                    adm_type=ADMType.ADD,
-                ),
-                ExecutorInput(
-                    name="ex2",
-                    cmd="cmd 2",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
-                    adm_type=ADMType.ADD,
-                ),
-                ExecutorInput(
-                    name="ex3",
-                    cmd="cmd 3",
-                    params=[
-                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
-                    ],
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
-                    adm_type=ADMType.ADD,
-                ),
-                ExecutorInput(
-                    name="ex1",
-                    error_name="QWE",
-                    cmd="exit 1",
-                    params=[
-                        ParamInput(name="mod_param1", value=True, adm_type=ADMType.ADD),
-                        ParamInput(name="add_param1", value=False, adm_type=ADMType.MODIFY),
-                    ],
-                    adm_type=ADMType.MODIFY,
-                ),
-                ExecutorInput(
-                    name="ex2",
-                    cmd="",
-                    varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
-                    adm_type=ADMType.MODIFY,
-                ),
-                ExecutorInput(
-                    name="ex3",
-                    new_error_name="eX,3",
                     new_name="eX3",
                     cmd="",
                     varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
@@ -474,7 +391,7 @@ def generate_inputs():
             "after_workspaces": {"aworkspace", "second"},
         },
         {
-            "id_str": "Basic Name with Comma Executors input",
+            "id_str": "Basic Name with comma Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
                 workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
@@ -493,6 +410,67 @@ def generate_inputs():
             ],
             "exit_code": 0,
             "after_executors": {"ex1"},
+            "after_workspaces": {"aworkspace"},
+        },
+        {
+            "id_str": "Basic Mod Name with comma Executors input",
+            "dispatcher_input": DispatcherInput(
+                ssl="false",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "executors_input": [
+                ExecutorInput(
+                    name="ex1",
+                    cmd="cmd 1",
+                    params=[
+                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
+                    ],
+                    adm_type=ADMType.ADD,
+                ),
+                ExecutorInput(
+                    name="ex2",
+                    cmd="cmd 2",
+                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    adm_type=ADMType.ADD,
+                ),
+                ExecutorInput(
+                    name="ex3",
+                    cmd="cmd 3",
+                    params=[
+                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
+                    ],
+                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    adm_type=ADMType.ADD,
+                ),
+                ExecutorInput(
+                    name="ex1",
+                    error_name="QWE",
+                    cmd="exit 1",
+                    params=[
+                        ParamInput(name="mod_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param1", value=False, adm_type=ADMType.MODIFY),
+                    ],
+                    adm_type=ADMType.MODIFY,
+                ),
+                ExecutorInput(
+                    name="ex2",
+                    cmd="",
+                    varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    adm_type=ADMType.MODIFY,
+                ),
+                ExecutorInput(
+                    name="ex3",
+                    new_error_name="eX,3",
+                    new_name="eX3",
+                    cmd="",
+                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
+                    adm_type=ADMType.MODIFY,
+                ),
+            ],
+            "exit_code": 0,
+            "after_executors": {"ex1", "ex2", "eX3"},
             "after_workspaces": {"aworkspace"},
         },
         {
@@ -518,6 +496,67 @@ def generate_inputs():
             "after_workspaces": {"aworkspace"},
         },
         {
+            "id_str": "Basic Mod Name with backslash Executors input",
+            "dispatcher_input": DispatcherInput(
+                ssl="false",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "executors_input": [
+                ExecutorInput(
+                    name="ex1",
+                    cmd="cmd 1",
+                    params=[
+                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
+                    ],
+                    adm_type=ADMType.ADD,
+                ),
+                ExecutorInput(
+                    name="ex2",
+                    cmd="cmd 2",
+                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    adm_type=ADMType.ADD,
+                ),
+                ExecutorInput(
+                    name="ex3",
+                    cmd="cmd 3",
+                    params=[
+                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
+                    ],
+                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    adm_type=ADMType.ADD,
+                ),
+                ExecutorInput(
+                    name="ex1",
+                    error_name="QWE",
+                    cmd="exit 1",
+                    params=[
+                        ParamInput(name="mod_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param1", value=False, adm_type=ADMType.MODIFY),
+                    ],
+                    adm_type=ADMType.MODIFY,
+                ),
+                ExecutorInput(
+                    name="ex2",
+                    cmd="",
+                    varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    adm_type=ADMType.MODIFY,
+                ),
+                ExecutorInput(
+                    name="ex3",
+                    new_error_name="eX\\3",
+                    new_name="eX3",
+                    cmd="",
+                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
+                    adm_type=ADMType.MODIFY,
+                ),
+            ],
+            "exit_code": 0,
+            "after_executors": {"ex1", "ex2", "eX3"},
+            "after_workspaces": {"aworkspace"},
+        },
+        {
             "id_str": "Basic Name with slash Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
@@ -537,6 +576,67 @@ def generate_inputs():
             ],
             "exit_code": 0,
             "after_executors": {"ex1"},
+            "after_workspaces": {"aworkspace"},
+        },
+        {
+            "id_str": "Basic Mod Name with slash Executors input",
+            "dispatcher_input": DispatcherInput(
+                ssl="false",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "executors_input": [
+                ExecutorInput(
+                    name="ex1",
+                    cmd="cmd 1",
+                    params=[
+                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
+                    ],
+                    adm_type=ADMType.ADD,
+                ),
+                ExecutorInput(
+                    name="ex2",
+                    cmd="cmd 2",
+                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    adm_type=ADMType.ADD,
+                ),
+                ExecutorInput(
+                    name="ex3",
+                    cmd="cmd 3",
+                    params=[
+                        ParamInput(name="add_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param2", value=False, adm_type=ADMType.ADD),
+                    ],
+                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    adm_type=ADMType.ADD,
+                ),
+                ExecutorInput(
+                    name="ex1",
+                    error_name="QWE",
+                    cmd="exit 1",
+                    params=[
+                        ParamInput(name="mod_param1", value=True, adm_type=ADMType.ADD),
+                        ParamInput(name="add_param1", value=False, adm_type=ADMType.MODIFY),
+                    ],
+                    adm_type=ADMType.MODIFY,
+                ),
+                ExecutorInput(
+                    name="ex2",
+                    cmd="",
+                    varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    adm_type=ADMType.MODIFY,
+                ),
+                ExecutorInput(
+                    name="ex3",
+                    new_error_name="eX/3",
+                    new_name="eX3",
+                    cmd="",
+                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
+                    adm_type=ADMType.MODIFY,
+                ),
+            ],
+            "exit_code": 0,
+            "after_executors": {"ex1", "ex2", "eX3"},
             "after_workspaces": {"aworkspace"},
         },
     ]
