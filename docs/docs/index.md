@@ -15,9 +15,12 @@ tools are a critical part of our product. However, we’ve realized that our
 
 To solve this problem, we have the **Faraday Agents**! You can use the [getting
 started guide](getting-started.md) to use one of our official executors, or code
- and use one custom executor. Otherwise, you can check our
- [architecture](technical/arch.md) or [technical](technical/agents.md) section,
- to understand how the agents works.
+ and use one custom executor. Otherwise, you can [use our docker
+image](misc/docker.md) with <s>all</s> **some** tools already built and ready to
+ go!
+
+You can also check our [architecture](technical/arch.md) or
+ [technical](technical/agents.md) section, to understand how the agents works.
 
 [faraday]: https://github.com/infobyte/faraday
 [plugins]: https://github.com/infobyte/faraday_plugins
