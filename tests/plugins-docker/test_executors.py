@@ -40,7 +40,7 @@ executors_to_test = [
         "name": "sublist3r",
         "cmd": "bash",
         "script": "sublist3r.sh",
-        "varenvs": {"EXECUTOR_CONFIG_DOMAIN": "google.com"},
+        "varenvs": {"EXECUTOR_CONFIG_DOMAIN": "hack.me"},
     },
     {
         "name": "nuclei",
