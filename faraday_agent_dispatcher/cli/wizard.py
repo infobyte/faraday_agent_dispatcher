@@ -46,6 +46,7 @@ class Wizard:
         Sections.EXECUTOR_PARAMS,
         Sections.EXECUTOR_VARENVS,
     ]
+    SPECIAL_CHARACTER = [",", "/", "\\"]
 
     def __init__(self, config_filepath: Path):
         self.config_filepath = config_filepath
@@ -129,9 +130,10 @@ class Wizard:
         if name in self.executors_list and name != default:
             print(f"{Bcolors.WARNING}The executor {name} already exists" f"{Bcolors.ENDC}")
             return
-        if "," in name:
-            print(f"{Bcolors.WARNING}" f"The executor cannot contain ',' in its name" f"{Bcolors.ENDC}")
-            return
+        for character in Wizard.SPECIAL_CHARACTER:
+            if character in name:
+                print(f"{Bcolors.WARNING}" f"The executor cannot contain {character} in its name" f"{Bcolors.ENDC}")
+                return
         return name
 
     async def new_executor(self):
