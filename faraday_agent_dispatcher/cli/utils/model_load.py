@@ -1,5 +1,6 @@
 import click
 from pathlib import Path
+from urllib.parse import urlparse
 
 from faraday_agent_dispatcher import config
 from faraday_agent_dispatcher.cli.utils.general_inputs import (
@@ -14,10 +15,22 @@ from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 
 def ask_value(agent_dict, opt, section, ssl, control_opt=None):
+    check_ssl = None
     def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
     value = None
     while value is None:
         value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
+        if opt == "host":
+            url_host = urlparse(value)
+            if url_host.netloc:
+                value = url_host.netloc
+            else:
+                value = url_host.path
+            if url_host.scheme == "http":
+                check_ssl = False
+            elif url_host.scheme == "https":
+                check_ssl = True
+
         if value == "":
             print(f"{Bcolors.WARNING}Trying to save with empty value" f"{Bcolors.ENDC}")
         try:
@@ -28,7 +41,7 @@ def ask_value(agent_dict, opt, section, ssl, control_opt=None):
         except ValueError as e:
             print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
             value = None
-    return value
+    return value, check_ssl
 
 
 def process_agent():
@@ -91,14 +104,14 @@ def process_agent():
             elif section == Sections.SERVER and opt.__contains__("port"):
                 if opt == "ssl_port":
                     if ssl:
-                        value = ask_value(agent_dict, opt, section, ssl, "api_port")
+                        value, _ = ask_value(agent_dict, opt, section, ssl, "api_port")
                         config.instance.set(section, "api_port", str(value))
                         config.instance.set(section, "websocket_port", str(value))
                     else:
                         continue
                 else:
                     if not ssl:
-                        value = ask_value(agent_dict, opt, section, ssl)
+                        value, _ = ask_value(agent_dict, opt, section, ssl)
                         config.instance.set(section, opt, str(value))
                     else:
                         continue
@@ -110,16 +123,26 @@ def process_agent():
                     else:
                         path = None
                         while path is None:
-                            value = ask_value(agent_dict, opt, section, ssl)
+                            value, _ = ask_value(agent_dict, opt, section, ssl)
                             if value != "" and Path(value).exists():
                                 path = value
                     config.instance.set(section, opt, str(path))
             elif opt == "workspaces":
                 process_workspaces()
             else:
-                value = ask_value(agent_dict, opt, section, ssl)
-                if opt == "ssl":
-                    ssl = str(value).lower() == "true"
+                if opt == "host":
+                    value, url_ssl = ask_value(agent_dict, opt, section, ssl)
+
+                elif opt == "ssl":
+                    if url_ssl is None:
+                        value, _ = ask_value(agent_dict, opt, section, ssl)
+                        ssl = str(value).lower() == "true"
+                    else:
+                        ssl = str(url_ssl).lower() == "true"
+                        value = ssl
+                else:
+                    value, _ = ask_value(agent_dict, opt, section, ssl)
+
                 config.instance.set(section, opt, str(value))
 
 
