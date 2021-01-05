@@ -22,7 +22,6 @@ executors_to_test = [
         "name": "arachni",
         "script": "arachni.py",
         "varenvs": {"ARACHNI_PATH": "/usr/local/src/arachni/bin", "EXECUTOR_CONFIG_NAME_URL": "www.scanme.org"},
-        "regression": False,  # Arachni contains DATE data and IDS that make impossible (for now) regression testing
     },
     {"name": "nikto2", "script": "nikto2.py", "varenvs": {"EXECUTOR_CONFIG_TARGET_URL": "http://www.scanme.org"}},
     {"name": "nmap", "script": "nmap.py", "varenvs": {"EXECUTOR_CONFIG_TARGET": "www.scanme.org"}},
@@ -41,8 +40,7 @@ executors_to_test = [
         "name": "sublist3r",
         "cmd": "bash",
         "script": "sublist3r.sh",
-        "varenvs": {"EXECUTOR_CONFIG_DOMAIN": "google.com"},
-        "regression": False,  # Google probably change, but always sth should be found (scanme & other fails sometimes)
+        "varenvs": {"EXECUTOR_CONFIG_DOMAIN": "hack.me"},
     },
     {
         "name": "nuclei",
@@ -51,7 +49,6 @@ executors_to_test = [
             "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
         },
-        "regression": False,
     },
     {
         "name": "nuclei_multi",
@@ -60,7 +57,6 @@ executors_to_test = [
             "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org,https://grafana.faradaysec.com",
         },
-        "regression": False,
     },
     {
         "name": "nuclei_exclude",
@@ -70,7 +66,6 @@ executors_to_test = [
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
             "NUCLEI_EXCLUDE": "files/",
         },
-        "regression": False,
     },
 ]
 
@@ -91,7 +86,7 @@ def sort_dict_multilevel(value):
 
 
 @pytest.mark.parametrize("executor_data", executors_to_test, ids=lambda i: i["name"])
-def test_executors(executor_data, data_regression):
+def test_executors(executor_data):
     script = executor_data["script"]
     env = os.environ.copy()
     for key in executor_data["varenvs"]:
@@ -104,6 +99,4 @@ def test_executors(executor_data, data_regression):
     for response in responses_list:
         assert "hosts" in response, response
     responses_list = [sort_dict_multilevel(response["hosts"]) for response in responses_list]
-    if "regression" not in executor_data or executor_data["regression"]:
-        data_regression.check(responses_list)
     assert len(responses_list) > 0

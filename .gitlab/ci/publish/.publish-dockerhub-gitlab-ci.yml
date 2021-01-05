@@ -1,0 +1,19 @@
+docker-publish:
+  stage: publish
+  variables:
+    REGISTRY_IMAGE: index.docker.io/faradaysec/faraday_agent_dispatcher
+  script:
+    - export VERSION=$('egrep -o "[0-9]\.([0-9]|[0-9][0-9])(\.[0-9])?" faraday_agent_dispatcher/__init__.py')
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - docker pull $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:latest
+    - docker login -u $DOCKER_USER -p $DOCKER_PASS docker.io
+    - docker image tag registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:latest $REGISTRY_IMAGE:latest
+    - docker push $REGISTRY_IMAGE:latest
+    - docker image tag $REGISTRY_IMAGE:latest $REGISTRY_IMAGE:$VERSION
+    - docker push $REGISTRY_IMAGE:$VERSION
+  tags:
+    - shell
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
+    - when: never
