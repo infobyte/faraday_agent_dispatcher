@@ -1,7 +1,7 @@
 .docker-integration-build-base:
-  stage: regression-build
+  stage: integration-build
   script:
-    - cd docker/regression
+    - cd docker/plugins-docker
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker build --tag $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG .
     - docker push $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG
@@ -13,7 +13,7 @@
 docker-integration-build-branch:
   extends: .docker-integration-build-base
   variables:
-    IMAGE_TAG: "regression-testing-$CI_COMMIT_BRANCH"
+    IMAGE_TAG: "plugins-testing-$CI_COMMIT_BRANCH"
   rules:
     - if: '$CI_COMMIT_REF_NAME !~ /^(dev|master)$/'
       when: manual
@@ -29,5 +29,14 @@ docker-integration-build-main:
       when: manual
       allow_failure: true
     - if: '$FULL_CI'
+      when: on_success
+    - when: never
+
+docker-integration-build-tag:
+  extends: .docker-integration-build-base
+  variables:
+    IMAGE_TAG: "base-tag"
+  rules:
+    - if: '$CI_COMMIT_TAG'
       when: on_success
     - when: never
