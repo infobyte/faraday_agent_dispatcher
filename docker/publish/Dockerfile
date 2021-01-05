@@ -1,4 +1,6 @@
-FROM registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:regression-testing-tkt_101_docker_image
+ARG TAG=faraday-agent-dispatcher
+FROM registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:$TAG
+
 
 WORKDIR /usr/local/src/faraday_agent_dispatcher
 COPY ./faraday_agent_dispatcher/ /usr/local/src/faraday_agent_dispatcher/faraday_agent_dispatcher

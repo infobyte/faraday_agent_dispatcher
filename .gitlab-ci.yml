@@ -29,8 +29,8 @@ before_script:
 stages:
     - testing
     - post_testing
-    - regression-build
-    - regression-test
+    - integration-build
+    - integration-test
     - build
     - publish
     - deploy
@@ -177,6 +177,7 @@ publish_pypi:
 
 include:
   - local: docs/.gitlab-ci.yml
-  - local: .gitlab/ci/regression/.build-gitlab-ci.yml
-  - local: .gitlab/ci/regression/.testing-gitlab-ci.yml
+  - local: .gitlab/ci/plugins-integration/.build-gitlab-ci.yml
+  - local: .gitlab/ci/plugins-integration/.testing-gitlab-ci.yml
   - local: .gitlab/ci/build_ci/.build-gitlab-ci.yml
+  - local: .gitlab/ci/publish/.publish-dockerhub-gitlab-ci.yml

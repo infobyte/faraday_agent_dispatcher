@@ -188,7 +188,7 @@ def test_execute_agent():
         # Test results
         res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v2/ws/{WORKSPACE}/hosts"))
         host_dict = res.json()
-        assert host_dict["total_rows"] == 1, (res.text, host_dict)
+        assert host_dict["count"] == 1, (res.text, host_dict)
         host = host_dict["rows"][0]["value"]
         for key in host_data:
             if key == "hostnames":
