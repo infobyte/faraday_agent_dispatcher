@@ -19,6 +19,8 @@ nav:
     - Technical:
           - Architecture: technical/arch.md
           - Agents: technical/agents.md
+    - Misc:
+          - Docker: misc/docker.md
 markdown_extensions:
     - admonition
     - pymdownx.details
