@@ -16,7 +16,6 @@ from enum import Enum
 #   * Main input:
 #     * Executor name
 #     * Executor command
-#     * Max size
 #   * VARENVS AMD (?)
 #   * Params AMD (?)
 
@@ -68,7 +67,6 @@ class ExecutorInput:
         name=None,
         error_name=None,
         cmd=None,
-        max_size=None,
         varenvs: List[VarEnvInput] = None,
         params: List[ParamInput] = None,
         new_name: str = "",
@@ -78,7 +76,6 @@ class ExecutorInput:
         self.name = name or ""
         self.error_name = error_name
         self.cmd = cmd or ""
-        self.max_size = max_size or ""
         self.varenvs = varenvs or {}
         self.params = params or {}
         self.adm_type = adm_type
@@ -104,7 +101,7 @@ class ExecutorInput:
             if self.new_error_name:
                 cli_input = f"{cli_input}{self.new_error_name}\n"
             cli_input = f"{cli_input}{self.new_name or self.name}\n"
-        cli_input = f"{cli_input}" f"{self.cmd}\n" f"{self.max_size}\n"
+        cli_input = f"{cli_input}" f"{self.cmd}\n"
         for varenv_input in self.varenvs:
             cli_input = f"{cli_input}{varenv_input.input_str()}"
         cli_input = f"{cli_input}Q\n"
@@ -129,7 +126,6 @@ class RepoExecutorInput:
         base=None,
         name=None,
         error_name=None,
-        max_size=None,
         varenvs: List[RepoVarEnvInput] = None,
         new_name: str = "",
         adm_type: ADMType = None,
@@ -137,7 +133,6 @@ class RepoExecutorInput:
         self.name = name or ""
         self.error_name = error_name
         self.base = base or ""
-        self.max_size = max_size or ""
         self.varenvs = varenvs or {}
         self.adm_type = adm_type
         self.new_name = new_name
@@ -159,7 +154,7 @@ class RepoExecutorInput:
 
         if self.adm_type == ADMType.MODIFY:
             cli_input = f"{cli_input}{self.new_name or self.name}\n"
-        cli_input = f"{cli_input}" f"{self.max_size}\n"
+        cli_input = f"{cli_input}\n"
         for varenv_input in self.varenvs:
             cli_input = f"{cli_input}{varenv_input.input_str()}"
         cli_input = f"{cli_input}Q\n"
