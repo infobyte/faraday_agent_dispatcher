@@ -227,13 +227,23 @@ class Wizard:
         section = Sections.EXECUTOR_DATA.format(name)
         repo_name = config.instance[section].get("repo_executor", None)
         if repo_name:
-            config.instance.set(section, "max_size", f"{Wizard.MAX_BUFF_SIZE}")
+            max_buff_size = click.prompt(
+                "Max data sent to server",
+                type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
+                default=config.instance.get(section, "max_size"),
+            )
+            config.instance.set(section, "max_size", f"{max_buff_size}")
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(name, metadata)
         else:
             cmd = click.prompt("Command to execute", default=config.instance.get(section, "cmd"))
+            max_buff_size = click.prompt(
+                "Max data sent to server",
+                type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
+                default=config.instance.get(section, "max_size"),
+            )
             config.instance.set(section, "cmd", cmd)
-            config.instance.set(section, "max_size", f"{Wizard.MAX_BUFF_SIZE}")
+            config.instance.set(section, "max_size", f"{max_buff_size}")
             process_var_envs(name)
             process_params(name)
         print(f"{Bcolors.OKGREEN}Update repository executor finish" f"{Bcolors.ENDC}")
