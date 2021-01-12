@@ -130,6 +130,7 @@ class RepoExecutorInput:
         name=None,
         error_name=None,
         max_size=None,
+        force_quit=False,
         varenvs: List[RepoVarEnvInput] = None,
         new_name: str = "",
         adm_type: ADMType = None,
@@ -138,6 +139,7 @@ class RepoExecutorInput:
         self.error_name = error_name
         self.base = base or ""
         self.max_size = max_size or ""
+        self.force_quit = force_quit
         self.varenvs = varenvs or {}
         self.adm_type = adm_type
         self.new_name = new_name
@@ -154,14 +156,19 @@ class RepoExecutorInput:
 
         cli_input = f"{cli_input}" f"{self.name}\n"
 
-        if self.adm_type == ADMType.ADD:
-            cli_input = f"{cli_input}N\n{self.base}\n"
+        if self.force_quit:
+            if self.adm_type == ADMType.ADD:
+                cli_input = f"{cli_input}N\nQ\n"
+        else:
+            if self.adm_type == ADMType.ADD:
+                cli_input = f"{cli_input}N\n{self.base}\n"
 
-        if self.adm_type == ADMType.MODIFY:
-            cli_input = f"{cli_input}{self.new_name or self.name}\n"
-        cli_input = f"{cli_input}" f"{self.max_size}\n"
-        for varenv_input in self.varenvs:
-            cli_input = f"{cli_input}{varenv_input.input_str()}"
+            if self.adm_type == ADMType.MODIFY:
+                cli_input = f"{cli_input}{self.new_name or self.name}\n"
+            cli_input = f"{cli_input}" f"{self.max_size}\n"
+            for varenv_input in self.varenvs:
+                cli_input = f"{cli_input}{varenv_input.input_str()}"
+
         cli_input = f"{cli_input}Q\n"
         cli_input = f"{cli_input}Q\n"
         return cli_input
