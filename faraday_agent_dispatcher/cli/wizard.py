@@ -182,6 +182,7 @@ class Wizard:
             set_repo_params(name, metadata)
             print(f"{Bcolors.OKGREEN}New repository executor added" f"{Bcolors.ENDC}")
         except WizardCanceledOption:
+            self.executors_list.pop()
             print(f"{Bcolors.BOLD}New repository executor not added" f"{Bcolors.ENDC}")
 
     @staticmethod
