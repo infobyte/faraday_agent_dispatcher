@@ -89,7 +89,13 @@ class Wizard:
                         config.control_config()
                         end = True
                     else:
-                        print(f"{Bcolors.FAIL}Add agent configuration" f"{Bcolors.ENDC}")
+                        if confirm_prompt(
+                            f"{Bcolors.WARNING}File configuration not save. Are you sure?" f"{Bcolors.ENDC}"
+                        ):
+                            print(f"{Bcolors.WARNING}File configuration not created" f"{Bcolors.ENDC}")
+                            end = True
+                        else:
+                            end = False
 
                 except ValueError as e:
                     print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
