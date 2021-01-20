@@ -14,22 +14,43 @@ from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 
+def url_setting(url):
+    url_info = {
+        "url_name": None,
+        "url_path": None,
+        "check_ssl": False,
+    }
+    url_host = urlparse(url)
+    if url_host.netloc:
+        url_info["url_name"] = url_host.netloc
+    else:
+        url = f"http://{url}"
+        url_host = urlparse(url)
+        if url_host.netloc:
+            url_info["url_name"] = url_host.netloc
+
+    if url_info["url_name"] is not None:
+        url_info["url_path"] = url_host.path[1:]
+        match_port = url_info["url_name"].find(":")
+        if match_port >= 0:
+            url_info["url_name"] = url_info["url_name"][:match_port]
+        if url_host.scheme == "http":
+            url_info["check_ssl"] = False
+        elif url_host.scheme == "https":
+            url_info["check_ssl"] = True
+
+    return url_info
+
+
 def ask_value(agent_dict, opt, section, ssl, control_opt=None):
-    check_ssl = None
+    info_url = {}
     def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
     value = None
     while value is None:
         value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
         if opt == "host":
-            url_host = urlparse(value)
-            if url_host.netloc:
-                value = url_host.netloc
-            else:
-                value = url_host.path
-            if url_host.scheme == "http":
-                check_ssl = False
-            elif url_host.scheme == "https":
-                check_ssl = True
+            info_url = url_setting(value)
+            value = info_url["url_name"]
 
         if value == "":
             print(f"{Bcolors.WARNING}Trying to save with empty value" f"{Bcolors.ENDC}")
@@ -41,7 +62,7 @@ def ask_value(agent_dict, opt, section, ssl, control_opt=None):
         except ValueError as e:
             print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
             value = None
-    return value, check_ssl
+    return value, info_url
 
 
 def process_agent():
@@ -131,14 +152,16 @@ def process_agent():
                 process_workspaces()
             else:
                 if opt == "host":
-                    value, url_ssl = ask_value(agent_dict, opt, section, ssl)
+                    value, url_json = ask_value(agent_dict, opt, section, ssl)
+                    if url_json["url_path"] is not None:
+                        config.instance.set(section, "base_route", str(url_json["url_path"]))
 
                 elif opt == "ssl":
-                    if url_ssl is None:
+                    if url_json["check_ssl"] is None:
                         value, _ = ask_value(agent_dict, opt, section, ssl)
                         ssl = str(value).lower() == "true"
                     else:
-                        ssl = str(url_ssl).lower() == "true"
+                        ssl = str(url_json["check_ssl"]).lower() == "true"
                         value = ssl
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
