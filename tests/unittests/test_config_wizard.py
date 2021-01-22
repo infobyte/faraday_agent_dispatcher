@@ -56,7 +56,8 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
          \0 is added as a possible choice of the ones and should exit with
         error.
         """
-        in_data = parse_inputs(testing_inputs) + "\0\n" * 1000
+        in_data = "Q\nN\n" if ini_config["id_str"] == "no_ini" else ""
+        in_data += parse_inputs(testing_inputs) + "\0\n" * 1000
         env = os.environ
         env["DEBUG_INPUT_MODE"] = "True"
         result = runner.invoke(config_wizard, args=["-c", path], input=in_data, env=env)
@@ -203,3 +204,25 @@ def test_with_agent_token(delete_token):
             assert "agent" not in config_mod.instance.options(config_mod.Sections.TOKENS)
         else:
             assert "agent" in config_mod.instance.options(config_mod.Sections.TOKENS)
+
+
+def test_begin_and_quit():
+    runner = CliRunner()
+
+    with runner.isolated_filesystem() as file_system:
+        path = Path(file_system) / "dispatcher.ini"
+        input_str = "Q\nY\n"
+        escape_string = "\0\n" * 1000
+        env = os.environ
+        env["DEBUG_INPUT_MODE"] = "True"
+
+        result = runner.invoke(
+            config_wizard,
+            args=["-c", path],
+            input=f"{input_str}{escape_string}",
+            env=env,
+        )
+        assert result.exit_code == 0, result.exception
+        assert len(config_mod.instance.sections()) == 0
+        assert "\0\n" not in result.output
+        assert "Y\n" in result.output
