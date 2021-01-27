@@ -65,6 +65,30 @@ def generate_inputs():
             "after_workspaces": {"aworkspace"},
         },
         {
+            "id_str": "Dispatcher input only host",
+            "dispatcher_input": DispatcherInput(
+                host="127.0.0.1",
+                agent_name="agent",
+                registration_token="1234567890123456789012345",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"},
+        },
+        {
+            "id_str": "Dispatcher input host base_route",
+            "dispatcher_input": DispatcherInput(
+                host="127.0.0.1/faraday",
+                agent_name="agent",
+                registration_token="1234567890123456789012345",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"},
+        },
+        {
             "id_str": "Bad token input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
