@@ -66,6 +66,9 @@ def ask_value(agent_dict, opt, section, ssl, control_opt=None):
 
 
 def process_agent():
+    http_ports = (5985, 9000)
+    https_ports = (443, 443)
+
     agent_dict = {
         Sections.SERVER: {
             "host": {
@@ -83,14 +86,6 @@ def process_agent():
             "ssl_cert": {
                 "default_value": lambda _: "",
                 "type": click.Path(allow_dash=False, dir_okay=False),
-            },
-            "api_port": {
-                "default_value": lambda _ssl: "443" if _ssl else "5985",
-                "type": click.IntRange(min=1, max=65535),
-            },
-            "websocket_port": {
-                "default_value": lambda _ssl: "443" if _ssl else "9000",
-                "type": click.IntRange(min=1, max=65535),
             },
             "workspaces": {
                 "default_value": lambda _: "workspace",
@@ -122,20 +117,6 @@ def process_agent():
             if section == Sections.TOKENS and opt == "agent":
                 if "agent" in config.instance.options(section) and confirm_prompt("Delete agent token?"):
                     config.instance.remove_option(section, opt)
-            elif section == Sections.SERVER and opt.__contains__("port"):
-                if opt == "ssl_port":
-                    if ssl:
-                        value, _ = ask_value(agent_dict, opt, section, ssl, "api_port")
-                        config.instance.set(section, "api_port", str(value))
-                        config.instance.set(section, "websocket_port", str(value))
-                    else:
-                        continue
-                else:
-                    if not ssl:
-                        value, _ = ask_value(agent_dict, opt, section, ssl)
-                        config.instance.set(section, opt, str(value))
-                    else:
-                        continue
             elif opt == "ssl_cert":
                 if ssl:
 
@@ -153,9 +134,8 @@ def process_agent():
             else:
                 if opt == "host":
                     value, url_json = ask_value(agent_dict, opt, section, ssl)
-                    if url_json["url_path"] is not None:
+                    if url_json["url_path"]:
                         config.instance.set(section, "base_route", str(url_json["url_path"]))
-
                 elif opt == "ssl":
                     if url_json["check_ssl"] is None:
                         value, _ = ask_value(agent_dict, opt, section, ssl)
@@ -163,6 +143,15 @@ def process_agent():
                     else:
                         ssl = str(url_json["check_ssl"]).lower() == "true"
                         value = ssl
+                elif opt == "ssl_port":
+                    if ssl:
+                        config.instance.set(section, "api_port", str(https_ports[0]))
+                        config.instance.set(section, "websocket_port", str(https_ports[1]))
+                    elif not ssl:
+                        config.instance.set(section, "api_port", str(http_ports[0]))
+                        config.instance.set(section, "websocket_port", str(http_ports[1]))
+                    else:
+                        continue
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
 
