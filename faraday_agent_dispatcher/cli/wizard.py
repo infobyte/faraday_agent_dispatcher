@@ -34,12 +34,12 @@ import faraday_agent_dispatcher.logger as logging
 
 logger = logging.get_logger()
 
-DEFAULT_PAGE_SIZE = 5
+DEFAULT_PAGE_SIZE = 10
 
 
 class Wizard:
 
-    MAX_BUFF_SIZE = 1024
+    MAX_BUFF_SIZE = 65536
     PAGE_SIZE = DEFAULT_PAGE_SIZE
     EXECUTOR_SECTIONS = [
         Sections.EXECUTOR_DATA,
@@ -89,7 +89,13 @@ class Wizard:
                         config.control_config()
                         end = True
                     else:
-                        print(f"{Bcolors.FAIL}Add agent configuration" f"{Bcolors.ENDC}")
+                        if confirm_prompt(
+                            f"{Bcolors.WARNING}File configuration not save. Are you sure?" f"{Bcolors.ENDC}"
+                        ):
+                            print(f"{Bcolors.WARNING}File configuration not created" f"{Bcolors.ENDC}")
+                            end = True
+                        else:
+                            end = False
 
                 except ValueError as e:
                     print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
@@ -180,20 +186,17 @@ class Wizard:
             Wizard.set_generic_data(name, repo_executor_name=metadata["name"])
             process_repo_var_envs(name, metadata)
             set_repo_params(name, metadata)
+            print(f"{Bcolors.OKGREEN}New repository executor added" f"{Bcolors.ENDC}")
         except WizardCanceledOption:
+            self.executors_list.pop()
             print(f"{Bcolors.BOLD}New repository executor not added" f"{Bcolors.ENDC}")
 
     @staticmethod
     def set_generic_data(name, cmd=None, repo_executor_name: str = None):
-        max_buff_size = click.prompt(
-            "Max data sent to server",
-            type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
-            default=65536,
-        )
         for section in Wizard.EXECUTOR_SECTIONS:
             formatted_section = section.format(name)
             config.instance.add_section(formatted_section)
-        config.instance.set(Sections.EXECUTOR_DATA.format(name), "max_size", f"{max_buff_size}")
+        config.instance.set(Sections.EXECUTOR_DATA.format(name), "max_size", f"{Wizard.MAX_BUFF_SIZE}")
         if repo_executor_name:
             config.instance.set(
                 Sections.EXECUTOR_DATA.format(name),
@@ -231,25 +234,14 @@ class Wizard:
         section = Sections.EXECUTOR_DATA.format(name)
         repo_name = config.instance[section].get("repo_executor", None)
         if repo_name:
-            max_buff_size = click.prompt(
-                "Max data sent to server",
-                type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
-                default=config.instance.get(section, "max_size"),
-            )
-            config.instance.set(section, "max_size", f"{max_buff_size}")
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(name, metadata)
         else:
             cmd = click.prompt("Command to execute", default=config.instance.get(section, "cmd"))
-            max_buff_size = click.prompt(
-                "Max data sent to server",
-                type=click.IntRange(min=Wizard.MAX_BUFF_SIZE),
-                default=config.instance.get(section, "max_size"),
-            )
             config.instance.set(section, "cmd", cmd)
-            config.instance.set(section, "max_size", f"{max_buff_size}")
             process_var_envs(name)
             process_params(name)
+        print(f"{Bcolors.OKGREEN}Update repository executor finish" f"{Bcolors.ENDC}")
 
     def delete_executor(self):
         name = click.prompt("Name")
