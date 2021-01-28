@@ -2,21 +2,21 @@
   "arguments": {
     "SCAN_TARGET": true,
     "PORT_LIST_ID": false,
-    "SCAN_ID": false
+    "SCAN_ID": false,
+    "CONNECTION_TYPE": true,
+    "SOCKET_PATH": false,
+    "SSH_USER": false,
+    "SSH_PASSW": false,
+    "TLS_CERTFILE_PATH": false,
+    "TLS_CAFILE_PATH": false,
+    "TLS_KEYFILE_PATH": false,
+    "TLS_PKEY_PASSW": false
   },
   "environment_variables": [
-    "CONNECTION_TYPE",
     "GVM_USER",
     "GVM_PASSW",
     "HOST",
-    "PORT",
-    "SOCKET_PATH",
-    "SSH_USER",
-    "SSH_PASSW",
-    "TLS_CERTFILE_PATH",
-    "TLS_CAFILE_PATH",
-    "TLS_KEYFILE_PATH",
-    "TLS_PKEY_PASSW"
+    "PORT"
   ],
   "check_cmds": [
     "python3 -m pip show python-gvm"
