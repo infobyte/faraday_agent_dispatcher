@@ -9,3 +9,4 @@ class Bcolors:
     UNDERLINE = "\033[4m"
     REVERSE = "\033[7m"
     END_REVERSE = "\033[27m"
+    OPTIONS = "\033[96m"

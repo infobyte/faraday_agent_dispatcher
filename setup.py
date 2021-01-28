@@ -39,7 +39,7 @@ with open("RELEASE.md") as history_file:
 
 
 requirements = [
-    "Click",
+    "Click>=7",
     "websockets",
     "aiohttp",
     "syslog_rfc5424_formatter",
