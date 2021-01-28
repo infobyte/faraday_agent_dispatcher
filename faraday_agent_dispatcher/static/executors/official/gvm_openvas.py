@@ -13,16 +13,16 @@ from gvm.transforms import EtreeCheckCommandTransform
 def main():
     user = os.environ.get("GVM_USER")
     passw = os.environ.get("GVM_PASSW")
-    userssh = os.environ.get("SSH_USER")
-    passwssh = os.environ.get("SSH_PASSW")
+    userssh = os.environ.get("EXECUTOR_CONFIG_SSH_USER")
+    passwssh = os.environ.get("EXECUTOR_CONFIG_SSH_PASSW")
     host = os.environ.get("HOST")
     port = os.environ.get("PORT")
-    socket = os.environ.get("SOCKET_PATH")
-    tls_certfile = os.environ.get("TLS_CERTFILE_PATH")
-    tls_cafile = os.environ.get("TLS_CAFILE_PATH")
-    tls_keyfile = os.environ.get("TLS_KEYFILE_PATH")
-    tls_passw = os.environ.get("TLS_PKEY_PASSW")
-    connection_type = os.environ.get("CONNECTION_TYPE").lower()
+    socket = os.environ.get("EXECUTOR_CONFIG_SOCKET_PATH")
+    tls_certfile = os.environ.get("EXECUTOR_CONFIG_TLS_CERTFILE_PATH")
+    tls_cafile = os.environ.get("EXECUTOR_CONFIG_TLS_CAFILE_PATH")
+    tls_keyfile = os.environ.get("EXECUTOR_CONFIG_TLS_KEYFILE_PATH")
+    tls_passw = os.environ.get("EXECUTOR_CONFIG_TLS_PKEY_PASSW")
+    connection_type = os.environ.get("EXECUTOR_CONFIG_CONNECTION_TYPE").lower()
     scan_url = os.environ.get("EXECUTOR_CONFIG_SCAN_TARGET")
     # Defaults to: Full and Fast
     scan_id = os.environ.get("EXECUTOR_CONFIG_SCAN_ID") or "daba56c8-73ec-11df-a475-002264764cea"
@@ -35,8 +35,8 @@ def main():
     # OPENVAS SCANNER
     scanner = "08b69003-5fc2-4037-a479-93b440211c73"
 
-    if not user or not passw or not connection_type:
-        print("Data config ['User', 'Passw', 'Connection_type'] GVM_OpenVas not provided", file=sys.stderr)
+    if not user or not passw or not host or not port:
+        print("Data config ['User', 'Passw', 'Host', 'Port'] GVM_OpenVas not provided", file=sys.stderr)
         sys.exit()
 
     if not scan_url:
@@ -48,9 +48,13 @@ def main():
         print("Not a valid connection_type, Choose between socket-ssh-tls", file=sys.stderr)
         sys.exit()
 
-    if not socket and connection_type == "socket":
+    if connection_type == "socket":
         # Default Socket
-        socket = "/var/run/gvmd.sock"
+        socket = "/var/run/gvmd.sock" if not socket else socket
+    elif connection_type == "ssh":
+        if not userssh or not passwssh:
+            print("SSH username or password not provided", file=sys.stderr)
+            sys.exit()
 
     # CONNECTION
     transform = EtreeCheckCommandTransform()
