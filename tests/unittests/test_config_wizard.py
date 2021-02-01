@@ -7,7 +7,7 @@ import os
 
 from faraday_agent_dispatcher import config as config_mod
 from faraday_agent_dispatcher.cli.main import config_wizard
-from faraday_agent_dispatcher.utils.metadata_utils import executor_metadata,check_commands
+from faraday_agent_dispatcher.utils.metadata_utils import executor_metadata, check_commands
 from tests.unittests.config.wizard import (
     generate_inputs,
     generate_no_ssl_ini_configs,
@@ -107,13 +107,15 @@ def test_verify(ini_config):
         assert result.exit_code == 1, result.exception
         assert ini_config["exception_message"] in result.output
 
+
 @pytest.mark.asyncio
 async def test_executor_dependency():
-    CHOSEN_OPTION = 'nmap.py'
+    CHOSEN_OPTION = "nmap.py"
     metadata = executor_metadata(CHOSEN_OPTION)
     dependency_ok = False if not await check_commands(metadata) else True
-    
+
     assert dependency_ok
+
 
 @pytest.mark.parametrize("ini_config", ssl_ini_configs, ids=lambda elem: elem["id_str"])
 def test_override_ssl_cert_with_default(ini_config):
