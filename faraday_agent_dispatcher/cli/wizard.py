@@ -90,7 +90,7 @@ class Wizard:
                         end = True
                     else:
                         if confirm_prompt(
-                            f"{Bcolors.WARNING}File configuration not save. Are you sure?" f"{Bcolors.ENDC}"
+                            f"{Bcolors.WARNING}File configuration not saved. Are you sure?" f"{Bcolors.ENDC}"
                         ):
                             print(f"{Bcolors.WARNING}File configuration not created" f"{Bcolors.ENDC}")
                             end = True
