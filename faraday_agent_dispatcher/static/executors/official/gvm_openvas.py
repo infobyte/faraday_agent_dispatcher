@@ -49,7 +49,7 @@ def main():
         sys.exit()
 
     if connection_type == "socket":
-        # Default Socket
+        # Default Socket according to official docs
         socket = "/var/run/gvmd.sock" if not socket else socket
     elif connection_type == "ssh":
         if not userssh or not passwssh:
@@ -58,6 +58,8 @@ def main():
 
     # CONNECTION
     transform = EtreeCheckCommandTransform()
+
+    # USER NEEDS PERMISSION ON THE SOCKET
     if connection_type == "socket":
         connection = UnixSocketConnection(path=socket)
     elif connection_type == "ssh":
