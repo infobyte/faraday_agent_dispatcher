@@ -14,29 +14,50 @@ from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 
-def url_setting(url):
-    url_info = {
-        "url_name": None,
-        "url_path": None,
-        "check_ssl": False,
+def append_keys(agent_dict, section):
+    agent_dict[section]["api_port"] = {
+        "default_value": lambda _ssl: "443" if _ssl else "5985",
+        "type": click.IntRange(min=1, max=65535),
     }
+    agent_dict[section]["websocket_port"] = {
+        "default_value": lambda _ssl: "443" if _ssl else "9000",
+        "type": click.IntRange(min=1, max=65535),
+    }
+    return agent_dict
+
+
+def url_setting(url):
+    url_info = {"url_name": None, "url_path": None, "check_ssl": False, "api_port": None, "websocket_port": None}
     url_host = urlparse(url)
-    if url_host.netloc:
-        url_info["url_name"] = url_host.netloc
-    else:
+
+    if not url_host.scheme:
         url = f"http://{url}"
         url_host = urlparse(url)
-        if url_host.netloc:
-            url_info["url_name"] = url_host.netloc
+        url_info["check_ssl"] = None
 
-    if url_info["url_name"] is not None:
-        url_info["url_path"] = url_host.path[1:]
-        match_port = url_info["url_name"].find(":")
-        if match_port >= 0:
-            url_info["url_name"] = url_info["url_name"][:match_port]
+    url_info["url_name"] = url_host.netloc
+    url_info["url_path"] = url_host.path[1:]
+
+    match_port = url_info["url_name"].find(":")
+    if match_port >= 0:
+        url_info["url_name"] = url_info["url_name"][:match_port]
+
+    if url_info["check_ssl"] is not None:
         if url_host.scheme == "http":
+            if url_host.port:
+                url_info["api_port"] = url_host.port
+                url_info["websocket_port"] = url_host.port
+            else:
+                url_info["api_port"] = 5985
+                url_info["websocket_port"] = 9000
             url_info["check_ssl"] = False
         elif url_host.scheme == "https":
+            if url_host.port:
+                url_info["api_port"] = url_host.port
+                url_info["websocket_port"] = url_host.port
+            else:
+                url_info["api_port"] = 443
+                url_info["websocket_port"] = 443
             url_info["check_ssl"] = True
 
     return url_info
@@ -66,9 +87,6 @@ def ask_value(agent_dict, opt, section, ssl, control_opt=None):
 
 
 def process_agent():
-    http_ports = (5985, 9000)
-    https_ports = (443, 443)
-
     agent_dict = {
         Sections.SERVER: {
             "host": {
@@ -78,10 +96,6 @@ def process_agent():
             "ssl": {
                 "default_value": lambda _: "True",
                 "type": click.BOOL,
-            },
-            "ssl_port": {
-                "default_value": lambda _: "443",
-                "type": click.IntRange(min=1, max=65535),
             },
             "ssl_cert": {
                 "default_value": lambda _: "",
@@ -143,18 +157,33 @@ def process_agent():
                     else:
                         ssl = str(url_json["check_ssl"]).lower() == "true"
                         value = ssl
-                elif opt == "ssl_port":
+
                     if ssl:
-                        config.instance.set(section, "api_port", str(https_ports[0]))
-                        config.instance.set(section, "websocket_port", str(https_ports[1]))
+                        if url_json["api_port"] is None:
+                            agent_dict = append_keys(agent_dict, Sections.SERVER)
+                            for type_ports in ["api_port", "websocket_port"]:
+                                value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
+                                config.instance.set(section, type_ports, str(value_port))
+                                agent_dict[Sections.SERVER].pop(type_ports, None)
+
+                        else:
+                            config.instance.set(section, "api_port", str(url_json["api_port"]))
+                            config.instance.set(section, "websocket_port", str(url_json["websocket_port"]))
                     elif not ssl:
-                        config.instance.set(section, "api_port", str(http_ports[0]))
-                        config.instance.set(section, "websocket_port", str(http_ports[1]))
+                        if url_json["api_port"] is None:
+                            agent_dict = append_keys(agent_dict, Sections.SERVER)
+                            for type_ports in ["api_port", "websocket_port"]:
+                                value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
+                                config.instance.set(section, type_ports, str(value_port))
+                                agent_dict[Sections.SERVER].pop(type_ports, None)
+                        else:
+                            config.instance.set(section, "api_port", str(url_json["api_port"]))
+                            config.instance.set(section, "websocket_port", str(url_json["websocket_port"]))
+
                     else:
                         continue
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
-
                 config.instance.set(section, opt, str(value))
 
 
