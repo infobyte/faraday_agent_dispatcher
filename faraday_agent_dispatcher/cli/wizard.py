@@ -85,6 +85,7 @@ class Wizard:
                 process_choice_errors(value)
                 try:
                     if Sections.AGENT in config.instance.sections():
+                        print(self.status_report(sections=config.instance.sections()))
                         self.save_executors()
                         config.control_config()
                         end = True
@@ -92,7 +93,7 @@ class Wizard:
                         if confirm_prompt(
                             f"{Bcolors.WARNING}File configuration not saved. Are you sure?" f"{Bcolors.ENDC}"
                         ):
-                            print(f"{Bcolors.WARNING}File configuration not created" f"{Bcolors.ENDC}")
+                            print(self.status_report(sections=config.instance.sections()))
                             end = True
                         else:
                             end = False
@@ -129,7 +130,7 @@ class Wizard:
             elif value.upper() == "D":
                 self.delete_executor()
             else:
-                end = True
+                end = self.quit_executor()
 
     def check_executors_name(self, show_text: str, default=None):
         name = click.prompt(show_text, default=default)
@@ -251,3 +252,29 @@ class Wizard:
         for section in Wizard.EXECUTOR_SECTIONS:
             config.instance.remove_section(section.format(name))
         self.executors_list.remove(name)
+
+    def quit_executor(self):
+        end = True
+        if not self.executors_list:
+            quit_executors = confirm_prompt(
+                f"{Bcolors.WARNING}There are no executors loaded. Are you sure?{Bcolors.ENDC}", default=False
+            )
+            if quit_executors:
+                end = True
+            else:
+                end = False
+        return end
+
+    def status_report(self, sections):
+        MIN_SECTIONS = ["server", "tokens", "agent"]
+        check = all(item in sections for item in MIN_SECTIONS)
+        check_len = len(config.instance.sections())
+        if check:
+            if check_len > 3:
+                msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
+            else:
+                msj = f"{Bcolors.WARNING}File configuration not section Executor.{Bcolors.ENDC}"
+        else:
+            msj = f"{Bcolors.WARNING}File configuration not created" f"{Bcolors.ENDC}"
+            config.reset_config(self.config_filepath)
+        return msj
