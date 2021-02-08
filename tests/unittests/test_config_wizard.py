@@ -109,7 +109,6 @@ def test_verify(ini_config):
 @pytest.mark.parametrize("ini_config", ssl_ini_configs, ids=lambda elem: elem["id_str"])
 def test_override_ssl_cert_with_default(ini_config):
     runner = CliRunner()
-
     content = None
     content_path = ini_config["dir"]
 
@@ -136,12 +135,14 @@ def test_override_ssl_cert_with_default(ini_config):
         testing_inputs = [
             {
                 "dispatcher_input": DispatcherInput(
+                    host="https://127.0.0.1",
                     workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
                     ssl_cert=Path(__file__).parent.parent / "data" / "mock.pub",
                 ),
             },
             {
                 "dispatcher_input": DispatcherInput(
+                    host="https://127.0.0.1",
                     ssl_cert="",
                     workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
                 ),
@@ -185,6 +186,7 @@ def test_with_agent_token(delete_token):
         env = os.environ
         env["DEBUG_INPUT_MODE"] = "True"
         input_str = DispatcherInput(
+            ssl="false",
             delete_agent_token=delete_token,
             workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
         ).input_str()

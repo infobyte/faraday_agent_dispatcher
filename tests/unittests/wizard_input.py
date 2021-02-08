@@ -185,9 +185,9 @@ class DispatcherInput:
         self.ssl = ssl is None or ssl.lower() != "false"
         self.server_input = {
             "ssl": ssl or "",
-            "host": host or "",
-            "api_port": api_port or "",
-            "ws_port": ws_port or "",
+            "host": host or "localhost",
+            "api_port": api_port or "13123",
+            "ws_port": ws_port or "1234",
             "ssl_cert": ssl_cert or "",
         }
         self.workspaces = workspaces
