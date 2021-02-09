@@ -68,7 +68,7 @@ class Wizard:
 
     async def run(self):
         end = False
-
+        delete_report = False
         def_value, choices = get_default_value_and_choices("Q", ["A", "E", "Q"])
 
         while not end:
@@ -91,17 +91,20 @@ class Wizard:
                         end = True
                     else:
                         if confirm_prompt(
-                            f"{Bcolors.WARNING}File configuration not saved. Are you sure?" f"{Bcolors.ENDC}"
+                            f"{Bcolors.WARNING}File configuration not saved. Are you sure? {Bcolors.ENDC}"
                         ):
                             print(self.status_report(sections=config.instance.sections()))
                             end = True
+                            delete_report = True
                         else:
                             end = False
 
                 except ValueError as e:
                     print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
-
-        config.save_config(self.config_filepath)
+        if delete_report == 1:
+            pass
+        else:
+            config.save_config(self.config_filepath)
 
     def load_executors(self):
         if Sections.AGENT in config.instance:
@@ -266,15 +269,14 @@ class Wizard:
         return end
 
     def status_report(self, sections):
-        MIN_SECTIONS = ["server", "tokens", "agent"]
-        check = all(item in sections for item in MIN_SECTIONS)
+        min_sections = ["server", "tokens", "agent"]
+        check = all(item in sections for item in min_sections)
         check_len = len(config.instance.sections())
         if check:
             if check_len > 3:
                 msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
             else:
-                msj = f"{Bcolors.WARNING}File configuration not section Executor.{Bcolors.ENDC}"
+                msj = f"{Bcolors.WARNING}File configuration not complete. Missing Executor section.{Bcolors.ENDC}"
         else:
-            msj = f"{Bcolors.WARNING}File configuration not created" f"{Bcolors.ENDC}"
-            config.reset_config(self.config_filepath)
+            msj = f"{Bcolors.WARNING}File configuration not created {Bcolors.ENDC}"
         return msj
