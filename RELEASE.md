@@ -1,3 +1,17 @@
+1.4.1 [Feb 17th, 2021]:
+---
+ * MOD Various UX improves in wizard:
+    * ADD special character control in name executor
+    * ADD More verbose info
+    * It is possible to exit wizard if its misconfigurated (will not be saved)
+    * FIX Not choosing executor (Using Q) generates correct config file
+    * MOD max data sent to server option is a manual edit configuration
+    * MOD more extensive default list of official executors
+    * MOD change color for options "next page" "don't choose"
+ * ADD new WPScan executor that does not need docker anymore
+ * FIX in nuclei_exclude parameter for nuclei executor
+ * [Faraday][faraday] versions: 3.14.0, 3.14.1
+
 1.4.0 [Dec 23rd, 2020]:
 ---
  * A base_route can be added before the root of the server (e.g:
@@ -9,7 +23,7 @@ https://my.company.com/faraday/ as / of faraday)
  * Add new flags for nmap executor: `-sC`,`-sV`,`-Pn`,`--script-timeout`,`--host-timeout`,`--top-ports`
  * Fix bug nmap and nessus executors to execute with the dispatcher environment
  * Fix nmap executor when http(s) scheme passed as target
- * [Faraday][faraday] versions: 3.14.0
+ * [Faraday][faraday] versions: 3.14.0, 3.14.1
 
 1.3.1 [Sep 7th, 2020]:
 ---
