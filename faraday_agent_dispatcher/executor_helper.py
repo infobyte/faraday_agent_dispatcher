@@ -95,7 +95,7 @@ class StdOutLineProcessor(FileLineProcessor):
         return api_url(
             host,
             port,
-            postfix="/_api/v2/ws/" f"{self.workspace}/" "bulk_create/",
+            postfix="/_api/v3/ws/" f"{self.workspace}/bulk_create",
             secure=self.api_ssl_enabled,
         )
 

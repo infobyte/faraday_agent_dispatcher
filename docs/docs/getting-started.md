@@ -207,7 +207,7 @@ $ faraday-dispatcher run
     The expected output when the dispatcher run command is as follows
     ```shell
     $ faraday-dispatcher run
-    INFO - token_registration_url: {faraday_host}/_api/v2/ws/agent2/agent_registration/
+    INFO - token_registration_url: {faraday_host}/_api/v3/ws/agent2/agent_registration
     INFO - Registered successfully
     INFO - Connection to Faraday server succeeded
     ```

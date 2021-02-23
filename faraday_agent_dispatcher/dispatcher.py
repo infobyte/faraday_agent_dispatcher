@@ -126,7 +126,7 @@ class Dispatcher:
             api_url(
                 self.host,
                 self.api_port,
-                postfix="/_api/v2/agent_websocket_token/",
+                postfix="/_api/v3/agent_websocket_token",
                 secure=self.api_ssl_enabled,
             ),
             headers=headers,
@@ -146,7 +146,7 @@ class Dispatcher:
             token_registration_url = api_url(
                 self.host,
                 self.api_port,
-                postfix="/_api/v2/agent_registration/",
+                postfix="/_api/v3/agent_registration",
                 secure=self.api_ssl_enabled,
             )
             logger.info(f"token_registration_url: {token_registration_url}")
