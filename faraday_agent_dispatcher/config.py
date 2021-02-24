@@ -18,7 +18,6 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_int,
     control_str,
     control_host,
-    control_registration_token,
     control_agent_token,
     control_list,
     control_bool,
@@ -209,7 +208,6 @@ __control_dict = {
         "workspaces": control_list(can_repeat=False),
     },
     Sections.TOKENS: {
-        "registration": control_registration_token,
         "agent": control_agent_token,
     },
     Sections.AGENT: {

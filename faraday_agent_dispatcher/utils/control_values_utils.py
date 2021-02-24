@@ -42,10 +42,12 @@ def control_bool(field_name, value):
         raise ValueError(f"Trying to parse {field_name} with value {value} and should be a " f"bool")
 
 
-def control_registration_token(field_name, value):
+def control_registration_token(field_name: str, value: str):
     if value is None:
-        raise ValueError(f'"{field_name}" option is required in the configuration file')
-    control_token(field_name, 25, value)
+        raise ValueError("No connected before, provide a token. For more help see `faraday-dispatcher --help`")
+    if not value.isnumeric():
+        raise ValueError(f"{field_name} must be a number")
+    control_token(field_name, 6, value)
 
 
 def control_agent_token(field_name, value):

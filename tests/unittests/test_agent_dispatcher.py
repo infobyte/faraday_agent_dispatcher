@@ -114,7 +114,6 @@ async def test_start_and_register(
 
     configuration.set(Sections.SERVER, "api_port", str(client.port))
     configuration.set(Sections.SERVER, "workspaces", test_config.workspaces_str())
-    configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
     configuration.set(Sections.EXECUTOR_DATA.format("ex1"), "cmd", "exit 1")
 
     for section in register_options["replace_data"]:
@@ -129,7 +128,7 @@ async def test_start_and_register(
     dispatcher = Dispatcher(client.session, tmp_default_config.config_file_path)
 
     if "expected_exception" not in register_options:
-        await dispatcher.register()
+        await dispatcher.register(test_config.registration_token)
         # Control tokens
         assert dispatcher.agent_token == test_config.agent_token
 
@@ -137,8 +136,19 @@ async def test_start_and_register(
         agent_id = int(signer.unsign(dispatcher.websocket_token).decode("utf-8"))
         assert test_config.agent_id == agent_id
     else:
+        if "bad_registration_token" in register_options:
+            if register_options["bad_registration_token"] is None:
+                token = None
+            elif register_options["bad_registration_token"] == "incorrect":
+                token = f"{((int(test_config.registration_token) + 1) % 1000000):06}"
+            elif register_options["bad_registration_token"] == "bad format":
+                token = "qewqwe"
+            else:  # == "bad"
+                token = test_config.registration_token[0:3]
+        else:
+            token = test_config.registration_token
         with pytest.raises(register_options["expected_exception"]):
-            await dispatcher.register()
+            await dispatcher.register(token)
 
     history = test_logger_handler.history
 
@@ -199,7 +209,6 @@ async def test_run_once(
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "websocket_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "workspaces", workspaces_str)
-    configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
     configuration.set(Sections.SERVER, "ssl", str(test_config.is_ssl))
     if test_config.is_ssl:
@@ -256,7 +265,7 @@ async def test_run_once(
         run_data["workspace"] = run_data["workspace"].format(selected_workspace)
     test_config.ws_data = {"run_data": run_data, "ws_responses": ws_responses}
 
-    await dispatcher.register()
+    await dispatcher.register(test_config.registration_token)
     await dispatcher.connect()
 
     history = test_logger_handler.history
@@ -301,7 +310,6 @@ async def test_merge_config(
     configuration.set(Sections.SERVER, "workspace", random_workspace_name)
 
     test_config.workspaces = [random_workspace_name] + test_config.workspaces
-    configuration.set(Sections.TOKENS, "registration", test_config.registration_token)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
     path_to_basic_executor = Path(__file__).parent.parent / "data" / "basic_executor.py"
     configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3,ex4")
@@ -325,7 +333,7 @@ async def test_merge_config(
     test_config.ws_data["ws_responses"] = [{"error": "'action' key is mandatory in this websocket connection"}]
     test_config.executors = get_merge_executors()
 
-    await dispatcher.register()
+    await dispatcher.register(test_config.registration_token)
     await dispatcher.connect()
 
     assert len(test_config.ws_data["ws_responses"]) == 0

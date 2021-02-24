@@ -40,6 +40,7 @@ from faraday_agent_dispatcher.executor_helper import (
     StdErrLineProcessor,
     StdOutLineProcessor,
 )
+from faraday_agent_dispatcher.utils.control_values_utils import control_registration_token
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
 import faraday_agent_dispatcher.logger as logging
@@ -136,13 +137,18 @@ class Dispatcher:
         websocket_token_json = await websocket_token_response.json()
         return websocket_token_json["token"]
 
-    async def register(self):
+    async def register(self, registration_token=None):
         if not await self.check_connection():
             exit(1)
 
         if self.agent_token is None:
-            registration_token = self.agent_token = config.get(Sections.TOKENS, "registration")
-            assert registration_token is not None, "The registration token is mandatory"
+            try:
+                control_registration_token("token", registration_token)
+            except ValueError as ex:
+                print(f"{Bcolors.FAIL}{ex.args[0]}")
+                logger.error(ex.args[0])
+                exit(1)
+
             token_registration_url = api_url(
                 self.host,
                 self.api_port,
