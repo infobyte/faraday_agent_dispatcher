@@ -77,6 +77,10 @@ def process_agent():
     ssl = True
 
     for section in agent_dict:
+        if Sections.TOKENS == section and (
+            section not in config.instance or "agent" not in config.instance.options(section)
+        ):
+            continue
         print(f"{Bcolors.OKBLUE}Section: {section}{Bcolors.ENDC}")
         for opt in agent_dict[section]:
             if section not in config.instance:
