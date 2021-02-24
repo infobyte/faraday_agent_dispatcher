@@ -119,12 +119,6 @@ def generate_basic_built_config():
             "expected_exception": ValueError,
         },
         {
-            "id_str": "Error: No token section",
-            "remove": {Sections.TOKENS: ["section"]},
-            "replace": {},
-            "expected_exception": ValueError,
-        },
-        {
             "id_str": "Error: No server section",
             "remove": {Sections.SERVER: ["section"]},
             "replace": {},

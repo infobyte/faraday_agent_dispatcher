@@ -82,7 +82,7 @@ class Dispatcher:
         self.host = config.get(Sections.SERVER, "host")
         self.api_port = config.get(Sections.SERVER, "api_port")
         self.websocket_port = config.get(Sections.SERVER, "websocket_port")
-        self.agent_token = config[Sections.TOKENS].get("agent", None)
+        self.agent_token = config[Sections.TOKENS].get("agent", None) if Sections.TOKENS in config else None
         self.agent_name = config.get(Sections.AGENT, "agent_name")
         self.session = session
         self.websocket = None
