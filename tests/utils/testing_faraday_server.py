@@ -29,7 +29,7 @@ from tests.utils.text_utils import fuzzy_string
 class FaradayTestConfig:
     def __init__(self, is_ssl: bool = False, has_base_route: bool = False):
         self.workspaces = [fuzzy_string(8) for _ in range(0, random.randint(2, 6))]
-        self.registration_token = fuzzy_string(25)
+        self.registration_token = f"{random.randint(0, 999999):06}"
         self.agent_token = fuzzy_string(64)
         self.agent_id = random.randint(1, 1000)
         self.websocket_port = random.randint(1025, 65535)

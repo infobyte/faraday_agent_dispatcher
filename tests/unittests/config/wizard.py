@@ -57,7 +57,6 @@ def generate_inputs():
                 api_port="13123",
                 ws_port="1234",
                 agent_name="agent",
-                registration_token="1234567890123456789012345",
                 workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
@@ -73,10 +72,6 @@ def generate_inputs():
                 ws_port="1234",
                 agent_name="agent",
                 workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
-                registration_token=[
-                    "12345678901234567890",
-                    "1234567890123456789012345",
-                ],
             ),
             "exit_code": 0,
             "expected_output": ["registration must be 25 character length"],
