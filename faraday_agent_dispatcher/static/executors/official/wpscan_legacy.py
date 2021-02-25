@@ -19,11 +19,15 @@ def main():
     with tempfile.TemporaryDirectory() as tempdirname:
         tempdir = Path(tempdirname)
         name_output_file = "wpscan-output.json"
-        out_file = tempdir / name_output_file
         cmd = [
-            "wpscan",
+            "docker",
+            "run",
+            "--rm",
+            "--mount",
+            f"type=bind,source={tempdirname},target=/output",
+            "wpscanteam/wpscan:latest",
             "-o",
-            out_file,
+            f"/output/{name_output_file}",
             "--url",
             url_target,
             "-f",
@@ -43,6 +47,7 @@ def main():
             )
 
         plugin = WPScanPlugin()
+        out_file = tempdir / name_output_file
         with open(out_file, "r") as f:
             plugin.parseOutputString(f.read())
             print(plugin.get_json())

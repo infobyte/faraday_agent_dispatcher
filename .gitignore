@@ -159,3 +159,5 @@ fabric.properties
 .idea/httpRequests
 
 .idea/*
+
+logs/*

@@ -58,14 +58,14 @@ async def choice_paged_option(
     max_page = int(math.ceil(len(options) / page_size))
     while metadata is None:
         print("The executors are:")
-        paged_executors = options[page * page_size : min((page + 1) * page_size, len(options))]  # noqa E203
+        paged_executors = sorted(options)[page * page_size : min((page + 1) * page_size, len(options))]  # noqa E203
         for i, name in enumerate(paged_executors):
             print(f"{Bcolors.OKGREEN}{i + 1}: {name}{Bcolors.ENDC}")
         if page > 0:
-            print(f"{Bcolors.OKBLUE}-: Previous page{Bcolors.ENDC}")
+            print(f"{Bcolors.OPTIONS}-: Previous page{Bcolors.ENDC}")
         if page < max_page - 1:
-            print(f"{Bcolors.OKBLUE}+: Next page{Bcolors.ENDC}")
-        print(f"{Bcolors.OKBLUE}Q: Don't choose{Bcolors.ENDC}")
+            print(f"{Bcolors.OPTIONS}+: Next page{Bcolors.ENDC}")
+        print(f"{Bcolors.OPTIONS}Q: Don't choose{Bcolors.ENDC}")
         chosen = click.prompt("Choose one")
         if chosen not in [str(i) for i in range(1, len(paged_executors) + 1)]:
             if chosen == "+" and page < max_page - 1:
