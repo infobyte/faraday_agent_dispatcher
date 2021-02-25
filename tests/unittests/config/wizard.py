@@ -704,7 +704,9 @@ def generate_inputs():
         },
         {
             "id_str": "Force Quit Executor",
-            "dispatcher_input": DispatcherInput(workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]),
+            "dispatcher_input": DispatcherInput(
+                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
+            ),
             "executors_input": [
                 RepoExecutorInput(
                     name="ex1",
