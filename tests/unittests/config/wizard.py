@@ -702,6 +702,20 @@ def generate_inputs():
             "after_executors": {"ex1", "ex2", "eX3"},
             "after_workspaces": {"aworkspace"},
         },
+        {
+            "id_str": "Force Quit Executor",
+            "dispatcher_input": DispatcherInput(workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]),
+            "executors_input": [
+                RepoExecutorInput(
+                    name="ex1",
+                    force_quit=True,
+                    adm_type=ADMType.ADD,
+                ),
+            ],
+            "exit_code": 0,
+            "after_executors": {},
+            "after_workspaces": {"aworkspace"},
+        },
     ]
 
 
