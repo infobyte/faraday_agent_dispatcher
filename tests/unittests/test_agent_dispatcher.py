@@ -209,6 +209,8 @@ async def test_run_once(
     configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "websocket_port", str(test_config.client.port))
     configuration.set(Sections.SERVER, "workspaces", workspaces_str)
+    if Sections.TOKENS not in configuration:
+        configuration.add_section(Sections.TOKENS)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
     configuration.set(Sections.SERVER, "ssl", str(test_config.is_ssl))
     if test_config.is_ssl:
@@ -310,6 +312,8 @@ async def test_merge_config(
     configuration.set(Sections.SERVER, "workspace", random_workspace_name)
 
     test_config.workspaces = [random_workspace_name] + test_config.workspaces
+    if Sections.TOKENS not in configuration:
+        configuration.add_section(Sections.TOKENS)
     configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
     path_to_basic_executor = Path(__file__).parent.parent / "data" / "basic_executor.py"
     configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3,ex4")
