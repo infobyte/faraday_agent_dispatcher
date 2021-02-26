@@ -168,6 +168,8 @@ class Dispatcher:
                 )
                 token = await token_response.json()
                 self.agent_token = token["token"]
+                if Sections.TOKENS not in config:
+                    config.add_section(Sections.TOKENS)
                 config.set(Sections.TOKENS, "agent", self.agent_token)
                 save_config(self.config_path)
             except ClientResponseError as e:
