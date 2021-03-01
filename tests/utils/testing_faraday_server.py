@@ -62,20 +62,20 @@ class FaradayTestConfig:
         app = web.Application()
         app.router.add_get(self.wrap_route("/"), get_base(self))
         app.router.add_post(
-            self.wrap_route("/_api/v2/agent_registration/"),
+            self.wrap_route("/_api/v3/agent_registration"),
             get_agent_registration(self),
         )
         app.router.add_post(
-            self.wrap_route("/_api/v2/agent_websocket_token/"),
+            self.wrap_route("/_api/v3/agent_websocket_token"),
             get_agent_websocket_token(self),
         )
         for workspace in self.workspaces:
             app.router.add_post(
-                self.wrap_route(f"/_api/v2/ws/{workspace}/bulk_create/"),
+                self.wrap_route(f"/_api/v3/ws/{workspace}/bulk_create"),
                 get_bulk_create(self),
             )
-        app.router.add_post(self.wrap_route("/_api/v2/ws/error500/bulk_create/"), get_bulk_create(self))
-        app.router.add_post(self.wrap_route("/_api/v2/ws/error429/bulk_create/"), get_bulk_create(self))
+        app.router.add_post(self.wrap_route("/_api/v3/ws/error500/bulk_create"), get_bulk_create(self))
+        app.router.add_post(self.wrap_route("/_api/v3/ws/error429/bulk_create"), get_bulk_create(self))
         app.router.add_get(self.wrap_route("/websockets"), get_ws_handler(self))
 
         server = TestServer(app)
