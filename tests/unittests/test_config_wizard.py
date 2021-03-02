@@ -84,6 +84,7 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         if "" in workspace_config_set:
             workspace_config_set.remove("")
         assert workspace_config_set == expected_workspaces_set
+        assert f"Section: {config_mod.Sections.TOKENS}" not in result.output
 
 
 @pytest.mark.parametrize("ini_config", error_ini_configs, ids=lambda elem: elem["id_str"])
@@ -167,6 +168,7 @@ def test_override_ssl_cert_with_default(ini_config):
 
         config_mod.reset_config(path)
         assert "" == config_mod.instance.get(config_mod.Sections.SERVER, "ssl_cert")
+        assert f"Section: {config_mod.Sections.TOKENS}" not in result.output
 
 
 @pytest.mark.parametrize("delete_token", [True, False])
@@ -198,6 +200,7 @@ def test_with_agent_token(delete_token):
             env=env,
         )
         assert result.exit_code == 0, result.exception
+        assert f"Section: {config_mod.Sections.TOKENS}" in result.output
 
         config_mod.reset_config(path)
         if delete_token:
