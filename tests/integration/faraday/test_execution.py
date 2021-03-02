@@ -73,7 +73,6 @@ def test_execute_agent():
     token = res.json()["token"]
 
     # Config set up
-    config.set(Sections.TOKENS, "registration", token)
     config.remove_option(Sections.TOKENS, "agent")
     config.set(Sections.SERVER, "workspaces", WORKSPACE)
     config.set(Sections.SERVER, "ssl", SSL)
@@ -115,6 +114,7 @@ def test_execute_agent():
             "run",
             f"--config-file={config_pathfile}",
             f"--logdir={LOGGER_DIR}",
+            f"--token={token}",
         ]
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         time.sleep(2)  # If fails check time

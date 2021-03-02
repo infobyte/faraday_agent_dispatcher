@@ -18,7 +18,6 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_int,
     control_str,
     control_host,
-    control_registration_token,
     control_agent_token,
     control_list,
     control_bool,
@@ -127,6 +126,9 @@ def verify():
         if len(data) > 0:
             raise ValueError("\n".join(data))
 
+    if Sections.TOKENS in instance and "registration" in instance.options(Sections.TOKENS):
+        instance.remove_option(Sections.TOKENS, "registration")
+
     if Sections.SERVER not in instance:
         should_be_empty = True
 
@@ -209,7 +211,6 @@ __control_dict = {
         "workspaces": control_list(can_repeat=False),
     },
     Sections.TOKENS: {
-        "registration": control_registration_token,
         "agent": control_agent_token,
     },
     Sections.AGENT: {
@@ -223,6 +224,8 @@ def control_config():
     for section in __control_dict:
         for option in __control_dict[section]:
             if section not in instance:
+                if section == Sections.TOKENS:
+                    continue
                 report_sections_differences()
             value = instance.get(section, option) if option in instance[section] else None
             __control_dict[section][option](option, value)
