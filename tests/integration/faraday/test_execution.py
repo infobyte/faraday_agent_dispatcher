@@ -66,14 +66,13 @@ def test_execute_agent():
     )
     assert res.status_code == 200, res.text
     # session_res = session.get(api_url(HOST, API_PORT, postfix="/_api/session"))
-    res = session.post(api_url(HOST, API_PORT, postfix="/_api/v2/ws/"), json={"name": WORKSPACE})
+    res = session.post(api_url(HOST, API_PORT, postfix="/_api/v3/ws"), json={"name": WORKSPACE})
     assert res.status_code == 201, res.text
-    res = session.get(api_url(HOST, API_PORT, postfix="/_api/v2/agent_token/"))
+    res = session.get(api_url(HOST, API_PORT, postfix="/_api/v3/agent_token"))
     assert res.status_code == 200, res.text
     token = res.json()["token"]
 
     # Config set up
-    config.set(Sections.TOKENS, "registration", token)
     config.remove_option(Sections.TOKENS, "agent")
     config.set(Sections.SERVER, "workspaces", WORKSPACE)
     config.set(Sections.SERVER, "ssl", SSL)
@@ -115,12 +114,13 @@ def test_execute_agent():
             "run",
             f"--config-file={config_pathfile}",
             f"--logdir={LOGGER_DIR}",
+            f"--token={token}",
         ]
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         time.sleep(2)  # If fails check time
 
         # Checking dispatcher connection
-        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v2/ws/{WORKSPACE}/agents/"))
+        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v3/ws/{WORKSPACE}/agents"))
         assert res.status_code == 200, res.text
         res_data = res.json()
         assert len(res_data) == 1, p.communicate(timeout=0.1)
@@ -142,7 +142,7 @@ def test_execute_agent():
             api_url(
                 HOST,
                 API_PORT,
-                postfix=f'/_api/v2/ws/{WORKSPACE}/agents/{agent["id"]}/run/',
+                postfix=f'/_api/v3/ws/{WORKSPACE}/agents/{agent["id"]}/run',
             ),
             json={
                 # "csrf_token": session_res.json()["csrf_token"],
@@ -162,7 +162,7 @@ def test_execute_agent():
             api_url(
                 HOST,
                 API_PORT,
-                postfix=f"/_api/v2/ws/{WORKSPACE}/commands/{command_id}/",
+                postfix=f"/_api/v3/ws/{WORKSPACE}/commands/{command_id}",
             ),
         )
         assert res.status_code == 200, res.text
@@ -178,7 +178,7 @@ def test_execute_agent():
             api_url(
                 HOST,
                 API_PORT,
-                postfix=f"/_api/v2/ws/{WORKSPACE}/commands/{command_id}/",
+                postfix=f"/_api/v3/ws/{WORKSPACE}/commands/{command_id}",
             ),
         )
         assert res.status_code == 200, res.text
@@ -186,7 +186,7 @@ def test_execute_agent():
         assert command_check_response["duration"] != "In progress"
 
         # Test results
-        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v2/ws/{WORKSPACE}/hosts"))
+        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v3/ws/{WORKSPACE}/hosts"))
         host_dict = res.json()
         assert host_dict["count"] == 1, (res.text, host_dict)
         host = host_dict["rows"][0]["value"]
@@ -197,7 +197,7 @@ def test_execute_agent():
                 assert host[key] == host_data[key]
         assert host["vulns"] == 1
 
-        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v2/ws/{WORKSPACE}/vulns"))
+        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v3/ws/{WORKSPACE}/vulns"))
         vuln_dict = res.json()
         assert vuln_dict["count"] == 1
         vuln = vuln_dict["vulnerabilities"][0]["value"]
