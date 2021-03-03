@@ -158,6 +158,7 @@ class RepoExecutorInput:
 
         if self.force_quit:
             if self.adm_type == ADMType.ADD:
+
                 cli_input = f"{cli_input}N\nQ\n"
         else:
             if self.adm_type == ADMType.ADD:
@@ -169,8 +170,8 @@ class RepoExecutorInput:
             for varenv_input in self.varenvs:
                 cli_input = f"{cli_input}{varenv_input.input_str()}"
 
-        cli_input = f"{cli_input}Q\n"
-        cli_input = f"{cli_input}Q\n"
+        cli_input = f"{cli_input}Q\nQ\n"
+
         return cli_input
 
 

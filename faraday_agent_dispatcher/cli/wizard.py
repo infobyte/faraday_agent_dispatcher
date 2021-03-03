@@ -46,7 +46,7 @@ class Wizard:
         Sections.EXECUTOR_PARAMS,
         Sections.EXECUTOR_VARENVS,
     ]
-    SPECIAL_CHARACTER = [",", "/", "\\"]
+    SPECIAL_CHARACTER = [",", "/", "\\", ";"]
 
     def __init__(self, config_filepath: Path):
         self.config_filepath = config_filepath
@@ -131,8 +131,12 @@ class Wizard:
             else:
                 end = True
 
-    def check_executors_name(self, show_text: str, default=None):
-        name = click.prompt(show_text, default=default)
+    def check_executors_name(self, show_text: str, default=None, custom_name=None):
+        if custom_name is None:
+            name = click.prompt(show_text, default=default)
+        else:
+            name = custom_name
+
         if name in self.executors_list and name != default:
             print(f"{Bcolors.WARNING}The executor {name} already exists" f"{Bcolors.ENDC}")
             return
@@ -141,6 +145,17 @@ class Wizard:
                 print(f"{Bcolors.WARNING}" f"The executor cannot contain {character} in its name" f"{Bcolors.ENDC}")
                 return
         return name
+
+    def adding_name(self, name, executor="custom"):
+        new_name = f"{executor}_{name}"
+        status_check = self.check_executors_name(show_text="Name", custom_name=new_name)
+        if status_check is None:
+            return
+        for x in range(len(self.executors_list)):
+            if self.executors_list[x] == name:
+
+                self.executors_list[x] = new_name
+        return new_name
 
     async def new_executor(self):
         name = self.check_executors_name("Name")
@@ -183,9 +198,14 @@ class Wizard:
     async def new_repo_executor(self, name):
         try:
             metadata = await self.get_base_repo()
-            Wizard.set_generic_data(name, repo_executor_name=metadata["name"])
-            process_repo_var_envs(name, metadata)
-            set_repo_params(name, metadata)
+            name_exectuor = metadata["name"].rsplit(".")
+            new_name = self.adding_name(name, name_exectuor[0])
+            if new_name is None:
+                self.executors_list.pop()
+                print(f"{Bcolors.BOLD}New repository executor not added" f"{Bcolors.ENDC}")
+            Wizard.set_generic_data(new_name, repo_executor_name=metadata["name"])
+            process_repo_var_envs(new_name, metadata)
+            set_repo_params(new_name, metadata)
             print(f"{Bcolors.OKGREEN}New repository executor added" f"{Bcolors.ENDC}")
         except WizardCanceledOption:
             self.executors_list.pop()
@@ -208,9 +228,14 @@ class Wizard:
 
     def new_custom_executor(self, name):
         cmd = click.prompt("Command to execute", default="exit 1")
-        Wizard.set_generic_data(name, cmd=cmd)
-        process_var_envs(name)
-        process_params(name)
+        new_name = self.adding_name(name)
+        if new_name is None:
+            self.executors_list.pop()
+            print(f"{Bcolors.BOLD}New repository executor not added" f"{Bcolors.ENDC}")
+        else:
+            Wizard.set_generic_data(new_name, cmd=cmd)
+            process_var_envs(new_name)
+            process_params(new_name)
 
     def edit_executor(self):
         name = click.prompt("Name")
@@ -221,6 +246,11 @@ class Wizard:
         while new_name is None:
             new_name = self.check_executors_name("New name", default=name)
         if new_name != name:
+            if name.startswith("custom_"):
+                new_name = f"custom_{new_name}"
+            else:
+                end = name.rfind("_")
+                new_name = f"{name[:end]}_{new_name}"
             for unformatted_section in Wizard.EXECUTOR_SECTIONS:
                 section = unformatted_section.format(new_name)
                 old_section = unformatted_section.format(name)
