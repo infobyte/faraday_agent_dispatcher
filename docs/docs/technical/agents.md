@@ -88,9 +88,9 @@ Faraday has a vast REST API, and there are a few endpoints used by
  the agent, which are used for:
 
  * `/`: Connectivity check.
- * `/_api/v2/agent_registration/`: Registration of a new agent.
- * `/_api/v2/agent_websocket_token/`: Get a [websocket](#websockets) token.
- * `/_api/v2/ws/{workspace_name}/bulk_create/`: Publish data to a specific
+ * `/_api/v3/agent_registration`: Registration of a new agent.
+ * `/_api/v3/agent_websocket_token`: Get a [websocket](#websockets) token.
+ * `/_api/v3/ws/{workspace_name}/bulk_create`: Publish data to a specific
   workspace
 
 !!! info "REST API Documentarion"
