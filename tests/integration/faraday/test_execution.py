@@ -73,7 +73,8 @@ def test_execute_agent():
     token = res.json()["token"]
 
     # Config set up
-    config.remove_option(Sections.TOKENS, "agent")
+
+    config.remove_section(Sections.TOKENS)
     config.set(Sections.SERVER, "workspaces", WORKSPACE)
     config.set(Sections.SERVER, "ssl", SSL)
     config.set(Sections.AGENT, "agent_name", AGENT_NAME)
