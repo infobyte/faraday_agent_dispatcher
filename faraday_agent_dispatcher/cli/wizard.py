@@ -68,7 +68,7 @@ class Wizard:
 
     async def run(self):
         end = False
-        delete_report = False
+        ignore_changes = False
         def_value, choices = get_default_value_and_choices("Q", ["A", "E", "Q"])
 
         while not end:
@@ -95,15 +95,13 @@ class Wizard:
                         ):
                             print(self.status_report(sections=config.instance.sections()))
                             end = True
-                            delete_report = True
+                            ignore_changes = True
                         else:
                             end = False
 
                 except ValueError as e:
                     print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
-        if delete_report == 1:
-            pass
-        else:
+        if not ignore_changes:
             config.save_config(self.config_filepath)
 
     def load_executors(self):
@@ -133,7 +131,8 @@ class Wizard:
             elif value.upper() == "D":
                 self.delete_executor()
             else:
-                end = self.quit_executor()
+                quit_executor_msg = f"{Bcolors.WARNING}There are no executors loaded. Are you sure?{Bcolors.ENDC}"
+                return confirm_prompt(quit_executor_msg, default=False) if not self.executors_list else True
 
     def check_executors_name(self, show_text: str, default=None):
         name = click.prompt(show_text, default=default)
@@ -256,20 +255,8 @@ class Wizard:
             config.instance.remove_section(section.format(name))
         self.executors_list.remove(name)
 
-    def quit_executor(self):
-        end = True
-        if not self.executors_list:
-            quit_executors = confirm_prompt(
-                f"{Bcolors.WARNING}There are no executors loaded. Are you sure?{Bcolors.ENDC}", default=False
-            )
-            if quit_executors:
-                end = True
-            else:
-                end = False
-        return end
-
     def status_report(self, sections):
-        min_sections = ["server", "tokens", "agent"]
+        min_sections = ["server", "agent"]
         check = all(item in sections for item in min_sections)
         check_len = len(config.instance.sections())
         if check:
