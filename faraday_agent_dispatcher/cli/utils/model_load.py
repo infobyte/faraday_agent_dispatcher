@@ -158,30 +158,17 @@ def process_agent():
                         ssl = str(url_json["check_ssl"]).lower() == "true"
                         value = ssl
 
-                    if ssl:
-                        if url_json["api_port"] is None:
-                            agent_dict = append_keys(agent_dict, Sections.SERVER)
-                            for type_ports in ["api_port", "websocket_port"]:
-                                value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
-                                config.instance.set(section, type_ports, str(value_port))
-                                agent_dict[Sections.SERVER].pop(type_ports, None)
-
-                        else:
-                            config.instance.set(section, "api_port", str(url_json["api_port"]))
-                            config.instance.set(section, "websocket_port", str(url_json["websocket_port"]))
-                    elif not ssl:
-                        if url_json["api_port"] is None:
-                            agent_dict = append_keys(agent_dict, Sections.SERVER)
-                            for type_ports in ["api_port", "websocket_port"]:
-                                value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
-                                config.instance.set(section, type_ports, str(value_port))
-                                agent_dict[Sections.SERVER].pop(type_ports, None)
-                        else:
-                            config.instance.set(section, "api_port", str(url_json["api_port"]))
-                            config.instance.set(section, "websocket_port", str(url_json["websocket_port"]))
+                    if url_json["api_port"] is None:
+                        agent_dict = append_keys(agent_dict, Sections.SERVER)
+                        for type_ports in ["api_port", "websocket_port"]:
+                            value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
+                            config.instance.set(section, type_ports, str(value_port))
+                            agent_dict[Sections.SERVER].pop(type_ports, None)
 
                     else:
-                        continue
+                        config.instance.set(section, "api_port", str(url_json["api_port"]))
+                        config.instance.set(section, "websocket_port", str(url_json["websocket_port"]))
+
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
                 config.instance.set(section, opt, str(value))
