@@ -46,7 +46,7 @@ class Wizard:
         Sections.EXECUTOR_PARAMS,
         Sections.EXECUTOR_VARENVS,
     ]
-    SPECIAL_CHARACTER = [",", "/", "\\", ";"]
+    SPECIAL_CHARACTER = [",", "/", "\\", ";", "_"]
 
     def __init__(self, config_filepath: Path):
         self.config_filepath = config_filepath
@@ -68,7 +68,7 @@ class Wizard:
 
     async def run(self):
         end = False
-
+        save_file = True
         def_value, choices = get_default_value_and_choices("Q", ["A", "E", "Q"])
 
         while not end:
@@ -94,13 +94,15 @@ class Wizard:
                         ):
                             print(f"{Bcolors.WARNING}File configuration not created" f"{Bcolors.ENDC}")
                             end = True
+                            save_file = False
                         else:
                             end = False
 
                 except ValueError as e:
                     print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
 
-        config.save_config(self.config_filepath)
+        if save_file:
+            config.save_config(self.config_filepath)
 
     def load_executors(self):
         if Sections.AGENT in config.instance:
@@ -116,10 +118,11 @@ class Wizard:
         end = False
 
         while not end:
+            list_executors = self.get_name_executors()
             print(
                 f"The actual configured {Bcolors.OKBLUE}{Bcolors.BOLD}"
                 f"executors{Bcolors.ENDC} are: {Bcolors.OKGREEN}"
-                f"{self.executors_list}{Bcolors.ENDC}"
+                f"{list_executors}{Bcolors.ENDC}"
             )
             value = choose_adm("executor")
             if value.upper() == "A":
@@ -131,13 +134,18 @@ class Wizard:
             else:
                 end = True
 
-    def check_executors_name(self, show_text: str, default=None, custom_name=None):
-        if custom_name is None:
-            name = click.prompt(show_text, default=default)
-        else:
-            name = custom_name
+    def get_name_executors(self):
+        executors_list_only_name = []
+        for name_executor in self.executors_list:
+            position_end = name_executor.rfind("_")
+            position_end = position_end + 1
+            executors_list_only_name.append(name_executor[position_end:])
+        return executors_list_only_name
 
-        if name in self.executors_list and name != default:
+    def check_executors_name(self, show_text: str, default=None):
+        name = click.prompt(show_text)
+        executors_list_only_name = self.get_name_executors()
+        if name in executors_list_only_name and name != default:
             print(f"{Bcolors.WARNING}The executor {name} already exists" f"{Bcolors.ENDC}")
             return
         for character in Wizard.SPECIAL_CHARACTER:
@@ -146,15 +154,12 @@ class Wizard:
                 return
         return name
 
-    def adding_name(self, name, executor="custom"):
+    def change_name(self, name, executor="custom"):
         new_name = f"{executor}_{name}"
-        status_check = self.check_executors_name(show_text="Name", custom_name=new_name)
-        if status_check is None:
-            return
-        for x in range(len(self.executors_list)):
-            if self.executors_list[x] == name:
+        for nro in range(len(self.executors_list)):
+            if self.executors_list[nro] == name:
+                self.executors_list[nro] = new_name
 
-                self.executors_list[x] = new_name
         return new_name
 
     async def new_executor(self):
@@ -198,11 +203,8 @@ class Wizard:
     async def new_repo_executor(self, name):
         try:
             metadata = await self.get_base_repo()
-            name_exectuor = metadata["name"].rsplit(".")
-            new_name = self.adding_name(name, name_exectuor[0])
-            if new_name is None:
-                self.executors_list.pop()
-                print(f"{Bcolors.BOLD}New repository executor not added" f"{Bcolors.ENDC}")
+            name_executor = metadata["name"].rsplit(".")
+            new_name = self.change_name(name=name, executor=name_executor[0])
             Wizard.set_generic_data(new_name, repo_executor_name=metadata["name"])
             process_repo_var_envs(new_name, metadata)
             set_repo_params(new_name, metadata)
@@ -228,56 +230,54 @@ class Wizard:
 
     def new_custom_executor(self, name):
         cmd = click.prompt("Command to execute", default="exit 1")
-        new_name = self.adding_name(name)
-        if new_name is None:
-            self.executors_list.pop()
-            print(f"{Bcolors.BOLD}New repository executor not added" f"{Bcolors.ENDC}")
-        else:
-            Wizard.set_generic_data(new_name, cmd=cmd)
-            process_var_envs(new_name)
-            process_params(new_name)
+        new_name = self.change_name(name=name)
+        Wizard.set_generic_data(new_name, cmd=cmd)
+        process_var_envs(new_name)
+        process_params(new_name)
 
     def edit_executor(self):
         name = click.prompt("Name")
-        if name not in self.executors_list:
+        executors_list_only_name = self.get_name_executors()
+        if name not in executors_list_only_name:
             print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
             return
         new_name = None
+        index = executors_list_only_name.index(name)
         while new_name is None:
-            new_name = self.check_executors_name("New name", default=name)
+            new_name = self.check_executors_name(f"New name [{name}]", default=name)
         if new_name != name:
-            if name.startswith("custom_"):
-                new_name = f"custom_{new_name}"
-            else:
-                end = name.rfind("_")
-                new_name = f"{name[:end]}_{new_name}"
+            nro_end = self.executors_list[index].find("_")
+            new_name = f"{self.executors_list[index][:nro_end]}_{new_name}"
             for unformatted_section in Wizard.EXECUTOR_SECTIONS:
                 section = unformatted_section.format(new_name)
-                old_section = unformatted_section.format(name)
+                old_section = unformatted_section.format(self.executors_list[index])
                 config.instance.add_section(section)
                 for item in config.instance.items(old_section):
                     config.instance.set(section, item[0], item[1])
                 config.instance.remove_section(old_section)
-            self.executors_list.remove(name)
+
+            self.executors_list.remove(self.executors_list[index])
             self.executors_list.append(new_name)
-            name = new_name
-        section = Sections.EXECUTOR_DATA.format(name)
+        section = Sections.EXECUTOR_DATA.format(self.executors_list[index])
         repo_name = config.instance[section].get("repo_executor", None)
         if repo_name:
             metadata = executor_metadata(repo_name)
-            process_repo_var_envs(name, metadata)
+            process_repo_var_envs(self.executors_list[index], metadata)
         else:
             cmd = click.prompt("Command to execute", default=config.instance.get(section, "cmd"))
             config.instance.set(section, "cmd", cmd)
-            process_var_envs(name)
-            process_params(name)
+            process_var_envs(self.executors_list[index])
+            process_params(self.executors_list[index])
         print(f"{Bcolors.OKGREEN}Update repository executor finish" f"{Bcolors.ENDC}")
 
     def delete_executor(self):
         name = click.prompt("Name")
-        if name not in self.executors_list:
+        executors_list_only_name = self.get_name_executors()
+        if name not in executors_list_only_name:
             print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
             return
+        index = executors_list_only_name.index(name)
+        name_delete = self.executors_list[index]
         for section in Wizard.EXECUTOR_SECTIONS:
-            config.instance.remove_section(section.format(name))
-        self.executors_list.remove(name)
+            config.instance.remove_section(section.format(name_delete))
+        self.executors_list.remove(name_delete)
