@@ -153,7 +153,7 @@ def generate_inputs():
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
-                    error_name="custom_ex1",
+                    error_name="ex1",
                     cmd="cmd 4",
                     name="ex4",
                     params=[
@@ -201,7 +201,7 @@ def generate_inputs():
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
-                    name="custom_ex1",
+                    name="ex1",
                     error_name="QWE",
                     cmd="exit 1",
                     params=[
@@ -211,13 +211,13 @@ def generate_inputs():
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex2",
+                    name="ex2",
                     cmd="",
                     varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex3",
+                    name="ex3",
                     new_name="eX3",
                     cmd="",
                     varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
@@ -261,15 +261,15 @@ def generate_inputs():
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
-                    name="custom_ex1",
+                    name="ex1",
                     error_name="QWE",
-                    cmd="exit 1",
+                    cmd="exit 2",
                     params=[ParamInput(name="add_param1", value=False, adm_type=ADMType.DELETE)],
                     adm_type=ADMType.MODIFY,
                 ),
-                ExecutorInput(name="custom_ex2", cmd="", adm_type=ADMType.DELETE),
+                ExecutorInput(name="ex2", cmd="", adm_type=ADMType.DELETE),
                 ExecutorInput(
-                    name="custom_ex3",
+                    name="ex3",
                     cmd="",
                     varenvs=[
                         VarEnvInput(
@@ -446,7 +446,7 @@ def generate_inputs():
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
-                    name="custom_ex1",
+                    name="ex1",
                     error_name="QWE",
                     cmd="exit 1",
                     params=[
@@ -456,13 +456,13 @@ def generate_inputs():
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex2",
+                    name="ex2",
                     cmd="",
                     varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex3",
+                    name="ex3",
                     new_error_name="eX,3",
                     new_name="eX3",
                     cmd="",
@@ -529,7 +529,7 @@ def generate_inputs():
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
-                    name="custom_ex1",
+                    name="ex1",
                     error_name="QWE",
                     cmd="exit 1",
                     params=[
@@ -539,13 +539,13 @@ def generate_inputs():
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex2",
+                    name="ex2",
                     cmd="",
                     varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex3",
+                    name="ex3",
                     new_error_name="eX;3",
                     new_name="eX3",
                     cmd="",
@@ -612,7 +612,7 @@ def generate_inputs():
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
-                    name="custom_ex1",
+                    name="ex1",
                     error_name="QWE",
                     cmd="exit 1",
                     params=[
@@ -622,13 +622,13 @@ def generate_inputs():
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex2",
+                    name="ex2",
                     cmd="",
                     varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex3",
+                    name="ex3",
                     new_error_name="eX\\3",
                     new_name="eX3",
                     cmd="",
@@ -695,7 +695,7 @@ def generate_inputs():
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
-                    name="custom_ex1",
+                    name="ex1",
                     error_name="QWE",
                     cmd="exit 1",
                     params=[
@@ -705,13 +705,13 @@ def generate_inputs():
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex2",
+                    name="ex2",
                     cmd="",
                     varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
-                    name="custom_ex3",
+                    name="ex3",
                     new_error_name="eX/3",
                     new_name="eX3",
                     cmd="",
