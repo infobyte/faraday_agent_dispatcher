@@ -60,6 +60,7 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         in_data += parse_inputs(testing_inputs) + "\0\n" * 1000
         env = os.environ
         env["DEBUG_INPUT_MODE"] = "True"
+
         result = runner.invoke(config_wizard, args=["-c", path], input=in_data, env=env)
         assert result.exit_code == testing_inputs["exit_code"], result.exception
         if "exception" in testing_inputs:
@@ -83,6 +84,7 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         workspace_config_set = set(config_mod.instance.get(config_mod.Sections.SERVER, "workspaces").split(","))
         if "" in workspace_config_set:
             workspace_config_set.remove("")
+
         assert workspace_config_set == expected_workspaces_set
         assert f"Section: {config_mod.Sections.TOKENS}" not in result.output
 
@@ -225,6 +227,7 @@ def test_begin_and_quit():
             input=f"{input_str}{escape_string}",
             env=env,
         )
+
         assert result.exit_code == 0, result.exception
         assert len(config_mod.instance.sections()) == 0
         assert "\0\n" not in result.output

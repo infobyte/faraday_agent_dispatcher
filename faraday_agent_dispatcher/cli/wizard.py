@@ -68,7 +68,7 @@ class Wizard:
 
     async def run(self):
         end = False
-
+        ignore_changes = False
         def_value, choices = get_default_value_and_choices("Q", ["A", "E", "Q"])
 
         while not end:
@@ -85,22 +85,24 @@ class Wizard:
                 process_choice_errors(value)
                 try:
                     if Sections.AGENT in config.instance.sections():
+                        print(self.status_report(sections=config.instance.sections()))
                         self.save_executors()
                         config.control_config()
                         end = True
                     else:
                         if confirm_prompt(
-                            f"{Bcolors.WARNING}File configuration not save. Are you sure?" f"{Bcolors.ENDC}"
+                            f"{Bcolors.WARNING}File configuration not saved. Are you sure? {Bcolors.ENDC}"
                         ):
-                            print(f"{Bcolors.WARNING}File configuration not created" f"{Bcolors.ENDC}")
+                            print(self.status_report(sections=config.instance.sections()))
                             end = True
+                            ignore_changes = True
                         else:
                             end = False
 
                 except ValueError as e:
                     print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
-
-        config.save_config(self.config_filepath)
+        if not ignore_changes:
+            config.save_config(self.config_filepath)
 
     def load_executors(self):
         if Sections.AGENT in config.instance:
@@ -129,7 +131,8 @@ class Wizard:
             elif value.upper() == "D":
                 self.delete_executor()
             else:
-                end = True
+                quit_executor_msg = f"{Bcolors.WARNING}There are no executors loaded. Are you sure?{Bcolors.ENDC}"
+                return confirm_prompt(quit_executor_msg, default=False) if not self.executors_list else True
 
     def check_executors_name(self, show_text: str, default=None):
         name = click.prompt(show_text, default=default)
@@ -251,3 +254,16 @@ class Wizard:
         for section in Wizard.EXECUTOR_SECTIONS:
             config.instance.remove_section(section.format(name))
         self.executors_list.remove(name)
+
+    def status_report(self, sections):
+        min_sections = ["server", "agent"]
+        check = all(item in sections for item in min_sections)
+        check_len = len(config.instance.sections())
+        if check:
+            if check_len > 3:
+                msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
+            else:
+                msj = f"{Bcolors.WARNING}File configuration not complete. Missing Executor section.{Bcolors.ENDC}"
+        else:
+            msj = f"{Bcolors.WARNING}File configuration not created {Bcolors.ENDC}"
+        return msj
