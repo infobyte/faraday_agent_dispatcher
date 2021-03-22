@@ -116,6 +116,7 @@ def test_execute_agent():
             f"--config-file={config_pathfile}",
             f"--logdir={LOGGER_DIR}",
             f"--token={token}",
+            "--debug",
         ]
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         time.sleep(2)  # If fails check time
