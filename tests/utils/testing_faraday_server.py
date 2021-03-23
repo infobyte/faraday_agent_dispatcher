@@ -60,7 +60,7 @@ class FaradayTestConfig:
 
     async def aiohttp_faraday_client(self):
         app = web.Application()
-        app.router.add_get(self.wrap_route("/"), get_base(self))
+        app.router.add_get(self.wrap_route("/_api/v3/info"), get_info(self))
         app.router.add_post(
             self.wrap_route("/_api/v3/agent_registration"),
             get_agent_registration(self),
@@ -143,11 +143,12 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
     return agent_websocket_token
 
 
-def get_base(_: FaradayTestConfig):
-    async def base(_):
-        return web.HTTPOk()
+def get_info(_: FaradayTestConfig):
+    async def info(_):
+        response_dict = {"Faraday Server": "Running", "Version": "3.14.2"}
+        return web.Response(text=json.dumps(response_dict), headers={"content-type": "application/json"})
 
-    return base
+    return info
 
 
 def get_bulk_create(test_config: FaradayTestConfig):

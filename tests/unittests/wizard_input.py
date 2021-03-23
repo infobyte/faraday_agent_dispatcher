@@ -158,7 +158,7 @@ class RepoExecutorInput:
 
         if self.force_quit:
             if self.adm_type == ADMType.ADD:
-                cli_input = f"{cli_input}N\nQ\n"
+                cli_input = f"{cli_input}N\nQ\nY\nQ\nY\n"
         else:
             if self.adm_type == ADMType.ADD:
                 cli_input = f"{cli_input}N\n{self.base}\n"
@@ -191,9 +191,9 @@ class DispatcherInput:
         self.ssl = ssl is None or ssl.lower() != "false"
         self.server_input = {
             "ssl": ssl or "",
-            "host": host or "",
-            "api_port": api_port or "",
-            "ws_port": ws_port or "",
+            "host": host or "localhost",
+            "api_port": api_port or "13123",
+            "ws_port": ws_port or "1234",
             "ssl_cert": ssl_cert or "",
         }
         self.workspaces = workspaces
