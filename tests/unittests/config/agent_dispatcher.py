@@ -221,7 +221,7 @@ def generate_register_options():
             "logs": [
                 {
                     "levelname": "ERROR",
-                    "msg": "No connected before, provide a token. For more help see `faraday-dispatcher --help`",
+                    "msg": "No connected before, provide a token. For more help see `faraday-dispatcher run --help`",
                 },
             ],
             "expected_exception": SystemExit,
