@@ -496,7 +496,7 @@ class Dispatcher:
         await asyncio.sleep(0.25)
 
     async def check_connection(self):
-        server_url = api_url(self.host, self.api_port, secure=self.api_ssl_enabled)
+        server_url = api_url(self.host, self.api_port, postfix="/_api/v3/info", secure=self.api_ssl_enabled)
         logger.debug(f"Validating server connection with {server_url}")
         try:
             kwargs = self.api_kwargs.copy()
