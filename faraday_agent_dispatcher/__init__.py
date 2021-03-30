@@ -20,4 +20,4 @@
 
 __author__ = """Eric Horvat"""
 __email__ = "erich@infobytesec.com"
-__version__ = "1.4.2"
+__version__ = "1.5.0"
