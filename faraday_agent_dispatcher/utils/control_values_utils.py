@@ -44,7 +44,7 @@ def control_bool(field_name, value):
 
 def control_registration_token(field_name: str, value: str):
     if value is None:
-        raise ValueError("No connected before, provide a token. For more help see `faraday-dispatcher --help`")
+        raise ValueError("No connected before, provide a token. For more help see `faraday-dispatcher run --help`")
     if not value.isnumeric():
         raise ValueError(f"{field_name} must be a number")
     control_token(field_name, 6, value)
