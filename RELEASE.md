@@ -1,3 +1,15 @@
+1.5.0 [Mar 30th, 2021]:
+---
+ * ADD having at least a executor is mandatory, if not it will not save the configuration
+ * UPD executor pagination, now each executor have a "unique" id
+ * MOD Update all reference to [faraday][faraday] to [API v3][api]
+ * MOD Connectivity endpoint is now `/_api/v3/info`
+ * MOD Now registration token is needed within the run command. Only needed the first time
+ * MOD setting host in the wizard now accepts full urls, such as `https://my.server.com:12345`
+ * ADD new plugin to support newer OpenVas/gvm versions (gvm_openvas). The old openvas executor was renamed to
+ "openvas_legacy"
+ * [Faraday][faraday] versions: 3.14.3
+
 1.4.2 [Feb 26th, 2021]:
 ---
  * MOD Update faraday-plugins version, improving nessus plugin process
@@ -111,3 +123,4 @@ https://my.company.com/faraday/ as / of faraday)
 
 [faraday]: https://github.com/infobyte/faraday
 [doc]: https://docs.agents.faradaysec.com
+[api]: https://api.faradaysec.com
