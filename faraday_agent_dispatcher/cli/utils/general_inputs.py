@@ -56,11 +56,14 @@ async def choice_paged_option(
     metadata: T = None
     page = 0
     max_page = int(math.ceil(len(options) / page_size))
+    page_next = page_size
+    page_previous = 0
+    paged_executors = sorted(options)
     while metadata is None:
         print("The executors are:")
-        paged_executors = sorted(options)[page * page_size : min((page + 1) * page_size, len(options))]  # noqa E203
         for i, name in enumerate(paged_executors):
-            print(f"{Bcolors.OKGREEN}{i + 1}: {name}{Bcolors.ENDC}")
+            if i in range(page_previous, page_next):
+                print(f"{Bcolors.OKGREEN}{i + 1}: {name}{Bcolors.ENDC}")
         if page > 0:
             print(f"{Bcolors.OPTIONS}-: Previous page{Bcolors.ENDC}")
         if page < max_page - 1:
@@ -70,8 +73,13 @@ async def choice_paged_option(
         if chosen not in [str(i) for i in range(1, len(paged_executors) + 1)]:
             if chosen == "+" and page < max_page - 1:
                 page += 1
+                page_previous += page_size
+                page_next += page_size
             elif chosen == "-" and page > 0:
                 page -= 1
+                page_previous -= page_size
+                page_next -= page_size
+
             elif chosen == "Q":
                 raise WizardCanceledOption("Repository executor selection canceled")
             else:

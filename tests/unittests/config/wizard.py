@@ -24,7 +24,9 @@ def generate_inputs():
     return [
         {
             "id_str": "All default",
-            "dispatcher_input": DispatcherInput(workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]),
+            "dispatcher_input": DispatcherInput(
+                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
+            ),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
@@ -32,6 +34,7 @@ def generate_inputs():
         {
             "id_str": "SSL cert",
             "dispatcher_input": DispatcherInput(
+                host="https://127.0.0.1",
                 ssl_cert=DATA_FOLDER / "mock.pub",
                 workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
@@ -57,7 +60,54 @@ def generate_inputs():
                 api_port="13123",
                 ws_port="1234",
                 agent_name="agent",
-                registration_token="1234567890123456789012345",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"},
+        },
+        {
+            "id_str": "Dispatcher input only host",
+            "dispatcher_input": DispatcherInput(
+                host="127.0.0.1",
+                ssl="false",
+                agent_name="agent",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"},
+        },
+        {
+            "id_str": "Dispatcher input host and port",
+            "dispatcher_input": DispatcherInput(
+                host="127.0.0.1:8080",
+                ssl="false",
+                agent_name="agent",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"},
+        },
+        {
+            "id_str": "Dispatcher input scheme url",
+            "dispatcher_input": DispatcherInput(
+                host="http://127.0.0.1:8080",
+                ssl="false",
+                agent_name="agent",
+                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
+            ),
+            "exit_code": 0,
+            "after_executors": set(),
+            "after_workspaces": {"aworkspace"},
+        },
+        {
+            "id_str": "Dispatcher input host base_route",
+            "dispatcher_input": DispatcherInput(
+                host="127.0.0.1/faraday",
+                ssl="false",
+                agent_name="agent",
                 workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
@@ -73,10 +123,6 @@ def generate_inputs():
                 ws_port="1234",
                 agent_name="agent",
                 workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
-                registration_token=[
-                    "12345678901234567890",
-                    "1234567890123456789012345",
-                ],
             ),
             "exit_code": 0,
             "expected_output": ["registration must be 25 character length"],
@@ -290,7 +336,9 @@ def generate_inputs():
         },
         {
             "id_str": "Basic Repo Executors input",
-            "dispatcher_input": DispatcherInput(workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]),
+            "dispatcher_input": DispatcherInput(
+                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
+            ),
             "executors_input": [
                 RepoExecutorInput(
                     name="ex1",
@@ -320,6 +368,7 @@ def generate_inputs():
         {
             "id_str": "Pass folder as SSL cert",
             "dispatcher_input": DispatcherInput(
+                host="https://127.0.0.1",
                 wrong_ssl_cert="/tmp",
                 ssl_cert=DATA_FOLDER / "mock.pub",
                 workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
@@ -333,6 +382,7 @@ def generate_inputs():
             "id_str": "Non-existent SSL cert",
             "dispatcher_input": DispatcherInput(
                 wrong_ssl_cert="/asdasdasd.pub",
+                host="https://127.0.0.1",
                 ssl_cert=DATA_FOLDER / "mock.pub",
                 workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
@@ -343,11 +393,12 @@ def generate_inputs():
         {
             "id_str": "Add multiple executors and delete one",
             "dispatcher_input": DispatcherInput(
+                ssl="false",
                 workspaces=[
                     WorkspaceInput(name="aworkspace1", adm_type=ADMType.ADD),
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
                     WorkspaceInput(name="aworkspace1", adm_type=ADMType.DELETE),
-                ]
+                ],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -356,11 +407,12 @@ def generate_inputs():
         {
             "id_str": "Add an executor and delete and add one",
             "dispatcher_input": DispatcherInput(
+                ssl="false",
                 workspaces=[
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.DELETE),
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                ]
+                ],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -369,11 +421,12 @@ def generate_inputs():
         {
             "id_str": "Delete an non-existent executor (Test modify do " "nothing)",
             "dispatcher_input": DispatcherInput(
+                ssl="false",
                 workspaces=[
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
                     WorkspaceInput(name="not_exist", adm_type=ADMType.DELETE),
                     WorkspaceInput(name="not_exist", adm_type=ADMType.MODIFY),
-                ]
+                ],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -382,10 +435,11 @@ def generate_inputs():
         {
             "id_str": "Try add an existent executor",
             "dispatcher_input": DispatcherInput(
+                ssl="false",
                 workspaces=[
                     WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
                     WorkspaceInput(name="second", adm_type=ADMType.ADD, error_name="aworkspace"),
-                ]
+                ],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -725,7 +779,9 @@ def generate_inputs():
         },
         {
             "id_str": "Force Quit Executor",
-            "dispatcher_input": DispatcherInput(workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]),
+            "dispatcher_input": DispatcherInput(
+                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
+            ),
             "executors_input": [
                 RepoExecutorInput(
                     name="ex1",

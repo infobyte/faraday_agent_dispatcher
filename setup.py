@@ -45,8 +45,9 @@ requirements = [
     "syslog_rfc5424_formatter",
     "requests",
     "itsdangerous",
-    "faraday-plugins>=1.4.0",
+    "faraday-plugins>=1.4.1",
     "python-owasp-zap-v2.4",
+    "python-gvm",
 ]
 
 setup_requirements = ["pytest-runner", "click", "setuptools_scm"]

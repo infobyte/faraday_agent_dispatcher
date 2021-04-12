@@ -159,7 +159,7 @@ class RepoExecutorInput:
         if self.force_quit:
             if self.adm_type == ADMType.ADD:
 
-                cli_input = f"{cli_input}N\nQ\n"
+                cli_input = f"{cli_input}N\nQ\nY\nQ\nY\n"
         else:
             if self.adm_type == ADMType.ADD:
                 cli_input = f"{cli_input}N\n{self.base}\n"
@@ -186,23 +186,21 @@ class DispatcherInput:
         ssl_cert=None,
         wrong_ssl_cert=None,
         agent_name=None,
-        registration_token=None,
         delete_agent_token: bool = None,
         empty=False,
     ):
         self.ssl = ssl is None or ssl.lower() != "false"
         self.server_input = {
             "ssl": ssl or "",
-            "host": host or "",
-            "api_port": api_port or "",
-            "ws_port": ws_port or "",
+            "host": host or "localhost",
+            "api_port": api_port or "13123",
+            "ws_port": ws_port or "1234",
             "ssl_cert": ssl_cert or "",
         }
         self.workspaces = workspaces
         self.wrong_ssl_cert = wrong_ssl_cert
         self.override_with_default_ssl_cert = self.server_input["ssl_cert"] == ""
         self.agent = agent_name or ""
-        self.registration_token = registration_token or "ACorrectTokenHas25" "CharLen"
         self.delete_agent_token = delete_agent_token
         self.empty = empty
 
@@ -229,10 +227,6 @@ class DispatcherInput:
                 f"{self.process_input_workspaces()}\n"
             )
 
-        if isinstance(self.registration_token, str):
-            self.registration_token = [self.registration_token]
-        for token in self.registration_token:
-            input_str = f"{input_str}{token}\n"
         if self.delete_agent_token is not None:
             input_str = f"{input_str}" f"{'Y' if self.delete_agent_token else 'N'}\n"
 

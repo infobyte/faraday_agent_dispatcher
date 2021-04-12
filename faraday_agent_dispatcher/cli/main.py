@@ -52,7 +52,7 @@ def process_config_file(config_filepath: Path, logger):
     return config_filepath
 
 
-async def main(config_file, logger):
+async def main(config_file, logger, token):
 
     config_file = process_config_file(config_file, logger)
 
@@ -71,7 +71,7 @@ async def main(config_file, logger):
                 lambda: asyncio.ensure_future(dispatcher.close(signame)),
             )
 
-        await dispatcher.register()
+        await dispatcher.register(token)
         await dispatcher.connect()
 
     return 0 if dispatcher.sigterm_received else 1
@@ -91,10 +91,11 @@ async def main(config_file, logger):
     default=False,
     help="Set debug logging, overrides --log-level option",
 )
-def run(config_file, logdir, log_level, debug):
+@click.option("--token", help="Registration token from Faraday server")
+def run(config_file, logdir, log_level, debug, token=None):
     logger = setting_logger(debug, log_level, logdir)
     try:
-        exit_code = asyncio.run(main(config_file, logger))
+        exit_code = asyncio.run(main(config_file, logger, token))
     except KeyboardInterrupt:
         sys.exit(0)
     except Exception as e:
