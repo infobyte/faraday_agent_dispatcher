@@ -5,11 +5,9 @@ import tempfile
 import requests
 import time
 import socket
-from pathlib import Path
 import xml.etree.cElementTree as ET
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.burp.plugin import BurpPlugin
-from urllib.parse import urlparse
 
 
 def get_ip(url):
