@@ -126,8 +126,6 @@ def main():
         sys.exit()
     print(f"Scanning {url_target}", file=sys.stderr)
     with tempfile.TemporaryFile() as tmp_file:
-        #tmpdir = Path(tempdirname)
-        #name_result = tmpdir / "output.xml"
         issue_def = f"{api_host}/{api_key}" f"/v0.1/knowledge_base/issue_definitions"
         rg_issue_definitions = requests.get(issue_def)
         json_issue_definitions = rg_issue_definitions.json()
@@ -159,7 +157,6 @@ def main():
         tmp_file.seek(0)
         plugin.parseOutputString(tmp_file.read())
         print(plugin.get_json())
-
 
 
 if __name__ == "__main__":
