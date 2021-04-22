@@ -5,17 +5,17 @@ import tempfile
 import requests
 import time
 import socket
-from pathlib import Path
 import xml.etree.cElementTree as ET
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.burp.plugin import BurpPlugin
 
 
-def get_ip(host_name):
+def get_ip(url):
+    url_data = urlparse(url)
     try:
-        ip = socket.gethostbyname(host_name)
+        ip = socket.gethostbyname(url_data.netloc)
     except socket.error:
-        ip = "0.0.0.0"
+        ip = url_data.netloc
     return ip
 
 
@@ -122,10 +122,8 @@ def main():
             file=sys.stderr,
         )
         sys.exit()
-
-    with tempfile.TemporaryDirectory() as tempdirname:
-        tmpdir = Path(tempdirname)
-        name_result = tmpdir / "output.xml"
+    print(f"Scanning {url_target}", file=sys.stderr)
+    with tempfile.TemporaryFile() as tmp_file:
         issue_def = f"{api_host}/{api_key}" f"/v0.1/knowledge_base/issue_definitions"
         rg_issue_definitions = requests.get(issue_def)
         json_issue_definitions = rg_issue_definitions.json()
@@ -138,7 +136,7 @@ def main():
         rp_scan = requests.post(f"{api_host}/{api_key}/v0.1/scan", json=json_scan)
         get_location = rp_scan.headers["Location"]
         scan_status = ""
-        while scan_status != "succeeded":
+        while scan_status not in ("succeeded", "failed"):
             try:
                 rg_issues = requests.get(f"{api_host}/{api_key}" f"/v0.1/scan/{get_location}")
             except ConnectionError:
@@ -149,12 +147,14 @@ def main():
             scan_status = issues["scan_status"]
             # Before checking back, wait 15 seconds.
             time.sleep(5)
+            print(f"Waiting for results [{scan_status}]", file=sys.stderr)
 
-        generate_xml(issues, name_result, json_issue_definitions)
+        print("Scan finished", file=sys.stderr)
+        generate_xml(issues, tmp_file, json_issue_definitions)
         plugin = BurpPlugin()
-        with open(name_result, "r") as f:
-            plugin.parseOutputString(f.read())
-            print(plugin.get_json())
+        tmp_file.seek(0)
+        plugin.parseOutputString(tmp_file.read())
+        print(plugin.get_json())
 
 
 if __name__ == "__main__":
