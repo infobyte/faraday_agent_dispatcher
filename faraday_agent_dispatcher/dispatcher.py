@@ -53,6 +53,7 @@ from faraday_agent_dispatcher.config import (
     verify,
 )
 from faraday_agent_dispatcher.executor import Executor
+from faraday_agent_parameters_types import type_validate
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -380,6 +381,25 @@ class Dispatcher:
                         }
                     )
                 )
+
+            # VALIDATE
+            for param in params:
+                errors = type_validate(executor.params[param][1], passed_params[param])
+                if errors:
+                    logger.error(f'Validation error on parameter "{param}", of type "{executor.params[param][1]}"')
+                    await out_func(
+                        json.dumps(
+                            {
+                                "action": "RUN_STATUS",
+                                "execution_id": self.execution_id,
+                                "executor_name": data_dict["executor"],
+                                "running": False,
+                                "message": "Validation error "
+                                f"{param} = {passed_params[param]} did not validate correctly ",
+                            }
+                        )
+                    )
+                    return
 
             if mandatory_full and all_accepted:
                 if not await executor.check_cmds():
