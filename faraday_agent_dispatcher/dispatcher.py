@@ -360,7 +360,7 @@ class Dispatcher:
                 )
             mandatory_full = all(
                 [
-                    not executor.params[param]  # All params is not mandatory
+                    not executor.params[param][0]  # All params is not mandatory
                     or any([param in passed_param for passed_param in passed_params])  # Or was passed
                     for param in params
                 ]

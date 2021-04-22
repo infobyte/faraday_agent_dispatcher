@@ -7,7 +7,6 @@ from faraday_agent_dispatcher.utils.metadata_utils import (
 from faraday_agent_dispatcher.utils.control_values_utils import (
     control_int,
     control_str,
-    control_bool,
 )
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.logger import get_logger
@@ -41,7 +40,8 @@ class Executor:
 
         self.max_size = int(config[executor_section].get("max_size", 64 * 1024))
         self.params = dict(config[params_section]) if params_section in config else {}
-        self.params = {key: value.lower() in ["t", "true"] for key, value in self.params.items()}
+        self.params = {key: value.split(",") for key, value in self.params.items()}
+        self.params = {key: [value[0].lower() in ["t", "true"], value[1]] for key, value in self.params.items()}
         self.varenvs = dict(config[varenvs_section]) if varenvs_section in config else {}
 
     def control_config(self, name, config):
@@ -58,7 +58,6 @@ class Executor:
         if params_section in config:
             for option in config[params_section]:
                 value = config.get(params_section, option)
-                control_bool(option, value)
 
     async def check_cmds(self):
         if self.repo_name is None:
