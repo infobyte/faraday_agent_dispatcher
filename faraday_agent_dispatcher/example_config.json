@@ -1,0 +1,23 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "ssl": false
+  },
+  "agent": {
+    "executors": {
+      "asd": {
+        "max": "asd",
+        "repo_exe": "dfdsf",
+        "params": {
+          "name_url": {
+            "mandatory": true,
+            "type": "string"
+          }
+        },
+        "varenvs": {
+          "test": true
+        }
+      }
+    }
+  }
+}
