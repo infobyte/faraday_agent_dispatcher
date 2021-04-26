@@ -1,13 +1,20 @@
 {
   "server": {
     "host": "127.0.0.1",
-    "ssl": false
+    "ssl": false,
+    "api_port": 5985,
+    "websocket_port": 9000,
+    "ssl_cert": null,
+    "workspaces": "ws"
+  },
+  "tokens": {
+    "agent": "ZDH64Mstt9ZeDwzFVq5AnBaOtadiQLOWV99aKhVIihAIygDef6L5vv2xzlXjFU6S"
   },
   "agent": {
     "executors": {
       "asd": {
-        "max": "asd",
-        "repo_exe": "dfdsf",
+        "max_size": 65536,
+        "repo_executor": "arachni.py",
         "params": {
           "name_url": {
             "mandatory": true,
@@ -15,7 +22,47 @@
           }
         },
         "varenvs": {
-          "test": true
+          "arachni_path": "asd"
+        }
+      },
+      "nmap": {
+        "max_size": 65536,
+        "repo_executor": "nmap.py",
+        "params": {
+          "target": {
+            "mandatory": true,
+            "type": "ip"
+          },
+          "port_list": {
+            "mandatory": false,
+            "type": "range"
+          },
+          "option_sc": {
+            "mandatory": false,
+            "type": "boolean"
+          },
+          "option_sv": {
+            "mandatory": false,
+            "type": "boolean"
+          },
+          "option_pn": {
+            "mandatory": false,
+            "type": "boolean"
+          },
+          "script_timeout": {
+            "mandatory": false,
+            "type": "integer"
+          },
+          "host_timeout": {
+            "mandatory": false,
+            "type": "integer"
+          },
+          "top_ports": {
+            "mandatory": false,
+            "type": "list"
+          }
+        },
+        "varenvs": {
         }
       }
     }

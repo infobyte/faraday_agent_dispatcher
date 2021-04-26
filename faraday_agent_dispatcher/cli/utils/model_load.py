@@ -206,90 +206,104 @@ def process_workspaces() -> None:
 
 def process_var_envs(executor_name):
     end = False
-    section = Sections.EXECUTOR_VARENVS.format(executor_name)
+    # section = Sections.EXECUTOR_VARENVS.format(executor_name)
+    config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"]
 
     while not end:
         print(
             f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name}"
             f" executor's environment variables{Bcolors.ENDC} are:"
-            f" {Bcolors.OKGREEN}{config.instance.options(section)}"
+            f" {Bcolors.OKGREEN}{list(section.keys())}"
             f"{Bcolors.ENDC}"
         )
         value = choose_adm("environment variable")
         if value == "A":
             env_var = click.prompt("Environment variable name").lower()
-            if env_var in config.instance.options(section):
+            if env_var in section:
                 print(f"{Bcolors.WARNING}The environment variable {env_var} " f"already exists{Bcolors.ENDC}")
             else:
                 value = click.prompt("Environment variable value")
-                config.instance.set(section, env_var, value)
+                section[env_var] = value
+                # config.instance.set(section, env_var, value)
         elif value == "M":
             env_var = click.prompt("Environment variable name").lower()
-            if env_var not in config.instance.options(section):
+            if env_var not in section:
                 print(f"{Bcolors.WARNING}There is no {env_var} environment " f"variable{Bcolors.ENDC}")
             else:
                 def_value, env_var = get_new_name(env_var, section, "environment variable")
                 value = click.prompt("Environment variable value", default=def_value)
-                config.instance.set(section, env_var, value)
+                section[env_var] = value
         elif value == "D":
             env_var = click.prompt("Environment variable name").lower()
-            if env_var not in config.instance.options(section):
+            if env_var not in section:
                 print(f"{Bcolors.WARNING}There is no {env_var}" f"environment variable{Bcolors.ENDC}")
             else:
-                config.instance.remove_option(section, env_var)
+                section.pop(env_var)
         else:
             end = True
 
 
 def process_params(executor_name):
     end = False
-    section = Sections.EXECUTOR_PARAMS.format(executor_name)
+    # section = Sections.EXECUTOR_PARAMS.format(executor_name)
+    config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"]
 
     while not end:
         print(
             f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name}"
             f" executor's arguments{Bcolors.ENDC} are: "
-            f"{Bcolors.OKGREEN}{config.instance.options(section)}"
+            f"{Bcolors.OKGREEN}{list(section.keys())}"
             f"{Bcolors.ENDC}"
         )
         value = choose_adm("argument")
         if value == "A":
             param = click.prompt("Argument name").lower()
-            if param in config.instance.options(section):
+            if param in section:
                 print(f"{Bcolors.WARNING}The argument {param} already exists" f"{Bcolors.ENDC}")
             else:
-                value = confirm_prompt("Is mandatory?")
-                config.instance.set(section, param, f"{value}")
+                mandatory = confirm_prompt("Is mandatory?")
+                input_type = param = click.prompt("Type?").lower()
+                section[param] = {"mandatory": mandatory, "type": input_type}
         elif value == "M":
             param = click.prompt("Argument name").lower()
-            if param not in config.instance.options(section):
+            if param not in section:
                 print(f"{Bcolors.WARNING}There is no {param} argument" f"{Bcolors.ENDC}")
             else:
                 def_value, param = get_new_name(param, section, "argument")
-                value = confirm_prompt("Is mandatory?", default=def_value)
-                config.instance.set(section, param, f"{value}")
+                mandatory = confirm_prompt("Is mandatory?", default=def_value["mandatory"])
+                input_type = param = click.prompt("Type?", default=def_value["type"]).lower()
+                section[param] = {"mandatory": mandatory, "type": input_type}
         elif value == "D":
             param = click.prompt("Argument name").lower()
-            if param not in config.instance.options(section):
+            if param not in section:
                 print(f"{Bcolors.WARNING}There is no {param} argument" f"{Bcolors.ENDC}")
             else:
-                config.instance.remove_option(section, param)
+                section.pop(param)
         else:
             end = True
 
 
 def process_repo_var_envs(executor_name, metadata: dict):
-    section = Sections.EXECUTOR_VARENVS.format(executor_name)
+    # section = Sections.EXECUTOR_VARENVS.format(executor_name)
     env_vars = metadata["environment_variables"]
+    config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"]
 
     for env_var in env_vars:
-        def_value = config.instance[section].get(env_var, None)
-        value = click.prompt(f"Environment variable {env_var} value", default=def_value)
-        config.instance.set(section, env_var, value)
+        # def_value = config.instance[section].get(env_var, None)
+        value = click.prompt(f"Environment variable {env_var} value", default=None)
+        section[env_var] = value
+        # config.instance.set(section, env_var, value)
 
 
 def set_repo_params(executor_name, metadata: dict):
-    section = Sections.EXECUTOR_PARAMS.format(executor_name)
+    # section = Sections.EXECUTOR_PARAMS.format(executor_name)
     params: dict = metadata["arguments"]
+    config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"]
+
     for param, value in params.items():
-        config.instance.set(section, param, f"{value}")
+        # config.instance.set(section, param, f"{value}")
+        section[param] = value

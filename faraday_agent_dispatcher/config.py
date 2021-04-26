@@ -12,6 +12,7 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+import json
 from typing import NoReturn
 
 from faraday_agent_dispatcher.utils.control_values_utils import (
@@ -26,7 +27,6 @@ from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
 import os
 import logging
-import configparser
 from pathlib import Path
 from configparser import DuplicateSectionError
 
@@ -48,9 +48,9 @@ if not LOGS_PATH.exists():
 if not CONFIG_PATH.exists():
     CONFIG_PATH.mkdir()
 
-CONFIG_FILENAME = CONFIG_PATH / "dispatcher.ini"
+CONFIG_FILENAME = CONFIG_PATH / "dispatcher.json"
 
-EXAMPLE_CONFIG_FILENAME = Path(__file__).parent / "example_config.ini"
+EXAMPLE_CONFIG_FILENAME = Path(__file__).parent / "example_config.json"
 
 USE_RFC = False
 
@@ -58,16 +58,19 @@ LOGGING_LEVEL = logging.DEBUG
 
 DEFAULT_EXECUTOR_VERIFY_NAME = "unnamed_executor"
 
-instance = configparser.ConfigParser()
+# instance = configparser.ConfigParser()
+instance = {}
 
 
 def reset_config(filepath: Path):
-    instance.clear()
+    global instance
     if filepath.is_dir():
-        filepath = filepath / "dispatcher.ini"
+        filepath = filepath / "dispatcher.json"
     try:
-        if not instance.read(filepath):
-            raise ValueError(f"Unable to read config file located at {filepath}", False)
+        with open(filepath) as json_file:
+            if not json_file:
+                raise ValueError(f"Unable to read config file located at {filepath}", False)
+            instance = json.load(json_file)
     except DuplicateSectionError:
         raise ValueError(f"The config in {filepath} contains duplicated sections", True)
 
@@ -82,9 +85,9 @@ def check_filepath(filepath: str = None):
 def save_config(filepath=None):
     check_filepath(filepath)
     if filepath.is_dir():
-        filepath = filepath / "dispatcher.ini"
+        filepath = filepath / "dispatcher.json"
     with open(filepath, "w") as configfile:
-        instance.write(configfile)
+        json.dump(instance, configfile)
 
 
 def verify():
@@ -196,9 +199,11 @@ class Sections:
     TOKENS = "tokens"
     SERVER = "server"
     AGENT = "agent"
-    EXECUTOR_VARENVS = "{}_varenvs"
-    EXECUTOR_PARAMS = "{}_params"
+    EXECUTORS = "executors"
+    # EXECUTOR_VARENVS = "{}_varenvs"
+    # EXECUTOR_PARAMS = "{}_params"
     EXECUTOR_DATA = "{}"
+    # EXECUTORS = "executors"
 
 
 __control_dict = {
@@ -223,7 +228,7 @@ __control_dict = {
 def control_config():
     for section in __control_dict:
         for option in __control_dict[section]:
-            if section not in instance:
+            if section not in instance[section]:
                 if section == Sections.TOKENS:
                     continue
                 report_sections_differences()
