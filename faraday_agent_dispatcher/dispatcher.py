@@ -50,7 +50,6 @@ from faraday_agent_dispatcher.config import (
     Sections,
     save_config,
     control_config,
-    verify,
 )
 from faraday_agent_dispatcher.executor import Executor
 
@@ -73,7 +72,7 @@ class Dispatcher:
     def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
         try:
-            verify()
+            # verify()
             control_config()
         except ValueError as e:
             logger.error(e)

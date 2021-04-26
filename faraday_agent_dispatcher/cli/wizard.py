@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 from typing import Optional
 
 import click
@@ -41,11 +40,11 @@ class Wizard:
 
     MAX_BUFF_SIZE = 65536
     PAGE_SIZE = DEFAULT_PAGE_SIZE
-    EXECUTOR_SECTIONS = [
-        Sections.EXECUTOR_DATA,
-        Sections.EXECUTOR_PARAMS,
-        Sections.EXECUTOR_VARENVS,
-    ]
+    # EXECUTOR_SECTIONS = [
+    #     Sections.EXECUTOR_DATA,
+    #     Sections.EXECUTOR_PARAMS,
+    #     Sections.EXECUTOR_VARENVS,
+    # ]
     SPECIAL_CHARACTER = [",", "/", "\\"]
 
     def __init__(self, config_filepath: Path):
@@ -58,11 +57,11 @@ class Wizard:
                 # the filepath is either a file, or a folder containing a file,
                 # which can't be processed
                 raise e
-        try:
-            config.verify()
-        except ValueError as e:
-            print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
-            sys.exit(1)
+        # try:
+        #     config.verify()
+        # except ValueError as e:
+        #     print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+        #     sys.exit(1)
         self.executors_list = []
         self.load_executors()
 
@@ -106,13 +105,13 @@ class Wizard:
 
     def load_executors(self):
         if Sections.AGENT in config.instance:
-            executors = config.instance[Sections.AGENT].get("executors", "")
-            self.executors_list = executors.split(",")
+            self.executors_list = config.instance[Sections.AGENT].get("executors", "")
             if "" in self.executors_list:
                 self.executors_list.remove("")
 
     def save_executors(self):
-        config.instance.set(Sections.AGENT, "executors", ",".join(self.executors_list))
+        # config.instance.set(Sections.AGENT, "executors", ",".join(self.executors_list))
+        pass
 
     async def process_executors(self):
         end = False
@@ -121,7 +120,7 @@ class Wizard:
             print(
                 f"The actual configured {Bcolors.OKBLUE}{Bcolors.BOLD}"
                 f"executors{Bcolors.ENDC} are: {Bcolors.OKGREEN}"
-                f"{self.executors_list}{Bcolors.ENDC}"
+                f"{list(self.executors_list.keys())}{Bcolors.ENDC}"
             )
             value = choose_adm("executor")
             if value.upper() == "A":
@@ -148,7 +147,7 @@ class Wizard:
     async def new_executor(self):
         name = self.check_executors_name("Name")
         if name:
-            self.executors_list.append(name)
+            self.executors_list[name] = {}
             custom_executor = confirm_prompt("Is a custom executor?", default=False)
             if custom_executor:
                 self.new_custom_executor(name)
@@ -196,18 +195,12 @@ class Wizard:
 
     @staticmethod
     def set_generic_data(name, cmd=None, repo_executor_name: str = None):
-        for section in Wizard.EXECUTOR_SECTIONS:
-            formatted_section = section.format(name)
-            config.instance.add_section(formatted_section)
-        config.instance.set(Sections.EXECUTOR_DATA.format(name), "max_size", f"{Wizard.MAX_BUFF_SIZE}")
+        executor = config.instance[Sections.AGENT][Sections.EXECUTORS][name]
+        executor["max_size"] = Wizard.MAX_BUFF_SIZE
         if repo_executor_name:
-            config.instance.set(
-                Sections.EXECUTOR_DATA.format(name),
-                "repo_executor",
-                f"{repo_executor_name}",
-            )
+            executor["repo_executor"] = repo_executor_name
         else:
-            config.instance.set(Sections.EXECUTOR_DATA.format(name), "cmd", cmd)
+            executor["cmd"] = cmd
 
     def new_custom_executor(self, name):
         cmd = click.prompt("Command to execute", default="exit 1")
