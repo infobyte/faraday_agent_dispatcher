@@ -13,7 +13,9 @@ from faraday_plugins.plugins.repo.burp.plugin import BurpPlugin
 
 def get_ip(host_name):
     try:
-        ip = socket.gethostbyname(host_name)
+        #Need to change this because we have a full URL (http://127.0.0.1/)
+        parsed_uri = urlparse(host_name)
+        ip = socket.gethostbyname(parsed_uri.netloc)
     except socket.error:
         ip = "0.0.0.0"
     return ip
