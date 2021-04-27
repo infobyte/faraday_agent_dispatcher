@@ -120,17 +120,16 @@ def process_agent():
     ssl = True
 
     for section in agent_dict:
-        if Sections.TOKENS == section and (
-            section not in config.instance or "agent" not in config.instance.options(section)
-        ):
+        if Sections.TOKENS == section and (section not in config.instance or "agent" not in config.instance[section]):
             continue
         print(f"{Bcolors.OKBLUE}Section: {section}{Bcolors.ENDC}")
         for opt in agent_dict[section]:
             if section not in config.instance:
-                config.instance.add_section(section)
+                config.instance[section] = agent_dict[section]
             if section == Sections.TOKENS and opt == "agent":
-                if "agent" in config.instance.options(section) and confirm_prompt("Delete agent token?"):
-                    config.instance.remove_option(section, opt)
+                if "agent" in config.instance[section] and confirm_prompt("Delete agent token?"):
+                    # config.instance.remove_option(section, opt)
+                    config.instance[section].pop(opt, None)
             elif opt == "ssl_cert":
                 if ssl:
 
@@ -142,14 +141,16 @@ def process_agent():
                             value, _ = ask_value(agent_dict, opt, section, ssl)
                             if value != "" and Path(value).exists():
                                 path = value
-                    config.instance.set(section, opt, str(path))
+                    # config.instance.set(section, opt, str(path))
+                    config.instance[section][opt] = str(path)
             elif opt == "workspaces":
                 process_workspaces()
             else:
                 if opt == "host":
                     value, url_json = ask_value(agent_dict, opt, section, ssl)
                     if url_json["url_path"]:
-                        config.instance.set(section, "base_route", str(url_json["url_path"]))
+                        # config.instance.set(section, "base_route", str(url_json["url_path"]))
+                        config.instance[section]["base_route"] = str(url_json["url_path"])
                 elif opt == "ssl":
                     if url_json["check_ssl"] is None:
                         value, _ = ask_value(agent_dict, opt, section, ssl)
@@ -162,16 +163,20 @@ def process_agent():
                         agent_dict = append_keys(agent_dict, Sections.SERVER)
                         for type_ports in ["api_port", "websocket_port"]:
                             value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
-                            config.instance.set(section, type_ports, str(value_port))
+                            # config.instance.set(section, type_ports, str(value_port))
+                            config.instance[section][type_ports] = str(value_port)
                             agent_dict[Sections.SERVER].pop(type_ports, None)
 
                     else:
-                        config.instance.set(section, "api_port", str(url_json["api_port"]))
-                        config.instance.set(section, "websocket_port", str(url_json["websocket_port"]))
+                        # config.instance.set(section, "api_port", str(url_json["api_port"]))
+                        config.instance[section]["api_port"] = str(url_json["api_port"])
+                        # config.instance.set(section, "websocket_port", str(url_json["websocket_port"]))
+                        config.instance[section]["websocket_port"] = str(url_json["websocket_port"])
 
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
-                config.instance.set(section, opt, str(value))
+                # config.instance.set(section, opt, str(value))
+                config.instance[section][opt] = str(value)
 
 
 def process_workspaces() -> None:
@@ -201,7 +206,8 @@ def process_workspaces() -> None:
         else:
             end = True
 
-    config.instance.set(section, "workspaces", ",".join(workspaces))
+    # config.instance.set(section, "workspaces", ",".join(workspaces))
+    config.instance[section]["workspaces"] = ",".join(workspaces)
 
 
 def process_var_envs(executor_name):
