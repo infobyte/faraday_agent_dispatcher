@@ -55,7 +55,7 @@ KNOWN_SERVICES = ["redis", "postgres"]
 
 
 def main():
-    """ heroku cli user must be logged to run this agent"""
+    """heroku cli user must be logged to run this agent"""
 
     try:
         subprocess.run(["heroku", "auth:whoami"], stdout=subprocess.DEVNULL, check=True)
