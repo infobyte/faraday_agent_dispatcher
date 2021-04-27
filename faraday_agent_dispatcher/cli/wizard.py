@@ -83,9 +83,8 @@ class Wizard:
             else:
                 process_choice_errors(value)
                 try:
-                    if Sections.AGENT in config.instance.sections():
-                        print(self.status_report(sections=config.instance.sections()))
-                        self.save_executors()
+                    if Sections.AGENT in config.instance:
+                        print(self.status_report(sections=config.instance))
                         config.control_config()
                         end = True
                     else:
@@ -108,10 +107,6 @@ class Wizard:
             self.executors_list = config.instance[Sections.AGENT].get("executors", "")
             if "" in self.executors_list:
                 self.executors_list.remove("")
-
-    def save_executors(self):
-        # config.instance.set(Sections.AGENT, "executors", ",".join(self.executors_list))
-        pass
 
     async def process_executors(self):
         end = False
@@ -251,9 +246,9 @@ class Wizard:
     def status_report(self, sections):
         min_sections = ["server", "agent"]
         check = all(item in sections for item in min_sections)
-        check_len = len(config.instance.sections())
+        check_len = len(config.instance)
         if check:
-            if check_len > 3:
+            if check_len > 2:
                 msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
             else:
                 msj = f"{Bcolors.WARNING}File configuration not complete. Missing Executor section.{Bcolors.ENDC}"

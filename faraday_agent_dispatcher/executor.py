@@ -26,11 +26,12 @@ class Executor:
 
     def __init__(self, name: str, config):
         name = name.strip()
+        config = config[Sections.AGENT][Sections.EXECUTORS]
         self.control_config(name, config)
         self.name = name
         executor_section = Sections.EXECUTOR_DATA.format(name)
-        params_section = Sections.EXECUTOR_PARAMS.format(name)
-        varenvs_section = Sections.EXECUTOR_VARENVS.format(name)
+        params_section = Sections.EXECUTOR_PARAMS
+        varenvs_section = Sections.EXECUTOR_VARENVS
         self.repo_name = config[executor_section].get("repo_executor", None)
         if self.repo_name:
             metadata = executor_metadata(self.repo_name)
@@ -40,9 +41,13 @@ class Executor:
             self.cmd = config[executor_section].get("cmd")
 
         self.max_size = int(config[executor_section].get("max_size", 64 * 1024))
-        self.params = dict(config[params_section]) if params_section in config else {}
+        self.params = (
+            dict(config[executor_section][params_section]) if params_section in config[executor_section] else {}
+        )
         self.params = {key: value.lower() in ["t", "true"] for key, value in self.params.items()}
-        self.varenvs = dict(config[varenvs_section]) if varenvs_section in config else {}
+        self.varenvs = (
+            dict(config[executor_section][varenvs_section]) if varenvs_section in config[executor_section] else {}
+        )
 
     def control_config(self, name, config):
         if " " in name:
@@ -52,7 +57,7 @@ class Executor:
 
         for section in self.__control_dict:
             for option in self.__control_dict[section]:
-                value = config.get(section.format(name), option) if option in config[section.format(name)] else None
+                value = config[section.format(name)][option] if option in config[section.format(name)] else None
                 self.__control_dict[section][option](option, value)
         params_section = Sections.EXECUTOR_PARAMS.format(name)
         if params_section in config:

@@ -73,6 +73,8 @@ def reset_config(filepath: Path):
             instance = json.load(json_file)
     except DuplicateSectionError:
         raise ValueError(f"The config in {filepath} contains duplicated sections", True)
+    except EnvironmentError:
+        raise EnvironmentError("Error opening the config file")
 
 
 def check_filepath(filepath: str = None):
@@ -87,7 +89,7 @@ def save_config(filepath=None):
     if filepath.is_dir():
         filepath = filepath / "dispatcher.json"
     with open(filepath, "w") as configfile:
-        json.dump(instance, configfile)
+        json.dump(instance, configfile, indent=4)
 
 
 def verify():
@@ -166,21 +168,21 @@ def verify():
 
 def report_sections_differences() -> NoReturn:
     actual_sections = {Sections.AGENT, Sections.SERVER, Sections.TOKENS}
-    config_section = set(instance.sections())
+    config_section = set(instance)
     lacking_sections = actual_sections.difference(config_section)
     extra_sections = config_section.difference(actual_sections)
-    if Sections.AGENT in instance.sections() and "executors" in instance[Sections.AGENT]:
-        extra_sections.difference_update(
-            {
-                section.format(executor_name)
-                for executor_name in instance.get(Sections.AGENT, "executors")
-                for section in {
-                    Sections.EXECUTOR_DATA,
-                    Sections.EXECUTOR_PARAMS,
-                    Sections.EXECUTOR_VARENVS,
-                }
-            }
-        )
+    # if Sections.AGENT in instance and "executors" in instance[Sections.AGENT]:
+    #     extra_sections.difference_update(
+    #         {
+    #             section.format(executor_name)
+    #             for executor_name in instance.get(Sections.AGENT, "executors")
+    #             for section in {
+    #                 Sections.EXECUTOR_DATA,
+    #                 Sections.EXECUTOR_PARAMS,
+    #                 Sections.EXECUTOR_VARENVS,
+    #             }
+    #         }
+    #     )
     msg_phrases = [
         "The lacking sections are:",
         f"{Bcolors.BOLD}{','.join(lacking_sections)}{Bcolors.ENDC}"
@@ -200,8 +202,8 @@ class Sections:
     SERVER = "server"
     AGENT = "agent"
     EXECUTORS = "executors"
-    # EXECUTOR_VARENVS = "{}_varenvs"
-    # EXECUTOR_PARAMS = "{}_params"
+    EXECUTOR_VARENVS = "varenvs"
+    EXECUTOR_PARAMS = "params"
     EXECUTOR_DATA = "{}"
     # EXECUTORS = "executors"
 
@@ -220,7 +222,7 @@ __control_dict = {
     },
     Sections.AGENT: {
         "agent_name": control_str(),
-        "executors": control_list(can_repeat=False),
+        # "executors": control_list(can_repeat=False),
     },
 }
 
@@ -228,9 +230,9 @@ __control_dict = {
 def control_config():
     for section in __control_dict:
         for option in __control_dict[section]:
-            if section not in instance[section]:
+            if section not in instance:
                 if section == Sections.TOKENS:
                     continue
                 report_sections_differences()
-            value = instance.get(section, option) if option in instance[section] else None
+            value = instance[section][option] if option in instance[section] else None
             __control_dict[section][option](option, value)
