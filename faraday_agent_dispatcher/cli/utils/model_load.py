@@ -206,15 +206,14 @@ def process_workspaces() -> None:
         else:
             end = True
 
-    # config.instance.set(section, "workspaces", ",".join(workspaces))
     config.instance[section]["workspaces"] = ",".join(workspaces)
 
 
 def process_var_envs(executor_name):
     end = False
-    # section = Sections.EXECUTOR_VARENVS.format(executor_name)
-    config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"]
+    if "varenvs" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
+        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("varenvs", None)
 
     while not end:
         print(
@@ -252,9 +251,9 @@ def process_var_envs(executor_name):
 
 def process_params(executor_name):
     end = False
-    # section = Sections.EXECUTOR_PARAMS.format(executor_name)
-    config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"]
+    if "params" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
+        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("params", {})
 
     while not end:
         print(
@@ -270,7 +269,7 @@ def process_params(executor_name):
                 print(f"{Bcolors.WARNING}The argument {param} already exists" f"{Bcolors.ENDC}")
             else:
                 mandatory = confirm_prompt("Is mandatory?")
-                input_type = param = click.prompt("Type?").lower()
+                input_type = click.prompt("Type?").lower()
                 section[param] = {"mandatory": mandatory, "type": input_type}
         elif value == "M":
             param = click.prompt("Argument name").lower()
@@ -292,16 +291,13 @@ def process_params(executor_name):
 
 
 def process_repo_var_envs(executor_name, metadata: dict):
-    # section = Sections.EXECUTOR_VARENVS.format(executor_name)
     env_vars = metadata["environment_variables"]
     config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
     section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"]
 
     for env_var in env_vars:
-        # def_value = config.instance[section].get(env_var, None)
         value = click.prompt(f"Environment variable {env_var} value", default=None)
         section[env_var] = value
-        # config.instance.set(section, env_var, value)
 
 
 def set_repo_params(executor_name, metadata: dict):
@@ -311,5 +307,4 @@ def set_repo_params(executor_name, metadata: dict):
     section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"]
 
     for param, value in params.items():
-        # config.instance.set(section, param, f"{value}")
         section[param] = value
