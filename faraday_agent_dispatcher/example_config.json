@@ -1,70 +1,14 @@
 {
-    "agent": {
-        "agent_name": "agent",
-        "executors": {
-            "asd": {
-                "max_size": 65536,
-                "params": {
-                    "name_url": {
-                        "mandatory": true,
-                        "type": "string"
-                    }
-                },
-                "repo_executor": "arachni.py",
-                "varenvs": {
-                    "arachni_path": "asd"
-                }
-            },
-            "nmap": {
-                "max_size": 65536,
-                "params": {
-                    "host_timeout": {
-                        "mandatory": false,
-                        "type": "integer"
-                    },
-                    "option_pn": {
-                        "mandatory": false,
-                        "type": "boolean"
-                    },
-                    "option_sc": {
-                        "mandatory": false,
-                        "type": "boolean"
-                    },
-                    "option_sv": {
-                        "mandatory": false,
-                        "type": "boolean"
-                    },
-                    "port_list": {
-                        "mandatory": false,
-                        "type": "range"
-                    },
-                    "script_timeout": {
-                        "mandatory": false,
-                        "type": "integer"
-                    },
-                    "target": {
-                        "mandatory": true,
-                        "type": "ip"
-                    },
-                    "top_ports": {
-                        "mandatory": false,
-                        "type": "list"
-                    }
-                },
-                "repo_executor": "nmap.py",
-                "varenvs": {}
-            }
-        }
-    },
-    "server": {
-        "api_port": "5985",
-        "host": "127.0.0.1",
-        "ssl": "True",
-        "ssl_cert": "",
-        "websocket_port": "9000",
-        "workspaces": "ws"
-    },
-    "tokens": {
-        "agent": "ZDH64Mstt9ZeDwzFVq5AnBaOtadiQLOWV99aKhVIihAIygDef6L5vv2xzlXjFU6S"
-    }
+  "agent": {
+    "agent_name": "agent",
+    "executors": {}
+  },
+  "server": {
+    "api_port": "5985",
+    "host": "localhost",
+    "ssl": "False",
+    "ssl_cert": "",
+    "websocket_port": "9000",
+    "workspaces": ""
+  }
 }

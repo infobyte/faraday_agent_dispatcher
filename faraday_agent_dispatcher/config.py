@@ -28,7 +28,7 @@ from faraday_agent_dispatcher.utils.text_utils import Bcolors
 import os
 import logging
 from pathlib import Path
-from configparser import DuplicateSectionError
+from shutil import copy
 
 try:
     FARADAY_PATH = Path(os.environ["FARADAY_HOME"]).expanduser()
@@ -58,7 +58,6 @@ LOGGING_LEVEL = logging.DEBUG
 
 DEFAULT_EXECUTOR_VERIFY_NAME = "unnamed_executor"
 
-# instance = configparser.ConfigParser()
 instance = {}
 
 
@@ -66,13 +65,13 @@ def reset_config(filepath: Path):
     global instance
     if filepath.is_dir():
         filepath = filepath / "dispatcher.json"
+    if not filepath.is_file():
+        copy(EXAMPLE_CONFIG_FILENAME, filepath)
     try:
         with open(filepath) as json_file:
             if not json_file:
                 raise ValueError(f"Unable to read config file located at {filepath}", False)
             instance = json.load(json_file)
-    except DuplicateSectionError:
-        raise ValueError(f"The config in {filepath} contains duplicated sections", True)
     except EnvironmentError:
         raise EnvironmentError("Error opening the config file")
 
@@ -205,7 +204,6 @@ class Sections:
     EXECUTOR_VARENVS = "varenvs"
     EXECUTOR_PARAMS = "params"
     EXECUTOR_DATA = "{}"
-    # EXECUTORS = "executors"
 
 
 __control_dict = {

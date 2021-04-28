@@ -40,11 +40,11 @@ class Wizard:
 
     MAX_BUFF_SIZE = 65536
     PAGE_SIZE = DEFAULT_PAGE_SIZE
-    # EXECUTOR_SECTIONS = [
-    #     Sections.EXECUTOR_DATA,
-    #     Sections.EXECUTOR_PARAMS,
-    #     Sections.EXECUTOR_VARENVS,
-    # ]
+    EXECUTOR_SECTIONS = [
+        Sections.EXECUTOR_DATA,
+        Sections.EXECUTOR_PARAMS,
+        Sections.EXECUTOR_VARENVS,
+    ]
     SPECIAL_CHARACTER = [",", "/", "\\"]
 
     def __init__(self, config_filepath: Path):
@@ -212,24 +212,18 @@ class Wizard:
         while new_name is None:
             new_name = self.check_executors_name("New name", default=name)
         if new_name != name:
-            for unformatted_section in Wizard.EXECUTOR_SECTIONS:
-                section = unformatted_section.format(new_name)
-                old_section = unformatted_section.format(name)
-                config.instance.add_section(section)
-                for item in config.instance.items(old_section):
-                    config.instance.set(section, item[0], item[1])
-                config.instance.remove_section(old_section)
-            self.executors_list.remove(name)
-            self.executors_list.append(new_name)
+            value = self.executors_list[name]
+            self.executors_list.pop(name)
+            self.executors_list[new_name] = value
             name = new_name
         section = Sections.EXECUTOR_DATA.format(name)
-        repo_name = config.instance[section].get("repo_executor", None)
+        repo_name = self.executors_list[section].get("repo_executor", None)
         if repo_name:
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(name, metadata)
         else:
-            cmd = click.prompt("Command to execute", default=config.instance.get(section, "cmd"))
-            config.instance.set(section, "cmd", cmd)
+            cmd = click.prompt("Command to execute", default=self.executors_list[section]["cmd"])
+            self.executors_list[section]["cmd"] = cmd
             process_var_envs(name)
             process_params(name)
         print(f"{Bcolors.OKGREEN}Update repository executor finish" f"{Bcolors.ENDC}")
@@ -239,9 +233,7 @@ class Wizard:
         if name not in self.executors_list:
             print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
             return
-        for section in Wizard.EXECUTOR_SECTIONS:
-            config.instance.remove_section(section.format(name))
-        self.executors_list.remove(name)
+        self.executors_list.pop(name)
 
     def status_report(self, sections):
         min_sections = ["server", "agent"]
