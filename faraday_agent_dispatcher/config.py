@@ -14,7 +14,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import configparser
 import json
-from typing import NoReturn
 
 from faraday_agent_dispatcher.utils.control_values_utils import (
     control_int,
@@ -23,6 +22,7 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_agent_token,
     control_list,
     control_bool,
+    control_executors,
 )
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 
@@ -112,7 +112,6 @@ def update_config():
     except configparser.DuplicateSectionError:
         raise ValueError(f"The config in {OLD_CONFIG_FILENAME} contains duplicated sections", True)
 
-    should_be_empty = False
     if OldSections.AGENT not in old_instance:
         if OldSections.EXECUTOR in old_instance:
             agent_name = old_instance.get(OldSections.EXECUTOR, "agent_name")
@@ -126,8 +125,6 @@ def update_config():
             cmd = old_instance.get(OldSections.EXECUTOR, "cmd")
             old_instance.set(OldSections.EXECUTOR_DATA.format(executor_name), "cmd", cmd)
             old_instance.remove_section(OldSections.EXECUTOR)
-        else:
-            should_be_empty = True
     else:
         data = []
 
@@ -149,13 +146,6 @@ def update_config():
     if OldSections.TOKENS in old_instance and "registration" in old_instance.options(OldSections.TOKENS):
         old_instance.remove_option(OldSections.TOKENS, "registration")
 
-    if OldSections.SERVER not in old_instance:
-        should_be_empty = True
-
-    if should_be_empty:
-        if len(old_instance.sections()) != 0:
-            pass
-            # report_sections_differences()
     else:
         if "workspace" in old_instance[OldSections.SERVER]:
             workspace_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspace")
@@ -179,7 +169,6 @@ def update_config():
             old_instance.set(OldSections.SERVER, "ssl", "True")
         if "ssl_cert" not in old_instance[OldSections.SERVER]:
             old_instance.set(OldSections.SERVER, "ssl_cert", "")
-        # control_config()
 
     # TO JSON
 
@@ -210,7 +199,10 @@ def update_config():
                 # Params
                 executors[executor_name]["params"] = {}
                 for key, value in old_instance[OldSections.EXECUTOR_PARAMS.format(executor_name)].items():
-                    executors[executor_name]["params"][key] = value
+                    executors[executor_name]["params"][key] = {
+                        "mandatory": value.lower() in ["true", "t"],
+                        "type": "string",
+                    }
 
         else:
             data.append(f"executors option not in {OldSections.AGENT} section")
@@ -233,34 +225,8 @@ def update_config():
             json_config[Sections.SERVER][key] = value
 
     instance.update(json_config)
+    control_config()
     save_config(CONFIG_FILENAME)
-
-
-def report_sections_differences() -> NoReturn:
-    actual_sections = {Sections.AGENT, Sections.SERVER, Sections.TOKENS}
-    config_section = set(instance)
-    lacking_sections = actual_sections.difference(config_section)
-    extra_sections = config_section.difference(actual_sections)
-    # if Sections.AGENT in instance and "executors" in instance[Sections.AGENT]:
-    #     extra_sections.difference_update(
-    #         {
-    #             section.format(executor_name)
-    #             for executor_name in instance.get(Sections.AGENT, "executors")
-    #             for section in {
-    #                 Sections.EXECUTOR_DATA,
-    #                 Sections.EXECUTOR_PARAMS,
-    #                 Sections.EXECUTOR_VARENVS,
-    #             }
-    #         }
-    #     )
-    msg_phrases = [
-        "The lacking sections are:",
-        f"{Bcolors.BOLD}{','.join(lacking_sections)}{Bcolors.ENDC}"
-        "Can not process the config file, the extra sections are:",
-        f"{Bcolors.BOLD}{','.join(extra_sections)}{Bcolors.ENDC}",
-    ]
-    logging.error(" ".join(msg_phrases))
-    raise ValueError("\n".join(msg_phrases))
 
 
 class Sections:
@@ -293,7 +259,7 @@ __control_dict = {
     },
     Sections.AGENT: {
         "agent_name": control_str(),
-        # "executors": control_list(can_repeat=False),
+        "executors": control_executors,
     },
 }
 
@@ -304,6 +270,6 @@ def control_config():
             if section not in instance:
                 if section == Sections.TOKENS:
                     continue
-                report_sections_differences()
+                raise ValueError(f"{section} section missing in config file")
             value = instance[section][option] if option in instance[section] else None
             __control_dict[section][option](option, value)

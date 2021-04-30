@@ -44,7 +44,6 @@ class Executor:
         self.params = (
             dict(config[executor_section][params_section]) if params_section in config[executor_section] else {}
         )
-        # self.params = {key: value.lower() in ["t", "true"] for key, value in self.params.items()}
         self.varenvs = (
             dict(config[executor_section][varenvs_section]) if varenvs_section in config[executor_section] else {}
         )
