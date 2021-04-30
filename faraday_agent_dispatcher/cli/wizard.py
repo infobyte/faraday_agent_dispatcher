@@ -236,6 +236,7 @@ class Wizard:
         process_params(new_name)
 
     def edit_executor(self):
+
         name = click.prompt("Name")
         executors_list_only_name = self.get_name_executors()
         if name not in executors_list_only_name:
@@ -249,17 +250,22 @@ class Wizard:
             nro_end = self.executors_list[index].find("_")
             new_name = f"{self.executors_list[index][:nro_end]}_{new_name}"
             for unformatted_section in Wizard.EXECUTOR_SECTIONS:
+
                 section = unformatted_section.format(new_name)
                 old_section = unformatted_section.format(self.executors_list[index])
                 config.instance.add_section(section)
                 for item in config.instance.items(old_section):
+
                     config.instance.set(section, item[0], item[1])
                 config.instance.remove_section(old_section)
 
             self.executors_list.remove(self.executors_list[index])
             self.executors_list.append(new_name)
+
+        index = self.executors_list.index(new_name)
         section = Sections.EXECUTOR_DATA.format(self.executors_list[index])
         repo_name = config.instance[section].get("repo_executor", None)
+       
         if repo_name:
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(self.executors_list[index], metadata)
