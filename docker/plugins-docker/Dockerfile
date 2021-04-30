@@ -24,7 +24,7 @@ RUN apt-get update && \
     apt-get install --yes --no-install-recommends \
         build-essential git \
         # Python
-        python3.8 python3-pip python3-venv \
+        python3 python3-pip python3-venv \
         # Go
         golang \
         # Installing Nikto

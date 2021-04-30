@@ -23,17 +23,17 @@ websocket_port = 9000
 ssl_cert =
 ; TODO be filled with available workspaces
 workspaces =
-
-[tokens]
-; TODO be filled with the registration token (see https://docs.agents.faradaysec.com/getting-started/)
-registration =
 ```
 
 After setting the values in the .ini file, you can run the agent as:
 
 ```sh
-$ docker run -v {ABSOLUTE_PATH_TO_INI}:/root/.faraday/config/dispatcher.ini -it faradaysec/faraday_agent_dispatcher
+$ docker run -v {ABSOLUTE_PATH_TO_INI}:/root/.faraday/config/dispatcher.ini -it faradaysec/faraday_agent_dispatcher --token={TOKEN}
 ```
+
+!!! warning
+    As we explain in the [getting started guide][getting-started], you only need the token the first time you run
+    an agent
 
 ### Templates
 
@@ -42,16 +42,17 @@ We currently have 2 templates:
 === "Base Agent"  
     This [template](template_dispatcher.ini) use is as simple as shown above  
     ```shell
-    $ docker run -v {ABSOLUTE_PATH_TO_INI}:/root/.faraday/config/dispatcher.ini -it faradaysec/faraday_agent_dispatcher
+    $ docker run -v {ABSOLUTE_PATH_TO_INI}:/root/.faraday/config/dispatcher.ini -it faradaysec/faraday_agent_dispatcher --token={TOKEN}
     ```
 
 === "With reports"  
     This [template](template_dispatcher_with_report.ini) adds the possibility
     of use a path to read reports from the host machine.
     ```shell
-    $ docker run -v {ABSOLUTE_PATH_TO_INI}:/root/.faraday/config/dispatcher.ini  -v {ABSOLUTE_PATH_TO_REPORT_FOLDER}:/root/reports/ -it faradaysec/faraday_agent_dispatcher
+    $ docker run -v {ABSOLUTE_PATH_TO_INI}:/root/.faraday/config/dispatcher.ini  -v {ABSOLUTE_PATH_TO_REPORT_FOLDER}:/root/reports/ -it faradaysec/faraday_agent_dispatcher --token={TOKEN}
     ```
     Then you can process any report by just specifying the route to the report
     file as an executor parameter
 
 [dockerhub]: https://hub.docker.com/u/faradaysec
+[getting-started]: ../getting-started.md

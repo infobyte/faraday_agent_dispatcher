@@ -29,7 +29,7 @@ from tests.utils.text_utils import fuzzy_string
 class FaradayTestConfig:
     def __init__(self, is_ssl: bool = False, has_base_route: bool = False):
         self.workspaces = [fuzzy_string(8) for _ in range(0, random.randint(2, 6))]
-        self.registration_token = fuzzy_string(25)
+        self.registration_token = f"{random.randint(0, 999999):06}"
         self.agent_token = fuzzy_string(64)
         self.agent_id = random.randint(1, 1000)
         self.websocket_port = random.randint(1025, 65535)
@@ -60,22 +60,22 @@ class FaradayTestConfig:
 
     async def aiohttp_faraday_client(self):
         app = web.Application()
-        app.router.add_get(self.wrap_route("/"), get_base(self))
+        app.router.add_get(self.wrap_route("/_api/v3/info"), get_info(self))
         app.router.add_post(
-            self.wrap_route("/_api/v2/agent_registration/"),
+            self.wrap_route("/_api/v3/agent_registration"),
             get_agent_registration(self),
         )
         app.router.add_post(
-            self.wrap_route("/_api/v2/agent_websocket_token/"),
+            self.wrap_route("/_api/v3/agent_websocket_token"),
             get_agent_websocket_token(self),
         )
         for workspace in self.workspaces:
             app.router.add_post(
-                self.wrap_route(f"/_api/v2/ws/{workspace}/bulk_create/"),
+                self.wrap_route(f"/_api/v3/ws/{workspace}/bulk_create"),
                 get_bulk_create(self),
             )
-        app.router.add_post(self.wrap_route("/_api/v2/ws/error500/bulk_create/"), get_bulk_create(self))
-        app.router.add_post(self.wrap_route("/_api/v2/ws/error429/bulk_create/"), get_bulk_create(self))
+        app.router.add_post(self.wrap_route("/_api/v3/ws/error500/bulk_create"), get_bulk_create(self))
+        app.router.add_post(self.wrap_route("/_api/v3/ws/error429/bulk_create"), get_bulk_create(self))
         app.router.add_get(self.wrap_route("/websockets"), get_ws_handler(self))
 
         server = TestServer(app)
@@ -143,11 +143,12 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
     return agent_websocket_token
 
 
-def get_base(_: FaradayTestConfig):
-    async def base(_):
-        return web.HTTPOk()
+def get_info(_: FaradayTestConfig):
+    async def info(_):
+        response_dict = {"Faraday Server": "Running", "Version": "3.14.2"}
+        return web.Response(text=json.dumps(response_dict), headers={"content-type": "application/json"})
 
-    return base
+    return info
 
 
 def get_bulk_create(test_config: FaradayTestConfig):

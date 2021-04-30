@@ -1,3 +1,20 @@
+1.5.0 [Mar 30th, 2021]:
+---
+ * ADD having at least a executor is mandatory, if not it will not save the configuration
+ * UPD executor pagination, now each executor have a "unique" id
+ * MOD Update all reference to [faraday][faraday] to [API v3][api]
+ * MOD Connectivity endpoint is now `/_api/v3/info`
+ * MOD Now registration token is needed within the run command. Only needed the first time
+ * MOD setting host in the wizard now accepts full urls, such as `https://my.server.com:12345`
+ * ADD new plugin to support newer OpenVas/gvm versions (gvm_openvas). The old openvas executor was renamed to
+ "openvas_legacy"
+ * [Faraday][faraday] versions: 3.14.3
+
+1.4.2 [Feb 26th, 2021]:
+---
+ * MOD Update faraday-plugins version, improving nessus plugin process
+ * [Faraday][faraday] versions: 3.14.0, 3.14.1, 3.14.2
+
 1.4.1 [Feb 17th, 2021]:
 ---
  * MOD Various UX improves in wizard:
@@ -10,7 +27,7 @@
     * MOD change color for options "next page" "don't choose"
  * ADD new WPScan executor that does not need docker anymore
  * FIX in nuclei_exclude parameter for nuclei executor
- * [Faraday][faraday] versions: 3.14.0, 3.14.1
+ * [Faraday][faraday] versions: 3.14.0, 3.14.1, 3.14.2
 
 1.4.0 [Dec 23rd, 2020]:
 ---
@@ -23,7 +40,7 @@ https://my.company.com/faraday/ as / of faraday)
  * Add new flags for nmap executor: `-sC`,`-sV`,`-Pn`,`--script-timeout`,`--host-timeout`,`--top-ports`
  * Fix bug nmap and nessus executors to execute with the dispatcher environment
  * Fix nmap executor when http(s) scheme passed as target
- * [Faraday][faraday] versions: 3.14.0, 3.14.1
+ * [Faraday][faraday] versions: 3.14.0, 3.14.1, 3.14.2
 
 1.3.1 [Sep 7th, 2020]:
 ---
@@ -106,3 +123,4 @@ https://my.company.com/faraday/ as / of faraday)
 
 [faraday]: https://github.com/infobyte/faraday
 [doc]: https://docs.agents.faradaysec.com
+[api]: https://api.faradaysec.com

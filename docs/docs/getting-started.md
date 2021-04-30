@@ -28,14 +28,8 @@ The wizard will ask for which configuration you would set, the
 
 ### Agent configuration
 
-The proper configuration differ if you want to use a SSL connection with your
- [Faraday][faraday] server. When using SSL you can use a self signed certificate!
-
-!!! info
-    The token required can be taken in the http(s)://__{faraday_server_host}__/#/admin/agents
-
-    ![token_example](images/token.png)
-    Your token is: _ImalA8Cg1L6Z5Qbx2u9CFAsob_
+The proper configuration differ if you want to use SSL connection with your
+ [Faraday][faraday] server. When using SSL you can use a self-signed certificate!
 
 Examples:
 
@@ -53,8 +47,6 @@ Examples:
         _Trying to save with empty value_  
         ssl_cert []: **/home/path/to/the/cert.pub**  
         workspace [workspace]: **sslWorkspace**  
-        _Section: tokens_  
-        registration [ACorrectTokenIs25CharLen]: **1234567890123456789012345**  
         _Section: agent_  
         agent_name [agent]: **sslAgent**  
         Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?  
@@ -71,8 +63,6 @@ Examples:
         api_port [5985]:  
         websocket_port [9000]:  
         workspace [workspace]: **sslFalseWorkspace**  
-        _Section: tokens_  
-        registration [ACorrectTokenIs25CharLen]: **1234567890123456789012345**  
         _Section: agent_  
         agent_name [agent]: **sslFalseAgent**  
         Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?  
@@ -197,19 +187,33 @@ technical section.
 
 ### Start the agent
 
-The dispatcher can be configured with the `run` command: <!--Add link to proper page-->
+The first time you run an agent, you need a token provided by the server
+That required token can be taken from the http(s)://__{faraday_server_host}__/#/admin/agents
+
+For example in:
+![token_example](images/token.png)
+Your token is: _562107_
+
+The dispatcher can be executed with the `run` command, passing this token as an option: <!--Add link to proper
+page-->
 
 ```shell
-$ faraday-dispatcher run
+$ faraday-dispatcher run --token={TOKEN}
 ```
 
 ???+ success "Expected output"
     The expected output when the dispatcher run command is as follows
     ```shell
     $ faraday-dispatcher run
-    INFO - token_registration_url: {faraday_host}/_api/v2/ws/agent2/agent_registration/
+    INFO - token_registration_url: {faraday_host}/_api/v3/ws/agent2/agent_registration
     INFO - Registered successfully
     INFO - Connection to Faraday server succeeded
+    ```
+
+???+ warning
+    The token is only needed the first time you run an agent, afterward you can run it without the option, as:
+    ```shell
+    $ faraday-dispatcher run
     ```
 
 ### Running an executor from faraday
