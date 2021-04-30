@@ -12,6 +12,7 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+import configparser
 import json
 from typing import NoReturn
 
@@ -102,55 +103,65 @@ def update_config():
     This methods tries to adapt old versions, if its not possible,
     warns about it and exits with a proper error code
     """
+
+    old_instance = configparser.ConfigParser()
+
+    try:
+        if not old_instance.read(OLD_CONFIG_FILENAME):
+            raise ValueError(f"Unable to read config file located at {OLD_CONFIG_FILENAME}", False)
+    except configparser.DuplicateSectionError:
+        raise ValueError(f"The config in {OLD_CONFIG_FILENAME} contains duplicated sections", True)
+
     should_be_empty = False
-    if Sections.AGENT not in instance:
-        if OldSections.EXECUTOR in instance:
-            agent_name = instance.get(OldSections.EXECUTOR, "agent_name")
+    if OldSections.AGENT not in old_instance:
+        if OldSections.EXECUTOR in old_instance:
+            agent_name = old_instance.get(OldSections.EXECUTOR, "agent_name")
             executor_name = DEFAULT_EXECUTOR_VERIFY_NAME
-            instance.add_section(Sections.EXECUTOR_DATA.format(executor_name))
-            instance.add_section(Sections.EXECUTOR_VARENVS.format(executor_name))
-            instance.add_section(Sections.EXECUTOR_PARAMS.format(executor_name))
-            instance.add_section(Sections.AGENT)
-            instance.set(Sections.AGENT, "agent_name", agent_name)
-            instance.set(Sections.AGENT, "executors", executor_name)
-            cmd = instance.get(OldSections.EXECUTOR, "cmd")
-            instance.set(Sections.EXECUTOR_DATA.format(executor_name), "cmd", cmd)
-            instance.remove_section(OldSections.EXECUTOR)
+            old_instance.add_section(OldSections.EXECUTOR_DATA.format(executor_name))
+            old_instance.add_section(OldSections.EXECUTOR_VARENVS.format(executor_name))
+            old_instance.add_section(OldSections.EXECUTOR_PARAMS.format(executor_name))
+            old_instance.add_section(OldSections.AGENT)
+            old_instance.set(OldSections.AGENT, "agent_name", agent_name)
+            old_instance.set(OldSections.AGENT, "executors", executor_name)
+            cmd = old_instance.get(OldSections.EXECUTOR, "cmd")
+            old_instance.set(OldSections.EXECUTOR_DATA.format(executor_name), "cmd", cmd)
+            old_instance.remove_section(OldSections.EXECUTOR)
         else:
             should_be_empty = True
     else:
         data = []
 
-        if "executors" in instance[Sections.AGENT]:
-            executor_list = instance.get(Sections.AGENT, "executors").split(",")
+        if "executors" in old_instance[OldSections.AGENT]:
+            executor_list = old_instance.get(OldSections.AGENT, "executors").split(",")
             if "" in executor_list:
                 executor_list.remove("")
             for executor_name in executor_list:
                 executor_name = executor_name.strip()
-                if Sections.EXECUTOR_DATA.format(executor_name) not in instance.sections():
+                if OldSections.EXECUTOR_DATA.format(executor_name) not in old_instance.sections():
 
-                    data.append(f"{Sections.EXECUTOR_DATA.format(executor_name)} " "section does not exists")
+                    data.append(f"{OldSections.EXECUTOR_DATA.format(executor_name)} " "section does not exists")
         else:
-            data.append(f"executors option not in {Sections.AGENT} section")
+            data.append(f"executors option not in {OldSections.AGENT} section")
 
         if len(data) > 0:
             raise ValueError("\n".join(data))
 
-    if Sections.TOKENS in instance and "registration" in instance.options(Sections.TOKENS):
-        instance.remove_option(Sections.TOKENS, "registration")
+    if OldSections.TOKENS in old_instance and "registration" in old_instance.options(OldSections.TOKENS):
+        old_instance.remove_option(OldSections.TOKENS, "registration")
 
-    if Sections.SERVER not in instance:
+    if OldSections.SERVER not in old_instance:
         should_be_empty = True
 
     if should_be_empty:
-        if len(instance.sections()) != 0:
-            report_sections_differences()
+        if len(old_instance.sections()) != 0:
+            pass
+            # report_sections_differences()
     else:
-        if "workspace" in instance[Sections.SERVER]:
-            workspace_loaded_value = instance.get(section=Sections.SERVER, option="workspace")
+        if "workspace" in old_instance[OldSections.SERVER]:
+            workspace_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspace")
             workspaces_value = workspace_loaded_value
 
-            if "workspaces" in instance[Sections.SERVER]:
+            if "workspaces" in old_instance[OldSections.SERVER]:
                 print(
                     f"{Bcolors.WARNING}Both section {Bcolors.BOLD}workspace "
                     f"{Bcolors.ENDC}{Bcolors.WARNING}and "
@@ -158,17 +169,71 @@ def update_config():
                     f"{Bcolors.WARNING} found. Merging them"
                 )
                 logging.warning("Both section workspace and workspaces " "found. Merging them")
-                workspaces_loaded_value = instance.get(section=Sections.SERVER, option="workspaces")
+                workspaces_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspaces")
                 if len(workspaces_value) >= 0:
                     workspaces_value = f"{workspaces_value}," f"{workspaces_loaded_value}"
-            instance.set(section=Sections.SERVER, option="workspaces", value=workspaces_value)
-            instance.remove_option(Sections.SERVER, "workspace")
+            old_instance.set(section=OldSections.SERVER, option="workspaces", value=workspaces_value)
+            old_instance.remove_option(OldSections.SERVER, "workspace")
 
-        if "ssl" not in instance[Sections.SERVER]:
-            instance.set(Sections.SERVER, "ssl", "True")
-        if "ssl_cert" not in instance[Sections.SERVER]:
-            instance.set(Sections.SERVER, "ssl_cert", "")
-        control_config()
+        if "ssl" not in old_instance[OldSections.SERVER]:
+            old_instance.set(OldSections.SERVER, "ssl", "True")
+        if "ssl_cert" not in old_instance[OldSections.SERVER]:
+            old_instance.set(OldSections.SERVER, "ssl_cert", "")
+        # control_config()
+
+    # TO JSON
+
+    json_config = {}
+    executors = {}
+
+    # Agent & Executors
+
+    if Sections.AGENT in old_instance:
+        if "executors" in old_instance[OldSections.AGENT]:
+            executor_list = old_instance.get(OldSections.AGENT, "executors").split(",")
+            if "" in executor_list:
+                executor_list.remove("")
+            for executor_name in executor_list:
+                executor_name = executor_name.strip()
+
+                executors[executor_name] = {}
+
+                # Data
+                for key, value in old_instance[OldSections.EXECUTOR_DATA.format(executor_name)].items():
+                    executors[executor_name][key] = value
+
+                # Varenvs
+                executors[executor_name]["varenvs"] = {}
+                for key, value in old_instance[OldSections.EXECUTOR_VARENVS.format(executor_name)].items():
+                    executors[executor_name]["varenvs"][key] = value
+
+                # Params
+                executors[executor_name]["params"] = {}
+                for key, value in old_instance[OldSections.EXECUTOR_PARAMS.format(executor_name)].items():
+                    executors[executor_name]["params"][key] = value
+
+        else:
+            data.append(f"executors option not in {OldSections.AGENT} section")
+
+        json_config[Sections.AGENT] = {
+            "agent_name": old_instance.get(OldSections.AGENT, "agent_name"),
+            Sections.EXECUTORS: executors,
+        }
+
+    # Tokens
+    json_config[Sections.TOKENS] = {}
+    if OldSections.TOKENS in old_instance:
+        for key, value in old_instance[OldSections.TOKENS].items():
+            json_config[Sections.TOKENS][key] = value
+
+    # Server
+    json_config[Sections.SERVER] = {}
+    if OldSections.SERVER in old_instance:
+        for key, value in old_instance[OldSections.SERVER].items():
+            json_config[Sections.SERVER][key] = value
+
+    instance.update(json_config)
+    save_config(CONFIG_FILENAME)
 
 
 def report_sections_differences() -> NoReturn:
@@ -198,10 +263,6 @@ def report_sections_differences() -> NoReturn:
     raise ValueError("\n".join(msg_phrases))
 
 
-class OldSections:
-    EXECUTOR = "executor"
-
-
 class Sections:
     TOKENS = "tokens"
     SERVER = "server"
@@ -210,6 +271,12 @@ class Sections:
     EXECUTOR_VARENVS = "varenvs"
     EXECUTOR_PARAMS = "params"
     EXECUTOR_DATA = "{}"
+
+
+class OldSections(Sections):
+    EXECUTOR = "executor"
+    EXECUTOR_VARENVS = "{}_varenvs"
+    EXECUTOR_PARAMS = "{}_params"
 
 
 __control_dict = {
