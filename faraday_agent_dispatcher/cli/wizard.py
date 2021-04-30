@@ -265,7 +265,7 @@ class Wizard:
         index = self.executors_list.index(new_name)
         section = Sections.EXECUTOR_DATA.format(self.executors_list[index])
         repo_name = config.instance[section].get("repo_executor", None)
-       
+
         if repo_name:
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(self.executors_list[index], metadata)
