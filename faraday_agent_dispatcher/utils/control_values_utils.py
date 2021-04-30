@@ -60,3 +60,28 @@ def control_token(field_name, size: int, value: str):
         raise ValueError(f"{field_name} must be alphanumeric")
     if len(value) != size:
         raise ValueError(f"{field_name} must be {size} character length")
+
+
+def control_executors(field_name, value):
+    if not isinstance(value, dict):
+        raise ValueError(f"{field_name} must be a dictionary")
+
+    for e_name, e_value in value.items():
+
+        if "max_size" not in e_value:
+            raise ValueError(f"Missing max_size in {e_name}")
+        if "repo_executor" not in e_value and "cmd" not in e_value:
+            raise ValueError(f"repo_executor or cmd missing in {e_value}")
+        if "varenvs" not in e_value:
+            raise ValueError(f"varenvs section missing in {e_value}")
+
+        if "params" in e_value:
+            for param, param_val in e_value["params"].items():
+                if not isinstance(param_val, dict):
+                    raise ValueError(f"{e_name}-{param} must be a dictionary")
+                if not isinstance(param_val.get("mandatory"), bool):
+                    raise ValueError(f"{param} mandatory field missing or not boolean")
+                if not isinstance(param_val.get("type"), str):
+                    raise ValueError(f"{param} type field missing or not string")
+        else:
+            raise ValueError(f"params section missing in {e_value}")

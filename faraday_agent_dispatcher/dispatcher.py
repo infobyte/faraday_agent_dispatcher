@@ -71,7 +71,6 @@ class Dispatcher:
     def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
         try:
-            # verify()
             control_config()
         except ValueError as e:
             logger.error(e)
@@ -88,7 +87,10 @@ class Dispatcher:
         self.websocket = None
         self.websocket_token = None
         self.workspaces = _parse_list(config.instance[Sections.SERVER]["workspaces"])
-        self.executors = config.instance[Sections.AGENT].get("executors", {})
+        self.executors = {
+            executor_name: Executor(executor_name, config.instance)
+            for executor_name in config.instance[Sections.AGENT].get("executors", "")
+        }
         self.ws_ssl_enabled = self.api_ssl_enabled = config.instance[Sections.SERVER].get("ssl", "False").lower() in [
             "t",
             "true",
