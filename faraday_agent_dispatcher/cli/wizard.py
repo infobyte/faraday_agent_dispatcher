@@ -57,12 +57,7 @@ class Wizard:
                 # the filepath is either a file, or a folder containing a file,
                 # which can't be processed
                 raise e
-        # try:
-        #     config.verify()
-        # except ValueError as e:
-        #     print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
-        #     sys.exit(1)
-        self.executors_list = []
+        self.executors_dict = {}
         self.load_executors()
 
     async def run(self):
@@ -104,9 +99,7 @@ class Wizard:
 
     def load_executors(self):
         if Sections.AGENT in config.instance:
-            self.executors_list = config.instance[Sections.AGENT].get("executors", "")
-            if "" in self.executors_list:
-                self.executors_list.remove("")
+            self.executors_dict = config.instance[Sections.AGENT].get("executors", {})
 
     async def process_executors(self):
         end = False
@@ -115,7 +108,7 @@ class Wizard:
             print(
                 f"The actual configured {Bcolors.OKBLUE}{Bcolors.BOLD}"
                 f"executors{Bcolors.ENDC} are: {Bcolors.OKGREEN}"
-                f"{list(self.executors_list.keys())}{Bcolors.ENDC}"
+                f"{list(self.executors_dict.keys())}{Bcolors.ENDC}"
             )
             value = choose_adm("executor")
             if value.upper() == "A":
@@ -126,11 +119,11 @@ class Wizard:
                 self.delete_executor()
             else:
                 quit_executor_msg = f"{Bcolors.WARNING}There are no executors loaded. Are you sure?{Bcolors.ENDC}"
-                return confirm_prompt(quit_executor_msg, default=False) if not self.executors_list else True
+                return confirm_prompt(quit_executor_msg, default=False) if not self.executors_dict else True
 
     def check_executors_name(self, show_text: str, default=None):
         name = click.prompt(show_text, default=default)
-        if name in self.executors_list and name != default:
+        if name in self.executors_dict and name != default:
             print(f"{Bcolors.WARNING}The executor {name} already exists" f"{Bcolors.ENDC}")
             return
         for character in Wizard.SPECIAL_CHARACTER:
@@ -142,7 +135,7 @@ class Wizard:
     async def new_executor(self):
         name = self.check_executors_name("Name")
         if name:
-            self.executors_list[name] = {}
+            self.executors_dict[name] = {}
             custom_executor = confirm_prompt("Is a custom executor?", default=False)
             if custom_executor:
                 self.new_custom_executor(name)
@@ -185,7 +178,7 @@ class Wizard:
             set_repo_params(name, metadata)
             print(f"{Bcolors.OKGREEN}New repository executor added" f"{Bcolors.ENDC}")
         except WizardCanceledOption:
-            self.executors_list.pop()
+            self.executors_dict.pop()
             print(f"{Bcolors.BOLD}New repository executor not added" f"{Bcolors.ENDC}")
 
     @staticmethod
@@ -205,35 +198,35 @@ class Wizard:
 
     def edit_executor(self):
         name = click.prompt("Name")
-        if name not in self.executors_list:
+        if name not in self.executors_dict:
             print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
             return
         new_name = None
         while new_name is None:
             new_name = self.check_executors_name("New name", default=name)
         if new_name != name:
-            value = self.executors_list[name]
-            self.executors_list.pop(name)
-            self.executors_list[new_name] = value
+            value = self.executors_dict[name]
+            self.executors_dict.pop(name)
+            self.executors_dict[new_name] = value
             name = new_name
         section = Sections.EXECUTOR_DATA.format(name)
-        repo_name = self.executors_list[section].get("repo_executor", None)
+        repo_name = self.executors_dict[section].get("repo_executor", None)
         if repo_name:
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(name, metadata)
         else:
-            cmd = click.prompt("Command to execute", default=self.executors_list[section]["cmd"])
-            self.executors_list[section]["cmd"] = cmd
+            cmd = click.prompt("Command to execute", default=self.executors_dict[section]["cmd"])
+            self.executors_dict[section]["cmd"] = cmd
             process_var_envs(name)
             process_params(name)
         print(f"{Bcolors.OKGREEN}Update repository executor finish" f"{Bcolors.ENDC}")
 
     def delete_executor(self):
         name = click.prompt("Name")
-        if name not in self.executors_list:
+        if name not in self.executors_dict:
             print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
             return
-        self.executors_list.pop(name)
+        self.executors_dict.pop(name)
 
     def status_report(self, sections):
         min_sections = ["server", "agent"]
