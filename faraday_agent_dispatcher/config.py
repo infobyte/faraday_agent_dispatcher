@@ -52,6 +52,8 @@ CONFIG_FILENAME = CONFIG_PATH / "dispatcher.json"
 
 EXAMPLE_CONFIG_FILENAME = Path(__file__).parent / "example_config.json"
 
+OLD_CONFIG_FILENAME = CONFIG_PATH / "dispatcher.ini"
+
 USE_RFC = False
 
 LOGGING_LEVEL = logging.DEBUG
@@ -62,16 +64,20 @@ instance = {}
 
 
 def reset_config(filepath: Path):
-    global instance
     if filepath.is_dir():
         filepath = filepath / "dispatcher.json"
     if not filepath.is_file():
-        copy(EXAMPLE_CONFIG_FILENAME, filepath)
+        if OLD_CONFIG_FILENAME.is_file():
+            update_config()
+        else:
+            copy(EXAMPLE_CONFIG_FILENAME, filepath)
+
     try:
-        with open(filepath) as json_file:
+        with filepath.open() as json_file:
             if not json_file:
                 raise ValueError(f"Unable to read config file located at {filepath}", False)
-            instance = json.load(json_file)
+            instance.clear()
+            instance.update(json.load(json_file))
     except EnvironmentError:
         raise EnvironmentError("Error opening the config file")
 
@@ -87,11 +93,11 @@ def save_config(filepath=None):
     check_filepath(filepath)
     if filepath.is_dir():
         filepath = filepath / "dispatcher.json"
-    with open(filepath, "w") as configfile:
+    with filepath.open("w") as configfile:
         json.dump(instance, configfile, indent=4)
 
 
-def verify():
+def update_config():
     """
     This methods tries to adapt old versions, if its not possible,
     warns about it and exits with a proper error code

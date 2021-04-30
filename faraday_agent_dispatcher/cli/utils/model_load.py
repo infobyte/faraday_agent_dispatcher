@@ -12,6 +12,7 @@ from faraday_agent_dispatcher.cli.utils.general_prompts import (
 )
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
+from faraday_agent_parameters_types import DATA_TYPE
 
 
 def append_keys(agent_dict, section):
@@ -125,11 +126,10 @@ def process_agent():
         print(f"{Bcolors.OKBLUE}Section: {section}{Bcolors.ENDC}")
         for opt in agent_dict[section]:
             if section not in config.instance:
-                config.instance[section] = agent_dict[section]
+                config.instance[section] = dict()
             if section == Sections.TOKENS and opt == "agent":
                 if "agent" in config.instance[section] and confirm_prompt("Delete agent token?"):
-                    # config.instance.remove_option(section, opt)
-                    config.instance[section].pop(opt, None)
+                    config.instance[section].pop(opt)
             elif opt == "ssl_cert":
                 if ssl:
 
@@ -213,7 +213,7 @@ def process_var_envs(executor_name):
     end = False
     if "varenvs" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
         config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("varenvs", None)
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("varenvs")
 
     while not end:
         print(
@@ -253,7 +253,7 @@ def process_params(executor_name):
     end = False
     if "params" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
         config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("params", {})
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("params")
 
     while not end:
         print(
@@ -269,7 +269,7 @@ def process_params(executor_name):
                 print(f"{Bcolors.WARNING}The argument {param} already exists" f"{Bcolors.ENDC}")
             else:
                 mandatory = confirm_prompt("Is mandatory?")
-                input_type = click.prompt("Type?").lower()
+                input_type = click.prompt("Type?", type=click.Choice(DATA_TYPE.keys()))
                 section[param] = {"mandatory": mandatory, "type": input_type}
         elif value == "M":
             param = click.prompt("Argument name").lower()
@@ -278,7 +278,7 @@ def process_params(executor_name):
             else:
                 def_value, param = get_new_name(param, section, "argument")
                 mandatory = confirm_prompt("Is mandatory?", default=def_value["mandatory"])
-                input_type = param = click.prompt("Type?", default=def_value["type"]).lower()
+                input_type = click.prompt("Type?", type=click.Choice(DATA_TYPE.keys()), default=def_value["type"])
                 section[param] = {"mandatory": mandatory, "type": input_type}
         elif value == "D":
             param = click.prompt("Argument name").lower()
@@ -292,8 +292,9 @@ def process_params(executor_name):
 
 def process_repo_var_envs(executor_name, metadata: dict):
     env_vars = metadata["environment_variables"]
-    config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"]
+    if "varenvs" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
+        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("varenvs")
 
     for env_var in env_vars:
         value = click.prompt(f"Environment variable {env_var} value", default=None)
@@ -301,10 +302,10 @@ def process_repo_var_envs(executor_name, metadata: dict):
 
 
 def set_repo_params(executor_name, metadata: dict):
-    # section = Sections.EXECUTOR_PARAMS.format(executor_name)
     params: dict = metadata["arguments"]
-    config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"]
+    if "params" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
+        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("params")
 
     for param, value in params.items():
         section[param] = value

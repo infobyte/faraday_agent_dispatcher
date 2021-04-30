@@ -88,11 +88,7 @@ class Dispatcher:
         self.websocket = None
         self.websocket_token = None
         self.workspaces = _parse_list(config.instance[Sections.SERVER]["workspaces"])
-
-        self.executors = {
-            executor_name: Executor(executor_name, config.instance)
-            for executor_name in config.instance[Sections.AGENT].get("executors", "")
-        }
+        self.executors = config.instance[Sections.AGENT].get("executors", {})
         self.ws_ssl_enabled = self.api_ssl_enabled = config.instance[Sections.SERVER].get("ssl", "False").lower() in [
             "t",
             "true",
