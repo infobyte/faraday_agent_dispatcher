@@ -74,14 +74,17 @@ def control_executors(field_name, value):
             raise ValueError(f"repo_executor or cmd missing in {e_value}")
         if "varenvs" not in e_value:
             raise ValueError(f"varenvs section missing in {e_value}")
-
         if "params" in e_value:
-            for param, param_val in e_value["params"].items():
-                if not isinstance(param_val, dict):
-                    raise ValueError(f"{e_name}-{param} must be a dictionary")
-                if not isinstance(param_val.get("mandatory"), bool):
-                    raise ValueError(f"{param} mandatory field missing or not boolean")
-                if not isinstance(param_val.get("type"), str):
-                    raise ValueError(f"{param} type field missing or not string")
+            control_param(e_value["params"])
         else:
             raise ValueError(f"params section missing in {e_value}")
+
+
+def control_param(params):
+    for param, param_val in params.items():
+        if not isinstance(param_val, dict):
+            raise ValueError(f"{param} must be a dictionary")
+        if not isinstance(param_val.get("mandatory"), bool):
+            raise ValueError(f"{param} mandatory field missing or not boolean")
+        if not isinstance(param_val.get("type"), str):
+            raise ValueError(f"{param} type field missing or not string")
