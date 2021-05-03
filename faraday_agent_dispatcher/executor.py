@@ -20,7 +20,6 @@ class Executor:
 
     def __init__(self, name: str, config):
         name = name.strip()
-        config = config[Sections.AGENT][Sections.EXECUTORS][name]
         self.control_config(name, config)
         self.name = name
         self.repo_name = config.get("repo_executor")
