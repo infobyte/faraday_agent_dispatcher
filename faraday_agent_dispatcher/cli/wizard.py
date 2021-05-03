@@ -57,6 +57,7 @@ class Wizard:
                 # the filepath is either a file, or a folder containing a file,
                 # which can't be processed
                 raise e
+        config.control_config()
         self.executors_dict = {}
         self.load_executors()
 
