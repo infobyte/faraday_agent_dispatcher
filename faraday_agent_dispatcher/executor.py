@@ -4,11 +4,7 @@ from faraday_agent_dispatcher.utils.metadata_utils import (
     executor_folder,
     check_commands,
 )
-from faraday_agent_dispatcher.utils.control_values_utils import (
-    control_int,
-    control_str,
-    control_bool,
-)
+from faraday_agent_dispatcher.utils.control_values_utils import control_int, control_str, control_param
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.logger import get_logger
 
@@ -17,52 +13,38 @@ logger = get_logger()
 
 class Executor:
     __control_dict = {
-        Sections.EXECUTOR_DATA: {
-            "cmd": control_str(True),
-            "repo_executor": control_str(True),
-            "max_size": control_int(True),
-        }
+        "cmd": control_str(True),
+        "repo_executor": control_str(True),
+        "max_size": control_int(True),
     }
 
     def __init__(self, name: str, config):
         name = name.strip()
-        config = config[Sections.AGENT][Sections.EXECUTORS]
+        config = config[Sections.AGENT][Sections.EXECUTORS][name]
         self.control_config(name, config)
         self.name = name
-        executor_section = Sections.EXECUTOR_DATA.format(name)
-        params_section = Sections.EXECUTOR_PARAMS
-        varenvs_section = Sections.EXECUTOR_VARENVS
-        self.repo_name = config[executor_section].get("repo_executor", None)
+        self.repo_name = config.get("repo_executor")
         if self.repo_name:
             metadata = executor_metadata(self.repo_name)
             repo_path = executor_folder() / self.repo_name
             self.cmd = metadata["cmd"].format(EXECUTOR_FILE_PATH=repo_path)
         else:
-            self.cmd = config[executor_section].get("cmd")
+            self.cmd = config.get("cmd")
 
-        self.max_size = int(config[executor_section].get("max_size", 64 * 1024))
-        self.params = (
-            dict(config[executor_section][params_section]) if params_section in config[executor_section] else {}
-        )
-        self.varenvs = (
-            dict(config[executor_section][varenvs_section]) if varenvs_section in config[executor_section] else {}
-        )
+        self.max_size = int(config.get("max_size", 64 * 1024))
+        self.params = dict(config[Sections.EXECUTOR_PARAMS]) if Sections.EXECUTOR_PARAMS in config else {}
+        self.varenvs = dict(config[Sections.EXECUTOR_VARENVS]) if Sections.EXECUTOR_VARENVS in config else {}
 
     def control_config(self, name, config):
         if " " in name:
             raise ValueError("Executor names can't contains space character, passed name:" f"{name}")
-        if Sections.EXECUTOR_DATA.format(name) not in config:
-            raise ValueError(f"{name} is an executor name but there is no proper section")
 
-        for section in self.__control_dict:
-            for option in self.__control_dict[section]:
-                value = config[section.format(name)][option] if option in config[section.format(name)] else None
-                self.__control_dict[section][option](option, value)
-        params_section = Sections.EXECUTOR_PARAMS.format(name)
-        if params_section in config:
-            for option in config[params_section]:
-                value = config.get(params_section, option)
-                control_bool(option, value)
+        for option in self.__control_dict:
+            value = config[option] if option in config else None
+            self.__control_dict[option](option, value)
+        if Sections.EXECUTOR_PARAMS in config:
+            value = config.get(Sections.EXECUTOR_PARAMS)
+            control_param(value)
 
     async def check_cmds(self):
         if self.repo_name is None:
