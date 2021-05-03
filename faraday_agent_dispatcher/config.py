@@ -177,7 +177,7 @@ def update_config():
 
     # Agent & Executors
 
-    if Sections.AGENT in old_instance:
+    if OldSections.AGENT in old_instance:
         if "executors" in old_instance[OldSections.AGENT]:
             executor_list = old_instance.get(OldSections.AGENT, "executors").split(",")
             if "" in executor_list:
