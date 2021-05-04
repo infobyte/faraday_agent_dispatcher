@@ -146,24 +146,26 @@ def update_config():
     if OldSections.TOKENS in old_instance and "registration" in old_instance.options(OldSections.TOKENS):
         old_instance.remove_option(OldSections.TOKENS, "registration")
 
-    else:
-        if "workspace" in old_instance[OldSections.SERVER]:
-            workspace_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspace")
-            workspaces_value = workspace_loaded_value
+    if OldSections.SERVER not in old_instance:
+        raise ValueError("Server section missing in config file")
 
-            if "workspaces" in old_instance[OldSections.SERVER]:
-                print(
-                    f"{Bcolors.WARNING}Both section {Bcolors.BOLD}workspace "
-                    f"{Bcolors.ENDC}{Bcolors.WARNING}and "
-                    f"{Bcolors.BOLD}workspaces{Bcolors.ENDC}"
-                    f"{Bcolors.WARNING} found. Merging them"
-                )
-                logging.warning("Both section workspace and workspaces " "found. Merging them")
-                workspaces_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspaces")
-                if len(workspaces_value) >= 0:
-                    workspaces_value = f"{workspaces_value}," f"{workspaces_loaded_value}"
-            old_instance.set(section=OldSections.SERVER, option="workspaces", value=workspaces_value)
-            old_instance.remove_option(OldSections.SERVER, "workspace")
+    if "workspace" in old_instance[OldSections.SERVER]:
+        workspace_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspace")
+        workspaces_value = workspace_loaded_value
+
+        if "workspaces" in old_instance[OldSections.SERVER]:
+            print(
+                f"{Bcolors.WARNING}Both section {Bcolors.BOLD}workspace "
+                f"{Bcolors.ENDC}{Bcolors.WARNING}and "
+                f"{Bcolors.BOLD}workspaces{Bcolors.ENDC}"
+                f"{Bcolors.WARNING} found. Merging them"
+            )
+            logging.warning("Both section workspace and workspaces " "found. Merging them")
+            workspaces_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspaces")
+            if len(workspaces_value) >= 0:
+                workspaces_value = f"{workspaces_value}," f"{workspaces_loaded_value}"
+        old_instance.set(section=OldSections.SERVER, option="workspaces", value=workspaces_value)
+        old_instance.remove_option(OldSections.SERVER, "workspace")
 
         if "ssl" not in old_instance[OldSections.SERVER]:
             old_instance.set(OldSections.SERVER, "ssl", "True")

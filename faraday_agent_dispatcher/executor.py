@@ -4,7 +4,7 @@ from faraday_agent_dispatcher.utils.metadata_utils import (
     executor_folder,
     check_commands,
 )
-from faraday_agent_dispatcher.utils.control_values_utils import control_int, control_str, control_param
+from faraday_agent_dispatcher.utils.control_values_utils import control_int, control_str, ParamsSchema
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.logger import get_logger
 
@@ -43,7 +43,9 @@ class Executor:
             self.__control_dict[option](option, value)
         if Sections.EXECUTOR_PARAMS in config:
             value = config.get(Sections.EXECUTOR_PARAMS)
-            control_param(value)
+            errors = ParamsSchema().validate({"params": value})
+            if errors:
+                raise ValueError(errors)
 
     async def check_cmds(self):
         if self.repo_name is None:
