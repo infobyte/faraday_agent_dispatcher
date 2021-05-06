@@ -18,6 +18,6 @@
 
 """Top-level package for faraday_agent_dispatcher."""
 
-__author__ = """Eric Horvat"""
-__email__ = "erich@infobytesec.com"
-__version__ = "1.5.0"
+__author__ = """Faraday Development Team"""
+__email__ = "devel@infobytesec.com"
+__version__ = "1.5.1"
