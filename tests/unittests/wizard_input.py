@@ -57,9 +57,29 @@ class VarEnvInput(Input):
         return f"{cli_input}{self.value}\n"
 
 
-class ParamInput(VarEnvInput):
-    def __init__(self, name: str, value: bool, adm_type: ADMType):
-        super().__init__(name, "Y" if value else "N", adm_type)
+class ParamInput(Input):
+    def __init__(self, name: str, mandatory: bool, type: str, adm_type: ADMType, error_type=None, new_name=None):
+        self.name = name
+        self.mandatory = mandatory
+        self.type = type
+        self.adm_type = adm_type
+        self.error_name = error_type
+        self.new_name = new_name
+
+    def input_str(self):
+        prefix = self.adm_type.name[0]
+        cli_input = f"{prefix}\n"
+        if self.error_name:
+            cli_input = f"{cli_input}{self.error_name}\n{prefix}\n"
+
+        if self.adm_type == ADMType.DELETE:
+            return f"{cli_input}{self.name}\n"
+
+        cli_input = f"{cli_input}" f"{self.name}\n"
+        if self.adm_type == ADMType.MODIFY:
+            cli_input = f"{cli_input}{self.new_name or self.name}\n"
+        mand = "y" if self.mandatory else "n"
+        return f"{cli_input}{mand}\n{self.type}\n"
 
 
 class ExecutorInput:
