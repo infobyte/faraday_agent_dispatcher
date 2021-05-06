@@ -66,17 +66,21 @@ instance = {}
 
 def reset_config(filepath: Path):
     if filepath.is_dir():
-        filepath = filepath / "dispatcher.json"
-    if not filepath.is_file():
-        if OLD_CONFIG_FILENAME.is_file():
-            update_config()
+        filename = filepath / "dispatcher.json"
+    else:
+        filename = filepath
+    if not filename.is_file():
+        if (filepath / "dispatcher.ini").is_file():
+            filename = update_config((filepath / "dispatcher.ini"))
         else:
-            copy(EXAMPLE_CONFIG_FILENAME, filepath)
+            copy(EXAMPLE_CONFIG_FILENAME, filename)
+    elif filename.suffix == ".ini":
+        filename = update_config(filename)
 
     try:
-        with filepath.open() as json_file:
+        with filename.open() as json_file:
             if not json_file:
-                raise ValueError(f"Unable to read config file located at {filepath}", False)
+                raise ValueError(f"Unable to read config file located at {filename}", False)
             instance.clear()
             instance.update(json.load(json_file))
     except EnvironmentError:
@@ -98,7 +102,7 @@ def save_config(filepath=None):
         json.dump(instance, configfile, indent=4)
 
 
-def update_config():
+def update_config(filepath: Path):
     """
     This methods tries to adapt old versions, if its not possible,
     warns about it and exits with a proper error code
@@ -107,10 +111,10 @@ def update_config():
     old_instance = configparser.ConfigParser()
 
     try:
-        if not old_instance.read(OLD_CONFIG_FILENAME):
-            raise ValueError(f"Unable to read config file located at {OLD_CONFIG_FILENAME}", False)
+        if not old_instance.read(filepath):
+            raise ValueError(f"Unable to read config file located at {filepath}", False)
     except configparser.DuplicateSectionError:
-        raise ValueError(f"The config in {OLD_CONFIG_FILENAME} contains duplicated sections", True)
+        raise ValueError(f"The config in {filepath} contains duplicated sections", True)
 
     if OldSections.AGENT not in old_instance:
         if OldSections.EXECUTOR in old_instance:
@@ -193,18 +197,23 @@ def update_config():
                 for key, value in old_instance[OldSections.EXECUTOR_DATA.format(executor_name)].items():
                     executors[executor_name][key] = value
 
+                if "max_size" not in executors[executor_name]:
+                    executors[executor_name]["max_size"] = "65536"
+
                 # Varenvs
                 executors[executor_name]["varenvs"] = {}
-                for key, value in old_instance[OldSections.EXECUTOR_VARENVS.format(executor_name)].items():
-                    executors[executor_name]["varenvs"][key] = value
+                if OldSections.EXECUTOR_VARENVS.format(executor_name) in old_instance:
+                    for key, value in old_instance[OldSections.EXECUTOR_VARENVS.format(executor_name)].items():
+                        executors[executor_name]["varenvs"][key] = value
 
                 # Params
                 executors[executor_name]["params"] = {}
-                for key, value in old_instance[OldSections.EXECUTOR_PARAMS.format(executor_name)].items():
-                    executors[executor_name]["params"][key] = {
-                        "mandatory": value.lower() in ["true", "t"],
-                        "type": "string",
-                    }
+                if OldSections.EXECUTOR_PARAMS.format(executor_name) in old_instance:
+                    for key, value in old_instance[OldSections.EXECUTOR_PARAMS.format(executor_name)].items():
+                        executors[executor_name]["params"][key] = {
+                            "mandatory": value.lower() in ["true", "t"],
+                            "type": "string",
+                        }
 
         else:
             data.append(f"executors option not in {OldSections.AGENT} section")
@@ -228,7 +237,9 @@ def update_config():
 
     instance.update(json_config)
     control_config()
-    save_config(CONFIG_FILENAME)
+    save_file = filepath.with_suffix(".json")
+    save_config(save_file)
+    return save_file
 
 
 class Sections:
