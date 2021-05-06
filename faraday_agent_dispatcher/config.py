@@ -98,6 +98,8 @@ def save_config(filepath=None):
     check_filepath(filepath)
     if filepath.is_dir():
         filepath = filepath / "dispatcher.json"
+    elif filepath.suffix != ".json":
+        filepath = filepath.with_suffix(".json")
     with filepath.open("w") as configfile:
         json.dump(instance, configfile, indent=4)
 
