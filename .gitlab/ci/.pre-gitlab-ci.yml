@@ -1,0 +1,14 @@
+
+flake8:
+    image: python:3
+    stage: .pre
+    script:
+      - pip install flake8
+      - flake8 .
+
+black:
+    image: python:3
+    stage: .pre
+    script:
+      - pip install black
+      - black --line-length=119 --check .

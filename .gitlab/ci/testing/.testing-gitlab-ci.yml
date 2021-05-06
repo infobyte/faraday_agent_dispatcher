@@ -1,0 +1,83 @@
+.venv_ready:
+  before_script:
+    - pip install virtualenv
+    - apt-get update
+    - apt-get install openssl
+    - virtualenv faraday_venv
+    - source faraday_venv/bin/activate
+
+
+.unit_tests_base:
+    stage: testing
+    coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
+    script:
+        - source faraday_venv/bin/activate
+        - openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -keyout tests/data/ok.key -out tests/data/ok.crt -subj "/CN=localhost"
+        - openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -keyout tests/data/other.key -out tests/data/wrong.crt -subj "/CN=localhost"
+        - mkdir run_from
+        - cd run_from && mkdir logs && pytest ../tests/unittests --capture=sys -v --cov=../faraday_agent_dispatcher --cov-config=../tests/unittests/.coveragerc --color=yes --disable-warnings --junitxml=report.xml
+        - cp report.xml ../
+    artifacts:
+      reports:
+        junit: report.xml
+      paths:
+        - dist/*
+        - run_from/logs/*
+      expire_in: 7 days
+    rules:
+      - if: '$JUST_INTEGRATION'
+        when: never
+      - if: '$CI_COMMIT_REF_NAME =~ /^.*ci-test.*$/'
+        when: never
+      - when: on_success
+
+.latest_unit_test_base:
+  extends: .unit_tests_base
+  before_script:
+    - !reference [.venv_ready, before_script]
+    - pip install .[test]
+
+.alpha_unit_test_base:
+  extends: .unit_tests_base
+  before_script:
+    - !reference [.venv_ready, before_script]
+    - pip install --pre .[test] #It does not override alphas
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
+      when: on_success
+    - if: '$TEST_ALPHA'
+      when: on_success
+
+unit_test 3.7:
+    extends: .latest_unit_test_base
+    image: python:3.7
+
+unit_test 3.8:
+    extends: .latest_unit_test_base
+    image: python:3.8
+
+unit_test 3.9:
+  extends: .latest_unit_test_base
+  image: python:3.9
+
+.unit_test 3.10: # To reactivate in beta (May 3rd 2021)
+    extends: .latest_unit_test_base
+    image: python:3.10-rc
+    allow_failure: true
+
+alpha_unit_test 3.7:
+    extends: .alpha_unit_test_base
+    image: python:3.7
+
+alpha_unit_test 3.8:
+    extends: .alpha_unit_test_base
+    image: python:3.8
+
+alpha_unit_test 3.9:
+    extends: .alpha_unit_test_base
+    image: python:3.9
+
+.alpha_unit_test 3.10: # To reactivate in beta (May 3rd 2021)
+    extends: .alpha_unit_test_base
+    image: python:3.10-rc

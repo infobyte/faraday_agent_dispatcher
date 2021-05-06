@@ -18,15 +18,8 @@
 
 """The setup script."""
 
-import sys
 from re import search
 from setuptools import setup, find_packages
-
-if sys.version_info.major < 3 or sys.version_info.minor < 7:
-    print("Python >=3.7 is required to run the dispatcher.")
-    print("Install a newer Python version to proceed")
-    sys.exit(1)
-
 
 with open("faraday_agent_dispatcher/__init__.py", "rt", encoding="utf8") as f:
     version = search(r"__version__ = \"(.*?)\"", f.read()).group(1)
@@ -66,16 +59,18 @@ extra_req = {
 }
 
 setup(
-    author="Eric Horvat",
-    author_email="erich@infobytesec.com",
+    author="Faraday Development Team",
+    author_email="devel@infobytesec.com",
+    python_requires=">=3.7",
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
     description="Faraday agent dispatcher to communicate an agent to faraday",
     entry_points={
