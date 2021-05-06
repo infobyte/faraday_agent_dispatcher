@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union
 
 import faraday_agent_dispatcher.logger as logging
+from faraday_agent_parameters_types import manifests_folder
 
 logger = logging.get_logger()
 
@@ -24,7 +25,7 @@ def executor_folder() -> Union[Path, str]:
 
 def executor_metadata(executor_filename: str) -> dict:
     chosen = Path(executor_filename)
-    chosen_metadata_path = executor_folder() / f"{chosen.stem}_manifest.json"
+    chosen_metadata_path = manifests_folder() / f"{chosen.stem}_manifest.json"
     with chosen_metadata_path.open() as metadata_file:
         data = metadata_file.read()
         metadata = json.loads(data)

@@ -7,6 +7,7 @@ import os
 
 from faraday_agent_dispatcher import config as config_mod
 from faraday_agent_dispatcher.cli.main import config_wizard
+from faraday_agent_dispatcher.config import Sections
 from tests.unittests.config.wizard import (
     generate_inputs,
     generate_no_ssl_ini_configs,
@@ -77,35 +78,14 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         expected_workspaces_set = set.union(ini_config["old_workspaces"], testing_inputs["after_workspaces"])
 
         # config_mod.reset_config(path)
-        executor_config_set = set(config_mod.instance[config_mod.Sections.AGENT].get("executors"))
+        executor_config_set = set(config_mod.instance[Sections.AGENT].get("executors"))
         assert executor_config_set == expected_executors_set
-        workspace_config_set = set(config_mod.instance[config_mod.Sections.SERVER].get("workspaces").split(","))
+        workspace_config_set = set(config_mod.instance[Sections.SERVER].get("workspaces").split(","))
         if "" in workspace_config_set:
             workspace_config_set.remove("")
 
         assert workspace_config_set == expected_workspaces_set
-        assert f"Section: {config_mod.Sections.TOKENS}" not in result.output
-
-
-@pytest.mark.parametrize("ini_config", error_ini_configs, ids=lambda elem: elem["id_str"])
-def test_verify(ini_config):
-    runner = CliRunner()
-
-    content_path = ini_config["dir"]
-
-    with open(content_path, "r") as content_file:
-        content = content_file.read()
-
-    with runner.isolated_filesystem() as file_system:
-
-        path = Path(file_system) / "dispatcher.ini"
-        with path.open(mode="w") as content_file:
-            content_file.write(content)
-        env = os.environ
-        env["DEBUG_INPUT_MODE"] = "True"
-        result = runner.invoke(config_wizard, args=["-c", path], env=env)
-        assert result.exit_code == 1, result.exception
-        assert ini_config["exception_message"] in result.output
+        assert f"Section: {Sections.TOKENS}" not in result.output
 
 
 @pytest.mark.parametrize("ini_config", ssl_ini_configs, ids=lambda elem: elem["id_str"])
@@ -159,6 +139,8 @@ def test_override_ssl_cert_with_default(ini_config):
         # Control '\0' is not passed in the output, as the input is echoed
         assert "\0\n" not in result.output
 
+        path = path.with_suffix(".json")
+
         in_data1 = parse_inputs(testing_inputs[1]) + "\0\n" * 1000
         env = os.environ
         env["DEBUG_INPUT_MODE"] = "True"
@@ -168,8 +150,8 @@ def test_override_ssl_cert_with_default(ini_config):
         assert "\0\n" not in result.output
 
         config_mod.reset_config(path)
-        assert "" == config_mod.instance.get(config_mod.Sections.SERVER, "ssl_cert")
-        assert f"Section: {config_mod.Sections.TOKENS}" not in result.output
+        assert "" == config_mod.instance[Sections.SERVER]["ssl_cert"]
+        assert f"Section: {Sections.TOKENS}" not in result.output
 
 
 @pytest.mark.parametrize("delete_token", [True, False])
@@ -202,20 +184,21 @@ def test_with_agent_token(delete_token):
             env=env,
         )
         assert result.exit_code == 0, result.exception
-        assert f"Section: {config_mod.Sections.TOKENS}" in result.output
+        assert f"Section: {Sections.TOKENS}" in result.output
 
+        path = path.with_suffix(".json")
         config_mod.reset_config(path)
         if delete_token:
-            assert "agent" not in config_mod.instance.options(config_mod.Sections.TOKENS)
+            assert "agent" not in config_mod.instance[Sections.TOKENS]
         else:
-            assert "agent" in config_mod.instance.options(config_mod.Sections.TOKENS)
+            assert "agent" in config_mod.instance[Sections.TOKENS]
 
 
 def test_begin_and_quit():
     runner = CliRunner()
 
     with runner.isolated_filesystem() as file_system:
-        path = Path(file_system) / "dispatcher.ini"
+        path = Path(file_system) / "dispatcher.json"
         input_str = "Q\nY\n"
         escape_string = "\0\n" * 1000
         env = os.environ
@@ -229,6 +212,5 @@ def test_begin_and_quit():
         )
 
         assert result.exit_code == 0, result.exception
-        assert len(config_mod.instance.sections()) == 0
+        assert len(config_mod.instance) == 2
         assert "\0\n" not in result.output
-        assert "Y\n" in result.output
