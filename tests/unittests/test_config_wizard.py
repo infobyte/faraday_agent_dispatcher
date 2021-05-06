@@ -77,7 +77,9 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         expected_executors_set = set.union(ini_config["old_executors"], testing_inputs["after_executors"])
         expected_workspaces_set = set.union(ini_config["old_workspaces"], testing_inputs["after_workspaces"])
 
-        # config_mod.reset_config(path)
+        if path.suffix == ".ini":
+            path = path.with_suffix(".json")
+        config_mod.reset_config(path)
         executor_config_set = set(config_mod.instance[Sections.AGENT].get("executors"))
         assert executor_config_set == expected_executors_set
         workspace_config_set = set(config_mod.instance[Sections.SERVER].get("workspaces").split(","))
