@@ -333,7 +333,7 @@ class Dispatcher:
 
             params = list(executor.params.keys()).copy()
             passed_params = data_dict["args"] if "args" in data_dict else {}
-            [params.remove(param) for param in config.instance.defaults()]
+            # [params.remove(param) for param in config.instance.defaults()]
 
             all_accepted = all(
                 [
@@ -358,7 +358,7 @@ class Dispatcher:
                 )
             mandatory_full = all(
                 [
-                    not executor.params[param]  # All params is not mandatory
+                    not executor.params[param]["mandatory"]  # All params is not mandatory
                     or any([param in passed_param for passed_param in passed_params])  # Or was passed
                     for param in params
                 ]
