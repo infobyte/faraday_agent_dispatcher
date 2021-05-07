@@ -72,34 +72,34 @@ def generate_basic_built_config():
                 Sections.TOKENS: {"agent": "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446"}
             },
         },
-        {
-            "id_str": "OK: executor without cmd",
-            "remove": {Sections.EXECUTOR_DATA.format("ex1"): ["cmd"]},
-            "replace": {},
-        },
-        {
-            "id_str": "Error: executor max_size port not number",
-            "remove": {},
-            "replace": {Sections.EXECUTOR_DATA.format("ex1"): {"max_size": "ASDASD"}},
-            "expected_exception": ValueError,
-        },
-        {
-            "id_str": "Error: executor param not bool (str)",
-            "remove": {},
-            "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "ASDASD"}},
-            "expected_exception": ValueError,
-        },
-        {
-            "id_str": "Error: executor param not bool (number)",
-            "remove": {},
-            "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "5"}},
-            "expected_exception": ValueError,
-        },
-        {
-            "id_str": "OK: executor param is bool",
-            "remove": {},
-            "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "True"}},
-        },
+        # {
+        #     "id_str": "OK: executor without cmd",
+        #     "remove": {Sections.EXECUTOR_DATA.format("ex1"): ["cmd"]},
+        #     "replace": {},
+        # },
+        # {
+        #     "id_str": "Error: executor max_size port not number",
+        #     "remove": {},
+        #     "replace": {Sections.EXECUTOR_DATA.format("ex1"): {"max_size": "ASDASD"}},
+        #     "expected_exception": ValueError,
+        # },
+        # {
+        #     "id_str": "Error: executor param not bool (str)",
+        #     "remove": {},
+        #     "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "ASDASD"}},
+        #     "expected_exception": ValueError,
+        # },
+        # {
+        #     "id_str": "Error: executor param not bool (number)",
+        #     "remove": {},
+        #     "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "5"}},
+        #     "expected_exception": ValueError,
+        # },
+        # {
+        #     "id_str": "OK: executor param is bool",
+        #     "remove": {},
+        #     "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "True"}},
+        # },
         {
             "id_str": "Error: No agent_name",
             "remove": {Sections.AGENT: ["agent_name"]},
@@ -131,38 +131,38 @@ def generate_basic_built_config():
             "duplicate_exception": True,
             "expected_exception": ValueError,
         },
-        {
-            "id_str": "OK: different executors (mid-split)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": "ex1, ex2"}},
-        },
-        {
-            "id_str": "OK: different executors (end-split)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": "ex1,ex2 "}},
-        },
-        {
-            "id_str": "OK: different executors (begin-split)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": " ex1,ex2"}},
-        },
-        {
-            "id_str": "OK: different executors (mid-split)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": " ex1, ex2 , ex3"}},
-        },
-        {
-            "id_str": "Error: different executors (spaced name)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": "ex1,ex 1"}},
-            "expected_exception": ValueError,
-        },
-        {
-            "id_str": "Error: Executor not configured",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": "ex1,ex8"}},
-            "expected_exception": ValueError,
-        },
+        # {
+        #     "id_str": "OK: different executors (mid-split)",
+        #     "remove": {},
+        #     "replace": {Sections.AGENT: {"executors": "ex1, ex2"}},
+        # },
+        # {
+        #     "id_str": "OK: different executors (end-split)",
+        #     "remove": {},
+        #     "replace": {Sections.AGENT: {"executors": "ex1,ex2 "}},
+        # },
+        # {
+        #     "id_str": "OK: different executors (begin-split)",
+        #     "remove": {},
+        #     "replace": {Sections.AGENT: {"executors": " ex1,ex2"}},
+        # },
+        # {
+        #     "id_str": "OK: different executors (mid-split)",
+        #     "remove": {},
+        #     "replace": {Sections.AGENT: {"executors": " ex1, ex2 , ex3"}},
+        # },
+        # {
+        #     "id_str": "Error: different executors (spaced name)",
+        #     "remove": {},
+        #     "replace": {Sections.AGENT: {"executors": "ex1,ex 1"}},
+        #     "expected_exception": ValueError,
+        # },
+        # {
+        #     "id_str": "Error: Executor not configured",
+        #     "remove": {},
+        #     "replace": {Sections.AGENT: {"executors": "ex1,ex8"}},
+        #     "expected_exception": ValueError,
+        # },
         {"id_str": "OK: All default", "remove": {}, "replace": {}},
         {
             "id_str": "Error: ssl crt do not exists",

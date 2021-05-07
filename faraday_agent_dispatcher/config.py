@@ -149,8 +149,11 @@ def update_config(filepath: Path):
         if len(data) > 0:
             raise ValueError("\n".join(data))
 
-    if OldSections.TOKENS in old_instance and "registration" in old_instance.options(OldSections.TOKENS):
-        old_instance.remove_option(OldSections.TOKENS, "registration")
+    if OldSections.TOKENS in old_instance:
+        if "registration" in old_instance.options(OldSections.TOKENS):
+            old_instance.remove_option(OldSections.TOKENS, "registration")
+        if not old_instance.options(OldSections.TOKENS):
+            old_instance.remove_section(OldSections.TOKENS)
 
     if OldSections.SERVER not in old_instance:
         raise ValueError("Server section missing in config file")
@@ -226,8 +229,8 @@ def update_config(filepath: Path):
         }
 
     # Tokens
-    json_config[Sections.TOKENS] = {}
     if OldSections.TOKENS in old_instance:
+        json_config[Sections.TOKENS] = {}
         for key, value in old_instance[OldSections.TOKENS].items():
             json_config[Sections.TOKENS][key] = value
 
@@ -238,7 +241,7 @@ def update_config(filepath: Path):
             json_config[Sections.SERVER][key] = value
 
     instance.update(json_config)
-    control_config()
+    # control_config()
     save_file = filepath.with_suffix(".json")
     save_config(save_file)
     return save_file
@@ -286,5 +289,8 @@ def control_config():
                 if section == Sections.TOKENS:
                     continue
                 raise ValueError(f"{section} section missing in config file")
+            else:
+                if option not in instance[section]:
+                    raise ValueError(f"{option} option missing in {section} section of the config file")
             value = instance[section][option] if option in instance[section] else None
             __control_dict[section][option](option, value)

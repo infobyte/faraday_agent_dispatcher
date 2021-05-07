@@ -221,7 +221,7 @@ async def test_config(request):
 
 
 class TmpConfig:
-    config_file_path = Path(f"/tmp/{fuzzy_string(10)}.ini")
+    config_file_path = Path(f"/tmp/{fuzzy_string(10)}.json")
 
     def save(self):
         save_config(self.config_file_path)
@@ -240,7 +240,7 @@ def tmp_default_config():
 def tmp_custom_config():
     config = TmpConfig()
     ini_path = pathlib.Path(__file__).parent.parent / "data" / "test_config.ini"
-    shutil.copyfile(ini_path, config.config_file_path)
+    shutil.copyfile(ini_path, config.config_file_path.with_suffix(".ini"))
     reset_config(config.config_file_path)
     yield config
     os.remove(config.config_file_path)
