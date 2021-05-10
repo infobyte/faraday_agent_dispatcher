@@ -321,30 +321,30 @@ async def test_merge_config(
     test_logger_handler,  # noqa F811
     test_logger_folder,  # noqa F811
 ):
-    configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
-    configuration.set(Sections.SERVER, "websocket_port", str(test_config.client.port))
+    configuration[Sections.SERVER]["api_port"] = str(test_config.client.port)
+    configuration[Sections.SERVER]["websocket_port"] = str(test_config.client.port)
     if test_config.base_route:
-        configuration.set(Sections.SERVER, "base_route", test_config.base_route)
-    configuration.set(Sections.SERVER, "ssl", str(test_config.is_ssl))
+        configuration[Sections.SERVER]["base_route"] = test_config.base_route
+    configuration[Sections.SERVER]["ssl"] = str(test_config.is_ssl)
     if test_config.is_ssl:
-        configuration.set(Sections.SERVER, "ssl_cert", str(test_config.ssl_cert_path / "ok.crt"))
-        configuration.set(Sections.SERVER, "host", "localhost")
+        configuration[Sections.SERVER]["ssl_cert"] = str(test_config.ssl_cert_path / "ok.crt")
+        configuration[Sections.SERVER]["host"] = "localhost"
     else:
-        configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.SERVER, "workspaces", test_config.workspaces_str())
+        configuration[Sections.SERVER]["host"] = test_config.client.host
+    configuration[Sections.SERVER]["workspaces"] = test_config.workspaces_str()
     random_workspace_name = fuzzy_string(15)
-    configuration.set(Sections.SERVER, "workspace", random_workspace_name)
+    configuration[Sections.SERVER]["workspace"] = random_workspace_name
 
     test_config.workspaces = [random_workspace_name] + test_config.workspaces
     if Sections.TOKENS not in configuration:
-        configuration.add_section(Sections.TOKENS)
-    configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
+        configuration[Sections.TOKENS] = {}
+    configuration[Sections.TOKENS]["agent"] = test_config.agent_token
     path_to_basic_executor = Path(__file__).parent.parent / "data" / "basic_executor.py"
-    configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3,ex4")
+    configuration[Sections.AGENT][Sections.EXECUTORS] = {"ex1": {}, "ex2": {}, "ex3": {}, "ex4": {}}
 
     for executor_name in ["ex1", "ex3", "ex4"]:
-        executor_section = Sections.EXECUTOR_DATA.format(executor_name)
-        params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
+        executor_section = configuration[Sections.AGENT][Sections.EXECUTORS][executor_name]
+        params_section = executor_section[Sections.EXECUTOR_PARAMS]
         for section in [executor_section, params_section]:
             if section not in configuration:
                 configuration.add_section(section)
