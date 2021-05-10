@@ -1,6 +1,6 @@
 {
   "agent": {
-    "agent_name": "agent",
+    "agent_name": "unnamed_agent",
     "executors": {}
   },
   "server": {
