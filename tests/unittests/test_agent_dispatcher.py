@@ -37,7 +37,6 @@ from tests.unittests.config.agent_dispatcher import (
     generate_basic_built_config,
     generate_executor_options,
     generate_register_options,
-    get_merge_executors,
 )
 from tests.utils.testing_faraday_server import (  # noqa: F401
     FaradayTestConfig,
@@ -47,7 +46,6 @@ from tests.utils.testing_faraday_server import (  # noqa: F401
     test_logger_handler,
     test_logger_folder,
 )
-from tests.utils.text_utils import fuzzy_string
 from faraday_agent_dispatcher.config import reset_config, save_config
 
 
@@ -311,57 +309,3 @@ async def test_run_once(
             )
             >= min_count
         ), log["msg"]
-
-
-# This test merging "workspace" & "workspaces" in config to "workspaces"
-@pytest.mark.asyncio
-async def test_merge_config(
-    test_config: FaradayTestConfig,  # noqa F811
-    tmp_default_config,  # noqa F811
-    test_logger_handler,  # noqa F811
-    test_logger_folder,  # noqa F811
-):
-    configuration[Sections.SERVER]["api_port"] = str(test_config.client.port)
-    configuration[Sections.SERVER]["websocket_port"] = str(test_config.client.port)
-    if test_config.base_route:
-        configuration[Sections.SERVER]["base_route"] = test_config.base_route
-    configuration[Sections.SERVER]["ssl"] = str(test_config.is_ssl)
-    if test_config.is_ssl:
-        configuration[Sections.SERVER]["ssl_cert"] = str(test_config.ssl_cert_path / "ok.crt")
-        configuration[Sections.SERVER]["host"] = "localhost"
-    else:
-        configuration[Sections.SERVER]["host"] = test_config.client.host
-    configuration[Sections.SERVER]["workspaces"] = test_config.workspaces_str()
-    random_workspace_name = fuzzy_string(15)
-    configuration[Sections.SERVER]["workspace"] = random_workspace_name
-
-    test_config.workspaces = [random_workspace_name] + test_config.workspaces
-    if Sections.TOKENS not in configuration:
-        configuration[Sections.TOKENS] = {}
-    configuration[Sections.TOKENS]["agent"] = test_config.agent_token
-    path_to_basic_executor = Path(__file__).parent.parent / "data" / "basic_executor.py"
-    configuration[Sections.AGENT][Sections.EXECUTORS] = {"ex1": {}, "ex2": {}, "ex3": {}, "ex4": {}}
-
-    for executor_name in ["ex1", "ex3", "ex4"]:
-        executor_section = configuration[Sections.AGENT][Sections.EXECUTORS][executor_name]
-        params_section = executor_section[Sections.EXECUTOR_PARAMS]
-        for section in [executor_section, params_section]:
-            if section not in configuration:
-                configuration.add_section(section)
-        configuration.set(executor_section, "cmd", "python {}".format(path_to_basic_executor))
-
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param1", "True")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param2", "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param3", "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param4", "False")
-    tmp_default_config.save()
-    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
-
-    test_config.ws_data["run_data"] = {"agent_id": 1}
-    test_config.ws_data["ws_responses"] = [{"error": "'action' key is mandatory in this websocket connection"}]
-    test_config.executors = get_merge_executors()
-
-    await dispatcher.register(test_config.registration_token)
-    await dispatcher.connect()
-
-    assert len(test_config.ws_data["ws_responses"]) == 0
