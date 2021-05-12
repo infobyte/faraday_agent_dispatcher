@@ -12,7 +12,7 @@ from faraday_agent_dispatcher.cli.utils.general_prompts import (
 )
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
-from faraday_agent_parameters_types import DATA_TYPE
+from faraday_agent_parameters_types.data_types import DATA_TYPE
 
 
 def append_keys(agent_dict, section):
