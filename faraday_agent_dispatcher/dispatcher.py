@@ -207,9 +207,9 @@ class Dispatcher:
             logger.debug(msg="Exception raised", exc_info=e)
             exit(1)
 
-    async def connect(self, out_func=None):
+    async def connect(self):
 
-        if not self.websocket_token and not out_func:
+        if not self.websocket_token:
             return
 
         connected_data = json.dumps(
@@ -223,26 +223,22 @@ class Dispatcher:
             }
         )
 
-        if out_func is None:
+        async with websockets.connect(
+            websocket_url(
+                self.host,
+                self.websocket_port,
+                postfix="/websockets",
+                secure=self.ws_ssl_enabled,
+            ),
+            **self.ws_kwargs,
+        ) as websocket:
+            await websocket.send(connected_data)
 
-            async with websockets.connect(
-                websocket_url(
-                    self.host,
-                    self.websocket_port,
-                    postfix="/websockets",
-                    secure=self.ws_ssl_enabled,
-                ),
-                **self.ws_kwargs,
-            ) as websocket:
-                await websocket.send(connected_data)
+            logger.info("Connection to Faraday server succeeded")
+            self.websocket = websocket
 
-                logger.info("Connection to Faraday server succeeded")
-                self.websocket = websocket
-
-                # This line can we called from outside (in main)
-                await self.run_await()
-        else:
-            await out_func(connected_data)
+            # This line can we called from outside (in main)
+            await self.run_await()
 
     async def run_await(self):
         while True:
@@ -258,37 +254,42 @@ class Dispatcher:
                     logger.info(f"The server ended connection: {e.reason}")
                 break
 
-    async def run_once(self, data: str = None, out_func=None):
-        out_func = out_func if out_func is not None else self.websocket.send
+    async def run_once(self, data: str = None):
         logger.info("Parsing data: %s", data)
         data_dict = json.loads(data)
         if "action" not in data_dict:
             logger.info("Data not contains action to do")
-            await out_func(json.dumps({"error": "'action' key is mandatory in this websocket " "connection"}))
+            await self.websocket.send(
+                json.dumps({"error": "'action' key is mandatory in this websocket " "connection"})
+            )
             return
 
         # `RUN` is the ONLY SUPPORTED COMMAND FOR NOW
         if data_dict["action"] not in ["RUN"]:
             logger.info("Unrecognized action")
-            await out_func(json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"}))
+            await self.websocket.send(json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"}))
             return
 
         if "execution_id" not in data_dict:
             logger.info("Data not contains execution id")
-            await out_func(json.dumps({"error": "'execution_id' key is mandatory in this " "websocket connection"}))
+            await self.websocket.send(
+                json.dumps({"error": "'execution_id' key is mandatory in this " "websocket connection"})
+            )
             return
         self.execution_id = data_dict["execution_id"]
 
         if "workspace" not in data_dict:
             logger.info("Data not contains workspace name")
-            await out_func(json.dumps({"error": "'workspace' key is mandatory in this " "websocket connection"}))
+            await self.websocket.send(
+                json.dumps({"error": "'workspace' key is mandatory in this " "websocket connection"})
+            )
             return
         workspace_selected = data_dict["workspace"]
 
         if data_dict["action"] == "RUN":
             if "executor" not in data_dict:
                 logger.error("No executor selected")
-                await out_func(
+                await self.websocket.send(
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
@@ -302,7 +303,7 @@ class Dispatcher:
 
             if workspace_selected not in self.workspaces:
                 logger.error("Invalid workspace passed")
-                await out_func(
+                await self.websocket.send(
                     json.dumps(
                         {
                             "action": f"{data_dict['action']}_STATUS",
@@ -316,7 +317,7 @@ class Dispatcher:
 
             if data_dict["executor"] not in self.executors:
                 logger.error("The selected executor not exists")
-                await out_func(
+                await self.websocket.send(
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
@@ -345,7 +346,7 @@ class Dispatcher:
             )
             if not all_accepted:
                 logger.error(f"Unexpected argument passed to {executor.name} executor")
-                await out_func(
+                await self.websocket.send(
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
@@ -367,7 +368,7 @@ class Dispatcher:
             )
             if not mandatory_full:
                 logger.error("Mandatory argument not passed to {executor.name} executor")
-                await out_func(
+                await self.websocket.send(
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
@@ -412,7 +413,7 @@ class Dispatcher:
                     ).process_f(),
                     StdErrLineProcessor(process).process_f(),
                 ]
-                await out_func(
+                await self.websocket.send(
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
@@ -428,7 +429,7 @@ class Dispatcher:
                 assert process.returncode is not None
                 if process.returncode == 0:
                     logger.info(f"Executor {executor.name} finished successfully")
-                    await out_func(
+                    await self.websocket.send(
                         json.dumps(
                             {
                                 "action": "RUN_STATUS",
@@ -443,7 +444,7 @@ class Dispatcher:
                     )
                 else:
                     logger.warning(f"Executor {executor.name} finished with exit code" f" {process.returncode}")
-                    await out_func(
+                    await self.websocket.send(
                         json.dumps(
                             {
                                 "action": "RUN_STATUS",
