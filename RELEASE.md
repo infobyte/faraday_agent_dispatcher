@@ -1,3 +1,8 @@
+1.5.1 [May 6th, 2021]:
+---
+ * FIX Burp executor parse the IP
+ * [Faraday][faraday] versions: 3.14.3
+
 1.5.0 [Mar 30th, 2021]:
 ---
  * ADD having at least a executor is mandatory, if not it will not save the configuration

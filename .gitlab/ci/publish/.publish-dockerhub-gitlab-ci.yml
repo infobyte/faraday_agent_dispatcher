@@ -9,7 +9,7 @@ docker-publish:
     - docker login -u $DOCKER_USER -p $DOCKER_PASS docker.io
     - docker image tag registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:latest $REGISTRY_IMAGE:latest
     - docker push $REGISTRY_IMAGE:latest
-    - docker image tag $REGISTRY_IMAGE:latest $REGISTRY_IMAGE:$VERSION
+    - docker image tag registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:latest $REGISTRY_IMAGE:$VERSION
     - docker push $REGISTRY_IMAGE:$VERSION
   tags:
     - shell
