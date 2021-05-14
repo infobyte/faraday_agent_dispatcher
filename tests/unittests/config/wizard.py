@@ -742,7 +742,13 @@ def generate_ssl_ini_configs():
             "dir": old_version_path() / "1.2.ini",
             "old_executors": {"test", "test2", "test3"},
             "old_workspaces": {"workspace"},
-        }
+        },
+        {
+            "id_str": "1.3.ini",
+            "dir": old_version_path() / "1.3.ini",
+            "old_executors": {"test", "test2", "test3"},
+            "old_workspaces": {"workspace"},
+        },
     ]
 
 
