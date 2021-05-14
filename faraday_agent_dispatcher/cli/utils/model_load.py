@@ -141,7 +141,6 @@ def process_agent():
                             value, _ = ask_value(agent_dict, opt, section, ssl)
                             if value != "" and Path(value).exists():
                                 path = value
-                    # config.instance.set(section, opt, str(path))
                     config.instance[section][opt] = str(path)
             elif opt == "workspaces":
                 process_workspaces()
@@ -149,7 +148,6 @@ def process_agent():
                 if opt == "host":
                     value, url_json = ask_value(agent_dict, opt, section, ssl)
                     if url_json["url_path"]:
-                        # config.instance.set(section, "base_route", str(url_json["url_path"]))
                         config.instance[section]["base_route"] = str(url_json["url_path"])
                 elif opt == "ssl":
                     if url_json["check_ssl"] is None:
@@ -163,19 +161,15 @@ def process_agent():
                         agent_dict = append_keys(agent_dict, Sections.SERVER)
                         for type_ports in ["api_port", "websocket_port"]:
                             value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
-                            # config.instance.set(section, type_ports, str(value_port))
                             config.instance[section][type_ports] = str(value_port)
                             agent_dict[Sections.SERVER].pop(type_ports, None)
 
                     else:
-                        # config.instance.set(section, "api_port", str(url_json["api_port"]))
                         config.instance[section]["api_port"] = str(url_json["api_port"])
-                        # config.instance.set(section, "websocket_port", str(url_json["websocket_port"]))
                         config.instance[section]["websocket_port"] = str(url_json["websocket_port"])
 
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
-                # config.instance.set(section, opt, str(value))
                 config.instance[section][opt] = str(value)
 
 
@@ -230,7 +224,6 @@ def process_var_envs(executor_name):
             else:
                 value = click.prompt("Environment variable value")
                 section[env_var] = value
-                # config.instance.set(section, env_var, value)
         elif value == "M":
             env_var = click.prompt("Environment variable name").lower()
             if env_var not in section:
