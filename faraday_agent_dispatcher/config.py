@@ -218,6 +218,7 @@ def update_config(filepath: Path):
                         executors[executor_name]["params"][key] = {
                             "mandatory": value.lower() in ["true", "t"],
                             "type": "string",
+                            "base": "string",
                         }
 
         else:
