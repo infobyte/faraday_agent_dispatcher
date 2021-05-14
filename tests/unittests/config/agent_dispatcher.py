@@ -72,34 +72,170 @@ def generate_basic_built_config():
                 Sections.TOKENS: {"agent": "QWE46aasdje446aasdje446aaQWE46aasdje446aasdje446aaQWE46aasdje446"}
             },
         },
-        # {
-        #     "id_str": "OK: executor without cmd",
-        #     "remove": {Sections.EXECUTOR_DATA.format("ex1"): ["cmd"]},
-        #     "replace": {},
-        # },
-        # {
-        #     "id_str": "Error: executor max_size port not number",
-        #     "remove": {},
-        #     "replace": {Sections.EXECUTOR_DATA.format("ex1"): {"max_size": "ASDASD"}},
-        #     "expected_exception": ValueError,
-        # },
-        # {
-        #     "id_str": "Error: executor param not bool (str)",
-        #     "remove": {},
-        #     "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "ASDASD"}},
-        #     "expected_exception": ValueError,
-        # },
-        # {
-        #     "id_str": "Error: executor param not bool (number)",
-        #     "remove": {},
-        #     "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "5"}},
-        #     "expected_exception": ValueError,
-        # },
-        # {
-        #     "id_str": "OK: executor param is bool",
-        #     "remove": {},
-        #     "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "True"}},
-        # },
+        {
+            "id_str": "Error: No Executors section",
+            "remove": {Sections.AGENT: [Sections.EXECUTORS]},
+            "replace": {},
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: Empty executor",
+            "remove": {"executor": ["max_size"]},
+            "replace": {"executor": {"max_size": ""}},
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: executor max_size port not number",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "ASDASD",
+                    "cmd": "test",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: executor missing max_size",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "cmd": "test",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: executor Missing both cmd and repo_executor",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "OK: cmd but missing repo_executor",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
+        },
+        {
+            "id_str": "OK: repo_executor but missing cmd",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "repo_executor": "nmap",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
+        },
+        {
+            "id_str": "Error: param missing mandatory",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "type": "string",
+                            "base": "string",
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: param missing type",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "base": "string",
+                            "mandatory": True,
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: param missing base",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "type": "string",
+                            "mandatory": True,
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: invalid mandatory",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "type": "string",
+                            "base": "string",
+                            "mandatory": "asc",
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "OK: Valid Parameter",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "type": "string",
+                            "base": "string",
+                            "mandatory": False,
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
+        },
         {
             "id_str": "Error: No agent_name",
             "remove": {Sections.AGENT: ["agent_name"]},
@@ -131,38 +267,6 @@ def generate_basic_built_config():
             "duplicate_exception": True,
             "expected_exception": ValueError,
         },
-        # {
-        #     "id_str": "OK: different executors (mid-split)",
-        #     "remove": {},
-        #     "replace": {Sections.AGENT: {"executors": "ex1, ex2"}},
-        # },
-        # {
-        #     "id_str": "OK: different executors (end-split)",
-        #     "remove": {},
-        #     "replace": {Sections.AGENT: {"executors": "ex1,ex2 "}},
-        # },
-        # {
-        #     "id_str": "OK: different executors (begin-split)",
-        #     "remove": {},
-        #     "replace": {Sections.AGENT: {"executors": " ex1,ex2"}},
-        # },
-        # {
-        #     "id_str": "OK: different executors (mid-split)",
-        #     "remove": {},
-        #     "replace": {Sections.AGENT: {"executors": " ex1, ex2 , ex3"}},
-        # },
-        # {
-        #     "id_str": "Error: different executors (spaced name)",
-        #     "remove": {},
-        #     "replace": {Sections.AGENT: {"executors": "ex1,ex 1"}},
-        #     "expected_exception": ValueError,
-        # },
-        # {
-        #     "id_str": "Error: Executor not configured",
-        #     "remove": {},
-        #     "replace": {Sections.AGENT: {"executors": "ex1,ex8"}},
-        #     "expected_exception": ValueError,
-        # },
         {"id_str": "OK: All default", "remove": {}, "replace": {}},
         {
             "id_str": "Error: ssl crt do not exists",

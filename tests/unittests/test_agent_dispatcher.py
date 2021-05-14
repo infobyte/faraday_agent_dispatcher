@@ -59,7 +59,14 @@ def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
     config_path = tmp_custom_config.config_file_path.with_suffix(".json")
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
-            if section not in configuration:
+            if section == "executor":
+                if "ex1" not in configuration[Sections.AGENT][Sections.EXECUTORS]:
+                    configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"] = {}
+                configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"][option] = config_changes_dict["replace"][
+                    section
+                ][option]
+                continue
+            elif section not in configuration:
                 configuration[section] = {}
             configuration[section][option] = config_changes_dict["replace"][section][option]
     for section in config_changes_dict["remove"]:
@@ -68,7 +75,13 @@ def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
                 configuration.pop(section)
         else:
             for option in config_changes_dict["remove"][section]:
-                if section in configuration and option in configuration[section]:
+                if (
+                    section == "executor"
+                    and "ex1" in configuration[Sections.AGENT][Sections.EXECUTORS]
+                    and option in configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"]
+                ):
+                    configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"].pop(option)
+                elif section in configuration and option in configuration[section]:
                     configuration[section].pop(option)
     save_config(config_path)
     if "expected_exception" in config_changes_dict:
@@ -249,11 +262,13 @@ async def test_run_once(
             configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_PARAMS][param] = {
                 "mandatory": False,
                 "type": "string",
+                "base": "string",
             }
 
         configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_PARAMS]["out"] = {
             "mandatory": True,
             "type": "string",
+            "base": "string",
         }
 
         if "varenvs" in executor_options:
@@ -273,7 +288,7 @@ async def test_run_once(
                 ].items()
             },
         }
-        executor_metadata["args"]["out"] = {"mandatory": True, "type": "string"}
+        executor_metadata["args"]["out"] = {"mandatory": True, "type": "string", "base": "string"}
         test_config.executors.append(executor_metadata)
 
     tmp_default_config.save()
