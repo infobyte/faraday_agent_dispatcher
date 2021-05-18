@@ -51,7 +51,7 @@ from faraday_agent_dispatcher.config import (
     control_config,
 )
 from faraday_agent_dispatcher.executor import Executor
-from faraday_agent_parameters_types.validation import type_validate
+from faraday_agent_parameters_types.utils import type_validate
 
 logger = logging.get_logger()
 logging.setup_logging()
