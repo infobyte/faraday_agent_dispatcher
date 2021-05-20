@@ -79,7 +79,7 @@ class ParamInput(Input):
         if self.adm_type == ADMType.MODIFY:
             cli_input = f"{cli_input}{self.new_name or self.name}\n"
         mand = "y" if self.mandatory else "n"
-        return f"{cli_input}{mand}\n{self.type}\n"
+        return f"{cli_input}{mand}\n{self.type}\n\n"
 
 
 class ExecutorInput:

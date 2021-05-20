@@ -41,7 +41,7 @@ requirements = [
     "faraday-plugins>=1.4.1",
     "python-owasp-zap-v2.4",
     "python-gvm",
-    "faraday_agent_parameters_types>=0.1.5",
+    "faraday_agent_parameters_types>=0.1.7",
 ]
 
 setup_requirements = ["pytest-runner", "click", "setuptools_scm"]

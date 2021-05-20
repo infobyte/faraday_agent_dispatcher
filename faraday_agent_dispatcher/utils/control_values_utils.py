@@ -83,8 +83,8 @@ class ParamsField(fields.Field):
                 raise ValidationError(f"{param} must be a dictionary")
             if not isinstance(param_val.get("mandatory"), bool):
                 raise ValidationError(f'{param} - "mandatory" field missing or not boolean')
-            if not isinstance(param_val.get("type"), str):
-                raise ValidationError(f'{param} - "type" field missing or not string')
+            if not isinstance(param_val.get("type"), str) and not isinstance(param_val.get("type"), list):
+                raise ValidationError(f'{param} - "type" field missing or not string/list')
             if not isinstance(param_val.get("base"), str):
                 raise ValidationError(f'{param} - "base" field missing or not string')
 
