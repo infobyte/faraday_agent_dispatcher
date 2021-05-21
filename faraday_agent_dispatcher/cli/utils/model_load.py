@@ -297,7 +297,7 @@ def process_params(executor_name):
                     input_types = input_types[0]
                     input_base_type = BASE_TYPE.get(input_types)
                 else:
-                    input_base_type = "string"
+                    input_base_type = "or"
                 section[param] = {"mandatory": mandatory, "type": input_types, "base": input_base_type}
         elif value == "M":
             param = click.prompt("Argument name").lower()
@@ -348,7 +348,7 @@ def process_params(executor_name):
                     input_types = input_types[0]
                     input_base_type = BASE_TYPE.get(input_types)
                 else:
-                    input_base_type = "string"
+                    input_base_type = "or"
                 section[param] = {"mandatory": mandatory, "type": input_types, "base": input_base_type}
         elif value == "D":
             param = click.prompt("Argument name").lower()
