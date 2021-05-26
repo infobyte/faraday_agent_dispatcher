@@ -262,43 +262,9 @@ def process_params(executor_name):
                 print(f"{Bcolors.WARNING}The argument {param} already exists" f"{Bcolors.ENDC}")
             else:
                 mandatory = confirm_prompt("Is mandatory?")
-
-                # TYPES
-                choosing_types = True
-                input_types = []
-                choices = list(DATA_TYPE.keys())
-                while choosing_types:
-                    print(
-                        f"{Bcolors.BOLD}{Bcolors.OKBLUE}Types added so far{Bcolors.ENDC}"
-                        f" {Bcolors.OKGREEN}{input_types}{Bcolors.ENDC}"
-                    )
-                    print(
-                        f"{Bcolors.WARNING} - Order matters as it determines the order of"
-                        f" validation in case of multiple possible types{Bcolors.ENDC}"
-                    )
-                    if "list" in choices:
-                        print(f'{Bcolors.WARNING} - "list" type only available as a standalone{Bcolors.ENDC}')
-                    choice = click.prompt("Type name", type=click.Choice(choices))
-                    if choice in input_types:
-                        print(f"{Bcolors.WARNING}Type already added{Bcolors.ENDC}")
-                        continue
-                    input_types.append(choice)
-
-                    # list only allowed standalone
-                    if "list" in choices:
-                        choices.remove("list")
-                    if "list" in input_types and len(input_types) == 1:
-                        choosing_types = False
-                        continue
-
-                    if not confirm_prompt("Add another possible type?", default=False):
-                        choosing_types = False
-                if len(input_types) == 1:
-                    input_types = input_types[0]
-                    input_base_type = BASE_TYPE.get(input_types)
-                else:
-                    input_base_type = "or"
-                section[param] = {"mandatory": mandatory, "type": input_types, "base": input_base_type}
+                input_type = click.prompt("Type?", type=click.Choice(DATA_TYPE.keys()))
+                input_base_type = BASE_TYPE.get(input_type)
+                section[param] = {"mandatory": mandatory, "type": input_type, "base": input_base_type}
         elif value == "M":
             param = click.prompt("Argument name").lower()
             if param not in section:
@@ -306,50 +272,9 @@ def process_params(executor_name):
             else:
                 def_value, param = get_new_name(param, section, "argument")
                 mandatory = confirm_prompt("Is mandatory?", default=def_value["mandatory"])
-
-                # TYPES
-                choosing_types = True
-                input_types = []
-                default_value = def_value["type"]
-                choices = list(DATA_TYPE.keys())
-                while choosing_types:
-                    print(
-                        f"{Bcolors.BOLD}{Bcolors.OKBLUE}Types added so far{Bcolors.ENDC}"
-                        f" {Bcolors.OKGREEN}{input_types}{Bcolors.ENDC}"
-                    )
-                    print(
-                        f"{Bcolors.WARNING} - Order matters as it determines the order of"
-                        f" validation in case of multiple possible types{Bcolors.ENDC}"
-                    )
-                    if "list" in choices:
-                        print(f'{Bcolors.WARNING} - "list" type only available as a standalone{Bcolors.ENDC}')
-                    choice = click.prompt("Type name", type=click.Choice(choices), default=default_value)
-                    if isinstance(choice, list):
-                        input_types.extend(choice)
-                        choosing_types = False
-                        continue
-                    else:
-                        if choice in input_types:
-                            print(f"{Bcolors.WARNING}Type already added{Bcolors.ENDC}")
-                            continue
-                        input_types.append(choice)
-                    default_value = None
-
-                    # list only allowed standalone
-                    if "list" in choices:
-                        choices.remove("list")
-                    if "list" in input_types and len(input_types) == 1:
-                        choosing_types = False
-                        continue
-
-                    if not confirm_prompt("Add another possible type?", default=False):
-                        choosing_types = False
-                if len(input_types) == 1:
-                    input_types = input_types[0]
-                    input_base_type = BASE_TYPE.get(input_types)
-                else:
-                    input_base_type = "or"
-                section[param] = {"mandatory": mandatory, "type": input_types, "base": input_base_type}
+                input_type = click.prompt("Type?", type=click.Choice(DATA_TYPE.keys()), default=def_value["type"])
+                input_base_type = BASE_TYPE.get(input_type)
+                section[param] = {"mandatory": mandatory, "type": input_type, "base": input_base_type}
         elif value == "D":
             param = click.prompt("Argument name").lower()
             if param not in section:
