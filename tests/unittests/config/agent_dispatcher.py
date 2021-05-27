@@ -959,7 +959,7 @@ def generate_executor_options():
                 },
                 {"levelname": "INFO", "msg": "Executor ex1 finished successfully"},
             ],
-            "workspaces": "error500",
+            "workspaces": ["error500"],
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
@@ -1001,7 +1001,7 @@ def generate_executor_options():
                 },
                 {"levelname": "INFO", "msg": "Executor ex1 finished successfully"},
             ],
-            "workspaces": "error429",
+            "workspaces": ["error429"],
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
@@ -1240,7 +1240,7 @@ def generate_executor_options():
                 },
                 {"levelname": "INFO", "msg": "Executor ex1 finished successfully"},
             ],
-            "workspaces": "other_workspace",
+            "workspaces": ["other_workspace"],
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",

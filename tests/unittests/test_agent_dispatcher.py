@@ -129,7 +129,7 @@ async def test_start_and_register(
         configuration[Sections.SERVER]["host"] = client.host
 
     configuration[Sections.SERVER]["api_port"] = str(client.port)
-    configuration[Sections.SERVER]["workspaces"] = test_config.workspaces_str()
+    configuration[Sections.SERVER]["workspaces"] = test_config.workspaces
     if "ex1" not in configuration[Sections.AGENT][Sections.EXECUTORS]:
         configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"] = {
             "max_size": "65536",
@@ -221,16 +221,15 @@ async def test_run_once(
 ):
     # Config
     if "workspaces" in executor_options:
-        test_config.workspaces = executor_options["workspaces"].split(",")
+        test_config.workspaces = executor_options["workspaces"]
     workspaces = test_config.workspaces
-    workspaces_str = test_config.workspaces_str()
 
     if test_config.base_route:
         configuration[Sections.SERVER]["base_route"] = test_config.base_route
 
     configuration[Sections.SERVER]["api_port"] = str(test_config.client.port)
     configuration[Sections.SERVER]["websocket_port"] = str(test_config.client.port)
-    configuration[Sections.SERVER]["workspaces"] = workspaces_str
+    configuration[Sections.SERVER]["workspaces"] = workspaces
     if Sections.TOKENS not in configuration:
         configuration[Sections.TOKENS] = {}
     configuration[Sections.TOKENS]["agent"] = test_config.agent_token

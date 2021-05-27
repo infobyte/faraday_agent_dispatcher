@@ -57,13 +57,6 @@ logger = logging.get_logger()
 logging.setup_logging()
 
 
-def _parse_list(list_str: str) -> List[str]:
-    str_list = list_str.split(",")
-    if "" in str_list:
-        str_list.remove("")
-    return str_list
-
-
 class Dispatcher:
     class TaskLabels:
         CONNECTION_CHECK = "Connection check"
@@ -87,7 +80,7 @@ class Dispatcher:
         self.session = session
         self.websocket = None
         self.websocket_token = None
-        self.workspaces = _parse_list(config.instance[Sections.SERVER]["workspaces"])
+        self.workspaces = config.instance[Sections.SERVER]["workspaces"]
         self.executors = {
             executor_name: Executor(executor_name, executor_data)
             for executor_name, executor_data in config.instance[Sections.AGENT].get("executors", {}).items()

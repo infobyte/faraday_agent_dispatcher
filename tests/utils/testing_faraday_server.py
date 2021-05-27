@@ -44,9 +44,6 @@ class FaradayTestConfig:
         self.changes_queue = Queue()
         self.ws_data = {}
 
-    def workspaces_str(self) -> str:
-        return ",".join(self.workspaces)
-
     def run_agent_to_websocket(self):
         self.changes_queue.put(
             {

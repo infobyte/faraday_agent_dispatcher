@@ -9,6 +9,6 @@
     "ssl": "False",
     "ssl_cert": "",
     "websocket_port": "9000",
-    "workspaces": ""
+    "workspaces": []
   }
 }

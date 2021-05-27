@@ -82,9 +82,7 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         config_mod.reset_config(path)
         executor_config_set = set(config_mod.instance[Sections.AGENT].get("executors"))
         assert executor_config_set == expected_executors_set
-        workspace_config_set = set(config_mod.instance[Sections.SERVER].get("workspaces").split(","))
-        if "" in workspace_config_set:
-            workspace_config_set.remove("")
+        workspace_config_set = set(config_mod.instance[Sections.SERVER].get("workspaces"))
 
         assert workspace_config_set == expected_workspaces_set
         assert f"Section: {Sections.TOKENS}" not in result.output
