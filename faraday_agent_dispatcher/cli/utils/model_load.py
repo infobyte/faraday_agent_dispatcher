@@ -177,10 +177,7 @@ def process_workspaces() -> None:
     end = False
     section = Sections.SERVER
 
-    workspaces = config.instance[Sections.SERVER].get("workspaces", "")
-    workspaces = workspaces.split(",")
-    if "" in workspaces:
-        workspaces.remove("")
+    workspaces = config.instance[Sections.SERVER].get("workspaces", [])
 
     while not end:
         print(f"The actual workspaces{Bcolors.ENDC} are:" f" {Bcolors.OKGREEN}{workspaces}{Bcolors.ENDC}")
@@ -200,7 +197,7 @@ def process_workspaces() -> None:
         else:
             end = True
 
-    config.instance[section]["workspaces"] = ",".join(workspaces)
+    config.instance[section]["workspaces"] = workspaces
 
 
 def process_var_envs(executor_name):

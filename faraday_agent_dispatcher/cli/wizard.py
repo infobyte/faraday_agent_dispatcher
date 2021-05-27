@@ -232,12 +232,8 @@ class Wizard:
     def status_report(self, sections):
         min_sections = ["server", "agent"]
         check = all(item in sections for item in min_sections)
-        check_len = len(config.instance)
         if check:
-            if check_len > 2:
-                msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
-            else:
-                msj = f"{Bcolors.WARNING}File configuration not complete. Missing Executor section.{Bcolors.ENDC}"
+            msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
         else:
-            msj = f"{Bcolors.WARNING}File configuration not created {Bcolors.ENDC}"
+            msj = f"{Bcolors.WARNING}File configuration not complete. Missing section.{Bcolors.ENDC}"
         return msj

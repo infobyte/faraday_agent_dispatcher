@@ -241,6 +241,12 @@ def update_config(filepath: Path):
         for key, value in old_instance[OldSections.SERVER].items():
             json_config[Sections.SERVER][key] = value
 
+    if "workspaces" in json_config[Sections.SERVER] and isinstance(json_config[Sections.SERVER]["workspaces"], str):
+        str_list = json_config[Sections.SERVER]["workspaces"].split(",")
+        if "" in str_list:
+            str_list.remove("")
+        json_config[Sections.SERVER]["workspaces"] = str_list
+
     instance.update(json_config)
     # control_config()
     save_file = filepath.with_suffix(".json")
