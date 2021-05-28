@@ -233,7 +233,10 @@ class Wizard:
         min_sections = ["server", "agent"]
         check = all(item in sections for item in min_sections)
         if check:
-            msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
+            if sections["server"]["workspaces"]:
+                msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
+            else:
+                msj = f"{Bcolors.WARNING}File configuration not complete. Missing workspaces.{Bcolors.ENDC}"
         else:
             msj = f"{Bcolors.WARNING}File configuration not complete. Missing section.{Bcolors.ENDC}"
         return msj

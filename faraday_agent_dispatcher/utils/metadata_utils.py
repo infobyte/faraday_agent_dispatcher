@@ -10,7 +10,7 @@ from faraday_agent_parameters_types import manifests_folder
 logger = logging.get_logger()
 
 MANDATORY_METADATA_KEYS = ["cmd", "check_cmds", "arguments", "environment_variables"]
-INFO_METADATA_KEYS = []
+INFO_METADATA_KEYS = ["category", "name", "title", "website", "description", "image"]
 
 
 # Path can be treated as str
@@ -25,7 +25,7 @@ def executor_folder() -> Union[Path, str]:
 
 def executor_metadata(executor_filename: str) -> dict:
     chosen = Path(executor_filename)
-    chosen_metadata_path = manifests_folder() / f"{chosen.stem}_manifest.json"
+    chosen_metadata_path = manifests_folder() / f"{chosen.stem}.json"
     with chosen_metadata_path.open() as metadata_file:
         data = metadata_file.read()
         metadata = json.loads(data)
