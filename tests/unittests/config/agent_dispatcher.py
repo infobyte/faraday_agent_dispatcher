@@ -260,13 +260,6 @@ def generate_basic_built_config():
             "replace": {},
             "expected_exception": ValueError,
         },
-        {
-            "id_str": "Error: Duplicated section",
-            "remove": {},
-            "replace": {},
-            "duplicate_exception": True,
-            "expected_exception": ValueError,
-        },
         {"id_str": "OK: All default", "remove": {}, "replace": {}},
         {
             "id_str": "Error: ssl crt do not exists",

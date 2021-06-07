@@ -218,7 +218,7 @@ async def test_config(request):
 
 
 class TmpConfig:
-    config_file_path = Path(f"/tmp/{fuzzy_string(10)}.json")
+    config_file_path = Path(f"/tmp/{fuzzy_string(10)}.yaml")
 
     def save(self):
         save_config(self.config_file_path)

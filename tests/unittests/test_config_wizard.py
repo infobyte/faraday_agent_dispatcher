@@ -78,7 +78,7 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         expected_workspaces_set = set.union(ini_config["old_workspaces"], testing_inputs["after_workspaces"])
 
         if path.suffix == ".ini":
-            path = path.with_suffix(".json")
+            path = path.with_suffix(".yaml")
         config_mod.reset_config(path)
         executor_config_set = set(config_mod.instance[Sections.AGENT].get("executors"))
         assert executor_config_set == expected_executors_set
@@ -139,7 +139,7 @@ def test_override_ssl_cert_with_default(ini_config):
         # Control '\0' is not passed in the output, as the input is echoed
         assert "\0\n" not in result.output
 
-        path = path.with_suffix(".json")
+        path = path.with_suffix(".yaml")
 
         in_data1 = parse_inputs(testing_inputs[1]) + "\0\n" * 1000
         env = os.environ
@@ -186,7 +186,7 @@ def test_with_agent_token(delete_token):
         assert result.exit_code == 0, result.exception
         assert f"Section: {Sections.TOKENS}" in result.output
 
-        path = path.with_suffix(".json")
+        path = path.with_suffix(".yaml")
         config_mod.reset_config(path)
         if delete_token:
             assert "agent" not in config_mod.instance[Sections.TOKENS]
@@ -198,7 +198,7 @@ def test_begin_and_quit():
     runner = CliRunner()
 
     with runner.isolated_filesystem() as file_system:
-        path = Path(file_system) / "dispatcher.json"
+        path = Path(file_system) / "dispatcher.yaml"
         input_str = "Q\nY\n"
         escape_string = "\0\n" * 1000
         env = os.environ

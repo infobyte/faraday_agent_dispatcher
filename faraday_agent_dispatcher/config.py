@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import configparser
-import json
+import yaml
 
 from faraday_agent_dispatcher.utils.control_values_utils import (
     control_int,
@@ -49,9 +49,9 @@ if not LOGS_PATH.exists():
 if not CONFIG_PATH.exists():
     CONFIG_PATH.mkdir()
 
-CONFIG_FILENAME = CONFIG_PATH / "dispatcher.json"
+CONFIG_FILENAME = CONFIG_PATH / "dispatcher.yaml"
 
-EXAMPLE_CONFIG_FILENAME = Path(__file__).parent / "example_config.json"
+EXAMPLE_CONFIG_FILENAME = Path(__file__).parent / "example_config.yaml"
 
 OLD_CONFIG_FILENAME = CONFIG_PATH / "dispatcher.ini"
 
@@ -66,7 +66,7 @@ instance = {}
 
 def reset_config(filepath: Path):
     if filepath.is_dir():
-        filename = filepath / "dispatcher.json"
+        filename = filepath / "dispatcher.yaml"
     else:
         filename = filepath
     if not filename.is_file():
@@ -78,11 +78,11 @@ def reset_config(filepath: Path):
         filename = update_config(filename)
 
     try:
-        with filename.open() as json_file:
-            if not json_file:
+        with filename.open() as yaml_file:
+            if not yaml_file:
                 raise ValueError(f"Unable to read config file located at {filename}", False)
             instance.clear()
-            instance.update(json.load(json_file))
+            instance.update(yaml.safe_load(yaml_file))
     except EnvironmentError:
         raise EnvironmentError("Error opening the config file")
 
@@ -97,11 +97,11 @@ def check_filepath(filepath: str = None):
 def save_config(filepath=None):
     check_filepath(filepath)
     if filepath.is_dir():
-        filepath = filepath / "dispatcher.json"
-    elif filepath.suffix != ".json":
-        filepath = filepath.with_suffix(".json")
+        filepath = filepath / "dispatcher.yaml"
+    elif filepath.suffix != ".yaml":
+        filepath = filepath.with_suffix(".yaml")
     with filepath.open("w") as configfile:
-        json.dump(instance, configfile, indent=4)
+        yaml.dump(instance, configfile)
 
 
 def update_config(filepath: Path):
@@ -181,9 +181,9 @@ def update_config(filepath: Path):
         if "ssl_cert" not in old_instance[OldSections.SERVER]:
             old_instance.set(OldSections.SERVER, "ssl_cert", "")
 
-    # TO JSON
+    # TO YAML
 
-    json_config = {}
+    yaml_config = {}
     executors = {}
 
     # Agent & Executors
@@ -224,32 +224,32 @@ def update_config(filepath: Path):
         else:
             data.append(f"executors option not in {OldSections.AGENT} section")
 
-        json_config[Sections.AGENT] = {
+        yaml_config[Sections.AGENT] = {
             "agent_name": old_instance.get(OldSections.AGENT, "agent_name"),
             Sections.EXECUTORS: executors,
         }
 
     # Tokens
     if OldSections.TOKENS in old_instance:
-        json_config[Sections.TOKENS] = {}
+        yaml_config[Sections.TOKENS] = {}
         for key, value in old_instance[OldSections.TOKENS].items():
-            json_config[Sections.TOKENS][key] = value
+            yaml_config[Sections.TOKENS][key] = value
 
     # Server
-    json_config[Sections.SERVER] = {}
+    yaml_config[Sections.SERVER] = {}
     if OldSections.SERVER in old_instance:
         for key, value in old_instance[OldSections.SERVER].items():
-            json_config[Sections.SERVER][key] = value
+            yaml_config[Sections.SERVER][key] = value
 
-    if "workspaces" in json_config[Sections.SERVER] and isinstance(json_config[Sections.SERVER]["workspaces"], str):
-        str_list = json_config[Sections.SERVER]["workspaces"].split(",")
+    if "workspaces" in yaml_config[Sections.SERVER] and isinstance(yaml_config[Sections.SERVER]["workspaces"], str):
+        str_list = yaml_config[Sections.SERVER]["workspaces"].split(",")
         if "" in str_list:
             str_list.remove("")
-        json_config[Sections.SERVER]["workspaces"] = str_list
+        yaml_config[Sections.SERVER]["workspaces"] = str_list
 
-    instance.update(json_config)
+    instance.update(yaml_config)
     # control_config()
-    save_file = filepath.with_suffix(".json")
+    save_file = filepath.with_suffix(".yaml")
     save_config(save_file)
     return save_file
 
