@@ -80,7 +80,7 @@ def generate_basic_built_config():
         },
         {
             "id_str": "Error: Empty executor",
-            "remove": {"executor": ["max_size"]},
+            "remove": {},
             "replace": {"executor": {"max_size": ""}},
             "expected_exception": ValueError,
         },
