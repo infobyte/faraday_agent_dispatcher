@@ -56,7 +56,7 @@ from faraday_agent_dispatcher.config import reset_config, save_config
 )
 def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
     reset_config(tmp_custom_config.config_file_path)
-    config_path = tmp_custom_config.config_file_path.with_suffix(".json")
+    config_path = tmp_custom_config.config_file_path.with_suffix(".yaml")
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
             if section == "executor":
@@ -85,12 +85,6 @@ def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
                     configuration[section].pop(option)
     save_config(config_path)
     if "expected_exception" in config_changes_dict:
-        if "duplicate_exception" in config_changes_dict and config_changes_dict["duplicate_exception"]:
-            with open(config_path, "r") as file:
-                content = file.read()
-            with open(config_path, "w") as file:
-                file.write(content)
-                file.write(content)
         with pytest.raises(config_changes_dict["expected_exception"]):
             Dispatcher(None, config_path)
     else:
