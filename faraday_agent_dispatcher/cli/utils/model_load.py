@@ -12,7 +12,7 @@ from faraday_agent_dispatcher.cli.utils.general_prompts import (
 )
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
-from faraday_agent_parameters_types.data_types import DATA_TYPE, BASE_TYPE
+from faraday_agent_parameters_types.data_types import DATA_TYPE
 
 
 def append_keys(agent_dict, section):
@@ -260,7 +260,7 @@ def process_params(executor_name):
             else:
                 mandatory = confirm_prompt("Is mandatory?")
                 input_type = click.prompt("Type?", type=click.Choice(DATA_TYPE.keys()))
-                input_base_type = BASE_TYPE.get(input_type)
+                input_base_type = DATA_TYPE[input_type].type().base
                 section[param] = {"mandatory": mandatory, "type": input_type, "base": input_base_type}
         elif value == "M":
             param = click.prompt("Argument name").lower()
@@ -270,7 +270,7 @@ def process_params(executor_name):
                 def_value, param = get_new_name(param, section, "argument")
                 mandatory = confirm_prompt("Is mandatory?", default=def_value["mandatory"])
                 input_type = click.prompt("Type?", type=click.Choice(DATA_TYPE.keys()), default=def_value["type"])
-                input_base_type = BASE_TYPE.get(input_type)
+                input_base_type = DATA_TYPE[input_type].type().base
                 section[param] = {"mandatory": mandatory, "type": input_type, "base": input_base_type}
         elif value == "D":
             param = click.prompt("Argument name").lower()
