@@ -289,7 +289,8 @@ def process_repo_var_envs(executor_name, metadata: dict):
     section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("varenvs")
 
     for env_var in env_vars:
-        value = click.prompt(f"Environment variable {env_var} value", default=None)
+        def_value = section.get(env_var)
+        value = click.prompt(f"Environment variable {env_var} value", default=def_value)
         section[env_var] = value
 
 
