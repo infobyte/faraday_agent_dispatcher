@@ -374,26 +374,32 @@ class Dispatcher:
                 )
 
             # VALIDATE
+            errors = dict()
             for param in passed_params:
-                errors = type_validate(executor.params[param]["type"], passed_params[param])
-                if errors:
+                param_errors = type_validate(executor.params[param]["type"], passed_params[param])
+                if param_errors:
+                    errors[param] = ",".join(param_errors["data"])
                     logger.error(
                         f'Validation error on parameter "{param}", of type "{executor.params[param]["type"]}":'
-                        f" {errors}"
+                        f" {errors[param]}"
                     )
-                    await self.websocket.send(
-                        json.dumps(
-                            {
-                                "action": "RUN_STATUS",
-                                "execution_id": self.execution_id,
-                                "executor_name": executor.name,
-                                "running": False,
-                                "message": "Validation error "
-                                f"{param} = {passed_params[param]} did not validate correctly: {errors}",
-                            }
-                        )
+
+            if errors:
+                error_msg = "Validation error:"
+                for param in errors:
+                    error_msg += f"\n{param} = {passed_params[param]} did not validate correctly: {errors[param]}"
+                await self.websocket.send(
+                    json.dumps(
+                        {
+                            "action": "RUN_STATUS",
+                            "execution_id": self.execution_id,
+                            "executor_name": executor.name,
+                            "running": False,
+                            "message": error_msg,
+                        }
                     )
-                    return
+                )
+                return
 
             if mandatory_full and all_accepted:
                 if not await executor.check_cmds():
