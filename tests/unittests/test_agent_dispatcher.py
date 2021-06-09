@@ -238,14 +238,16 @@ async def test_run_once(
 
     test_config.executors = []
     for ex in executor_names:
-        false_params = [
-            "count",
-            "spare",
-            "spaced_before",
-            "spaced_middle",
-            "err",
-            "fails",
-        ]
+        from faraday_agent_parameters_types.data_types import DATA_TYPE
+
+        false_params = {
+            "count": DATA_TYPE["integer"],
+            "spare": DATA_TYPE["boolean"],
+            "spaced_before": DATA_TYPE["boolean"],
+            "spaced_middle": DATA_TYPE["boolean"],
+            "err": DATA_TYPE["boolean"],
+            "fails": DATA_TYPE["boolean"],
+        }
         configuration[Sections.AGENT][Sections.EXECUTORS][ex] = {
             "cmd": f"python {path_to_basic_executor}",
             "params": {},
@@ -254,14 +256,14 @@ async def test_run_once(
         for param in false_params:
             configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_PARAMS][param] = {
                 "mandatory": False,
-                "type": "string",
-                "base": "string",
+                "type": false_params[param].type.class_name,
+                "base": false_params[param].type.base,
             }
 
         configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_PARAMS]["out"] = {
             "mandatory": True,
-            "type": "string",
-            "base": "string",
+            "type": DATA_TYPE["string"].type.class_name,
+            "base": DATA_TYPE["string"].type.base,
         }
 
         if "varenvs" in executor_options:

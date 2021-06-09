@@ -1251,6 +1251,38 @@ def generate_executor_options():
                 },
             ],
         },
+        {
+            "id_str": "Validation error",
+            "data": {
+                "action": "RUN",
+                "agent_id": 1,
+                "workspace": "{}",
+                "execution_id": 1,
+                "executor": "ex1",
+                "args": {"out": "json", "count": "count", "spare": "spare"},
+            },
+            "logs": [
+                {
+                    "levelname": "ERROR",
+                    "msg": 'Validation error on parameter "spare", of type "boolean": Not a valid boolean.',
+                },
+                {
+                    "levelname": "ERROR",
+                    "msg": 'Validation error on parameter "count", of type "integer": Not a valid integer.',
+                },
+            ],
+            "ws_responses": [
+                {
+                    "action": "RUN_STATUS",
+                    "executor_name": "ex1",
+                    "execution_id": 1,
+                    "running": False,
+                    "message": "Validation error:\n"
+                    "count = count did not validate correctly: Not a valid integer.\n"
+                    "spare = spare did not validate correctly: Not a valid boolean.",
+                }
+            ],
+        },
     ]
 
 
