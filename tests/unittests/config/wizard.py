@@ -342,7 +342,7 @@ def generate_inputs():
             "executors_input": [
                 RepoExecutorInput(
                     name="ex1",
-                    base="5",
+                    base="4",
                     varenvs=[
                         RepoVarEnvInput(name="NESSUS_USERNAME", value="asd"),
                         RepoVarEnvInput(name="NESSUS_PASSWORD", value="asdsad"),

@@ -1,11 +1,10 @@
 import asyncio
-import json
 import os
 from pathlib import Path
 from typing import Union
 
 import faraday_agent_dispatcher.logger as logging
-from faraday_agent_parameters_types import manifests_folder
+from faraday_agent_parameters_types.utils import get_manifests
 
 logger = logging.get_logger()
 
@@ -23,13 +22,8 @@ def executor_folder() -> Union[Path, str]:
         return folder / "official"
 
 
-def executor_metadata(executor_filename: str) -> dict:
-    chosen = Path(executor_filename)
-    chosen_metadata_path = manifests_folder() / f"{chosen.stem}.json"
-    with chosen_metadata_path.open() as metadata_file:
-        data = metadata_file.read()
-        metadata = json.loads(data)
-    return metadata
+def executor_metadata(executor_name: str) -> dict:
+    return get_manifests("1.6.0").get(executor_name)
 
 
 def check_metadata(metadata) -> bool:

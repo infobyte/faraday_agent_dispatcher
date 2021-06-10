@@ -150,6 +150,8 @@ class Wizard:
             if re.match("(.*_manifest.json|__pycache__)", executor) is None
         ]
 
+        executors_names = list(map(lambda x: re.search(r"^(.+)\..+$", x).group(1), executors))
+
         async def control_base_repo(chosen_option: str) -> Optional[dict]:
             metadata = executor_metadata(chosen_option)
             try:
@@ -163,13 +165,12 @@ class Wizard:
                             f""
                         )
                     else:
-                        metadata["name"] = chosen_option
                         return metadata
             except FileNotFoundError:
                 print(f"{Bcolors.WARNING}Not existent manifest for " f"{Bcolors.BOLD}{chosen_option}{Bcolors.ENDC}")
             return None
 
-        return await choice_paged_option(executors, self.PAGE_SIZE, control_base_repo)
+        return await choice_paged_option(executors_names, self.PAGE_SIZE, control_base_repo)
 
     async def new_repo_executor(self, name):
         try:
