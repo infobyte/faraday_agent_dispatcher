@@ -5,6 +5,7 @@ from typing import Union
 
 import faraday_agent_dispatcher.logger as logging
 from faraday_agent_parameters_types.utils import get_manifests
+from faraday_agent_dispatcher import __version__ as current_version
 
 logger = logging.get_logger()
 
@@ -23,7 +24,7 @@ def executor_folder() -> Union[Path, str]:
 
 
 def executor_metadata(executor_name: str) -> dict:
-    return get_manifests("1.6.0").get(executor_name)
+    return get_manifests(current_version).get(executor_name)
 
 
 def check_metadata(metadata) -> bool:
