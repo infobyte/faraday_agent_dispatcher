@@ -69,6 +69,7 @@ def reset_config(filepath: Path):
         filename = filepath / "dispatcher.yaml"
     else:
         filename = filepath
+        filepath = filepath.parent
     if not filename.is_file():
         if (filepath / "dispatcher.ini").is_file():
             filename = update_config((filepath / "dispatcher.ini"))
