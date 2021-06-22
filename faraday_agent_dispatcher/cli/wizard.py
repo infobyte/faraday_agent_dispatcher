@@ -150,7 +150,7 @@ class Wizard:
             if re.match("(.*_manifest.json|__pycache__)", executor) is None
         ]
 
-        executors_names = list(map(lambda x: re.search(r"^(.+)\..+$", x).group(1), executors))
+        executors_names = list(map(lambda x: re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", x).group(1), executors))
 
         async def control_base_repo(chosen_option: str) -> Optional[dict]:
             metadata = executor_metadata(chosen_option)
@@ -175,7 +175,7 @@ class Wizard:
     async def new_repo_executor(self, name):
         try:
             metadata = await self.get_base_repo()
-            Wizard.set_generic_data(name, repo_executor_name=metadata["name"])
+            Wizard.set_generic_data(name, repo_executor_name=metadata["repo_executor"])
             process_repo_var_envs(name, metadata)
             set_repo_params(name, metadata)
             print(f"{Bcolors.OKGREEN}New repository executor added" f"{Bcolors.ENDC}")
@@ -212,8 +212,9 @@ class Wizard:
             self.executors_dict[new_name] = value
             name = new_name
         section = Sections.EXECUTOR_DATA.format(name)
-        repo_name = self.executors_dict[section].get("repo_executor", None)
-        if repo_name:
+        repo_executor = self.executors_dict[section].get("repo_executor")
+        if repo_executor:
+            repo_name = re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", repo_executor).group(1)
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(name, metadata)
         else:

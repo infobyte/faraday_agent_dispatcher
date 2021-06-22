@@ -1,3 +1,5 @@
+import re
+
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher.utils.metadata_utils import (
     executor_metadata,
@@ -22,10 +24,11 @@ class Executor:
         name = name.strip()
         self.control_config(name, config)
         self.name = name
-        self.repo_name = config.get("repo_executor")
-        if self.repo_name:
+        self.repo_executor = config.get("repo_executor")
+        if self.repo_executor:
+            self.repo_name = re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", self.repo_executor).group(1)
             metadata = executor_metadata(self.repo_name)
-            repo_path = executor_folder() / self.repo_name
+            repo_path = executor_folder() / self.repo_executor
             self.cmd = metadata["cmd"].format(EXECUTOR_FILE_PATH=repo_path)
         else:
             self.cmd = config.get("cmd")
