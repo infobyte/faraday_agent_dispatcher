@@ -51,9 +51,10 @@ class Executor:
                 raise ValueError(errors)
 
     async def check_cmds(self):
-        if self.repo_name is None:
+        if self.repo_executor is None:
             return True
-        metadata = executor_metadata(self.repo_name)
+        repo_name = re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", self.repo_executor).group(1)
+        metadata = executor_metadata(repo_name)
         if not await check_commands(metadata):
             logger.info(
                 f"{Bcolors.WARNING}Invalid bash dependency for " f"{Bcolors.BOLD}{self.repo_name}{Bcolors.ENDC}"
