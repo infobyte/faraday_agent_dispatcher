@@ -37,7 +37,6 @@ from tests.unittests.config.agent_dispatcher import (
     generate_basic_built_config,
     generate_executor_options,
     generate_register_options,
-    get_merge_executors,
 )
 from tests.utils.testing_faraday_server import (  # noqa: F401
     FaradayTestConfig,
@@ -47,7 +46,7 @@ from tests.utils.testing_faraday_server import (  # noqa: F401
     test_logger_handler,
     test_logger_folder,
 )
-from tests.utils.text_utils import fuzzy_string
+from faraday_agent_dispatcher.config import reset_config, save_config
 
 
 @pytest.mark.parametrize(
@@ -56,29 +55,40 @@ from tests.utils.text_utils import fuzzy_string
     ids=lambda elem: elem["id_str"],
 )
 def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
+    reset_config(tmp_custom_config.config_file_path)
+    config_path = tmp_custom_config.config_file_path.with_suffix(".yaml")
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
-            if section not in configuration:
-                configuration.add_section(section)
-            configuration.set(section, option, config_changes_dict["replace"][section][option])
+            if section == "executor":
+                if "ex1" not in configuration[Sections.AGENT][Sections.EXECUTORS]:
+                    configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"] = {}
+                configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"][option] = config_changes_dict["replace"][
+                    section
+                ][option]
+                continue
+            elif section not in configuration:
+                configuration[section] = {}
+            configuration[section][option] = config_changes_dict["replace"][section][option]
     for section in config_changes_dict["remove"]:
         if "section" in config_changes_dict["remove"][section]:
-            configuration.remove_section(section)
+            if section in configuration:
+                configuration.pop(section)
         else:
             for option in config_changes_dict["remove"][section]:
-                configuration.remove_option(section, option)
-    tmp_custom_config.save()
+                if (
+                    section == "executor"
+                    and "ex1" in configuration[Sections.AGENT][Sections.EXECUTORS]
+                    and option in configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"]
+                ):
+                    configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"].pop(option)
+                elif section in configuration and option in configuration[section]:
+                    configuration[section].pop(option)
+    save_config(config_path)
     if "expected_exception" in config_changes_dict:
-        if "duplicate_exception" in config_changes_dict and config_changes_dict["duplicate_exception"]:
-            with open(tmp_custom_config.config_file_path, "r") as file:
-                content = file.read()
-            with open(tmp_custom_config.config_file_path, "w") as file:
-                file.write(content)
-                file.write(content)
         with pytest.raises(config_changes_dict["expected_exception"]):
-            Dispatcher(None, tmp_custom_config.config_file_path)
+            Dispatcher(None, config_path)
     else:
-        Dispatcher(None, tmp_custom_config.config_file_path)
+        Dispatcher(None, config_path)
 
 
 @pytest.mark.parametrize("register_options", generate_register_options(), ids=lambda elem: elem["id_str"])
@@ -102,25 +112,31 @@ async def test_start_and_register(
     client = test_config.client
 
     if test_config.base_route:
-        configuration.set(Sections.SERVER, "base_route", test_config.base_route)
+        configuration[Sections.SERVER]["base_route"] = test_config.base_route
 
     # Config
-    configuration.set(Sections.SERVER, "ssl", str(test_config.is_ssl))
+    configuration[Sections.SERVER]["ssl"] = str(test_config.is_ssl)
     if test_config.is_ssl:
-        configuration.set(Sections.SERVER, "ssl_cert", str(test_config.ssl_cert_path / "ok.crt"))
-        configuration.set(Sections.SERVER, "host", "localhost")
+        configuration[Sections.SERVER]["ssl_cert"] = str(test_config.ssl_cert_path / "ok.crt")
+        configuration[Sections.SERVER]["host"] = "localhost"
     else:
-        configuration.set(Sections.SERVER, "host", client.host)
+        configuration[Sections.SERVER]["host"] = client.host
 
-    configuration.set(Sections.SERVER, "api_port", str(client.port))
-    configuration.set(Sections.SERVER, "workspaces", test_config.workspaces_str())
-    configuration.set(Sections.EXECUTOR_DATA.format("ex1"), "cmd", "exit 1")
+    configuration[Sections.SERVER]["api_port"] = str(client.port)
+    configuration[Sections.SERVER]["workspaces"] = test_config.workspaces
+    if "ex1" not in configuration[Sections.AGENT][Sections.EXECUTORS]:
+        configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"] = {
+            "max_size": "65536",
+            "params": {},
+            "varenvs": {},
+        }
+    configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"]["cmd"] = "exit 1"
 
     for section in register_options["replace_data"]:
         for option in register_options["replace_data"][section]:
             if section not in configuration:
-                configuration.add_section(section)
-            configuration.set(section, option, register_options["replace_data"][section][option])
+                configuration[section] = {}
+            configuration[section][option] = register_options["replace_data"][section][option]
 
     tmp_default_config.save()
 
@@ -199,59 +215,75 @@ async def test_run_once(
 ):
     # Config
     if "workspaces" in executor_options:
-        test_config.workspaces = executor_options["workspaces"].split(",")
+        test_config.workspaces = executor_options["workspaces"]
     workspaces = test_config.workspaces
-    workspaces_str = test_config.workspaces_str()
 
     if test_config.base_route:
-        configuration.set(Sections.SERVER, "base_route", test_config.base_route)
+        configuration[Sections.SERVER]["base_route"] = test_config.base_route
 
-    configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
-    configuration.set(Sections.SERVER, "websocket_port", str(test_config.client.port))
-    configuration.set(Sections.SERVER, "workspaces", workspaces_str)
+    configuration[Sections.SERVER]["api_port"] = str(test_config.client.port)
+    configuration[Sections.SERVER]["websocket_port"] = str(test_config.client.port)
+    configuration[Sections.SERVER]["workspaces"] = workspaces
     if Sections.TOKENS not in configuration:
-        configuration.add_section(Sections.TOKENS)
-    configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
-    configuration.set(Sections.SERVER, "ssl", str(test_config.is_ssl))
+        configuration[Sections.TOKENS] = {}
+    configuration[Sections.TOKENS]["agent"] = test_config.agent_token
+    configuration[Sections.SERVER]["ssl"] = str(test_config.is_ssl)
     if test_config.is_ssl:
-        configuration.set(Sections.SERVER, "ssl_cert", str(test_config.ssl_cert_path / "ok.crt"))
-        configuration.set(Sections.SERVER, "host", "localhost")
+        configuration[Sections.SERVER]["ssl_cert"] = str(test_config.ssl_cert_path / "ok.crt")
+        configuration[Sections.SERVER]["host"] = "localhost"
     else:
-        configuration.set(Sections.SERVER, "host", test_config.client.host)
+        configuration[Sections.SERVER]["host"] = test_config.client.host
     path_to_basic_executor = Path(__file__).parent.parent / "data" / "basic_executor.py"
     executor_names = ["ex1"] + ([] if "extra" not in executor_options else executor_options["extra"])
-    configuration.set(Sections.AGENT, "executors", ",".join(executor_names))
-    test_config.executors = []
-    for executor_name in executor_names:
-        executor_section = Sections.EXECUTOR_DATA.format(executor_name)
-        params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
-        varenvs_section = Sections.EXECUTOR_VARENVS.format(executor_name)
-        for section in [executor_section, params_section, varenvs_section]:
-            if section not in configuration:
-                configuration.add_section(section)
 
-        configuration.set(executor_section, "cmd", "python {}".format(path_to_basic_executor))
-        false_params = [
-            "count",
-            "spare",
-            "spaced_before",
-            "spaced_middle",
-            "err",
-            "fails",
-        ]
-        [configuration.set(params_section, param, "False") for param in false_params]
-        configuration.set(params_section, "out", "True")
+    test_config.executors = []
+    for ex in executor_names:
+        from faraday_agent_parameters_types.data_types import DATA_TYPE
+
+        false_params = {
+            "count": DATA_TYPE["integer"],
+            "spare": DATA_TYPE["boolean"],
+            "spaced_before": DATA_TYPE["boolean"],
+            "spaced_middle": DATA_TYPE["boolean"],
+            "err": DATA_TYPE["boolean"],
+            "fails": DATA_TYPE["boolean"],
+        }
+        configuration[Sections.AGENT][Sections.EXECUTORS][ex] = {
+            "cmd": f"python {path_to_basic_executor}",
+            "params": {},
+            "varenvs": {},
+        }
+        for param in false_params:
+            configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_PARAMS][param] = {
+                "mandatory": False,
+                "type": false_params[param].type.class_name,
+                "base": false_params[param].type.base,
+            }
+
+        configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_PARAMS]["out"] = {
+            "mandatory": True,
+            "type": DATA_TYPE["string"].type.class_name,
+            "base": DATA_TYPE["string"].type.base,
+        }
+
         if "varenvs" in executor_options:
             for varenv in executor_options["varenvs"]:
-                configuration.set(varenvs_section, varenv, executor_options["varenvs"][varenv])
+                configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_VARENVS][
+                    varenv
+                ] = executor_options["varenvs"][varenv]
 
         max_size = str(64 * 1024) if "max_size" not in executor_options else executor_options["max_size"]
-        configuration.set(executor_section, "max_size", max_size)
+        configuration[Sections.AGENT][Sections.EXECUTORS][ex]["max_size"] = max_size
         executor_metadata = {
-            "executor_name": executor_name,
-            "args": {param: False for param in false_params},
+            "executor_name": ex,
+            "args": {
+                param: value
+                for param, value in configuration[Sections.AGENT][Sections.EXECUTORS][ex][
+                    Sections.EXECUTOR_PARAMS
+                ].items()
+            },
         }
-        executor_metadata["args"]["out"] = True
+        executor_metadata["args"]["out"] = {"mandatory": True, "type": "string", "base": "string"}
         test_config.executors.append(executor_metadata)
 
     tmp_default_config.save()
@@ -287,57 +319,3 @@ async def test_run_once(
             )
             >= min_count
         ), log["msg"]
-
-
-# This test merging "workspace" & "workspaces" in config to "workspaces"
-@pytest.mark.asyncio
-async def test_merge_config(
-    test_config: FaradayTestConfig,  # noqa F811
-    tmp_default_config,  # noqa F811
-    test_logger_handler,  # noqa F811
-    test_logger_folder,  # noqa F811
-):
-    configuration.set(Sections.SERVER, "api_port", str(test_config.client.port))
-    configuration.set(Sections.SERVER, "websocket_port", str(test_config.client.port))
-    if test_config.base_route:
-        configuration.set(Sections.SERVER, "base_route", test_config.base_route)
-    configuration.set(Sections.SERVER, "ssl", str(test_config.is_ssl))
-    if test_config.is_ssl:
-        configuration.set(Sections.SERVER, "ssl_cert", str(test_config.ssl_cert_path / "ok.crt"))
-        configuration.set(Sections.SERVER, "host", "localhost")
-    else:
-        configuration.set(Sections.SERVER, "host", test_config.client.host)
-    configuration.set(Sections.SERVER, "workspaces", test_config.workspaces_str())
-    random_workspace_name = fuzzy_string(15)
-    configuration.set(Sections.SERVER, "workspace", random_workspace_name)
-
-    test_config.workspaces = [random_workspace_name] + test_config.workspaces
-    if Sections.TOKENS not in configuration:
-        configuration.add_section(Sections.TOKENS)
-    configuration.set(Sections.TOKENS, "agent", test_config.agent_token)
-    path_to_basic_executor = Path(__file__).parent.parent / "data" / "basic_executor.py"
-    configuration.set(Sections.AGENT, "executors", "ex1,ex2,ex3,ex4")
-
-    for executor_name in ["ex1", "ex3", "ex4"]:
-        executor_section = Sections.EXECUTOR_DATA.format(executor_name)
-        params_section = Sections.EXECUTOR_PARAMS.format(executor_name)
-        for section in [executor_section, params_section]:
-            if section not in configuration:
-                configuration.add_section(section)
-        configuration.set(executor_section, "cmd", "python {}".format(path_to_basic_executor))
-
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param1", "True")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex1"), "param2", "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param3", "False")
-    configuration.set(Sections.EXECUTOR_PARAMS.format("ex3"), "param4", "False")
-    tmp_default_config.save()
-    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
-
-    test_config.ws_data["run_data"] = {"agent_id": 1}
-    test_config.ws_data["ws_responses"] = [{"error": "'action' key is mandatory in this websocket connection"}]
-    test_config.executors = get_merge_executors()
-
-    await dispatcher.register(test_config.registration_token)
-    await dispatcher.connect()
-
-    assert len(test_config.ws_data["ws_responses"]) == 0

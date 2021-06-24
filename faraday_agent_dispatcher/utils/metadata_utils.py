@@ -1,15 +1,16 @@
 import asyncio
-import json
 import os
 from pathlib import Path
 from typing import Union
 
 import faraday_agent_dispatcher.logger as logging
+from faraday_agent_parameters_types.utils import get_manifests
+from faraday_agent_dispatcher import __version__ as current_version
 
 logger = logging.get_logger()
 
 MANDATORY_METADATA_KEYS = ["cmd", "check_cmds", "arguments", "environment_variables"]
-INFO_METADATA_KEYS = []
+INFO_METADATA_KEYS = ["category", "name", "title", "website", "description", "image"]
 
 
 # Path can be treated as str
@@ -22,13 +23,8 @@ def executor_folder() -> Union[Path, str]:
         return folder / "official"
 
 
-def executor_metadata(executor_filename: str) -> dict:
-    chosen = Path(executor_filename)
-    chosen_metadata_path = executor_folder() / f"{chosen.stem}_manifest.json"
-    with chosen_metadata_path.open() as metadata_file:
-        data = metadata_file.read()
-        metadata = json.loads(data)
-    return metadata
+def executor_metadata(executor_name: str) -> dict:
+    return get_manifests(current_version).get(executor_name)
 
 
 def check_metadata(metadata) -> bool:

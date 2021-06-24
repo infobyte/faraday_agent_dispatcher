@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import ssl
+from typing import Dict
 
 import pytest
 import random
@@ -43,9 +44,6 @@ class FaradayTestConfig:
         }
         self.changes_queue = Queue()
         self.ws_data = {}
-
-    def workspaces_str(self) -> str:
-        return ",".join(self.workspaces)
 
     def run_agent_to_websocket(self):
         self.changes_queue.put(
@@ -177,6 +175,10 @@ def get_bulk_create(test_config: FaradayTestConfig):
     return bulk_create
 
 
+def order_dict(bare_dict: Dict) -> Dict:
+    return {k: order_dict(v) if isinstance(v, dict) else v for k, v in sorted(bare_dict.items())}
+
+
 def get_ws_handler(test_config: FaradayTestConfig):
     async def websocket_handler(request):
 
@@ -188,7 +190,10 @@ def get_ws_handler(test_config: FaradayTestConfig):
             if "action" in msg_ and msg_["action"] == "JOIN_AGENT":
                 assert test_config.workspaces == msg_["workspaces"]
                 assert test_config.ws_token == msg_["token"]
-                assert test_config.executors == msg_["executors"]
+                assert sorted(
+                    [order_dict(elem) for elem in test_config.executors], key=lambda elem: elem["executor_name"]
+                ) == sorted([order_dict(elem) for elem in msg_["executors"]], key=lambda elem: elem["executor_name"])
+
                 await ws.send_json(test_config.ws_data["run_data"])
             else:
                 assert msg_ in test_config.ws_data["ws_responses"]
@@ -221,7 +226,7 @@ async def test_config(request):
 
 
 class TmpConfig:
-    config_file_path = Path(f"/tmp/{fuzzy_string(10)}.ini")
+    config_file_path = Path(f"/tmp/{fuzzy_string(10)}.yaml")
 
     def save(self):
         save_config(self.config_file_path)
@@ -240,7 +245,7 @@ def tmp_default_config():
 def tmp_custom_config():
     config = TmpConfig()
     ini_path = pathlib.Path(__file__).parent.parent / "data" / "test_config.ini"
-    shutil.copyfile(ini_path, config.config_file_path)
+    shutil.copyfile(ini_path, config.config_file_path.with_suffix(".ini"))
     reset_config(config.config_file_path)
     yield config
     os.remove(config.config_file_path)

@@ -1,9 +1,10 @@
-from faraday_agent_dispatcher.config import instance, Sections
+from faraday_agent_dispatcher.config import Sections
+from faraday_agent_dispatcher import config
 
 
 def __get_url(host: str, port: int, base_route: str = None):
     if base_route is None:
-        base_route = instance[Sections.SERVER].get("base_route", None)
+        base_route = config.instance[Sections.SERVER].get("base_route", None)
     if base_route is None:
         return f"{host}:{port}"
     else:
