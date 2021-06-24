@@ -20,9 +20,9 @@ import subprocess
 import time
 
 reset_config(EXAMPLE_CONFIG_FILENAME)
-HOST = config.get(Sections.SERVER, "host")
-API_PORT = config.get(Sections.SERVER, "api_port")
-WS_PORT = config.get(Sections.SERVER, "websocket_port")
+HOST = config[Sections.SERVER].get("host")
+API_PORT = config[Sections.SERVER].get("api_port")
+WS_PORT = config[Sections.SERVER].get("websocket_port")
 # TODO FIX WHEN FARADAY ACCEPTS CAPITAL FIRST LETTER
 WORKSPACE = fuzzy_string(6).lower()
 AGENT_NAME = fuzzy_string(6)
@@ -73,37 +73,26 @@ def test_execute_agent():
     token = res.json()["token"]
 
     # Config set up
-    if Sections.TOKENS in config.sections():
-        config.remove_section(Sections.TOKENS)
-    config.set(Sections.SERVER, "workspaces", WORKSPACE)
-    config.set(Sections.SERVER, "ssl", SSL)
-    config.set(Sections.AGENT, "agent_name", AGENT_NAME)
-    config.set(Sections.AGENT, "executors", EXECUTOR_NAME)
+    if Sections.TOKENS in config:
+        config.pop(Sections.TOKENS)
+    config[Sections.SERVER]["workspaces"] = [WORKSPACE]
+    config[Sections.SERVER]["ssl"] = SSL
+    config[Sections.AGENT]["agent_name"] = AGENT_NAME
+    config[Sections.AGENT]["executors"][EXECUTOR_NAME] = {}
     path_to_basic_executor = Path(__file__).parent.parent.parent / "data" / "basic_executor.py"
-    executor_section = Sections.EXECUTOR_DATA.format(EXECUTOR_NAME)
-    params_section = Sections.EXECUTOR_PARAMS.format(EXECUTOR_NAME)
-    for section in [executor_section, params_section]:
-        if section not in config:
-            config.add_section(section)
-
-    config.set(
-        Sections.EXECUTOR_DATA.format(EXECUTOR_NAME),
-        "cmd",
-        f"python {path_to_basic_executor}",
-    )
-
-    config.set(params_section, "out", "True")
-    [
-        config.set(params_section, param, "False")
-        for param in [
-            "count",
-            "spare",
-            "spaced_before",
-            "spaced_middle",
-            "err",
-            "fails",
-        ]
-    ]
+    executor_section = config[Sections.AGENT]["executors"][EXECUTOR_NAME]
+    executor_section["params"] = {
+        "out": {"mandatory": True, "base": "string", "type": "string"},
+        "count": {"mandatory": False, "base": "string", "type": "string"},
+        "space": {"mandatory": False, "base": "string", "type": "string"},
+        "spaced_before": {"mandatory": False, "base": "string", "type": "string"},
+        "spaced_middle": {"mandatory": False, "base": "string", "type": "string"},
+        "err": {"mandatory": False, "base": "string", "type": "string"},
+        "fails": {"mandatory": False, "base": "string", "type": "string"},
+    }
+    executor_section["varenvs"] = {}
+    executor_section["max_size"] = 65536
+    executor_section["cmd"] = f"python {path_to_basic_executor}"
 
     with tempfile.TemporaryDirectory() as tempdirfile:
         config_pathfile = Path(tempdirfile)

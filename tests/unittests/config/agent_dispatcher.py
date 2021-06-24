@@ -73,32 +73,168 @@ def generate_basic_built_config():
             },
         },
         {
-            "id_str": "OK: executor without cmd",
-            "remove": {Sections.EXECUTOR_DATA.format("ex1"): ["cmd"]},
+            "id_str": "Error: No Executors section",
+            "remove": {Sections.AGENT: [Sections.EXECUTORS]},
             "replace": {},
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: Empty executor",
+            "remove": {},
+            "replace": {"executor": {"max_size": ""}},
+            "expected_exception": ValueError,
         },
         {
             "id_str": "Error: executor max_size port not number",
             "remove": {},
-            "replace": {Sections.EXECUTOR_DATA.format("ex1"): {"max_size": "ASDASD"}},
+            "replace": {
+                "executor": {
+                    "max_size": "ASDASD",
+                    "cmd": "test",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
             "expected_exception": ValueError,
         },
         {
-            "id_str": "Error: executor param not bool (str)",
+            "id_str": "Error: executor missing max_size",
             "remove": {},
-            "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "ASDASD"}},
+            "replace": {
+                "executor": {
+                    "cmd": "test",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
             "expected_exception": ValueError,
         },
         {
-            "id_str": "Error: executor param not bool (number)",
+            "id_str": "Error: executor Missing both cmd and repo_executor",
             "remove": {},
-            "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "5"}},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
             "expected_exception": ValueError,
         },
         {
-            "id_str": "OK: executor param is bool",
+            "id_str": "OK: cmd but missing repo_executor",
             "remove": {},
-            "replace": {Sections.EXECUTOR_PARAMS.format("ex1"): {"param1": "True"}},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
+        },
+        {
+            "id_str": "OK: repo_executor but missing cmd",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "repo_executor": "nmap",
+                    "params": {},
+                    "varenvs": {},
+                }
+            },
+        },
+        {
+            "id_str": "Error: param missing mandatory",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "type": "string",
+                            "base": "string",
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: param missing type",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "base": "string",
+                            "mandatory": True,
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: param missing base",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "type": "string",
+                            "mandatory": True,
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "Error: invalid mandatory",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "type": "string",
+                            "base": "string",
+                            "mandatory": "asc",
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
+            "expected_exception": ValueError,
+        },
+        {
+            "id_str": "OK: Valid Parameter",
+            "remove": {},
+            "replace": {
+                "executor": {
+                    "max_size": "65536",
+                    "cmd": "test",
+                    "params": {
+                        "param1": {
+                            "type": "string",
+                            "base": "string",
+                            "mandatory": False,
+                        }
+                    },
+                    "varenvs": {},
+                }
+            },
         },
         {
             "id_str": "Error: No agent_name",
@@ -122,45 +258,6 @@ def generate_basic_built_config():
             "id_str": "Error: No server section",
             "remove": {Sections.SERVER: ["section"]},
             "replace": {},
-            "expected_exception": ValueError,
-        },
-        {
-            "id_str": "Error: Duplicated section",
-            "remove": {},
-            "replace": {},
-            "duplicate_exception": True,
-            "expected_exception": ValueError,
-        },
-        {
-            "id_str": "OK: different executors (mid-split)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": "ex1, ex2"}},
-        },
-        {
-            "id_str": "OK: different executors (end-split)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": "ex1,ex2 "}},
-        },
-        {
-            "id_str": "OK: different executors (begin-split)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": " ex1,ex2"}},
-        },
-        {
-            "id_str": "OK: different executors (mid-split)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": " ex1, ex2 , ex3"}},
-        },
-        {
-            "id_str": "Error: different executors (spaced name)",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": "ex1,ex 1"}},
-            "expected_exception": ValueError,
-        },
-        {
-            "id_str": "Error: Executor not configured",
-            "remove": {},
-            "replace": {Sections.AGENT: {"executors": "ex1,ex8"}},
             "expected_exception": ValueError,
         },
         {"id_str": "OK: All default", "remove": {}, "replace": {}},
@@ -855,7 +952,7 @@ def generate_executor_options():
                 },
                 {"levelname": "INFO", "msg": "Executor ex1 finished successfully"},
             ],
-            "workspaces": "error500",
+            "workspaces": ["error500"],
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
@@ -897,7 +994,7 @@ def generate_executor_options():
                 },
                 {"levelname": "INFO", "msg": "Executor ex1 finished successfully"},
             ],
-            "workspaces": "error429",
+            "workspaces": ["error429"],
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
@@ -1136,7 +1233,7 @@ def generate_executor_options():
                 },
                 {"levelname": "INFO", "msg": "Executor ex1 finished successfully"},
             ],
-            "workspaces": "other_workspace",
+            "workspaces": ["other_workspace"],
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
@@ -1152,6 +1249,38 @@ def generate_executor_options():
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
+            ],
+        },
+        {
+            "id_str": "Validation error",
+            "data": {
+                "action": "RUN",
+                "agent_id": 1,
+                "workspace": "{}",
+                "execution_id": 1,
+                "executor": "ex1",
+                "args": {"out": "json", "count": "count", "spare": "spare"},
+            },
+            "logs": [
+                {
+                    "levelname": "ERROR",
+                    "msg": 'Validation error on parameter "spare", of type "boolean": Not a valid boolean.',
+                },
+                {
+                    "levelname": "ERROR",
+                    "msg": 'Validation error on parameter "count", of type "integer": Not a valid integer.',
+                },
+            ],
+            "ws_responses": [
+                {
+                    "action": "RUN_STATUS",
+                    "executor_name": "ex1",
+                    "execution_id": 1,
+                    "running": False,
+                    "message": "Validation error:\n"
+                    "count = count did not validate correctly: Not a valid integer.\n"
+                    "spare = spare did not validate correctly: Not a valid boolean.",
+                }
             ],
         },
     ]
