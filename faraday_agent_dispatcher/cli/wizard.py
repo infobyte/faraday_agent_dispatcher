@@ -232,13 +232,18 @@ class Wizard:
         self.executors_dict.pop(name)
 
     def status_report(self, sections):
-        min_sections = ["server", "agent"]
+        min_sections = [Sections.SERVER, Sections.AGENT]
         check = all(item in sections for item in min_sections)
         if check:
-            if sections["server"]["workspaces"]:
+            if "workspaces" in sections[Sections.SERVER]:
                 msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
             else:
                 msj = f"{Bcolors.WARNING}File configuration not complete. Missing workspaces.{Bcolors.ENDC}"
         else:
             msj = f"{Bcolors.WARNING}File configuration not complete. Missing section.{Bcolors.ENDC}"
+        if Sections.TOKENS not in sections:
+            msj += (
+                f"\n{Bcolors.WARNING}Token not found, "
+                f'remember to run "faraday-dispatcher run --token {{TOKEN}}"{Bcolors.ENDC}'
+            )
         return msj
