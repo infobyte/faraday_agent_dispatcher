@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 from typing import Optional
 
 import click
@@ -58,12 +57,8 @@ class Wizard:
                 # the filepath is either a file, or a folder containing a file,
                 # which can't be processed
                 raise e
-        try:
-            config.verify()
-        except ValueError as e:
-            print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
-            sys.exit(1)
-        self.executors_list = []
+        config.control_config()
+        self.executors_dict = {}
         self.load_executors()
 
     async def run(self):
@@ -84,9 +79,8 @@ class Wizard:
             else:
                 process_choice_errors(value)
                 try:
-                    if Sections.AGENT in config.instance.sections():
-                        print(self.status_report(sections=config.instance.sections()))
-                        self.save_executors()
+                    if Sections.AGENT in config.instance:
+                        print(self.status_report(sections=config.instance))
                         config.control_config()
                         end = True
                     else:
@@ -106,13 +100,7 @@ class Wizard:
 
     def load_executors(self):
         if Sections.AGENT in config.instance:
-            executors = config.instance[Sections.AGENT].get("executors", "")
-            self.executors_list = executors.split(",")
-            if "" in self.executors_list:
-                self.executors_list.remove("")
-
-    def save_executors(self):
-        config.instance.set(Sections.AGENT, "executors", ",".join(self.executors_list))
+            self.executors_dict = config.instance[Sections.AGENT].get("executors", {})
 
     async def process_executors(self):
         end = False
@@ -121,7 +109,7 @@ class Wizard:
             print(
                 f"The actual configured {Bcolors.OKBLUE}{Bcolors.BOLD}"
                 f"executors{Bcolors.ENDC} are: {Bcolors.OKGREEN}"
-                f"{self.executors_list}{Bcolors.ENDC}"
+                f"{list(self.executors_dict.keys())}{Bcolors.ENDC}"
             )
             value = choose_adm("executor")
             if value.upper() == "A":
@@ -132,11 +120,11 @@ class Wizard:
                 self.delete_executor()
             else:
                 quit_executor_msg = f"{Bcolors.WARNING}There are no executors loaded. Are you sure?{Bcolors.ENDC}"
-                return confirm_prompt(quit_executor_msg, default=False) if not self.executors_list else True
+                return confirm_prompt(quit_executor_msg, default=False) if not self.executors_dict else True
 
     def check_executors_name(self, show_text: str, default=None):
         name = click.prompt(show_text, default=default)
-        if name in self.executors_list and name != default:
+        if name in self.executors_dict and name != default:
             print(f"{Bcolors.WARNING}The executor {name} already exists" f"{Bcolors.ENDC}")
             return
         for character in Wizard.SPECIAL_CHARACTER:
@@ -148,7 +136,7 @@ class Wizard:
     async def new_executor(self):
         name = self.check_executors_name("Name")
         if name:
-            self.executors_list.append(name)
+            self.executors_dict[name] = {}
             custom_executor = confirm_prompt("Is a custom executor?", default=False)
             if custom_executor:
                 self.new_custom_executor(name)
@@ -161,6 +149,8 @@ class Wizard:
             for executor in os.listdir(executor_folder())
             if re.match("(.*_manifest.json|__pycache__)", executor) is None
         ]
+
+        executors_names = list(map(lambda x: re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", x).group(1), executors))
 
         async def control_base_repo(chosen_option: str) -> Optional[dict]:
             metadata = executor_metadata(chosen_option)
@@ -175,39 +165,32 @@ class Wizard:
                             f""
                         )
                     else:
-                        metadata["name"] = chosen_option
                         return metadata
             except FileNotFoundError:
                 print(f"{Bcolors.WARNING}Not existent manifest for " f"{Bcolors.BOLD}{chosen_option}{Bcolors.ENDC}")
             return None
 
-        return await choice_paged_option(executors, self.PAGE_SIZE, control_base_repo)
+        return await choice_paged_option(executors_names, self.PAGE_SIZE, control_base_repo)
 
     async def new_repo_executor(self, name):
         try:
             metadata = await self.get_base_repo()
-            Wizard.set_generic_data(name, repo_executor_name=metadata["name"])
+            Wizard.set_generic_data(name, repo_executor_name=metadata["repo_executor"])
             process_repo_var_envs(name, metadata)
             set_repo_params(name, metadata)
             print(f"{Bcolors.OKGREEN}New repository executor added" f"{Bcolors.ENDC}")
         except WizardCanceledOption:
-            self.executors_list.pop()
+            self.executors_dict.pop(name)
             print(f"{Bcolors.BOLD}New repository executor not added" f"{Bcolors.ENDC}")
 
     @staticmethod
     def set_generic_data(name, cmd=None, repo_executor_name: str = None):
-        for section in Wizard.EXECUTOR_SECTIONS:
-            formatted_section = section.format(name)
-            config.instance.add_section(formatted_section)
-        config.instance.set(Sections.EXECUTOR_DATA.format(name), "max_size", f"{Wizard.MAX_BUFF_SIZE}")
+        executor = config.instance[Sections.AGENT][Sections.EXECUTORS][name]
+        executor["max_size"] = Wizard.MAX_BUFF_SIZE
         if repo_executor_name:
-            config.instance.set(
-                Sections.EXECUTOR_DATA.format(name),
-                "repo_executor",
-                f"{repo_executor_name}",
-            )
+            executor["repo_executor"] = repo_executor_name
         else:
-            config.instance.set(Sections.EXECUTOR_DATA.format(name), "cmd", cmd)
+            executor["cmd"] = cmd
 
     def new_custom_executor(self, name):
         cmd = click.prompt("Command to execute", default="exit 1")
@@ -217,53 +200,45 @@ class Wizard:
 
     def edit_executor(self):
         name = click.prompt("Name")
-        if name not in self.executors_list:
+        if name not in self.executors_dict:
             print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
             return
         new_name = None
         while new_name is None:
             new_name = self.check_executors_name("New name", default=name)
         if new_name != name:
-            for unformatted_section in Wizard.EXECUTOR_SECTIONS:
-                section = unformatted_section.format(new_name)
-                old_section = unformatted_section.format(name)
-                config.instance.add_section(section)
-                for item in config.instance.items(old_section):
-                    config.instance.set(section, item[0], item[1])
-                config.instance.remove_section(old_section)
-            self.executors_list.remove(name)
-            self.executors_list.append(new_name)
+            value = self.executors_dict[name]
+            self.executors_dict.pop(name)
+            self.executors_dict[new_name] = value
             name = new_name
         section = Sections.EXECUTOR_DATA.format(name)
-        repo_name = config.instance[section].get("repo_executor", None)
-        if repo_name:
+        repo_executor = self.executors_dict[section].get("repo_executor")
+        if repo_executor:
+            repo_name = re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", repo_executor).group(1)
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(name, metadata)
         else:
-            cmd = click.prompt("Command to execute", default=config.instance.get(section, "cmd"))
-            config.instance.set(section, "cmd", cmd)
+            cmd = click.prompt("Command to execute", default=self.executors_dict[section]["cmd"])
+            self.executors_dict[section]["cmd"] = cmd
             process_var_envs(name)
             process_params(name)
         print(f"{Bcolors.OKGREEN}Update repository executor finish" f"{Bcolors.ENDC}")
 
     def delete_executor(self):
         name = click.prompt("Name")
-        if name not in self.executors_list:
+        if name not in self.executors_dict:
             print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
             return
-        for section in Wizard.EXECUTOR_SECTIONS:
-            config.instance.remove_section(section.format(name))
-        self.executors_list.remove(name)
+        self.executors_dict.pop(name)
 
     def status_report(self, sections):
         min_sections = ["server", "agent"]
         check = all(item in sections for item in min_sections)
-        check_len = len(config.instance.sections())
         if check:
-            if check_len > 3:
+            if sections["server"]["workspaces"]:
                 msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
             else:
-                msj = f"{Bcolors.WARNING}File configuration not complete. Missing Executor section.{Bcolors.ENDC}"
+                msj = f"{Bcolors.WARNING}File configuration not complete. Missing workspaces.{Bcolors.ENDC}"
         else:
-            msj = f"{Bcolors.WARNING}File configuration not created {Bcolors.ENDC}"
+            msj = f"{Bcolors.WARNING}File configuration not complete. Missing section.{Bcolors.ENDC}"
         return msj
