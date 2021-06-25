@@ -90,8 +90,8 @@ class StdOutLineProcessor(FileLineProcessor):
         return line[:-1]
 
     def post_url(self):
-        host = config.get("server", "host")
-        port = config.get("server", "api_port")
+        host = config["server"]["host"]
+        port = config["server"]["api_port"]
         return api_url(
             host,
             port,
@@ -103,7 +103,7 @@ class StdOutLineProcessor(FileLineProcessor):
         try:
             loaded_json = json.loads(line)
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
-            headers = [("authorization", f"agent {config.get('tokens', 'agent')}")]
+            headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
             loaded_json["execution_id"] = self.execution_id
             loaded_json["command"] = self.command_json
 
@@ -132,7 +132,7 @@ class StdOutLineProcessor(FileLineProcessor):
 
     async def end_f(self):
         loaded_json = {"hosts": [], "execution_id": self.execution_id, "command": self.command_json}
-        headers = [("authorization", f"agent {config.get('tokens', 'agent')}")]
+        headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
         loaded_json["command"]["duration"] = (datetime.now() - self.start_date).total_seconds() * 1000000  # microsecs
 
         res = await self.__session.post(
