@@ -1,3 +1,9 @@
+2.0.0 [Jun 29th, 2021]:
+---
+ * ADD Executor parameter typing
+ * ADD versioning for manifests from typing package
+ * FIX typo in wizard
+
 1.5.1 [May 6th, 2021]:
 ---
  * FIX Burp executor parse the IP
