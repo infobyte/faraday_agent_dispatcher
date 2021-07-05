@@ -8,6 +8,7 @@ recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
+include faraday_agent_dispatcher/example_config.yaml
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
 
 prune faraday_agent_dispatcher/static/executors/dev

@@ -3,11 +3,12 @@
  * ADD Executor parameter typing
  * ADD versioning for manifests from typing package
  * FIX typo in wizard
+ * [Faraday][faraday] versions: 3.16.0, 3.16.1, 3.16.2
 
 1.5.1 [May 6th, 2021]:
 ---
  * FIX Burp executor parse the IP
- * [Faraday][faraday] versions: 3.14.3
+ * [Faraday][faraday] versions: 3.14.3, 3.15.0, 3.15.1
 
 1.5.0 [Mar 30th, 2021]:
 ---
@@ -19,7 +20,7 @@
  * MOD setting host in the wizard now accepts full urls, such as `https://my.server.com:12345`
  * ADD new plugin to support newer OpenVas/gvm versions (gvm_openvas). The old openvas executor was renamed to
  "openvas_legacy"
- * [Faraday][faraday] versions: 3.14.3
+ * [Faraday][faraday] versions: 3.14.3, 3.15.0, 3.15.1
 
 1.4.2 [Feb 26th, 2021]:
 ---
