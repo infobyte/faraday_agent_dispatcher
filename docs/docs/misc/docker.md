@@ -13,16 +13,14 @@ After that you only need a .ini file to pass to the image. We already have some
  [templates](#templates) to use. For these you have to edit it in
  the first lines:
 
-```ini
-[server]
-; TODO be replaced with network configuration
-host = localhost
-ssl = False
-api_port = 5985
-websocket_port = 9000
-ssl_cert =
-; TODO be filled with available workspaces
-workspaces =
+```yaml
+server:
+  api_port: '5985' # TODO be replaced with network configuration
+  host: localhost
+  ssl: 'False'
+  ssl_cert: ''
+  websocket_port: '9000'
+  workspaces: [] # TODO be filled with available workspaces
 ```
 
 After setting the values in the .yaml file, you can run the agent as:
