@@ -128,7 +128,7 @@ def main():
     if check_api.status_code != 200:
         log(f"API gets no response. Status code: {check_api.status_code}")
         sys.exit()
-    #handling multiple targets, can be provided with: "https://example.com, https://test.com"
+    # handling multiple targets, can be provided with: "https://example.com, https://test.com"
     targets = TARGET_URL.replace(" ", "").split(",")
     scope_include = []
     targets_urls = []
@@ -179,6 +179,7 @@ def main():
     else:
         log("No targets to scan.")
         sys.exit()
+
 
 if __name__ == "__main__":
     main()
