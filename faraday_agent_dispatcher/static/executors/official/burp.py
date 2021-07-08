@@ -102,7 +102,7 @@ def main():
     BURP_API_KEY = os.getenv("BURP_API_KEY")
     TARGET_URL = os.getenv("EXECUTOR_CONFIG_TARGET_URL")
     NAMED_CONFIGURATION = os.getenv("EXECUTOR_CONFIG_NAMED_CONFIGURATION")
-    PULL_INTERVAL = 30
+    PULL_INTERVAL = int(os.getenv("BURP_API_PULL_INTERVAL", "30"))
     WAIT_STATUS = ("initializing", "crawling", "auditing")
     host_re = re.compile(r"^https?://.+:\d+$")
     target_re = re.compile(r"^https?://.+")
