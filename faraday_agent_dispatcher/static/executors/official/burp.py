@@ -102,27 +102,28 @@ def main():
     BURP_API_KEY = os.getenv("BURP_API_KEY")
     TARGET_URL = os.getenv("EXECUTOR_CONFIG_TARGET_URL")
     NAMED_CONFIGURATION = os.getenv("EXECUTOR_CONFIG_NAMED_CONFIGURATION")
-    PULL_INTERVAL = 15
+    PULL_INTERVAL = 30
+    WAIT_STATUS = ("initializing", "crawling", "auditing")
     host_re = re.compile(r"^https?://.+:\d+$")
     target_re = re.compile(r"^https?://.+")
     if not TARGET_URL:
         log("URL not provided")
-        sys.exit()
+        sys.exit(1)
 
     if not BURP_API_KEY:
         log("BURP_API_KEY not provided")
-        sys.exit()
+        sys.exit(1)
 
     if not NAMED_CONFIGURATION:
         NAMED_CONFIGURATION = "Crawl strategy - fastest"
 
     if not BURP_HOST:
         log("BURP_HOST not provided")
-        sys.exit()
+        sys.exit(1)
 
     if not host_re.match(BURP_HOST):
         log(f"BURP_HOST is invalid, must be http(s)://HOST:PORT [{BURP_HOST}]")
-        sys.exit()
+        sys.exit(1)
 
     check_api = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1")
     if check_api.status_code != 200:
@@ -130,55 +131,64 @@ def main():
         sys.exit()
     # handling multiple targets, can be provided with: "https://example.com, https://test.com"
     targets = TARGET_URL.replace(" ", "").split(",")
-    scope_include = []
+    scope = []
     targets_urls = []
     for target in targets:
         if target_re.match(target):
-            scope_include.append({"rule": target, "type": "SimpleScopeDef"})
+            scope.append({"rule": target, "type": "SimpleScopeDef"})
             targets_urls.append(target)
         else:
             log(f"WARNING: Discard invalid target: {target}")
-
     if targets_urls:
         log(f"Scanning {targets_urls} with burp on: {BURP_HOST}")
         with tempfile.TemporaryFile() as tmp_file:
-            issue_def = f"{BURP_HOST}/{BURP_API_KEY}" f"/v0.1/knowledge_base/issue_definitions"
+            issue_def = f"{BURP_HOST}/{BURP_API_KEY}/v0.1/knowledge_base/issue_definitions"
             rg_issue_definitions = requests.get(issue_def)
             json_issue_definitions = rg_issue_definitions.json()
             json_scan = {
                 "scan_configurations": [{"name": NAMED_CONFIGURATION, "type": "NamedConfiguration"}],
-                "scope": {"include": scope_include},
+                "scope": {"include": scope},
                 "urls": targets_urls,
             }
 
-            rp_scan = requests.post(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan", json=json_scan)
+            try:
+                rp_scan = requests.post(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan", json=json_scan)
+            except Exception as e:
+                log(f"ERROR connecting to burp api on {BURP_HOST} [{e}]")
+                sys.exit()
             if rp_scan.status_code == 201:
                 location = rp_scan.headers["Location"]
+                log(f"Running scan: {location}")
                 scan_status = ""
-                while scan_status not in ("succeeded", "failed"):
+                issues = None
+                while scan_status not in ("succeeded", "failed", "paused"):
                     try:
-                        rg_issues = requests.get(f"{BURP_HOST}/{BURP_API_KEY}" f"/v0.1/scan/{location}")
-                    except ConnectionError:
-                        log("API gets no response.")
+                        rg_issues = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan/{location}")
+                    except Exception as e:
+                        log(f"API - ERROR: {e}")
                         sys.exit()
 
                     issues = rg_issues.json()
                     scan_status = issues["scan_status"]
-                    log(f"Waiting for results [{scan_status}]")
-                    time.sleep(PULL_INTERVAL)
-
-                log("Scan finished")
-                generate_xml(issues, tmp_file, json_issue_definitions)
-                plugin = BurpPlugin()
-                tmp_file.seek(0)
-                plugin.parseOutputString(tmp_file.read())
-                print(plugin.get_json())
+                    if scan_status in WAIT_STATUS:
+                        log(f"Waiting for results {scan_status}...")
+                        time.sleep(PULL_INTERVAL)
+                if scan_status in ("failed", "paused"):
+                    log(f"Scan finished NOT OK [{scan_status}]: {issues}")
+                else:
+                    log("Scan finished OK")
+                    generate_xml(issues, tmp_file, json_issue_definitions)
+                    plugin = BurpPlugin()
+                    tmp_file.seek(0)
+                    plugin.parseOutputString(tmp_file.read())
+                    print(plugin.get_json())
             else:
                 log(f"ERROR: {rp_scan.text}")
+                sys.exit(1)
 
     else:
         log("No targets to scan.")
-        sys.exit()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
