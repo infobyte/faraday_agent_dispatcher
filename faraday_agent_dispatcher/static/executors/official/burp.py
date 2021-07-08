@@ -122,6 +122,12 @@ def main():
             file=sys.stderr,
         )
         sys.exit()
+    #handling multiple targets, can be provided with: "https://example.com, https://test.com"
+    targets = url_target.split(",")
+    scope_include = []
+    for target in targets:
+        scope_include.append({"rule": target, "type": "SimpleScopeDef"})
+
     print(f"Scanning {url_target}", file=sys.stderr)
     with tempfile.TemporaryFile() as tmp_file:
         issue_def = f"{api_host}/{api_key}" f"/v0.1/knowledge_base/issue_definitions"
@@ -129,8 +135,8 @@ def main():
         json_issue_definitions = rg_issue_definitions.json()
         json_scan = {
             "scan_configurations": [{"name": named_configuration, "type": "NamedConfiguration"}],
-            "scope": {"include": [{"rule": url_target, "type": "SimpleScopeDef"}]},
-            "urls": [url_target],
+            "scope": {"include": scope_include},
+            "urls": targets,
         }
 
         rp_scan = requests.post(f"{api_host}/{api_key}/v0.1/scan", json=json_scan)
