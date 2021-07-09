@@ -409,7 +409,7 @@ class Dispatcher:
                 logger.info("Running {} executor".format(executor.name))
 
                 process = await self.create_process(executor, passed_params)
-                start_date = datetime.now()
+                start_date = datetime.utcnow()
                 command_json = {
                     "tool": self.agent_name,
                     "command": executor.name,
@@ -417,7 +417,7 @@ class Dispatcher:
                     "hostname": "",
                     "params": ", ".join([f"{key}={value}" for (key, value) in passed_params.items()]),
                     "import_source": "agent",
-                    "start_date": str(start_date),
+                    "start_date": start_date.isoformat(),
                 }
                 tasks = [
                     StdOutLineProcessor(
