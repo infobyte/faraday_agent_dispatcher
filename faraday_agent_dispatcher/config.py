@@ -42,7 +42,7 @@ CONFIG_PATH = FARADAY_PATH / "config"
 
 
 if not FARADAY_PATH.exists():
-    print(f"{Bcolors.WARNING}The configuration folder does not exists, creating" f" it{Bcolors.ENDC}")
+    print(f"{Bcolors.WARNING}The configuration folder does not exist, creating" f" it{Bcolors.ENDC}")
     FARADAY_PATH.mkdir()
 if not LOGS_PATH.exists():
     LOGS_PATH.mkdir()
@@ -143,7 +143,7 @@ def update_config(filepath: Path):
                 executor_name = executor_name.strip()
                 if OldSections.EXECUTOR_DATA.format(executor_name) not in old_instance.sections():
 
-                    data.append(f"{OldSections.EXECUTOR_DATA.format(executor_name)} " "section does not exists")
+                    data.append(f"{OldSections.EXECUTOR_DATA.format(executor_name)} section does not exist")
         else:
             data.append(f"executors option not in {OldSections.AGENT} section")
 

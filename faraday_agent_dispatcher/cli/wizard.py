@@ -107,7 +107,7 @@ class Wizard:
 
         while not end:
             print(
-                f"The actual configured {Bcolors.OKBLUE}{Bcolors.BOLD}"
+                f"The current configured {Bcolors.OKBLUE}{Bcolors.BOLD}"
                 f"executors{Bcolors.ENDC} are: {Bcolors.OKGREEN}"
                 f"{list(self.executors_dict.keys())}{Bcolors.ENDC}"
             )
