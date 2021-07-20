@@ -133,7 +133,9 @@ class StdOutLineProcessor(FileLineProcessor):
     async def end_f(self):
         loaded_json = {"hosts": [], "execution_id": self.execution_id, "command": self.command_json}
         headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
-        loaded_json["command"]["duration"] = (datetime.now() - self.start_date).total_seconds() * 1000000  # microsecs
+        loaded_json["command"]["duration"] = (
+            datetime.utcnow() - self.start_date
+        ).total_seconds() * 1000000  # microsecs
 
         res = await self.__session.post(
             self.post_url(),
