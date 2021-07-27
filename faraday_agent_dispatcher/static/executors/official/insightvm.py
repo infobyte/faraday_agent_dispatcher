@@ -20,14 +20,6 @@ def log(message):
     print(f"{datetime.datetime.utcnow()} - INSISGHTVM-NEXPOSE: {message}", file=sys.stderr)
 
 
-def get_ip(url):
-    url_data = urlparse(url)
-    try:
-        ip = socket.gethostbyname(url_data.netloc)
-    except socket.error:
-        ip = url_data.netloc
-    return ip
-
 
 def main():
     # If the script is run outside the dispatcher
