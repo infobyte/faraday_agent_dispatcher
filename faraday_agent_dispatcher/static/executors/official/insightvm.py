@@ -1,25 +1,15 @@
 #!/usr/bin/env python
 import os
 import sys
-import tempfile
 import requests
 from requests.auth import HTTPBasicAuth
-import time
 import datetime
-import socket
 import re
-import xml.etree.cElementTree as ET
-from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.nexpose_full.plugin import NexposeFullPlugin
-from faraday_plugins.plugins.repo.nexpose_full.plugin import NexposeFullXmlParser
-
-
 
 
 def log(message):
     print(f"{datetime.datetime.utcnow()} - INSISGHTVM-NEXPOSE: {message}", file=sys.stderr)
-
-
 
 def main():
     # If the script is run outside the dispatcher
@@ -49,7 +39,6 @@ def main():
     if not host_re.match(INSIGHTVM_HOST):
         log(f"INSIGHTVM_HOST is invalid, must be http(s)://HOST:PORT [{INSIGHTVM_HOST}]")
         sys.exit(1)
-    # handling multiple targets, can be provided with: "https://example.com, https://test.com"
     target = INSIGHTVM_HOST
 
     if target:
