@@ -11,6 +11,7 @@ from faraday_plugins.plugins.repo.nexpose_full.plugin import NexposeFullPlugin
 def log(message):
     print(f"{datetime.datetime.utcnow()} - INSISGHTVM-NEXPOSE: {message}", file=sys.stderr)
 
+
 def main():
     # If the script is run outside the dispatcher
     # the environment variables are checked.
@@ -46,7 +47,7 @@ def main():
         report_xml = f"{INSIGHTVM_HOST}/api/3/reports/{EXECUTIVE_REPORT_ID}/history/latest/output"
         log(f"Connecting to insightvm on {INSIGHTVM_HOST}")
         try:
-            rg_report_xml = requests.get(report_xml, verify=False, auth=HTTPBasicAuth(INSIGHTVM_USR,INSIGHTVM_PASSWD))
+            rg_report_xml = requests.get(report_xml, verify=False, auth=HTTPBasicAuth(INSIGHTVM_USR, INSIGHTVM_PASSWD))
             if rg_report_xml.status_code != 200:
                 log(f"API gets no response. Status code: {rg_report_xml.status_code}")
                 sys.exit()
@@ -56,7 +57,7 @@ def main():
         plugin = NexposeFullPlugin()
         plugin.parseOutputString(rg_report_xml.text)
         print(plugin.get_json())
-        
+
     else:
         log("Nothing to display.")
         sys.exit(1)
