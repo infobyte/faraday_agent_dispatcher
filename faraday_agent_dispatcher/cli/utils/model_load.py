@@ -180,7 +180,7 @@ def process_workspaces() -> None:
     workspaces = config.instance[Sections.SERVER].get("workspaces", [])
 
     while not end:
-        print(f"The actual workspaces{Bcolors.ENDC} are:" f" {Bcolors.OKGREEN}{workspaces}{Bcolors.ENDC}")
+        print(f"The current workspaces{Bcolors.ENDC} are:" f" {Bcolors.OKGREEN}{workspaces}{Bcolors.ENDC}")
         value = choose_adm("workspace", ignore=["M"])
         if value == "A":
             workspace_name = click.prompt("Workspace name")
@@ -208,7 +208,7 @@ def process_var_envs(executor_name):
 
     while not end:
         print(
-            f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name}"
+            f"The current {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name}"
             f" executor's environment variables{Bcolors.ENDC} are:"
             f" {Bcolors.OKGREEN}{list(section.keys())}"
             f"{Bcolors.ENDC}"
@@ -247,7 +247,7 @@ def process_params(executor_name):
 
     while not end:
         print(
-            f"The actual {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name}"
+            f"The current {Bcolors.BOLD}{Bcolors.OKBLUE}{executor_name}"
             f" executor's arguments{Bcolors.ENDC} are: "
             f"{Bcolors.OKGREEN}{list(section.keys())}"
             f"{Bcolors.ENDC}"
