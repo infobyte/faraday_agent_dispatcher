@@ -30,37 +30,27 @@ def main():
         log("INSIGHTVM_PASSWD not provided")
         sys.exit(1)
 
-    if not EXECUTIVE_REPORT_ID:
-        EXECUTIVE_REPORT_ID = "00000000"
-
     if not INSIGHTVM_HOST:
         log("INSIGHTVM_HOST not provided")
         sys.exit(1)
 
     if not host_re.match(INSIGHTVM_HOST):
-        log(f"INSIGHTVM_HOST is invalid, must be http(s)://HOST:PORT [{INSIGHTVM_HOST}]")
+        log(f"INSIGHTVM_HOST is invalid, must be http(s)://HOST(:PORT) [{INSIGHTVM_HOST}]")
         sys.exit(1)
-    target = INSIGHTVM_HOST
-
-    if target:
-        log(f"Fetching {target} with insightvm on: {INSIGHTVM_HOST}")
-        report_xml = f"{INSIGHTVM_HOST}/api/3/reports/{EXECUTIVE_REPORT_ID}/history/latest/output"
-        log(f"Connecting to insightvm on {INSIGHTVM_HOST}")
-        try:
-            rg_report_xml = requests.get(report_xml, verify=False, auth=HTTPBasicAuth(INSIGHTVM_USR, INSIGHTVM_PASSWD))
-            if rg_report_xml.status_code != 200:
-                log(f"API gets no response. Status code: {rg_report_xml.status_code}")
-                sys.exit()
-        except Exception as e:
-            log(f"ERROR connecting to insightvm api on {INSIGHTVM_HOST} [{e}]")
+    log(f"Fetching from: {INSIGHTVM_HOST}")
+    report_url = f"{INSIGHTVM_HOST}/api/3/reports/{EXECUTIVE_REPORT_ID}/history/latest/output"
+    log(f"Connecting to insightvm on {INSIGHTVM_HOST}")
+    try:
+        report_response = requests.get(report_url, verify=False, auth=HTTPBasicAuth(INSIGHTVM_USR, INSIGHTVM_PASSWD))
+        if report_response.status_code != 200:
+            log(f"API gets no response. Status code: {report_response.status_code}")
             sys.exit()
-        plugin = NexposeFullPlugin()
-        plugin.parseOutputString(rg_report_xml.text)
-        print(plugin.get_json())
-
-    else:
-        log("Nothing to display.")
-        sys.exit(1)
+    except Exception as e:
+        log(f"ERROR connecting to insightvm api on {INSIGHTVM_HOST} [{e}]")
+        sys.exit()
+    plugin = NexposeFullPlugin()
+    plugin.parseOutputString(report_response.text)
+    print(plugin.get_json())
 
 
 if __name__ == "__main__":
