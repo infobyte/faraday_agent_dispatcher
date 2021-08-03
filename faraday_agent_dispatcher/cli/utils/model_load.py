@@ -75,14 +75,14 @@ def ask_value(agent_dict, opt, section, ssl, control_opt=None):
             value = info_url["url_name"]
 
         if value == "":
-            print(f"{Bcolors.WARNING}Trying to save with empty value" f"{Bcolors.ENDC}")
+            click.secho("Trying to save with empty value", fg="yellow")
         try:
             if control_opt is None:
                 config.__control_dict[section][opt](opt, value)
             else:
                 config.__control_dict[section][control_opt](opt, value)
         except ValueError as e:
-            print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+            click.secho(f"{e}", fg="red")
             value = None
     return value, info_url
 
@@ -137,7 +137,7 @@ def process_agent():
             elif opt == "ssl_cert":
                 if ssl:
 
-                    if confirm_prompt("Default SSL behavior?"):
+                    if not confirm_prompt("Use certificate file?", default=False):
                         path = ""
                     else:
                         path = None
@@ -145,6 +145,8 @@ def process_agent():
                             value, _ = ask_value(agent_dict, opt, section, ssl)
                             if value != "" and Path(value).exists():
                                 path = value
+                            else:
+                                click.secho("File don't exists", fg="yellow")
                     config.instance[section][opt] = str(path)
             elif opt == "workspaces":
                 process_workspaces()
