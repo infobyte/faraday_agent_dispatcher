@@ -6,6 +6,16 @@
     - virtualenv faraday_venv
     - source faraday_venv/bin/activate
 
+.install_custom_typing_branch:
+  before_script:
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/cloud/faraday_agent_parameters_types.git typing
+    - cd typing
+    - if [ -z "$TYPING_BRANCH" ]; then export TYPING_BRANCH="master"; fi
+    - echo $TYPING_BRANCH
+    - git checkout $TYPING_BRANCH
+    - pip install .
+    - cd ..
+
 
 .unit_tests_base:
     stage: testing
@@ -35,12 +45,14 @@
   extends: .unit_tests_base
   before_script:
     - !reference [.venv_ready, before_script]
+    - !reference [.install_custom_typing_branch, before_script]
     - pip install .[test]
 
 .alpha_unit_test_base:
   extends: .unit_tests_base
   before_script:
     - !reference [.venv_ready, before_script]
+    - !reference [.install_custom_typing_branch, before_script]
     - pip install --pre .[test] #It does not override alphas
   allow_failure: true
   rules:
