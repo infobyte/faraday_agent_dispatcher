@@ -85,26 +85,29 @@ class Dispatcher:
             executor_name: Executor(executor_name, executor_data)
             for executor_name, executor_data in config.instance[Sections.AGENT].get("executors", {}).items()
         }
-        self.ws_ssl_enabled = self.api_ssl_enabled = config.instance[Sections.SERVER].get("ssl", "False").lower() in [
-            "t",
-            "true",
-        ]
+        self.ws_ssl_enabled = self.api_ssl_enabled = config.instance[Sections.SERVER].get("ssl", False)
         ssl_cert_path = config.instance[Sections.SERVER].get("ssl_cert", None)
+        ssl_ignore = config.instance[Sections.SERVER].get("ssl_ignore", False)
         if not Path(ssl_cert_path).exists():
             raise ValueError(f"SSL cert does not exist in path {ssl_cert_path}")
-        self.api_kwargs: Dict[str, object] = (
-            {"ssl": ssl.create_default_context(cafile=ssl_cert_path) if "HTTPS_PROXY" not in os.environ else False}
-            if self.api_ssl_enabled and ssl_cert_path
-            else {}
-        )
-        if "HTTPS_PROXY" in os.environ:
-            logger.info("HTTPS_PROXY is set; will not do SSL verify")
-            ws_ssl_context = ssl.create_default_context()
-            ws_ssl_context.check_hostname = False
-            ws_ssl_context.verify_mode = ssl.CERT_NONE
+        if self.api_ssl_enabled:
+            if ssl_cert_path:
+                ssl_cert_context = ssl.create_default_context(cafile=ssl_cert_path)
+                self.api_kwargs = {"ssl": ssl_cert_context}
+                self.ws_kwargs = {"ssl": ssl_cert_context}
+            else:
+                if ssl_ignore or "HTTPS_PROXY" in os.environ:
+                    ignore_ssl_context = ssl.create_default_context()
+                    ignore_ssl_context.check_hostname = False
+                    ignore_ssl_context.verify_mode = ssl.CERT_NONE
+                    self.api_kwargs = {"ssl": ignore_ssl_context}
+                    self.ws_kwargs = {"ssl": ignore_ssl_context}
+                else:
+                    self.api_kwargs: Dict[str, object] = {}
+                    self.ws_kwargs: Dict[str, object] = {}
         else:
-            ws_ssl_context = ssl.create_default_context(cafile=ssl_cert_path)
-        self.ws_kwargs = {"ssl": ws_ssl_context} if self.ws_ssl_enabled else {}
+            self.api_kwargs: Dict[str, object] = {}
+            self.ws_kwargs: Dict[str, object] = {}
         self.execution_id = None
         self.executor_tasks: Dict[str, List[Task]] = {
             Dispatcher.TaskLabels.EXECUTOR: [],

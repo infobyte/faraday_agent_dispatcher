@@ -275,6 +275,7 @@ __control_dict = {
     Sections.SERVER: {
         "host": control_host,
         "ssl": control_bool,
+        "ssl_ignore": control_bool,
         "ssl_cert": control_str(nullable=True),
         "api_port": control_int(),
         "websocket_port": control_int(),

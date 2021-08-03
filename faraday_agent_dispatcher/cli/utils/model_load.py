@@ -95,7 +95,11 @@ def process_agent():
                 "type": click.STRING,
             },
             "ssl": {
-                "default_value": lambda _: "True",
+                "default_value": lambda _: True,
+                "type": click.BOOL,
+            },
+            "ssl_ignore": {
+                "default_value": lambda _: False,
                 "type": click.BOOL,
             },
             "ssl_cert": {
@@ -152,7 +156,7 @@ def process_agent():
                 elif opt == "ssl":
                     if url_json["check_ssl"] is None:
                         value, _ = ask_value(agent_dict, opt, section, ssl)
-                        ssl = str(value).lower() == "true"
+                        ssl = value
                     else:
                         ssl = str(url_json["check_ssl"]).lower() == "true"
                         value = ssl
@@ -161,16 +165,16 @@ def process_agent():
                         agent_dict = append_keys(agent_dict, Sections.SERVER)
                         for type_ports in ["api_port", "websocket_port"]:
                             value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
-                            config.instance[section][type_ports] = str(value_port)
+                            config.instance[section][type_ports] = value_port
                             agent_dict[Sections.SERVER].pop(type_ports, None)
 
                     else:
-                        config.instance[section]["api_port"] = str(url_json["api_port"])
-                        config.instance[section]["websocket_port"] = str(url_json["websocket_port"])
+                        config.instance[section]["api_port"] = url_json["api_port"]
+                        config.instance[section]["websocket_port"] = url_json["websocket_port"]
 
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
-                config.instance[section][opt] = str(value)
+                config.instance[section][opt] = value
 
 
 def process_workspaces() -> None:
