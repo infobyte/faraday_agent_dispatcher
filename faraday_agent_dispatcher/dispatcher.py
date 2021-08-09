@@ -188,12 +188,15 @@ class Dispatcher:
             self.websocket_token = await self.reset_websocket_token()
             logger.info("Registered successfully")
         except ClientResponseError as e:
-            error_msg = (
-                "Invalid agent token, please reset and retry. If "
-                "the error persist, you should remove the agent "
-                "token with the wizard command `faraday-dispatcher "
-                "config-wizard`"
-            )
+            if e.status == 402:
+                error_msg = "Unauthorized. Is your license expired or invalid?"
+            else:
+                error_msg = (
+                    "Invalid agent token, please reset and retry. If "
+                    "the error persist, you should remove the agent "
+                    "token with the wizard command `faraday-dispatcher "
+                    "config-wizard`"
+                )
             logger.error(error_msg)
             self.agent_token = None
             logger.debug(msg="Exception raised", exc_info=e)
