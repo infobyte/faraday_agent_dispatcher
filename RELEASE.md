@@ -1,9 +1,18 @@
+2.1.0 [Aug 9th, 2021]:
+---
+ * ADD Reminder message to run --token command after wizard
+ * FIX `start_date` and `end_date` to be sent as UTC
+ * FIX Receiving API error when faraday license is expired
+ * ADD Executor for insightvm
+ * REMOVE Host and api from burp executor parameters
+ * [Faraday][faraday] versions: 3.16.0, 3.16.1, 3.16.2, 3.17.0
+
 2.0.0 [Jun 29th, 2021]:
 ---
  * ADD Executor parameter typing
  * ADD versioning for manifests from typing package
  * FIX typo in wizard
- * [Faraday][faraday] versions: 3.16.0, 3.16.1, 3.16.2
+ * [Faraday][faraday] versions: 3.16.0, 3.16.1, 3.16.2, 3.17.0
 
 1.5.1 [May 6th, 2021]:
 ---
