@@ -210,7 +210,7 @@ class DispatcherInput:
     ):
         self.ssl = ssl is None or ssl.lower() != "false"
         self.server_input = {
-            "ssl": ssl or "",
+            "ssl": "Y" if self.ssl else "N",
             "host": host or "localhost",
             "api_port": api_port or "13123",
             "ws_port": ws_port or "1234",
@@ -229,14 +229,14 @@ class DispatcherInput:
                 f"{self.server_input['host']}\n" f"{self.server_input['ssl']}\n" f"{self.server_input['api_port']}\n"
             )
             if self.override_with_default_ssl_cert:
-                input_str = f"{input_str}Y\n"
+                input_str = f"{input_str}N\nN\n"
             else:
                 if self.override_with_default_ssl_cert is not None:
-                    input_str = f"{input_str}N\n"
+                    input_str = f"{input_str}N\nY\n"
                 if self.wrong_ssl_cert:
-                    input_str = f"{input_str}" f"{self.wrong_ssl_cert}\n"
-                input_str = f"{input_str}" f"{self.server_input['ssl_cert']}\n"
-            input_str = f"{input_str}" f"{self.process_input_workspaces()}\n"
+                    input_str = f"{input_str}{self.wrong_ssl_cert}\n"
+                input_str = f"{input_str}{self.server_input['ssl_cert']}\n"
+            input_str = f"{input_str}{self.process_input_workspaces()}\n"
         else:
             input_str = (
                 f"{self.server_input['host']}\n"
@@ -247,9 +247,9 @@ class DispatcherInput:
             )
 
         if self.delete_agent_token is not None:
-            input_str = f"{input_str}" f"{'Y' if self.delete_agent_token else 'N'}\n"
+            input_str = f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
 
-        return f"{input_str}" f"{self.agent}\n"
+        return f"{input_str}{self.agent}\n"
 
     def process_input_workspaces(self):
         cli_input = ""

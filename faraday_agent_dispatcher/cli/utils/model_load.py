@@ -69,7 +69,10 @@ def ask_value(agent_dict, opt, section, ssl, control_opt=None):
     def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
     value = None
     while value is None:
-        value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
+        if agent_dict[section][opt]["type"] == click.BOOL:
+            value = confirm_prompt(f"{opt}", default=def_value)
+        else:
+            value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
         if opt == "host":
             info_url = url_setting(value)
             value = info_url["url_name"]
@@ -132,7 +135,7 @@ def process_agent():
             if section not in config.instance:
                 config.instance[section] = dict()
             if section == Sections.TOKENS and opt == "agent":
-                if "agent" in config.instance[section] and confirm_prompt("Delete agent token?"):
+                if "agent" in config.instance[section] and confirm_prompt("Delete agent token?", default=None):
                     config.instance[section].pop(opt)
             elif opt == "ssl_cert":
                 if ssl:
@@ -173,7 +176,8 @@ def process_agent():
                     else:
                         config.instance[section]["api_port"] = url_json["api_port"]
                         config.instance[section]["websocket_port"] = url_json["websocket_port"]
-
+                elif opt == "ssl_ignore" and not ssl:
+                    continue
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
                 config.instance[section][opt] = value

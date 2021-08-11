@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import configparser
+from typing import Dict
+
 import yaml
 
 from faraday_agent_dispatcher.utils.control_values_utils import (
@@ -72,18 +74,18 @@ def reset_config(filepath: Path):
         filepath = filepath.parent
     if not filename.is_file():
         if (filepath / "dispatcher.ini").is_file():
-            filename = update_config((filepath / "dispatcher.ini"))
+            filename = update_config_from_ini_to_yaml((filepath / "dispatcher.ini"))
         else:
             copy(EXAMPLE_CONFIG_FILENAME, filename)
     elif filename.suffix == ".ini":
-        filename = update_config(filename)
+        filename = update_config_from_ini_to_yaml(filename)
 
     try:
         with filename.open() as yaml_file:
             if not yaml_file:
                 raise ValueError(f"Unable to read config file located at {filename}", False)
             instance.clear()
-            instance.update(yaml.safe_load(yaml_file))
+            instance.update(update_config(yaml.safe_load(yaml_file)))
     except EnvironmentError:
         raise EnvironmentError("Error opening the config file")
 
@@ -105,9 +107,9 @@ def save_config(filepath=None):
         yaml.dump(instance, configfile)
 
 
-def update_config(filepath: Path):
+def update_config_from_ini_to_yaml(filepath: Path):
     """
-    This methods tries to adapt old versions, if its not possible,
+    This methods tries to adapt old .ini versions, if its not possible,
     warns about it and exits with a proper error code
     """
 
@@ -253,6 +255,24 @@ def update_config(filepath: Path):
     save_file = filepath.with_suffix(".yaml")
     save_config(save_file)
     return save_file
+
+
+def update_config(config: Dict):
+    """
+    This methods tries to adapt old .ini versions, if its not possible,
+    warns about it and exits with a proper error code
+    """
+    # From 2.1.0 to 2.1.1
+    if Sections.SERVER in config:
+        if "ssl_ignore" not in config[Sections.SERVER]:
+            config[Sections.SERVER]["ssl_ignore"] = False
+        if "api_port" in config[Sections.SERVER] and isinstance(config[Sections.SERVER]["api_port"], str):
+            config[Sections.SERVER]["api_port"] = int(config[Sections.SERVER]["api_port"])
+        if "websocket_port" in config[Sections.SERVER] and isinstance(config[Sections.SERVER]["websocket_port"], str):
+            config[Sections.SERVER]["websocket_port"] = int(config[Sections.SERVER]["websocket_port"])
+        if isinstance(config[Sections.SERVER]["ssl"], str):
+            config[Sections.SERVER]["ssl"] = config[Sections.SERVER]["ssl"] == "True"
+    return config
 
 
 class Sections:

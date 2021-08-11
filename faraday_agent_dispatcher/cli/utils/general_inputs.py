@@ -17,7 +17,7 @@ def get_default_value_and_choices(default_value, choices):
     return default_value, choices
 
 
-def confirm_prompt(text: str, default: bool = False):
+def confirm_prompt(text: str, default: Optional[bool] = False):
     return click.confirm(
         text=text,
         default=default,
