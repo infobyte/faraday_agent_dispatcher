@@ -21,7 +21,6 @@ import json
 
 import asyncio
 from datetime import datetime
-from pathlib import Path
 from asyncio import Task
 from typing import List, Dict
 
@@ -31,8 +30,6 @@ from aiohttp import ClientTimeout
 from aiohttp.client_exceptions import (
     ClientResponseError,
     ClientConnectorError,
-    ClientConnectorCertificateError,
-    ClientConnectorSSLError,
 )
 
 from faraday_agent_dispatcher.config import reset_config
@@ -86,25 +83,17 @@ class Dispatcher:
             for executor_name, executor_data in config.instance[Sections.AGENT].get("executors", {}).items()
         }
         self.ws_ssl_enabled = self.api_ssl_enabled = config.instance[Sections.SERVER].get("ssl", False)
-        ssl_cert_path = config.instance[Sections.SERVER].get("ssl_cert", None)
         ssl_ignore = config.instance[Sections.SERVER].get("ssl_ignore", False)
-        if not Path(ssl_cert_path).exists():
-            raise ValueError(f"SSL cert does not exist in path {ssl_cert_path}")
         if self.api_ssl_enabled:
-            if ssl_cert_path:
-                ssl_cert_context = ssl.create_default_context(cafile=ssl_cert_path)
-                self.api_kwargs = {"ssl": ssl_cert_context}
-                self.ws_kwargs = {"ssl": ssl_cert_context}
+            if ssl_ignore or "HTTPS_PROXY" in os.environ:
+                ignore_ssl_context = ssl.create_default_context()
+                ignore_ssl_context.check_hostname = False
+                ignore_ssl_context.verify_mode = ssl.CERT_NONE
+                self.api_kwargs = {"ssl": ignore_ssl_context}
+                self.ws_kwargs = {"ssl": ignore_ssl_context}
             else:
-                if ssl_ignore or "HTTPS_PROXY" in os.environ:
-                    ignore_ssl_context = ssl.create_default_context()
-                    ignore_ssl_context.check_hostname = False
-                    ignore_ssl_context.verify_mode = ssl.CERT_NONE
-                    self.api_kwargs = {"ssl": ignore_ssl_context}
-                    self.ws_kwargs = {"ssl": ignore_ssl_context}
-                else:
-                    self.api_kwargs: Dict[str, object] = {}
-                    self.ws_kwargs: Dict[str, object] = {}
+                self.api_kwargs: Dict[str, object] = {}
+                self.ws_kwargs: Dict[str, object] = {}
         else:
             self.api_kwargs: Dict[str, object] = {}
             self.ws_kwargs: Dict[str, object] = {}
@@ -535,14 +524,6 @@ class Dispatcher:
             # await check_connection_task
             await self.session.get(server_url, **kwargs)
 
-        except (ClientConnectorCertificateError, ClientConnectorSSLError) as e:
-            logger.debug("Invalid SSL Certificate", exc_info=e)
-            print(
-                f"{Bcolors.FAIL}Invalid SSL Certificate, use "
-                "`faraday-dispatcher config-wizard` and check the "
-                "certificate configuration"
-            )
-            return False
         except ClientConnectorError as e:
             logger.error("Can not connect to Faraday server")
             logger.debug("Connect failed traceback", exc_info=e)

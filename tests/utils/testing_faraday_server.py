@@ -35,7 +35,6 @@ class FaradayTestConfig:
         self.agent_id = random.randint(1, 1000)
         self.websocket_port = random.randint(1025, 65535)
         self.is_ssl = is_ssl
-        self.ssl_cert_path = Path(__file__).parent.parent / "data"
         self.client = None
         self.base_route = f"{fuzzy_string(24)}" if has_base_route else None
         self.app_config = {
@@ -80,7 +79,8 @@ class FaradayTestConfig:
         server_params = {}
         if self.is_ssl:
             ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            ssl_context.load_cert_chain(self.ssl_cert_path / "ok.crt", self.ssl_cert_path / "ok.key")
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
             server_params["ssl"] = ssl_context
         await server.start_server(**server_params)
         client = TestClient(server, raise_for_status=True)

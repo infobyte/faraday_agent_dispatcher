@@ -202,23 +202,23 @@ class DispatcherInput:
         ws_port=None,
         workspaces=None,
         ssl=None,
-        ssl_cert=None,
-        wrong_ssl_cert=None,
+        ssl_ignore=None,
         agent_name=None,
         delete_agent_token: bool = None,
         empty=False,
     ):
-        self.ssl = ssl is None or ssl.lower() != "false"
+        self.ssl = ssl is None or (isinstance(ssl, bool) and ssl) or ssl.lower() != "false"
+        self.ssl_ignore = (
+            ssl_ignore is None or (isinstance(ssl_ignore, bool) and ssl_ignore) or ssl_ignore.lower() != "false"
+        )
         self.server_input = {
             "ssl": "Y" if self.ssl else "N",
+            "ssl_ignore": "Y" if self.ssl and self.ssl_ignore else "N",
             "host": host or "localhost",
             "api_port": api_port or "13123",
             "ws_port": ws_port or "1234",
-            "ssl_cert": ssl_cert or "",
         }
         self.workspaces = workspaces
-        self.wrong_ssl_cert = wrong_ssl_cert
-        self.override_with_default_ssl_cert = self.server_input["ssl_cert"] == ""
         self.agent = agent_name or ""
         self.delete_agent_token = delete_agent_token
         self.empty = empty
@@ -228,14 +228,7 @@ class DispatcherInput:
             input_str = (
                 f"{self.server_input['host']}\n" f"{self.server_input['ssl']}\n" f"{self.server_input['api_port']}\n"
             )
-            if self.override_with_default_ssl_cert:
-                input_str = f"{input_str}N\nN\n"
-            else:
-                if self.override_with_default_ssl_cert is not None:
-                    input_str = f"{input_str}N\nY\n"
-                if self.wrong_ssl_cert:
-                    input_str = f"{input_str}{self.wrong_ssl_cert}\n"
-                input_str = f"{input_str}{self.server_input['ssl_cert']}\n"
+            input_str = f"{input_str}{self.server_input['ssl_ignore']}\n"
             input_str = f"{input_str}{self.process_input_workspaces()}\n"
         else:
             input_str = (

@@ -1,5 +1,4 @@
 import click
-from pathlib import Path
 from urllib.parse import urlparse
 
 from faraday_agent_dispatcher import config
@@ -105,10 +104,6 @@ def process_agent():
                 "default_value": lambda _: False,
                 "type": click.BOOL,
             },
-            "ssl_cert": {
-                "default_value": lambda _: "",
-                "type": click.Path(allow_dash=False, dir_okay=False),
-            },
             "workspaces": {
                 "default_value": lambda _: "workspace",
                 "type": click.STRING,
@@ -137,20 +132,6 @@ def process_agent():
             if section == Sections.TOKENS and opt == "agent":
                 if "agent" in config.instance[section] and confirm_prompt("Delete agent token?", default=None):
                     config.instance[section].pop(opt)
-            elif opt == "ssl_cert":
-                if ssl:
-
-                    if not confirm_prompt("Use certificate file?", default=False):
-                        path = ""
-                    else:
-                        path = None
-                        while path is None:
-                            value, _ = ask_value(agent_dict, opt, section, ssl)
-                            if value != "" and Path(value).exists():
-                                path = value
-                            else:
-                                click.secho("File don't exists", fg="yellow")
-                    config.instance[section][opt] = str(path)
             elif opt == "workspaces":
                 process_workspaces()
             else:

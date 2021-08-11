@@ -181,8 +181,6 @@ def update_config_from_ini_to_yaml(filepath: Path):
 
         if "ssl" not in old_instance[OldSections.SERVER]:
             old_instance.set(OldSections.SERVER, "ssl", "True")
-        if "ssl_cert" not in old_instance[OldSections.SERVER]:
-            old_instance.set(OldSections.SERVER, "ssl_cert", "")
 
     # TO YAML
 
@@ -296,7 +294,6 @@ __control_dict = {
         "host": control_host,
         "ssl": control_bool,
         "ssl_ignore": control_bool,
-        "ssl_cert": control_str(nullable=True),
         "api_port": control_int(),
         "websocket_port": control_int(),
         "workspaces": control_list(can_repeat=False),
