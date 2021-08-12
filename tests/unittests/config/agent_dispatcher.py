@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from faraday_agent_dispatcher.config import Sections
 
 
@@ -259,6 +261,12 @@ def generate_basic_built_config():
             "expected_exception": ValueError,
         },
         {"id_str": "OK: All default", "remove": {}, "replace": {}},
+        {
+            "id_str": "Error: ssl crt do not exists",
+            "remove": {},
+            "replace": {Sections.SERVER: {"ssl": "True", "ssl_cert": "/tmp/sarasa.pub"}},
+            "expected_exception": ValueError,
+        },
     ]
 
 
@@ -365,6 +373,38 @@ def generate_register_options():
                 {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
             ],
             "use_ssl": False,
+            "expected_exception": SystemExit,
+        },
+        {
+            "id_str": "Wrong SSL crt",
+            "replace_data": {
+                Sections.SERVER: {
+                    "ssl": "True",
+                    "ssl_cert": str(Path(__file__).parent.parent.parent / "data" / "wrong.crt"),
+                }
+            },
+            "logs": [
+                {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
+            ],
+            "optional_logs": [
+                {"levelname": "ERROR", "msg": "Can not connect to Faraday server"},
+            ],
+            "use_ssl": True,
+            "expected_exception": SystemExit,
+        },
+        {
+            "id_str": "Bad host within SSL cert",
+            "replace_data": {
+                Sections.SERVER: {
+                    "host": "127.0.0.1",
+                    "ssl": "True",
+                    "ssl_cert": str(Path(__file__).parent.parent.parent / "data" / "ok.crt"),
+                }
+            },
+            "logs": [
+                {"levelname": "DEBUG", "msg": "Invalid SSL Certificate"},
+            ],
+            "use_ssl": True,
             "expected_exception": SystemExit,
         },
     ]

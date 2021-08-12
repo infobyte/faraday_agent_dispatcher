@@ -117,10 +117,10 @@ async def test_start_and_register(
     # Config
     configuration[Sections.SERVER]["ssl"] = str(test_config.is_ssl)
     if test_config.is_ssl:
+        configuration[Sections.SERVER]["ssl_cert"] = str(test_config.ssl_cert_path / "ok.crt")
         configuration[Sections.SERVER]["host"] = "localhost"
     else:
         configuration[Sections.SERVER]["host"] = client.host
-        configuration[Sections.SERVER]["ssl_ignore"] = True
 
     configuration[Sections.SERVER]["api_port"] = str(client.port)
     configuration[Sections.SERVER]["workspaces"] = test_config.workspaces
@@ -229,6 +229,7 @@ async def test_run_once(
     configuration[Sections.TOKENS]["agent"] = test_config.agent_token
     configuration[Sections.SERVER]["ssl"] = str(test_config.is_ssl)
     if test_config.is_ssl:
+        configuration[Sections.SERVER]["ssl_cert"] = str(test_config.ssl_cert_path / "ok.crt")
         configuration[Sections.SERVER]["host"] = "localhost"
     else:
         configuration[Sections.SERVER]["host"] = test_config.client.host
