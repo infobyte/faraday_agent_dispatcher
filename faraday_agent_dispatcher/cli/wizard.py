@@ -80,21 +80,19 @@ class Wizard:
                 process_choice_errors(value)
                 try:
                     if Sections.AGENT in config.instance:
-                        print(self.status_report(sections=config.instance))
+                        click.echo(self.status_report(sections=config.instance))
                         config.control_config()
                         end = True
                     else:
-                        if confirm_prompt(
-                            f"{Bcolors.WARNING}File configuration not saved. Are you sure? {Bcolors.ENDC}"
-                        ):
-                            print(self.status_report(sections=config.instance.sections()))
+                        if confirm_prompt(click.style("File configuration not saved. Are you sure?", fg="yellow")):
+                            click.echo(self.status_report(sections=config.instance.sections()))
                             end = True
                             ignore_changes = True
                         else:
                             end = False
 
                 except ValueError as e:
-                    print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+                    click.secho(f"{e}", fg="red")
         if not ignore_changes:
             config.save_config(self.config_filepath)
 
@@ -119,17 +117,17 @@ class Wizard:
             elif value.upper() == "D":
                 self.delete_executor()
             else:
-                quit_executor_msg = f"{Bcolors.WARNING}There are no executors loaded. Are you sure?{Bcolors.ENDC}"
+                quit_executor_msg = click.style("There are no executors loaded. Are you sure?", fg="yellow")
                 return confirm_prompt(quit_executor_msg, default=False) if not self.executors_dict else True
 
     def check_executors_name(self, show_text: str, default=None):
         name = click.prompt(show_text, default=default)
         if name in self.executors_dict and name != default:
-            print(f"{Bcolors.WARNING}The executor {name} already exists" f"{Bcolors.ENDC}")
+            click.secho(f"The executor {name} already exists", fg="yellow")
             return
         for character in Wizard.SPECIAL_CHARACTER:
             if character in name:
-                print(f"{Bcolors.WARNING}" f"The executor cannot contain {character} in its name" f"{Bcolors.ENDC}")
+                click.secho(f"The executor cannot contain {character} in its name", fg="yellow")
                 return
         return name
 
@@ -156,7 +154,7 @@ class Wizard:
             metadata = executor_metadata(chosen_option)
             try:
                 if not check_metadata(metadata):
-                    print(f"{Bcolors.WARNING}Invalid manifest for " f"{Bcolors.BOLD}{chosen_option}{Bcolors.ENDC}")
+                    click.secho(f"Invalid manifest for: {chosen_option}", fg="yellow")
                 else:
                     if not await check_commands(metadata):
                         print(
@@ -167,7 +165,7 @@ class Wizard:
                     else:
                         return metadata
             except FileNotFoundError:
-                print(f"{Bcolors.WARNING}Not existent manifest for " f"{Bcolors.BOLD}{chosen_option}{Bcolors.ENDC}")
+                click.secho(f"Not existent manifest for: {chosen_option}", fg="yellow")
             return None
 
         return await choice_paged_option(executors_names, self.PAGE_SIZE, control_base_repo)
@@ -178,10 +176,10 @@ class Wizard:
             Wizard.set_generic_data(name, repo_executor_name=metadata["repo_executor"])
             process_repo_var_envs(name, metadata)
             set_repo_params(name, metadata)
-            print(f"{Bcolors.OKGREEN}New repository executor added" f"{Bcolors.ENDC}")
+            click.secho("New repository executor added", fg="green")
         except WizardCanceledOption:
             self.executors_dict.pop(name)
-            print(f"{Bcolors.BOLD}New repository executor not added" f"{Bcolors.ENDC}")
+            click.secho("New repository executor not added", fg="yellow")
 
     @staticmethod
     def set_generic_data(name, cmd=None, repo_executor_name: str = None):
@@ -201,7 +199,7 @@ class Wizard:
     def edit_executor(self):
         name = click.prompt("Name")
         if name not in self.executors_dict:
-            print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
+            click.secho(f"There is no {name} executor", fg="yellow")
             return
         new_name = None
         while new_name is None:
@@ -222,12 +220,12 @@ class Wizard:
             self.executors_dict[section]["cmd"] = cmd
             process_var_envs(name)
             process_params(name)
-        print(f"{Bcolors.OKGREEN}Update repository executor finish" f"{Bcolors.ENDC}")
+        click.secho("Update repository executor finish", fg="green")
 
     def delete_executor(self):
         name = click.prompt("Name")
         if name not in self.executors_dict:
-            print(f"{Bcolors.WARNING}There is no {name} executor{Bcolors.ENDC}")
+            click.secho(f"There is no {name} executor", fg="yellow")
             return
         self.executors_dict.pop(name)
 
@@ -236,11 +234,11 @@ class Wizard:
         check = all(item in sections for item in min_sections)
         if check:
             if "workspaces" in sections[Sections.SERVER]:
-                msj = f"{Bcolors.OKGREEN}File configuration OK.{Bcolors.ENDC}"
+                msj = click.style("File configuration OK.", fg="green")
             else:
-                msj = f"{Bcolors.WARNING}File configuration not complete. Missing workspaces.{Bcolors.ENDC}"
+                msj = click.style("File configuration not complete. Missing workspaces.", fg="yellow")
         else:
-            msj = f"{Bcolors.WARNING}File configuration not complete. Missing section.{Bcolors.ENDC}"
+            msj = click.style("File configuration not complete. Missing section.", fg="yellow")
         if Sections.TOKENS not in sections:
             msj += (
                 f"\n{Bcolors.WARNING}Token not found, "

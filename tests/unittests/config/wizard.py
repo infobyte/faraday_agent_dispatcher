@@ -32,17 +32,6 @@ def generate_inputs():
             "after_workspaces": {"aworkspace"},
         },
         {
-            "id_str": "SSL cert",
-            "dispatcher_input": DispatcherInput(
-                host="https://127.0.0.1",
-                ssl_cert=DATA_FOLDER / "mock.pub",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
-            ),
-            "exit_code": 0,
-            "after_executors": set(),
-            "after_workspaces": {"aworkspace"},
-        },
-        {
             "id_str": "All default with ssl false",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
@@ -362,31 +351,6 @@ def generate_inputs():
             ],
             "exit_code": 0,
             "after_executors": {"ex1"},
-            "after_workspaces": {"aworkspace"},
-        },
-        {
-            "id_str": "Pass folder as SSL cert",
-            "dispatcher_input": DispatcherInput(
-                host="https://127.0.0.1",
-                wrong_ssl_cert="/tmp",
-                ssl_cert=DATA_FOLDER / "mock.pub",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
-                agent_name="asd",
-            ),
-            "exit_code": 0,
-            "after_executors": set(),
-            "after_workspaces": {"aworkspace"},
-        },
-        {
-            "id_str": "Non-existent SSL cert",
-            "dispatcher_input": DispatcherInput(
-                wrong_ssl_cert="/asdasdasd.pub",
-                host="https://127.0.0.1",
-                ssl_cert=DATA_FOLDER / "mock.pub",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
-            ),
-            "exit_code": 0,
-            "after_executors": set(),
             "after_workspaces": {"aworkspace"},
         },
         {
