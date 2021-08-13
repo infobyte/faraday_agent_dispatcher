@@ -65,7 +65,14 @@ def url_setting(url):
 
 def ask_value(agent_dict, opt, section, ssl, control_opt=None):
     info_url = {}
-    def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
+
+    if agent_dict[section][opt]["type"] == click.BOOL:
+        def_value = config.instance[section].get(opt, None)
+        if def_value is None:
+            def_value = agent_dict[section][opt]["default_value"](ssl)
+    else:
+        def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
+
     value = None
     while value is None:
         if agent_dict[section][opt]["type"] == click.BOOL:
@@ -140,12 +147,17 @@ def process_agent():
                     if url_json["url_path"]:
                         config.instance[section]["base_route"] = str(url_json["url_path"])
                 elif opt == "ssl":
+                    old_ssl_value = config.instance[section].get("ssl", None)
                     if url_json["check_ssl"] is None:
                         value, _ = ask_value(agent_dict, opt, section, ssl)
                         ssl = value
                     else:
                         ssl = str(url_json["check_ssl"]).lower() == "true"
                         value = ssl
+
+                    if old_ssl_value != value:
+                        config.instance[section].pop("api_port", None)
+                        config.instance[section].pop("websocket_port", None)
 
                     if url_json["api_port"] is None:
                         agent_dict = append_keys(agent_dict, Sections.SERVER)
