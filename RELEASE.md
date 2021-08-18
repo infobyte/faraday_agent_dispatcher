@@ -1,3 +1,9 @@
+2.1.1 [Aug 18th, 2021]:
+---
+ * ADD option via configuration YAML file to ignore ssl errors
+ * MOD Wizard connection ports defaults vary if SSL value has changed in the previous configuration
+ * [Faraday][faraday] versions: 3.16.0, 3.16.1, 3.16.2, 3.17.0, 3.17.1, 3.17.2
+
 2.1.0 [Aug 9th, 2021]:
 ---
  * ADD Reminder message to run --token command after wizard
@@ -5,14 +11,14 @@
  * FIX Receiving API error when faraday license is expired
  * ADD Executor for insightvm
  * REMOVE Host and api from burp executor parameters
- * [Faraday][faraday] versions: 3.16.0, 3.16.1, 3.16.2, 3.17.0
+ * [Faraday][faraday] versions: 3.16.0, 3.16.1, 3.16.2, 3.17.0, 3.17.1, 3.17.2
 
 2.0.0 [Jun 29th, 2021]:
 ---
  * ADD Executor parameter typing
  * ADD versioning for manifests from typing package
  * FIX typo in wizard
- * [Faraday][faraday] versions: 3.16.0, 3.16.1, 3.16.2, 3.17.0
+ * [Faraday][faraday] versions: 3.16.0, 3.16.1, 3.16.2, 3.17.0, 3.17.1, 3.17.2
 
 1.5.1 [May 6th, 2021]:
 ---
