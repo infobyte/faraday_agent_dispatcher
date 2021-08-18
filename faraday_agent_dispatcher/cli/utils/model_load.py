@@ -1,5 +1,4 @@
 import click
-from pathlib import Path
 from urllib.parse import urlparse
 
 from faraday_agent_dispatcher import config
@@ -66,23 +65,33 @@ def url_setting(url):
 
 def ask_value(agent_dict, opt, section, ssl, control_opt=None):
     info_url = {}
-    def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
+
+    if agent_dict[section][opt]["type"] == click.BOOL:
+        def_value = config.instance[section].get(opt, None)
+        if def_value is None:
+            def_value = agent_dict[section][opt]["default_value"](ssl)
+    else:
+        def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
+
     value = None
     while value is None:
-        value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
+        if agent_dict[section][opt]["type"] == click.BOOL:
+            value = confirm_prompt(f"{opt}", default=def_value)
+        else:
+            value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
         if opt == "host":
             info_url = url_setting(value)
             value = info_url["url_name"]
 
         if value == "":
-            print(f"{Bcolors.WARNING}Trying to save with empty value" f"{Bcolors.ENDC}")
+            click.secho("Trying to save with empty value", fg="yellow")
         try:
             if control_opt is None:
                 config.__control_dict[section][opt](opt, value)
             else:
                 config.__control_dict[section][control_opt](opt, value)
         except ValueError as e:
-            print(f"{Bcolors.FAIL}{e}{Bcolors.ENDC}")
+            click.secho(f"{e}", fg="red")
             value = None
     return value, info_url
 
@@ -95,12 +104,12 @@ def process_agent():
                 "type": click.STRING,
             },
             "ssl": {
-                "default_value": lambda _: "True",
+                "default_value": lambda _: True,
                 "type": click.BOOL,
             },
-            "ssl_cert": {
-                "default_value": lambda _: "",
-                "type": click.Path(allow_dash=False, dir_okay=False),
+            "ssl_ignore": {
+                "default_value": lambda _: False,
+                "type": click.BOOL,
             },
             "workspaces": {
                 "default_value": lambda _: "workspace",
@@ -128,20 +137,8 @@ def process_agent():
             if section not in config.instance:
                 config.instance[section] = dict()
             if section == Sections.TOKENS and opt == "agent":
-                if "agent" in config.instance[section] and confirm_prompt("Delete agent token?"):
+                if "agent" in config.instance[section] and confirm_prompt("Delete agent token?", default=None):
                     config.instance[section].pop(opt)
-            elif opt == "ssl_cert":
-                if ssl:
-
-                    if confirm_prompt("Default SSL behavior?"):
-                        path = ""
-                    else:
-                        path = None
-                        while path is None:
-                            value, _ = ask_value(agent_dict, opt, section, ssl)
-                            if value != "" and Path(value).exists():
-                                path = value
-                    config.instance[section][opt] = str(path)
             elif opt == "workspaces":
                 process_workspaces()
             else:
@@ -150,27 +147,33 @@ def process_agent():
                     if url_json["url_path"]:
                         config.instance[section]["base_route"] = str(url_json["url_path"])
                 elif opt == "ssl":
+                    old_ssl_value = config.instance[section].get("ssl", None)
                     if url_json["check_ssl"] is None:
                         value, _ = ask_value(agent_dict, opt, section, ssl)
-                        ssl = str(value).lower() == "true"
+                        ssl = value
                     else:
                         ssl = str(url_json["check_ssl"]).lower() == "true"
                         value = ssl
+
+                    if old_ssl_value != value:
+                        config.instance[section].pop("api_port", None)
+                        config.instance[section].pop("websocket_port", None)
 
                     if url_json["api_port"] is None:
                         agent_dict = append_keys(agent_dict, Sections.SERVER)
                         for type_ports in ["api_port", "websocket_port"]:
                             value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
-                            config.instance[section][type_ports] = str(value_port)
+                            config.instance[section][type_ports] = value_port
                             agent_dict[Sections.SERVER].pop(type_ports, None)
 
                     else:
-                        config.instance[section]["api_port"] = str(url_json["api_port"])
-                        config.instance[section]["websocket_port"] = str(url_json["websocket_port"])
-
+                        config.instance[section]["api_port"] = url_json["api_port"]
+                        config.instance[section]["websocket_port"] = url_json["websocket_port"]
+                elif opt == "ssl_ignore" and not ssl:
+                    continue
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
-                config.instance[section][opt] = str(value)
+                config.instance[section][opt] = value
 
 
 def process_workspaces() -> None:

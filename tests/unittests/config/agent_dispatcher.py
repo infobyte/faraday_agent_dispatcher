@@ -274,7 +274,7 @@ def generate_register_options():
     return [
         {
             "id_str": "Bad registration token",
-            "bad_registration_token": "Bad",
+            "bad_registration_token": "123",
             "replace_data": {},
             "logs": [
                 {
