@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
 
 
-def command_create(lista_target):
+def command_create(target_list):
     my_envs = os.environ
     cmd = ["nmap"]
     cmd_end = ["-oX", "-", "--"]
@@ -52,9 +52,12 @@ def command_create(lista_target):
     host_timeout = my_envs.get("EXECUTOR_CONFIG_HOST_TIMEOUT")
     cmd += "" if not host_timeout else ["--host-timeout", host_timeout]
 
+    script_cmd = my_envs.get("EXECUTOR_CONFIG_SCRIPT_CMD")
+    cmd += "" if not script_cmd else ["--script", f"{script_cmd}"]
+
     cmd += cmd_end
 
-    cmd += lista_target
+    cmd += target_list
     return cmd
 
 
@@ -62,21 +65,21 @@ def main():
     targets = os.environ.get("EXECUTOR_CONFIG_TARGET")
 
     if " " in targets:
-        lista_target = targets.split(" ")
+        target_list = targets.split(" ")
     elif "," in targets:
-        lista_target = targets.split(",")
+        target_list = targets.split(",")
     else:
-        lista_target = [targets]
+        target_list = [targets]
 
     urls = []
-    for target in lista_target:
+    for target in target_list:
         url = urlparse(target)
         if url.scheme:
             urls.append(url.hostname)
         else:
             urls.append(target)
 
-    cmd = command_create(lista_target=urls)
+    cmd = command_create(target_list=urls)
     results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     nmap = NmapPlugin()
     nmap.parseOutputString(results.stdout.encode())
