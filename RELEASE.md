@@ -1,3 +1,7 @@
+2.1.2 [Oct 19th, 2021]:
+---
+ * ADD script to nmap logic
+
 2.1.1 [Aug 18th, 2021]:
 ---
  * ADD option via configuration YAML file to ignore ssl errors
