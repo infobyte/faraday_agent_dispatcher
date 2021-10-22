@@ -3,7 +3,7 @@ docker-publish:
   variables:
     REGISTRY_IMAGE: index.docker.io/faradaysec/faraday_agent_dispatcher
   script:
-    - export VERSION=$('egrep -o "[0-9]\.([0-9]|[0-9][0-9])(\.[0-9])?" faraday_agent_dispatcher/__init__.py')
+    - export VERSION=$(egrep -o "[0-9]\.([0-9]|[0-9][0-9])(\.[0-9])?" faraday_agent_dispatcher/__init__.py)
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker pull $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:latest
     - docker login -u $DOCKER_USER -p $DOCKER_PASS docker.io
