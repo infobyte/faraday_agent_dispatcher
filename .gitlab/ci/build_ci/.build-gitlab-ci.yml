@@ -15,9 +15,7 @@ docker-build-branch:
     IMAGE_TAG: "$CI_COMMIT_BRANCH"
     BASE_IMAGE_TAG: "plugins-testing-$CI_COMMIT_BRANCH"
   rules:
-    - if: '$CI_COMMIT_REF_NAME !~ /^(dev|master)$/'
-      when: manual
-      allow_failure: true
+    - !reference [.devel-branch-manual, rules]
     - when: never
 
 docker-build-main:
@@ -26,11 +24,8 @@ docker-build-main:
     IMAGE_TAG: "faraday-agent-dispatcher"
     BASE_IMAGE_TAG: "base"
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
-      when: manual
-      allow_failure: true
-    - if: '$FULL_CI'
-      when: on_success
+    - !reference [.dev-staging-master-manual, rules]
+    - !reference [.daily-control, rules]
     - when: never
 
 docker-build-tag:
@@ -39,6 +34,5 @@ docker-build-tag:
     IMAGE_TAG: "latest"
     BASE_IMAGE_TAG: "base-tag"
   rules:
-    - if: '$CI_COMMIT_TAG'
-      when: on_success
+    - !reference [.on-release, rules]
     - when: never

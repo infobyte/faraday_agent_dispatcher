@@ -15,9 +15,7 @@ docker-integration-build-branch:
   variables:
     IMAGE_TAG: "plugins-testing-$CI_COMMIT_BRANCH"
   rules:
-    - if: '$CI_COMMIT_REF_NAME !~ /^(dev|master)$/'
-      when: manual
-      allow_failure: true
+    - !reference [.devel-branch-manual, rules]
     - when: never
 
 docker-integration-build-main:
@@ -25,11 +23,8 @@ docker-integration-build-main:
   variables:
     IMAGE_TAG: "base"
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
-      when: manual
-      allow_failure: true
-    - if: '$FULL_CI'
-      when: on_success
+    - !reference [.dev-staging-master-manual, rules]
+    - !reference [.daily-control, rules]
     - when: never
 
 docker-integration-build-tag:
@@ -37,6 +32,5 @@ docker-integration-build-tag:
   variables:
     IMAGE_TAG: "base-tag"
   rules:
-    - if: '$CI_COMMIT_TAG'
-      when: on_success
+    - !reference [.on-release, rules]
     - when: never
