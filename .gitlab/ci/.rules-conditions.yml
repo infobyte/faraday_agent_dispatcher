@@ -1,0 +1,26 @@
+.devel-branch-manual:
+  rules:
+    - if: '$CI_COMMIT_REF_NAME !~ /^(dev|master)$/'
+      when: manual
+      allow_failure: true
+
+.dev-staging-master-manual:
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
+      when: manual
+      allow_failure: true
+
+.staging-master:
+  rules:
+    - if: '$CI_COMMIT_REF_NAME !~ /^(dev|master)$/'
+      when: on_success
+
+.on-release:
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
+
+.daily-control:
+  rules:
+    - if: '$FULL_CI'
+      when: on_success

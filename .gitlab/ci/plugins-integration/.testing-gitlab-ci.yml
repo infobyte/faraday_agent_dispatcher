@@ -15,18 +15,13 @@ integration_executor_testing_branch:
     IMAGE_TAG: "plugins-testing-$CI_COMMIT_BRANCH"
   image: registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG
   rules:
-    - if: '$CI_COMMIT_REF_NAME !~ /^(dev|master)$/'
-      when: manual
-      allow_failure: true
+    - !reference [.devel-branch-manual, rules]
     - when: never
 
 integration_executor_testing_main:
   extends: .integration_executor_testing_base
   image: registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:base
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master)$/'
-      when: manual
-      allow_failure: true
-    - if: '$FULL_CI'
-      when: on_success
+    - !reference [.dev-staging-master-manual, rules]
+    - !reference [.daily-control, rules]
     - when: never

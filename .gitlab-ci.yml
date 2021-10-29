@@ -41,6 +41,8 @@ services:
 include:
   - local: docs/.gitlab-ci.yml
 
+  - local: .gitlab/ci/.rules-conditions.yml
+
   - local: .gitlab/ci/.pre-gitlab-ci.yml
 
   - local: .gitlab/ci/testing/.testing-gitlab-ci.yml
