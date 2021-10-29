@@ -2,7 +2,8 @@
 integration_faraday:
     stage: post_testing
     variables:
-        DISPATCHER_REF: white/staging
+        FARADAY_REF: white/staging
+        DISPATCHER_REF: $CI_COMMIT_REF_NAME
     trigger:
         project: faradaysec/devops
         strategy: depend
@@ -10,7 +11,7 @@ integration_faraday:
         - !reference [ .on-release, rules ]
         - if: '$CI_COMMIT_REF_NAME =~ /^(staging|master)$/'
           variables:
-            DISPATCHER_REF: white/$CI_COMMIT_REF_NAME
+            FARADAY_REF: white/$CI_COMMIT_REF_NAME
           when: on_success
         - if: $INTEGRATION
           when: on_success
