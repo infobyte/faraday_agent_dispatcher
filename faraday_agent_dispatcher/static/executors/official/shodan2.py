@@ -15,8 +15,8 @@ def main():
 
     with tempfile.TemporaryDirectory() as tempdirname:
         tmpdir = Path(tempdirname)
-        name_result = tmpdir / "output.json.gz"
-
+        tmpfile = tempfile.NamedTemporaryFile(dir=tmpdir, suffix=".json.gz")
+        name_result = tmpfile.name
         cmd = [
             "shodan",
             "download",
