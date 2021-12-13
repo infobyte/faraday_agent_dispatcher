@@ -1,3 +1,8 @@
+2.1.3 [Dec 13th, 2021]:
+---
+ * Add --api-token --random-user-agent to wpscan
+ * Move shodan executor to official and change logic to work with plugins
+
 2.1.2 [Oct 19th, 2021]:
 ---
  * ADD script to nmap logic
