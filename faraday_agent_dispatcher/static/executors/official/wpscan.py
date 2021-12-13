@@ -12,6 +12,8 @@ def main():
     # are checked.
     # ['EXECUTOR_CONFIG_WPSCAN_TARGET_URL']
     url_target = os.environ.get("EXECUTOR_CONFIG_WPSCAN_TARGET_URL")
+    api_token = os.environ.get("EXECUTOR_CONFIG_WPSCAN_API_TOKEN")
+    random_user_agent = os.environ.get("EXECUTOR_CONFIG_WPSCAN_RANDOM_USER_AGENT")
     if not url_target:
         print("URL not provided", file=sys.stderr)
         sys.exit()
@@ -29,7 +31,10 @@ def main():
             "-f",
             "json",
         ]
-
+        if api_token:
+            cmd += ["--api-token", api_token]
+        if random_user_agent:
+            cmd += ["--random_user_agent"]
         wpscan_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if len(wpscan_process.stdout) > 0:
             print(
