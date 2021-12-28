@@ -35,7 +35,6 @@ def nessus_templates(url, token, x_token="", target=""):
     headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
     payload = {}
     response = requests.get(url + "/editor/scan/templates", json=payload, headers=headers, verify=False)
-
     if (
         response.status_code == 200
         and "templates" in response.json()
@@ -58,6 +57,7 @@ def nessus_add_target(url, token, x_token="", target="", template="basic", name=
         return None
     if template not in templates:
         print(f"Template {template} not valid. Setting basic as default", file=sys.stderr)
+        print(f"The templates available are {list(templates.keys())}", file=sys.stderr)
         template = "basic"
 
     payload = {
