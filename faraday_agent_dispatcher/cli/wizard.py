@@ -12,7 +12,6 @@ from faraday_agent_dispatcher.cli.utils.model_load import (
     process_var_envs,
     process_params,
     process_repo_var_envs,
-    set_repo_params,
 )
 from faraday_agent_dispatcher.utils.metadata_utils import (
     executor_folder,
@@ -175,7 +174,6 @@ class Wizard:
             metadata = await self.get_base_repo()
             Wizard.set_generic_data(name, metadata=metadata)
             process_repo_var_envs(name, metadata)
-            set_repo_params(name, metadata)
             click.secho("New repository executor added", fg="green")
         except WizardCanceledOption:
             self.executors_dict.pop(name)
