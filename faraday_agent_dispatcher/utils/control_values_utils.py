@@ -91,6 +91,7 @@ class ParamsField(fields.Field):
 class ExecutorSchema(schema.Schema):
     max_size = fields.Integer(required=True)
     repo_executor = fields.String()
+    repo_name = fields.String()
     cmd = fields.String()
     varenvs = fields.Dict(required=True)
     params = ParamsField(required=True)
