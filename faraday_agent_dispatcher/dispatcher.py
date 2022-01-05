@@ -564,16 +564,18 @@ class Dispatcher:
 
     @staticmethod
     def update_executors():
-        for executor_name, executor_data in config.instance[Sections.AGENT].get("executors", {}).items():
-            repo_name = executor_data.get("repo_name")
-            metadata = executor_metadata(repo_name)
-            if metadata:
-                if not check_metadata(metadata):
-                    click.secho(f"Invalid manifest for: {executor_name}", fg="yellow")
-                set_repo_params(executor_name, metadata)
-                for env_varb in metadata.get("environment_variables"):
-                    if env_varb not in executor_data.get("varenvs"):
-                        logger.warning(
-                            f"The enviroment variable {env_varb} of executor {repo_name} is not defined in"
-                            f"config file."
-                        )
+        executors = config.instance.get(Sections.AGENT, {}).get("executors")
+        if isinstance(executors, dict):
+            for executor_name, executor_data in executors.items():
+                repo_name = executor_data.get("repo_name")
+                metadata = executor_metadata(repo_name)
+                if metadata:
+                    if not check_metadata(metadata):
+                        click.secho(f"Invalid manifest for: {executor_name}", fg="yellow")
+                    set_repo_params(executor_name, metadata)
+                    for env_varb in metadata.get("environment_variables"):
+                        if env_varb not in executor_data.get("varenvs"):
+                            logger.warning(
+                                f"The enviroment variable {env_varb} of executor {repo_name} is not defined in"
+                                f"config file."
+                            )
