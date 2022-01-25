@@ -23,7 +23,6 @@ def flush_messages(process):
 
 def main():
     my_envs = os.environ
-    print(my_envs)
     # If the script is run outside the dispatcher
     # the environment variables
     # are checked.
