@@ -50,6 +50,7 @@ def main():
 
             if os.path.isfile("w3af_console"):
                 cmd = [
+                    "python2.7",
                     "./w3af_console",
                     "-s",
                     name_result,
