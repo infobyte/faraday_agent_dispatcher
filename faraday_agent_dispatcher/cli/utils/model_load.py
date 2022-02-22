@@ -303,5 +303,7 @@ def set_repo_params(executor_name, metadata: dict):
         config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
     section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("params")
     section.clear()
+    print(section)
     for param, value in params.items():
         section[param] = value
+    print(section)
