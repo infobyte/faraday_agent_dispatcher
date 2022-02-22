@@ -569,6 +569,10 @@ class Dispatcher:
             for executor_name, executor_data in executors.items():
                 repo_name = executor_data.get("repo_name")
                 metadata = executor_metadata(repo_name)
+                print(executor_name)
+                print(executor_data)
+                print(repo_name)
+                print(metadata)
                 if metadata:
                     if not check_metadata(metadata):
                         click.secho(f"Invalid manifest for: {executor_name}", fg="yellow")
