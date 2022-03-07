@@ -576,6 +576,6 @@ class Dispatcher:
                     for env_varb in metadata.get("environment_variables"):
                         if env_varb not in executor_data.get("varenvs"):
                             logger.warning(
-                                f"The enviroment variable {env_varb} of executor {repo_name} is not defined in "
-                                f"config file."
+                                f"{Bcolors.WARNING}The enviroment variable {env_varb} of executor {repo_name}"
+                                f" is not defined in config file.{Bcolors.ENDC}"
                             )
