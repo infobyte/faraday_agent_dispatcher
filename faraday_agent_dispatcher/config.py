@@ -276,7 +276,7 @@ def update_config(config: Dict):
     if Sections.AGENT in config and Sections.EXECUTORS in config[Sections.AGENT]:
         for executor in config[Sections.AGENT]["executors"]:
             if (
-                Sections.EXECUTORS_CMD not in config[Sections.AGENT]["executors"][executor]
+                "repo_executor" in config[Sections.AGENT]["executors"][executor]
                 and "repo_name" not in config[Sections.AGENT]["executors"][executor]
             ):
                 config[Sections.AGENT]["executors"][executor]["repo_name"] = get_repo_exec()[
@@ -293,7 +293,6 @@ class Sections:
     EXECUTORS = "executors"
     EXECUTOR_VARENVS = "varenvs"
     EXECUTOR_PARAMS = "params"
-    EXECUTORS_CMD = "cmd"
     EXECUTOR_DATA = "{}"
 
 
