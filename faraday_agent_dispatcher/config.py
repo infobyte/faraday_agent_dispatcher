@@ -276,12 +276,17 @@ def update_config(config: Dict):
     if Sections.AGENT in config and Sections.EXECUTORS in config[Sections.AGENT]:
         for executor in config[Sections.AGENT]["executors"]:
             if (
-                "repo_executor" in config[Sections.AGENT]["executors"][executor]
+                isinstance(config[Sections.AGENT]["executors"], dict)
+                and "repo_executor" in config[Sections.AGENT]["executors"][executor]
                 and "repo_name" not in config[Sections.AGENT]["executors"][executor]
             ):
-                config[Sections.AGENT]["executors"][executor]["repo_name"] = get_repo_exec()[
-                    config[Sections.AGENT]["executors"][executor]["repo_executor"]
-                ]
+                new_repo_name = get_repo_exec().get(config[Sections.AGENT]["executors"][executor]["repo_executor"], "")
+                config[Sections.AGENT]["executors"][executor]["repo_name"] = new_repo_name
+                if len(new_repo_name) == 0:
+                    logging.warning(
+                        f"{Bcolors.WARNING}We tried to update the executor {executor} but faild. Its recommended "
+                        f"to delete and add it by faraday-dispatcher config-wizard{Bcolors.ENDC}"
+                    )
 
     return config
 
