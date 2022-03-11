@@ -80,7 +80,6 @@ class Dispatcher:
         self.session = session
         self.websocket = None
         self.websocket_token = None
-        self.workspaces = config.instance[Sections.SERVER]["workspaces"]
         self.executors = {
             executor_name: Executor(executor_name, executor_data)
             for executor_name, executor_data in config.instance[Sections.AGENT].get("executors", {}).items()
@@ -154,11 +153,7 @@ class Dispatcher:
             try:
                 token_response = await self.session.post(
                     token_registration_url,
-                    json={
-                        "token": registration_token,
-                        "name": self.agent_name,
-                        "workspaces": self.workspaces,
-                    },
+                    json={"token": registration_token, "name": self.agent_name},
                     **self.api_kwargs,
                 )
                 token = await token_response.json()
@@ -213,7 +208,6 @@ class Dispatcher:
         connected_data = json.dumps(
             {
                 "action": "JOIN_AGENT",
-                "workspaces": self.workspaces,
                 "token": self.websocket_token,
                 "executors": [
                     {"executor_name": executor.name, "args": executor.params} for executor in self.executors.values()
@@ -294,20 +288,6 @@ class Dispatcher:
                             "execution_id": self.execution_id,
                             "running": False,
                             "message": "No executor selected to " f"{self.agent_name} agent",
-                        }
-                    )
-                )
-                return
-
-            if workspace_selected not in self.workspaces:
-                logger.error("Invalid workspace passed")
-                await self.websocket.send(
-                    json.dumps(
-                        {
-                            "action": f"{data_dict['action']}_STATUS",
-                            "execution_id": self.execution_id,
-                            "running": False,
-                            "message": "Invalid workspace passed to " f"{self.agent_name} agent",
                         }
                     )
                 )
