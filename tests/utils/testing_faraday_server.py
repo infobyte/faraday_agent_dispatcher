@@ -60,7 +60,7 @@ class FaradayTestConfig:
         app = web.Application()
         app.router.add_get(self.wrap_route("/_api/v3/info"), get_info(self))
         app.router.add_post(
-            self.wrap_route("/_api/v3/agent_registration"),
+            self.wrap_route("/_api/v3/agents"),
             get_agent_registration(self),
         )
         app.router.add_post(
@@ -98,8 +98,6 @@ def get_agent_registration(test_config: FaradayTestConfig):
         data = json.loads(data)
         if "token" not in data or data["token"] != test_config.registration_token:
             return web.HTTPUnauthorized()
-        if "workspaces" not in data:
-            return web.HTTPBadRequest()
         response_dict = {
             "name": data["name"],
             "token": test_config.agent_token,
@@ -188,7 +186,6 @@ def get_ws_handler(test_config: FaradayTestConfig):
         async for msg in ws:
             msg_ = json.loads(msg.data)
             if "action" in msg_ and msg_["action"] == "JOIN_AGENT":
-                assert test_config.workspaces == msg_["workspaces"]
                 assert test_config.ws_token == msg_["token"]
                 assert sorted(
                     [order_dict(elem) for elem in test_config.executors], key=lambda elem: elem["executor_name"]

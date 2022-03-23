@@ -123,7 +123,6 @@ async def test_start_and_register(
         configuration[Sections.SERVER]["host"] = client.host
 
     configuration[Sections.SERVER]["api_port"] = str(client.port)
-    configuration[Sections.SERVER]["workspaces"] = test_config.workspaces
     if "ex1" not in configuration[Sections.AGENT][Sections.EXECUTORS]:
         configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"] = {
             "max_size": "65536",
@@ -167,13 +166,11 @@ async def test_start_and_register(
             await dispatcher.register(token)
 
     history = test_logger_handler.history
-
     logs_ok, failed_logs = await check_logs(history, register_options["logs"])
 
     if "optional_logs" in register_options and not logs_ok:
         logs_ok, new_failed_logs = await check_logs(history, register_options["optional_logs"])
         failed_logs = {"logs": failed_logs, "optional_logs": new_failed_logs}
-
     assert logs_ok, failed_logs
 
 
@@ -223,7 +220,6 @@ async def test_run_once(
 
     configuration[Sections.SERVER]["api_port"] = str(test_config.client.port)
     configuration[Sections.SERVER]["websocket_port"] = str(test_config.client.port)
-    configuration[Sections.SERVER]["workspaces"] = workspaces
     if Sections.TOKENS not in configuration:
         configuration[Sections.TOKENS] = {}
     configuration[Sections.TOKENS]["agent"] = test_config.agent_token
