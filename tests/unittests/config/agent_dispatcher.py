@@ -46,12 +46,6 @@ def generate_basic_built_config():
             "replace": {Sections.SERVER: {"websocket_port": "9001"}},
         },  # None error as parse int
         {
-            "id_str": "Error: No workspaces",
-            "remove": {Sections.SERVER: ["workspaces"]},
-            "replace": {},
-            "expected_exception": ValueError,
-        },
-        {
             "id_str": "Error: agent token length",
             "remove": {},
             "replace": {Sections.TOKENS: {"agent": "invalid_token"}},
@@ -1180,34 +1174,6 @@ def generate_executor_options():
                 {"levelname": "INFO", "msg": "Data not contains workspace name"},
             ],
             "ws_responses": [{"error": "'workspace' key is mandatory in this websocket connection"}],
-        },
-        {
-            "id_str": "JUST in WS wrong workspace",
-            "data": {
-                "action": "RUN",
-                "execution_id": 1,
-                "agent_id": 1,
-                "executor": "ex1",
-                "workspace": "asd{}",
-                "args": {"out": "json"},
-            },
-            "logs": [
-                {
-                    "levelname": "INFO",
-                    "msg": "Running ex1 executor",
-                    "max_count": 0,
-                    "min_count": 0,
-                },
-                {"levelname": "ERROR", "msg": "Invalid workspace passed"},
-            ],
-            "ws_responses": [
-                {
-                    "action": "RUN_STATUS",
-                    "execution_id": 1,
-                    "running": False,
-                    "message": "Invalid workspace passed to unnamed_agent agent",
-                }
-            ],
         },
         {
             "id_str": "Post to other workspace",
