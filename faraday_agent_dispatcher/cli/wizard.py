@@ -233,10 +233,7 @@ class Wizard:
         min_sections = [Sections.SERVER, Sections.AGENT]
         check = all(item in sections for item in min_sections)
         if check:
-            if "workspaces" in sections[Sections.SERVER]:
-                msj = click.style("File configuration OK.", fg="green")
-            else:
-                msj = click.style("File configuration not complete. Missing workspaces.", fg="yellow")
+            msj = click.style("File configuration OK.", fg="green")
         else:
             msj = click.style("File configuration not complete. Missing section.", fg="yellow")
         if Sections.TOKENS not in sections:
