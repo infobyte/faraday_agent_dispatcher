@@ -27,11 +27,13 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_executors,
 )
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
-
+from faraday_agent_parameters_types.utils import get_manifests
+from faraday_agent_dispatcher import __version__ as current_version
 import os
 import logging
 from pathlib import Path
 from shutil import copy
+from functools import lru_cache
 
 try:
     FARADAY_PATH = Path(os.environ["FARADAY_HOME"]).expanduser()
@@ -259,10 +261,9 @@ def update_config_from_ini_to_yaml(filepath: Path):
 
 def update_config(config: Dict):
     """
-    This methods tries to adapt old .ini versions, if its not possible,
-    warns about it and exits with a proper error code
+    This methods tries to adapt old .yaml versions
     """
-    # From 2.1.0 to 2.1.1
+    # From 2.1.0 to 2.1.3
     if Sections.SERVER in config:
         if "ssl_ignore" not in config[Sections.SERVER]:
             config[Sections.SERVER]["ssl_ignore"] = False
@@ -272,6 +273,21 @@ def update_config(config: Dict):
             config[Sections.SERVER]["websocket_port"] = int(config[Sections.SERVER]["websocket_port"])
         if isinstance(config[Sections.SERVER]["ssl"], str):
             config[Sections.SERVER]["ssl"] = config[Sections.SERVER]["ssl"] == "True"
+    if Sections.AGENT in config and Sections.EXECUTORS in config[Sections.AGENT]:
+        for executor in config[Sections.AGENT]["executors"]:
+            if (
+                isinstance(config[Sections.AGENT]["executors"], dict)
+                and "repo_executor" in config[Sections.AGENT]["executors"][executor]
+                and "repo_name" not in config[Sections.AGENT]["executors"][executor]
+            ):
+                new_repo_name = get_repo_exec().get(config[Sections.AGENT]["executors"][executor]["repo_executor"], "")
+                config[Sections.AGENT]["executors"][executor]["repo_name"] = new_repo_name
+                if len(new_repo_name) == 0:
+                    logging.warning(
+                        f"{Bcolors.WARNING}We tried to update the executor {executor} but faild. Its recommended "
+                        f"to delete and add it by faraday-dispatcher config-wizard{Bcolors.ENDC}"
+                    )
+
     return config
 
 
@@ -323,3 +339,16 @@ def control_config():
                     raise ValueError(f"{option} option missing in {section} section of the config file")
             value = instance[section][option] if option in instance[section] else None
             __control_dict[section][option](option, value)
+
+
+@lru_cache(maxsize=None)
+def get_repo_exec() -> dict:
+    """
+    Return the a dict of manifests with keys being repo_executor
+    and values the name of the manifest
+    """
+    executer_names = {}
+    metadata = get_manifests(current_version)
+    for key, value in metadata.items():
+        executer_names[value.get("repo_executor")] = key
+    return executer_names

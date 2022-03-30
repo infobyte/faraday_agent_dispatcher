@@ -173,7 +173,7 @@ class Wizard:
     async def new_repo_executor(self, name):
         try:
             metadata = await self.get_base_repo()
-            Wizard.set_generic_data(name, repo_executor_name=metadata["repo_executor"])
+            Wizard.set_generic_data(name, metadata=metadata)
             process_repo_var_envs(name, metadata)
             set_repo_params(name, metadata)
             click.secho("New repository executor added", fg="green")
@@ -182,11 +182,13 @@ class Wizard:
             click.secho("New repository executor not added", fg="yellow")
 
     @staticmethod
-    def set_generic_data(name, cmd=None, repo_executor_name: str = None):
+    def set_generic_data(name, cmd=None, metadata: dict = {}):
         executor = config.instance[Sections.AGENT][Sections.EXECUTORS][name]
+        repo_executor_name = metadata.get("repo_executor")
         executor["max_size"] = Wizard.MAX_BUFF_SIZE
         if repo_executor_name:
             executor["repo_executor"] = repo_executor_name
+            executor["repo_name"] = metadata.get("name")
         else:
             executor["cmd"] = cmd
 
