@@ -367,7 +367,7 @@ class Dispatcher:
                 ]
             )
             if not mandatory_full:
-                logger.error("Mandatory argument not passed to {executor.name} executor")
+                logger.error(f"Mandatory argument not passed to {executor.name} executor")
                 await self.websocket.send(
                     json.dumps(
                         {
@@ -415,7 +415,7 @@ class Dispatcher:
                     # The function logs why cant run
                     return
                 running_msg = f"Running {executor.name} executor from " f"{self.agent_name} agent"
-                logger.info("Running {} executor".format(executor.name))
+                logger.info(f"Running {executor.name} executor")
 
                 process = await self.create_process(executor, passed_params)
                 start_date = datetime.utcnow()
