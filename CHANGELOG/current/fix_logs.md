@@ -1,1 +1,1 @@
-Fixs logs and use change strings to fstrings.
+Fix logs and change .format to fstrings
