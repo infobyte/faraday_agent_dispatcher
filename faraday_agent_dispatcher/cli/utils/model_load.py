@@ -269,6 +269,6 @@ def set_repo_params(executor_name, metadata: dict):
     if "params" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
         config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
     section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("params")
-
+    section.clear()
     for param, value in params.items():
         section[param] = value

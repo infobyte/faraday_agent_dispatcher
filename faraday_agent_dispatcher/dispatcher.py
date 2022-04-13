@@ -34,7 +34,7 @@ from aiohttp.client_exceptions import (
     ClientConnectorCertificateError,
     ClientConnectorSSLError,
 )
-
+import click
 from faraday_agent_dispatcher.config import reset_config
 from faraday_agent_dispatcher.executor_helper import (
     StdErrLineProcessor,
@@ -50,6 +50,8 @@ from faraday_agent_dispatcher.config import (
     save_config,
     control_config,
 )
+from faraday_agent_dispatcher.utils.metadata_utils import executor_metadata, check_metadata
+from faraday_agent_dispatcher.cli.utils.model_load import set_repo_params
 from faraday_agent_dispatcher.executor import Executor
 from faraday_agent_parameters_types.utils import type_validate
 
@@ -64,6 +66,7 @@ class Dispatcher:
 
     def __init__(self, session, config_path=None):
         reset_config(filepath=config_path)
+        self.update_executors()
         try:
             control_config()
         except ValueError as e:
@@ -538,3 +541,21 @@ class Dispatcher:
             logger.info("User sent close signal")
             return False
         return True
+
+    @staticmethod
+    def update_executors():
+        executors = config.instance.get(Sections.AGENT, {}).get("executors")
+        if isinstance(executors, dict):
+            for executor_name, executor_data in executors.items():
+                repo_name = executor_data.get("repo_name")
+                metadata = executor_metadata(repo_name)
+                if metadata:
+                    if not check_metadata(metadata):
+                        click.secho(f"Invalid manifest for: {executor_name}", fg="yellow")
+                    set_repo_params(executor_name, metadata)
+                    for env_varb in metadata.get("environment_variables"):
+                        if env_varb not in executor_data.get("varenvs"):
+                            logger.warning(
+                                f"{Bcolors.WARNING}The enviroment variable {env_varb} of executor {repo_name}"
+                                f" is not defined in config file.{Bcolors.ENDC}"
+                            )
