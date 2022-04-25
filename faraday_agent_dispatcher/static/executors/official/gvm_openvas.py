@@ -72,7 +72,7 @@ def main():
     # Create Target
     with Gmp(connection=connection, transform=transform) as gmp:
         gmp.authenticate(user, passw)
-        name = "Suspect Host {} {}".format(scan_url, str(datetime.datetime.now()))
+        name = f"Suspect Host {scan_url} {str(datetime.datetime.now())}"
 
         response = gmp.create_target(name=name, hosts=[scan_url], port_list_id=port_list)
 
@@ -81,7 +81,7 @@ def main():
     # Create Task
     with Gmp(connection=connection, transform=transform) as gmp:
         gmp.authenticate(user, passw)
-        name = "Scan Suspect Host {} {}".format(scan_url, str(datetime.datetime.now()))
+        name = f"Scan Suspect Host {scan_url} {str(datetime.datetime.now())}"
         response = gmp.create_task(name=name, config_id=scan_id, target_id=target_id, scanner_id=scanner)
 
     task_id = response.get("id")
