@@ -89,12 +89,12 @@ def get_logger(obj=None):
         logger.setLevel(config.LOGGING_LEVEL)
     elif isinstance(obj, str):
         if obj != ROOT_LOGGER:
-            logger = logging.getLogger("{}.{}".format(ROOT_LOGGER, obj))
+            logger = logging.getLogger(f"{ROOT_LOGGER}.{obj}")
         else:
             logger = logging.getLogger(obj)
     else:
         cls_name = obj.__class__.__name__
-        logger = logging.getLogger("{}.{}".format(ROOT_LOGGER, cls_name))
+        logger = logging.getLogger(f"{ROOT_LOGGER}.{cls_name}")
     return logger
 
 
