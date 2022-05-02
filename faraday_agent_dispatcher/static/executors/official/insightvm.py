@@ -110,23 +110,17 @@ def wait_scan(user, passwd, host, scan_id):
 
 def create_and_generate_report(user, passwd, host, scan_id):
     create_report_url = f"{host}/api/3/reports"
-    body = {"format": "xml-export-v2",
-            "filters": {
-                "severity": "all",
-                "statuses": [
-                    "vulnerable",
-                    "potentially-vulnerable",
-                    "vulnerable-version"
-                ]
-            },
-            "name": f"Report with scan {scan_id}",
-            "scope": {
-                "scan": scan_id}
-            }
+    body = {
+        "format": "xml-export-v2",
+        "filters": {"severity": "all", "statuses": ["vulnerable", "potentially-vulnerable", "vulnerable-version"]},
+        "name": f"Report with scan {scan_id}",
+        "scope": {"scan": scan_id},
+    }
     try:
         log("Creating the report")
-        report_create_response = requests.post(create_report_url, verify=False, auth=HTTPBasicAuth(user, passwd),
-                                               json=body)
+        report_create_response = requests.post(
+            create_report_url, verify=False, auth=HTTPBasicAuth(user, passwd), json=body
+        )
         if report_create_response.status_code != 201:
             log(f"Couldnt create report, Status codae {report_create_response.status_code}")
             sys.exit()
@@ -134,8 +128,9 @@ def create_and_generate_report(user, passwd, host, scan_id):
             report_id = report_create_response.json()["id"]
             log(report_create_response.json())
             generate_report_url = f"{host}/api/3/reports/{report_id}/generate"
-            report_generate_response = requests.post(generate_report_url, verify=False,
-                                                     auth=HTTPBasicAuth(user, passwd))
+            report_generate_response = requests.post(
+                generate_report_url, verify=False, auth=HTTPBasicAuth(user, passwd)
+            )
             if report_generate_response.status_code != 200:
                 log(f"Couldnt create report, Status codae {report_generate_response.status_code}")
                 sys.exit()
