@@ -174,7 +174,7 @@ def nessus_scan_export(url, scan_id, token, x_token=""):
 
         time.sleep(TIME_BETWEEN_TRIES)
 
-    print("Report export status {}".format(status), file=sys.stderr)
+    print(f"Report export status {status}", file=sys.stderr)
     response = requests.get(urljoin(url, f"tokens/{export_token}/download"), allow_redirects=True, verify=False)
     if response.status_code == 200:
         return response.content
@@ -185,7 +185,7 @@ def nessus_scan_export(url, scan_id, token, x_token=""):
 def get_x_api_token(url, token):
     x_token = None
 
-    headers = {"X-Cookie": "token={}".format(token)}
+    headers = {"X-Cookie": f"token={token}"}
 
     pattern = (
         r"\{key:\"getApiToken\",value:function\(\)\{"
