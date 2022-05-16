@@ -4,13 +4,15 @@ import sys
 import time
 import subprocess
 from zapv2 import ZAPv2
-from faraday_plugins.plugins.manager import PluginsManager
+from faraday_plugins.plugins.repo.zap.plugin import ZapPlugin
 
 
 def main():
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
+    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     try:
         target = os.environ["EXECUTOR_CONFIG_TARGET_URL"]
         api_key = os.environ["EXECUTOR_CONFIG_API_KEY"]
@@ -31,7 +33,7 @@ def main():
             time.sleep(1)
         # If finish the scan and the xml is generated
         zap_result = zap.core.xmlreport()
-        plugin = PluginsManager().get_plugin("zap")
+        plugin = ZapPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
         plugin.parseOutputString(zap_result)
         print(plugin.get_json())
 

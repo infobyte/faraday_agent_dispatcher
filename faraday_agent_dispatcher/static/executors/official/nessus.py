@@ -8,7 +8,7 @@ import requests
 import datetime
 from posixpath import join as urljoin
 
-from faraday_plugins.plugins.manager import PluginsManager
+from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
 MAX_TRIES = 3
 TIME_BETWEEN_TRIES = 5
@@ -210,6 +210,8 @@ def get_x_api_token(url, token):
 
 
 def main():
+    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     NESSUS_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_NAME", get_report_name())
     NESSUS_URL = os.getenv("EXECUTOR_CONFIG_NESSUS_URL")  # https://nessus:port
     NESSUS_USERNAME = os.getenv("NESSUS_USERNAME")
@@ -256,7 +258,7 @@ def main():
         scan_file = nessus_scan_export(NESSUS_URL, scan_id, token, x_token)
 
     if scan_file:
-        plugin = PluginsManager().get_plugin("nessus")
+        plugin = NessusPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
         plugin.parseOutputString(scan_file)
         print(plugin.get_json())
     else:

@@ -62,6 +62,8 @@ def command_create(target_list):
 
 
 def main():
+    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     targets = os.environ.get("EXECUTOR_CONFIG_TARGET")
 
     if " " in targets:
@@ -81,7 +83,7 @@ def main():
 
     cmd = command_create(target_list=urls)
     results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    nmap = NmapPlugin()
+    nmap = NmapPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
     nmap.parseOutputString(results.stdout.encode())
     print(nmap.get_json())
 
