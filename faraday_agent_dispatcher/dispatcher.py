@@ -417,6 +417,12 @@ class Dispatcher:
                 running_msg = f"Running {executor.name} executor from " f"{self.agent_name} agent"
                 logger.info(f"Running {executor.name} executor")
 
+                if config.instance["agent"]["ignore_info"] != data_dict["ignore_info"]:
+                    os.environ["AGENT_CONFIG_IGNORE_INFO"] = data_dict["ignore_info"]
+
+                if config.instance["agent"]["hostname_resolution"] != data_dict["hostname_resolution"]:
+                    os.environ["AGENT_CONFIG_HOSTNAME_RESOLUTION"] = data_dict["hostname_resolution"]
+
                 process = await self.create_process(executor, passed_params)
                 start_date = datetime.utcnow()
                 command_json = {

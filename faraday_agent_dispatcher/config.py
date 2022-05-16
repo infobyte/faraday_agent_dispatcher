@@ -88,6 +88,8 @@ def reset_config(filepath: Path):
                 raise ValueError(f"Unable to read config file located at {filename}", False)
             instance.clear()
             instance.update(update_config(yaml.safe_load(yaml_file)))
+            os.environ["AGENT_CONFIG_IGNORE_INFO"] = instance["agent"]["ignore_info"]
+            os.environ["AGENT_CONFIG_HOSTNAME_RESOLUTION"] = instance["agent"]["hostname_resolution"]
     except EnvironmentError:
         raise EnvironmentError("Error opening the config file")
 
@@ -274,6 +276,10 @@ def update_config(config: Dict):
         if isinstance(config[Sections.SERVER]["ssl"], str):
             config[Sections.SERVER]["ssl"] = config[Sections.SERVER]["ssl"] == "True"
     if Sections.AGENT in config and Sections.EXECUTORS in config[Sections.AGENT]:
+        if "ignore_info" not in config[Sections.AGENT]:
+            config[Sections.AGENT]["ignore_info"] = False
+        if "hostname_resolution" not in config[Sections.AGENT]:
+            config[Sections.AGENT]["hostname_resolution"] = True
         for executor in config[Sections.AGENT]["executors"]:
             if (
                 isinstance(config[Sections.AGENT]["executors"], dict)
@@ -322,6 +328,8 @@ __control_dict = {
     },
     Sections.AGENT: {
         "agent_name": control_str(),
+        "ignore_info": control_bool,
+        "hostname_resolution": control_bool,
         "executors": control_executors,
     },
 }

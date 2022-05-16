@@ -123,7 +123,15 @@ def process_agent():
             "agent_name": {
                 "default_value": lambda _: "agent",
                 "type": click.STRING,
-            }
+            },
+            "ignore_info": {
+                "default_value": lambda _: False,
+                "type": click.BOOL,
+            },
+            "hostname_resolution": {
+                "default_value": lambda _: True,
+                "type": click.BOOL,
+            },
         },
     }
 
