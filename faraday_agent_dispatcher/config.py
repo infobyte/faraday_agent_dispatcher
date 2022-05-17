@@ -88,8 +88,8 @@ def reset_config(filepath: Path):
                 raise ValueError(f"Unable to read config file located at {filename}", False)
             instance.clear()
             instance.update(update_config(yaml.safe_load(yaml_file)))
-            os.environ["AGENT_CONFIG_IGNORE_INFO"] = instance["agent"]["ignore_info"]
-            os.environ["AGENT_CONFIG_HOSTNAME_RESOLUTION"] = instance["agent"]["hostname_resolution"]
+            os.environ["AGENT_CONFIG_IGNORE_INFO"] = str(instance["agent"]["ignore_info"])
+            os.environ["AGENT_CONFIG_HOSTNAME_RESOLUTION"] = str(instance["agent"]["hostname_resolution"])
     except EnvironmentError:
         raise EnvironmentError("Error opening the config file")
 
