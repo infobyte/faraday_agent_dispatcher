@@ -241,8 +241,10 @@ class DispatcherInput:
 
         if self.delete_agent_token is not None:
             input_str = f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
-
-        return f"{input_str}{self.agent}\n"
+        input_str = f"{input_str}{self.agent}\n"
+        input_str = f"{input_str}{'n'}\n"
+        input_str = f"{input_str}{'Y'}\n"
+        return input_str
 
     def process_input_workspaces(self):
         cli_input = ""
