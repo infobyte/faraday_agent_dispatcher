@@ -10,10 +10,10 @@ from faraday_plugins.plugins.manager import PluginsManager
 def main():
     # If the script is run outside the dispatcher the environment variables
     # are checked.
-    # ['EXECUTOR_CONFIG_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
+    # ['ZAP_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
     try:
         target = os.environ["EXECUTOR_CONFIG_TARGET_URL"]
-        api_key = os.environ["EXECUTOR_CONFIG_API_KEY"]
+        api_key = os.environ["ZAP_API_KEY"]
     except KeyError:
         print("environment variable not found", file=sys.stderr)
         sys.exit()
