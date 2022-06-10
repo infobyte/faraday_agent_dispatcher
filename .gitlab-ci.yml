@@ -44,6 +44,7 @@ include:
   - local: .gitlab/ci/.rules-conditions.yml
 
   - local: .gitlab/ci/.pre-gitlab-ci.yml
+  - local: .gitlab/ci/fetch-secrets.yml
 
   - local: .gitlab/ci/testing/.testing-gitlab-ci.yml
   - local: .gitlab/ci/testing/.post-gitlab-ci.yml
