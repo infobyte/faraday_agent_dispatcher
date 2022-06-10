@@ -1,4 +1,4 @@
-bandit:
+SAST-bandit:
   stage: .pre
   image: python:3
   tags: 
