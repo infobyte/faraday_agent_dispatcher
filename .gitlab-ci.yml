@@ -10,6 +10,9 @@ variables:
     FARADAY_EMAIL: test@test.com
     FARADAY_REF: white/dev
     EXECUTOR_DIR: ./basic_executor.py
+    VAULT_ROLE: 'python-sast-readonly'
+    VAULT_ADDR: 'https://tluav-lb.faradaysec.com'
+    VAULT_SECRET_PATH: 'gitlab/SAST'
 
 workflow:
   rules:
