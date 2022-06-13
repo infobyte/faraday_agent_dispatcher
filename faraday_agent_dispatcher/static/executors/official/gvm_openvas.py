@@ -11,6 +11,8 @@ from gvm.transforms import EtreeCheckCommandTransform
 
 
 def main():
+    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     user = os.environ.get("GVM_USER")
     passw = os.environ.get("GVM_PASSW")
     userssh = os.environ.get("EXECUTOR_CONFIG_SSH_USER")
@@ -124,7 +126,7 @@ def main():
         )
 
     # Parse report and send to Faraday
-    plugin = OpenvasPlugin()
+    plugin = OpenvasPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
     plugin.parseOutputString(ET.tostring(report[0], encoding="unicode"))
     print(plugin.get_json())
 

@@ -237,8 +237,8 @@ class DispatcherInput:
 
         if self.delete_agent_token is not None:
             input_str = f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
-
-        return f"{input_str}{self.agent}\n"
+        input_str = f"{input_str}{self.agent}\n"
+        return input_str
 
 
 class WorkspaceInput(Input):
