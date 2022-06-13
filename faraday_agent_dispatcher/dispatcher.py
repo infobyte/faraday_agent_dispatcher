@@ -110,7 +110,7 @@ class Dispatcher:
         else:
             self.api_kwargs: Dict[str, object] = {}
             self.ws_kwargs: Dict[str, object] = {}
-        self.execution_id = None
+        self.executions_id = None
         self.executor_tasks: Dict[str, List[Task]] = {
             Dispatcher.TaskLabels.EXECUTOR: [],
             Dispatcher.TaskLabels.CONNECTION_CHECK: [],
@@ -250,7 +250,7 @@ class Dispatcher:
                 break
 
     async def run_once(self, data: str = None):
-        logger.info("Parsing data: %s", data)
+        logger.info(f"Parsing data: {data}")
         data_dict = json.loads(data)
         if "action" not in data_dict:
             logger.info("Data not contains action to do")
@@ -265,21 +265,21 @@ class Dispatcher:
             await self.websocket.send(json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"}))
             return
 
-        if "execution_id" not in data_dict:
+        if "executions_id" not in data_dict:
             logger.info("Data not contains execution id")
             await self.websocket.send(
-                json.dumps({"error": "'execution_id' key is mandatory in this " "websocket connection"})
+                json.dumps({"error": "'executions_id' key is mandatory in this " "websocket connection"})
             )
             return
-        self.execution_id = data_dict["execution_id"]
+        self.executions_id = data_dict["executions_id"]
 
-        if "workspace" not in data_dict:
-            logger.info("Data not contains workspace name")
+        if "workspaces" not in data_dict:
+            logger.info("Data not contains workspaces list")
             await self.websocket.send(
-                json.dumps({"error": "'workspace' key is mandatory in this " "websocket connection"})
+                json.dumps({"error": "'workspaces' key is mandatory in this " "websocket connection"})
             )
             return
-        workspace_selected = data_dict["workspace"]
+        workspaces_selected = data_dict["workspaces"]
 
         if data_dict["action"] == "RUN":
             if "executor" not in data_dict:
@@ -288,7 +288,7 @@ class Dispatcher:
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
-                            "execution_id": self.execution_id,
+                            "executions_id": self.executions_id,
                             "running": False,
                             "message": "No executor selected to " f"{self.agent_name} agent",
                         }
@@ -302,7 +302,7 @@ class Dispatcher:
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
-                            "execution_id": self.execution_id,
+                            "executions_id": self.executions_id,
                             "executor_name": data_dict["executor"],
                             "running": False,
                             "message": "The selected executor "
@@ -330,7 +330,7 @@ class Dispatcher:
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
-                            "execution_id": self.execution_id,
+                            "executions_id": self.executions_id,
                             "executor_name": executor.name,
                             "running": False,
                             "message": "Unexpected argument(s) passed to "
@@ -352,7 +352,7 @@ class Dispatcher:
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
-                            "execution_id": self.execution_id,
+                            "executions_id": self.executions_id,
                             "executor_name": executor.name,
                             "running": False,
                             "message": f"Mandatory argument(s) not passed to "
@@ -381,7 +381,7 @@ class Dispatcher:
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
-                            "execution_id": self.execution_id,
+                            "executions_id": self.executions_id,
                             "executor_name": executor.name,
                             "running": False,
                             "message": error_msg,
@@ -396,6 +396,8 @@ class Dispatcher:
                     return
                 running_msg = f"Running {executor.name} executor from " f"{self.agent_name} agent"
                 logger.info(f"Running {executor.name} executor")
+
+                #                TODO move all checks to another function
 
                 process = await self.create_process(executor, passed_params)
                 start_date = datetime.utcnow()
@@ -412,8 +414,8 @@ class Dispatcher:
                     StdOutLineProcessor(
                         process,
                         self.session,
-                        self.execution_id,
-                        workspace_selected,
+                        self.executions_id,
+                        workspaces_selected,
                         self.api_ssl_enabled,
                         self.api_kwargs,
                         command_json,
@@ -425,7 +427,7 @@ class Dispatcher:
                     json.dumps(
                         {
                             "action": "RUN_STATUS",
-                            "execution_id": self.execution_id,
+                            "executions_id": self.executions_id,
                             "executor_name": executor.name,
                             "running": True,
                             "message": running_msg,
@@ -441,7 +443,7 @@ class Dispatcher:
                         json.dumps(
                             {
                                 "action": "RUN_STATUS",
-                                "execution_id": self.execution_id,
+                                "executions_id": self.executions_id,
                                 "executor_name": executor.name,
                                 "successful": True,
                                 "message": f"Executor {executor.name} from "
@@ -456,7 +458,7 @@ class Dispatcher:
                         json.dumps(
                             {
                                 "action": "RUN_STATUS",
-                                "execution_id": self.execution_id,
+                                "executions_id": self.executions_id,
                                 "executor_name": executor.name,
                                 "successful": False,
                                 "message": f"Executor {executor.name} " f"from {self.agent_name} failed",
