@@ -398,6 +398,9 @@ class Dispatcher:
                 logger.info(f"Running {executor.name} executor")
 
                 #                TODO move all checks to another function
+                plugin_args = data_dict.get("plugin_args", {})
+                os.environ["AGENT_CONFIG_IGNORE_INFO"] = plugin_args.get("ignore_info", False)
+                os.environ["AGENT_CONFIG_HOSTNAME_RESOLUTION"] = plugin_args.get("hostname_resolution", True)
 
                 process = await self.create_process(executor, passed_params)
                 start_date = datetime.utcnow()
