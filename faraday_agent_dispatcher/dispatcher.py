@@ -271,7 +271,7 @@ class Dispatcher:
             if "execution_ids" not in data_dict:
                 logger.info("Data not contains execution id")
                 await self.websocket.send(
-                    json.dumps({"error": "'executions_id' key is mandatory in this " "websocket connection"})
+                    json.dumps({"error": "'execution_ids' key is mandatory in this " "websocket connection"})
                 )
                 return
             self.execution_ids = data_dict["execution_ids"]
