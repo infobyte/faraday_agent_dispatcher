@@ -292,7 +292,7 @@ async def test_run_once(
     ws_responses = deepcopy(executor_options["ws_responses"])
     run_data = deepcopy(executor_options["data"])
     if "workspace" in run_data:
-        run_data["workspace"] = run_data["workspace"].format(selected_workspace)
+        run_data["workspace"] = run_data["workspace"][0].format(selected_workspace)
     test_config.ws_data = {"run_data": run_data, "ws_responses": ws_responses}
 
     await dispatcher.register(test_config.registration_token)
