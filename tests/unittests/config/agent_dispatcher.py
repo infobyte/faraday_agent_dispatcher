@@ -1171,9 +1171,9 @@ def generate_executor_options():
                 "args": {"out": "json"},
             },
             "logs": [
-                {"levelname": "INFO", "msg": "Data not contains workspace name"},
+                {"levelname": "INFO", "msg": "Data not contains workspaces list"},
             ],
-            "ws_responses": [{"error": "'workspace' key is mandatory in this websocket connection"}],
+            "ws_responses": [{"error": "'workspaces' key is mandatory in this websocket connection"}],
         },
         {
             "id_str": "Post to other workspace",
