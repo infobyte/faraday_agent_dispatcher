@@ -287,12 +287,12 @@ async def test_run_once(
     # Init and register it
     dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
     selected_workspace = random.choice(workspaces)
-    print(selected_workspace)
 
     ws_responses = deepcopy(executor_options["ws_responses"])
     run_data = deepcopy(executor_options["data"])
-    if "workspace" in run_data:
-        run_data["workspace"] = run_data["workspace"][0].format(selected_workspace)
+    if "workspaces" in run_data:
+        run_data["workspaces"] = [run_data["workspaces"][0].format(selected_workspace)]
+    print(run_data)
     test_config.ws_data = {"run_data": run_data, "ws_responses": ws_responses}
 
     await dispatcher.register(test_config.registration_token)

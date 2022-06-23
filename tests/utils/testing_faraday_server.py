@@ -157,7 +157,6 @@ def get_bulk_create(test_config: FaradayTestConfig):
             return web.HTTPInternalServerError()
         if "error429" in request.url.path:
             return web.HTTPTooManyRequests()
-
         if all(workspace not in request.url.path for workspace in test_config.workspaces):
             return web.HTTPNotFound()
         _host_data = host_data.copy()
