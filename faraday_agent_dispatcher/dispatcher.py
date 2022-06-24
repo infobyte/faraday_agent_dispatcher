@@ -402,10 +402,8 @@ class Dispatcher:
 
                     #                TODO move all checks to another function
                     plugin_args = data_dict.get("plugin_args", {})
-                    os.environ.putenv("AGENT_CONFIG_IGNORE_INFO", str(plugin_args.get("ignore_info", "False")))
-                    os.environ.putenv(
-                        "AGENT_CONFIG_HOSTNAME_RESOLUTION", str(plugin_args.get("hostname_resolution", "False"))
-                    )
+                    os.putenv("AGENT_CONFIG_IGNORE_INFO", str(plugin_args.get("ignore_info", "False")))
+                    os.putenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", str(plugin_args.get("hostname_resolution", "False")))
                     process = await self.create_process(executor, passed_params)
                     start_date = datetime.utcnow()
                     command_json = {

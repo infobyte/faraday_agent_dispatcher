@@ -137,17 +137,16 @@ def test_execute_agent():
             ),
             json={
                 # "csrf_token": session_res.json()["csrf_token"],
-                "executorData": {
+                "executor_data": {
                     "agent_id": agent_id,
                     "executor": EXECUTOR_NAME,
                     "args": {"out": "json"},
                 },
-                "workspace_name": WORKSPACE,
+                "workspaces_names": [WORKSPACE],
             },
         )
         assert res.status_code == 200, res.text
-
-        command_id = res.json()["command_id"]
+        command_id = res.json()["commands_id"][0]
 
         # Command ID should be in progress!
         res = session.get(
