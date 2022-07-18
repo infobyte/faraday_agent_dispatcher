@@ -17,8 +17,11 @@ def is_ip(url):
 
 
 def main():
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
     # separate the target list with comma
     NUCLEI_TARGET = os.getenv("EXECUTOR_CONFIG_NUCLEI_TARGET")
     # separate the exclude list with comma
@@ -82,7 +85,13 @@ def main():
         if len(nuclei_process.stderr) > 0:
             print(f"Nuclei stderr: {nuclei_process.stderr.decode('utf-8')}", file=sys.stderr)
 
-        plugin = NucleiPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+        plugin = NucleiPlugin(
+            ignore_info=ignore_info,
+            hostname_resolution=hostname_resolution,
+            host_tag=host_tag,
+            service_tag=service_tag,
+            vuln_tag=vuln_tag,
+        )
         plugin.parseOutputString(nuclei_process.stdout.decode("utf-8"))
         print(plugin.get_json())
 

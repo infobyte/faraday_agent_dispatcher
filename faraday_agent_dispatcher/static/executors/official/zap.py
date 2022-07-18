@@ -11,8 +11,11 @@ def main():
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
     try:
         target = os.environ["EXECUTOR_CONFIG_TARGET_URL"]
         api_key = os.environ["EXECUTOR_CONFIG_API_KEY"]
@@ -33,7 +36,13 @@ def main():
             time.sleep(1)
         # If finish the scan and the xml is generated
         zap_result = zap.core.xmlreport()
-        plugin = ZapPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+        plugin = ZapPlugin(
+            ignore_info=ignore_info,
+            hostname_resolution=hostname_resolution,
+            host_tag=host_tag,
+            service_tag=service_tag,
+            vuln_tag=vuln_tag,
+        )
         plugin.parseOutputString(zap_result)
         print(plugin.get_json())
 
