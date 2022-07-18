@@ -8,8 +8,11 @@ from faraday_plugins.plugins.repo.wpscan.plugin import WPScanPlugin
 
 
 def main():
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_WPSCAN_TARGET_URL']
@@ -49,7 +52,13 @@ def main():
                 file=sys.stderr,
             )
 
-        plugin = WPScanPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+        plugin = WPScanPlugin(
+            ignore_info=ignore_info,
+            hostname_resolution=hostname_resolution,
+            host_tag=host_tag,
+            service_tag=service_tag,
+            vuln_tag=vuln_tag,
+        )
         with open(out_file, "r") as f:
             plugin.parseOutputString(f.read())
             print(plugin.get_json())

@@ -11,8 +11,11 @@ from faraday_plugins.plugins.repo.shodan.plugin import ShodanPlugin
 
 
 def main():
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
     shodan_query = os.environ.get("EXECUTOR_CONFIG_SHODAN_QUERY")
     with tempfile.TemporaryDirectory() as tempdirname:
         tmpdir = Path(tempdirname)
@@ -30,7 +33,13 @@ def main():
             print(f"Shodan stdout: {shodan_process.stdout.decode('utf-8')}", file=sys.stderr)
         if len(shodan_process.stderr) > 0:
             print(f"Shodan stderr: {shodan_process.stderr.decode('utf-8')}", file=sys.stderr)
-        plugin = ShodanPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+        plugin = ShodanPlugin(
+            ignore_info=ignore_info,
+            hostname_resolution=hostname_resolution,
+            host_tag=host_tag,
+            service_tag=service_tag,
+            vuln_tag=vuln_tag,
+        )
         with gzip.open(name_result, "rb") as f:
             plugin.parseOutputString(f.read().decode("utf-8"))
             print(plugin.get_json())

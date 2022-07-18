@@ -404,6 +404,9 @@ class Dispatcher:
                     plugin_args = data_dict.get("plugin_args", {})
                     os.putenv("AGENT_CONFIG_IGNORE_INFO", str(plugin_args.get("ignore_info", "False")))
                     os.putenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", str(plugin_args.get("hostname_resolution", "False")))
+                    os.putenv("AGENT_CONFIG_VULN_TAG", str(plugin_args.get("vuln_tag", "")))
+                    os.putenv("AGENT_CONFIG_SERVICE_TAG", str(plugin_args.get("service_tag", "")))
+                    os.putenv("AGENT_CONFIG_HOSTNAME_TAG", str(plugin_args.get("hostname_tag", "")))
                     process = await self.create_process(executor, passed_params)
                     start_date = datetime.utcnow()
                     command_json = {

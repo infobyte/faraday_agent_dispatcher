@@ -16,8 +16,11 @@ def main():
     # If the script is run outside the dispatcher
     # the environment variables are checked.
     # ['TARGET_URL', 'EXECUTIVE_REPORT_ID']
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
     INSIGHTVM_HOST = os.getenv("INSIGHTVM_HOST")
     INSIGHTVM_USR = os.getenv("INSIGHTVM_USR")
     INSIGHTVM_PASSWD = os.getenv("INSIGHTVM_PASSWD")
@@ -50,7 +53,13 @@ def main():
     except Exception as e:
         log(f"ERROR connecting to insightvm api on {INSIGHTVM_HOST} [{e}]")
         sys.exit()
-    plugin = NexposeFullPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+    plugin = NexposeFullPlugin(
+        ignore_info=ignore_info,
+        hostname_resolution=hostname_resolution,
+        host_tag=host_tag,
+        service_tag=service_tag,
+        vuln_tag=vuln_tag,
+    )
     plugin.parseOutputString(report_response.text)
     print(plugin.get_json())
 
