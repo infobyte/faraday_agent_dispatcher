@@ -402,12 +402,7 @@ class Dispatcher:
 
                     #                TODO move all checks to another function
                     plugin_args = data_dict.get("plugin_args", {})
-                    os.putenv("AGENT_CONFIG_IGNORE_INFO", str(plugin_args.get("ignore_info", "False")))
-                    os.putenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", str(plugin_args.get("hostname_resolution", "False")))
-                    os.putenv("AGENT_CONFIG_VULN_TAG", str(plugin_args.get("vuln_tag", "")))
-                    os.putenv("AGENT_CONFIG_SERVICE_TAG", str(plugin_args.get("service_tag", "")))
-                    os.putenv("AGENT_CONFIG_HOSTNAME_TAG", str(plugin_args.get("hostname_tag", "")))
-                    process = await self.create_process(executor, passed_params)
+                    process = await self.create_process(executor, passed_params, plugin_args)
                     start_date = datetime.utcnow()
                     command_json = {
                         "tool": self.agent_name,
@@ -488,7 +483,7 @@ class Dispatcher:
             )
 
     @staticmethod
-    async def create_process(executor: Executor, args):
+    async def create_process(executor: Executor, args: dict, plugin_args: dict):
         env = os.environ.copy()
         if isinstance(args, dict):
             for k in args:
@@ -496,6 +491,8 @@ class Dispatcher:
         else:
             logger.error("Args from data received has a not supported type")
             raise ValueError("Args from data received has a not supported type")
+        for pa in plugin_args:
+            env[f"AGENT_CONFIG_{pa.upper()}"] = str(args.get(pa))
         for varenv, value in executor.varenvs.items():
             env[f"{varenv.upper()}"] = value
         process = await asyncio.create_subprocess_shell(
