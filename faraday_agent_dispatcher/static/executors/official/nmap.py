@@ -62,8 +62,8 @@ def command_create(target_list):
 
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
-    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     targets = os.environ.get("EXECUTOR_CONFIG_TARGET")
 
     if " " in targets:

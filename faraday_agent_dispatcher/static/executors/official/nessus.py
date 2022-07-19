@@ -210,8 +210,8 @@ def get_x_api_token(url, token):
 
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
-    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     NESSUS_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_NAME", get_report_name())
     NESSUS_URL = os.getenv("EXECUTOR_CONFIG_NESSUS_URL")  # https://nessus:port
     NESSUS_USERNAME = os.getenv("NESSUS_USERNAME")

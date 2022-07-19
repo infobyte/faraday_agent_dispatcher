@@ -8,8 +8,8 @@ from faraday_plugins.plugins.repo.wpscan.plugin import WPScanPlugin
 
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
-    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_WPSCAN_TARGET_URL']
