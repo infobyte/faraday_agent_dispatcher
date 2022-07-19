@@ -11,7 +11,7 @@ from gvm.transforms import EtreeCheckCommandTransform
 
 
 def main():
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     user = os.environ.get("GVM_USER")
     passw = os.environ.get("GVM_PASSW")

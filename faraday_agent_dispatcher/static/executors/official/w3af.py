@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def main():
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     url_target = os.environ.get("EXECUTOR_CONFIG_W3AF_TARGET_URL")
     if not url_target:
