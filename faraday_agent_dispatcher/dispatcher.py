@@ -492,7 +492,7 @@ class Dispatcher:
             logger.error("Args from data received has a not supported type")
             raise ValueError("Args from data received has a not supported type")
         for pa in plugin_args:
-            env[f"AGENT_CONFIG_{pa.upper()}"] = str(args.get(pa))
+            env[f"AGENT_CONFIG_{pa.upper()}"] = str(plugin_args.get(pa))
         for varenv, value in executor.varenvs.items():
             env[f"{varenv.upper()}"] = value
         process = await asyncio.create_subprocess_shell(
