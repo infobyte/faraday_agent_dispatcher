@@ -62,8 +62,8 @@ def command_create(target_list):
 
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
-    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
     service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
     host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
