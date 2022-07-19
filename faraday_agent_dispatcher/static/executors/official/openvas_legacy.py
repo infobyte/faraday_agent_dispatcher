@@ -17,7 +17,7 @@ def main():
     # ["EXECUTOR_CONFIG_OPENVAS_USER", "EXECUTOR_CONFIG_OPENVAS_PASSW",
     # "EXECUTOR_CONFIG_OPENVAS_HOST", "EXECUTOR_CONFIG_OPENVAS_PORT",
     # "EXECUTOR_CONFIG_OPENVAS_SCAN_URL", "EXECUTOR_CONFIG_OPENVAS_SCAN_ID"]
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     user = os.environ.get("EXECUTOR_CONFIG_OPENVAS_USER")
     passw = os.environ.get("EXECUTOR_CONFIG_OPENVAS_PASSW")

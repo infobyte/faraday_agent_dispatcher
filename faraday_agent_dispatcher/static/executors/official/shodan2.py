@@ -11,7 +11,7 @@ from faraday_plugins.plugins.repo.shodan.plugin import ShodanPlugin
 
 
 def main():
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     shodan_query = os.environ.get("EXECUTOR_CONFIG_SHODAN_QUERY")
     with tempfile.TemporaryDirectory() as tempdirname:

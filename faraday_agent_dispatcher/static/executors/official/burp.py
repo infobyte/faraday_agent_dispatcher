@@ -98,7 +98,7 @@ def main():
     # If the script is run outside the dispatcher
     # the environment variables are checked.
     # ['TARGET_URL', 'NAMED_CONFIGURATION']
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     BURP_HOST = os.getenv("BURP_HOST")
     BURP_API_KEY = os.getenv("BURP_API_KEY")

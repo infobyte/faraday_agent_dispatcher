@@ -11,7 +11,7 @@ def main():
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
-    ignore_info = (os.getenv("AGENT_CONFIG_IGNORE_INFO", False),)
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False)
     hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", True)
     try:
         target = os.environ["EXECUTOR_CONFIG_TARGET_URL"]
