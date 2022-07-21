@@ -52,7 +52,7 @@ extra_req = {
     "test": [
         "pytest",
         "pytest-cov",
-        "pytest-asyncio",
+        "pytest-asyncio==0.18.3",
     ],
     "docs": [
         "mkdocs",
