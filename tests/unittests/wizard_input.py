@@ -200,7 +200,6 @@ class DispatcherInput:
         host=None,
         api_port=None,
         ws_port=None,
-        workspaces=None,
         ssl=None,
         ssl_ignore=None,
         agent_name=None,
@@ -218,7 +217,6 @@ class DispatcherInput:
             "api_port": api_port or "13123",
             "ws_port": ws_port or "1234",
         }
-        self.workspaces = workspaces
         self.agent = agent_name or ""
         self.delete_agent_token = delete_agent_token
         self.empty = empty
@@ -229,26 +227,18 @@ class DispatcherInput:
                 f"{self.server_input['host']}\n" f"{self.server_input['ssl']}\n" f"{self.server_input['api_port']}\n"
             )
             input_str = f"{input_str}{self.server_input['ssl_ignore']}\n"
-            input_str = f"{input_str}{self.process_input_workspaces()}\n"
         else:
             input_str = (
                 f"{self.server_input['host']}\n"
                 f"{self.server_input['ssl']}\n"
                 f"{self.server_input['api_port']}\n"
                 f"{self.server_input['ws_port']}\n"
-                f"{self.process_input_workspaces()}\n"
             )
 
         if self.delete_agent_token is not None:
             input_str = f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
-
-        return f"{input_str}{self.agent}\n"
-
-    def process_input_workspaces(self):
-        cli_input = ""
-        for workspace_input in self.workspaces:
-            cli_input = f"{cli_input}{workspace_input.input_str()}\n"
-        return f"{cli_input}Q\n"
+        input_str = f"{input_str}{self.agent}\n"
+        return input_str
 
 
 class WorkspaceInput(Input):

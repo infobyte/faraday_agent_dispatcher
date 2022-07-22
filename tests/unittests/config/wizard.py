@@ -10,7 +10,6 @@ from tests.unittests.wizard_input import (
     VarEnvInput,
     RepoExecutorInput,
     RepoVarEnvInput,
-    WorkspaceInput,
 )
 
 DATA_FOLDER = Path(__file__).parent.parent.parent / "data"
@@ -24,19 +23,14 @@ def generate_inputs():
     return [
         {
             "id_str": "All default",
-            "dispatcher_input": DispatcherInput(
-                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
         },
         {
             "id_str": "All default with ssl false",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
@@ -49,7 +43,6 @@ def generate_inputs():
                 api_port="13123",
                 ws_port="1234",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -61,7 +54,6 @@ def generate_inputs():
                 host="127.0.0.1",
                 ssl="false",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -73,7 +65,6 @@ def generate_inputs():
                 host="127.0.0.1:8080",
                 ssl="false",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -85,7 +76,6 @@ def generate_inputs():
                 host="http://127.0.0.1:8080",
                 ssl="false",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -97,7 +87,6 @@ def generate_inputs():
                 host="127.0.0.1/faraday",
                 ssl="false",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -111,7 +100,6 @@ def generate_inputs():
                 api_port="13123",
                 ws_port="1234",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "expected_output": ["registration must be 25 character length"],
@@ -122,7 +110,6 @@ def generate_inputs():
             "id_str": "Basic Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -159,7 +146,6 @@ def generate_inputs():
             "id_str": "Basic Bad Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -207,7 +193,6 @@ def generate_inputs():
             "id_str": "Basic Mod Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -267,7 +252,6 @@ def generate_inputs():
             "id_str": "Basic Del Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -325,9 +309,7 @@ def generate_inputs():
         },
         {
             "id_str": "Basic Repo Executors input",
-            "dispatcher_input": DispatcherInput(
-                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "executors_input": [
                 RepoExecutorInput(
                     name="ex1",
@@ -355,42 +337,21 @@ def generate_inputs():
         },
         {
             "id_str": "Add multiple executors and delete one",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[
-                    WorkspaceInput(name="aworkspace1", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="aworkspace1", adm_type=ADMType.DELETE),
-                ],
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
         },
         {
             "id_str": "Add an executor and delete and add one",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.DELETE),
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                ],
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
         },
         {
             "id_str": "Delete an non-existent executor (Test modify do " "nothing)",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="not_exist", adm_type=ADMType.DELETE),
-                    WorkspaceInput(name="not_exist", adm_type=ADMType.MODIFY),
-                ],
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
@@ -399,10 +360,6 @@ def generate_inputs():
             "id_str": "Try add an existent executor",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="second", adm_type=ADMType.ADD, error_name="aworkspace"),
-                ],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -412,7 +369,6 @@ def generate_inputs():
             "id_str": "Basic Name with comma Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -434,7 +390,6 @@ def generate_inputs():
             "id_str": "Basic Mod Name with comma Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -495,7 +450,6 @@ def generate_inputs():
             "id_str": "Basic Name with backslash Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -517,7 +471,6 @@ def generate_inputs():
             "id_str": "Basic Mod Name with backslash Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -578,7 +531,6 @@ def generate_inputs():
             "id_str": "Basic Name with slash Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -600,7 +552,6 @@ def generate_inputs():
             "id_str": "Basic Mod Name with slash Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -659,9 +610,7 @@ def generate_inputs():
         },
         {
             "id_str": "Force Quit Executor",
-            "dispatcher_input": DispatcherInput(
-                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "executors_input": [
                 RepoExecutorInput(
                     name="ex1",

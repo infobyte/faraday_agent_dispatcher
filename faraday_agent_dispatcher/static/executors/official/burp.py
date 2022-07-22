@@ -98,6 +98,8 @@ def main():
     # If the script is run outside the dispatcher
     # the environment variables are checked.
     # ['TARGET_URL', 'NAMED_CONFIGURATION']
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     BURP_HOST = os.getenv("BURP_HOST")
     BURP_API_KEY = os.getenv("BURP_API_KEY")
     TARGET_URL = os.getenv("EXECUTOR_CONFIG_TARGET_URL")
@@ -182,7 +184,7 @@ def main():
                 else:
                     log("Scan finished OK")
                     generate_xml(issues, tmp_file, json_issue_definitions)
-                    plugin = BurpPlugin()
+                    plugin = BurpPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
                     tmp_file.seek(0)
                     plugin.parseOutputString(tmp_file.read())
                     print(plugin.get_json())
