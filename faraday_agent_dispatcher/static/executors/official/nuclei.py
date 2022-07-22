@@ -5,7 +5,7 @@ import ipaddress
 import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
-from faraday_plugins.plugins.manager import PluginsManager
+from faraday_plugins.plugins.repo.nuclei.plugin import NucleiPlugin
 
 
 def is_ip(url):
@@ -17,6 +17,8 @@ def is_ip(url):
 
 
 def main():
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     # separate the target list with comma
     NUCLEI_TARGET = os.getenv("EXECUTOR_CONFIG_NUCLEI_TARGET")
     # separate the exclude list with comma
@@ -80,7 +82,7 @@ def main():
         if len(nuclei_process.stderr) > 0:
             print(f"Nuclei stderr: {nuclei_process.stderr.decode('utf-8')}", file=sys.stderr)
 
-        plugin = PluginsManager().get_plugin("nuclei")
+        plugin = NucleiPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
         plugin.parseOutputString(nuclei_process.stdout.decode("utf-8"))
         print(plugin.get_json())
 
