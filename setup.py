@@ -38,7 +38,7 @@ requirements = [
     "syslog_rfc5424_formatter",
     "requests",
     "itsdangerous",
-    "faraday-plugins>=1.5.8",
+    "faraday-plugins>=1.6.8",
     "python-owasp-zap-v2.4",
     "python-gvm",
     "faraday_agent_parameters_types>=1.0.0",
