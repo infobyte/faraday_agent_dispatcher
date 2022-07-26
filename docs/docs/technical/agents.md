@@ -88,7 +88,7 @@ Faraday has a vast REST API, and there are a few endpoints used by
  the agent, which are used for:
 
  * `/_api/v3/info`: Connectivity check.
- * `/_api/v3/agent_registration`: Registration of a new agent.
+ * `/_api/v3/agents`: [POST] Registration of a new agent.
  * `/_api/v3/agent_websocket_token`: Get a [websocket](#websockets) token.
  * `/_api/v3/ws/{workspace_name}/bulk_create`: Publish data to a specific
   workspace
@@ -100,7 +100,7 @@ Faraday has a vast REST API, and there are a few endpoints used by
 For commands, a bidirectional communication is expected between the Agent
  and the server.
 The server can only send a `RUN` command, specifying which
- executor to run, its parameters and to which workspace post the data. It
+ executor to run, its parameters, plugins arguments (ignore info, resolve_hostname) and to which workspaces post the data. It
  also has some metadata relevant to the faraday server to identify the
  execution.
 
