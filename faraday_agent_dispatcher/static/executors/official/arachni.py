@@ -23,8 +23,8 @@ def flush_messages(process):
 
 def main():
     my_envs = os.environ
-    ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = my_envs.get("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    hostname_resolution = my_envs.get("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     # If the script is run outside the dispatcher
     # the environment variables
     # are checked.
