@@ -111,10 +111,6 @@ def process_agent():
                 "default_value": lambda _: False,
                 "type": click.BOOL,
             },
-            "workspaces": {
-                "default_value": lambda _: "workspace",
-                "type": click.STRING,
-            },
         },
         Sections.TOKENS: {
             "agent": {},
@@ -139,8 +135,6 @@ def process_agent():
             if section == Sections.TOKENS and opt == "agent":
                 if "agent" in config.instance[section] and confirm_prompt("Delete agent token?", default=None):
                     config.instance[section].pop(opt)
-            elif opt == "workspaces":
-                process_workspaces()
             else:
                 if opt == "host":
                     value, url_json = ask_value(agent_dict, opt, section, ssl)
@@ -174,33 +168,6 @@ def process_agent():
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
                 config.instance[section][opt] = value
-
-
-def process_workspaces() -> None:
-    end = False
-    section = Sections.SERVER
-
-    workspaces = config.instance[Sections.SERVER].get("workspaces", [])
-
-    while not end:
-        print(f"The current workspaces{Bcolors.ENDC} are:" f" {Bcolors.OKGREEN}{workspaces}{Bcolors.ENDC}")
-        value = choose_adm("workspace", ignore=["M"])
-        if value == "A":
-            workspace_name = click.prompt("Workspace name")
-            if workspace_name in workspaces:
-                print(f"{Bcolors.WARNING}The workspace {workspace_name} already " f"exists{Bcolors.ENDC}")
-            else:
-                workspaces.append(workspace_name)
-        elif value == "D":
-            workspace_name = click.prompt("workspace name")
-            if workspace_name not in workspaces:
-                print(f"{Bcolors.WARNING}There is no {workspace_name}" f"workspace{Bcolors.ENDC}")
-            else:
-                workspaces.remove(workspace_name)
-        else:
-            end = True
-
-    config.instance[section]["workspaces"] = workspaces
 
 
 def process_var_envs(executor_name):

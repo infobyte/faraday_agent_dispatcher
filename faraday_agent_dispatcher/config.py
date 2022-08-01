@@ -22,7 +22,6 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_str,
     control_host,
     control_agent_token,
-    control_list,
     control_bool,
     control_executors,
 )
@@ -315,7 +314,6 @@ __control_dict = {
         "ssl_cert": control_str(nullable=True),
         "api_port": control_int(),
         "websocket_port": control_int(),
-        "workspaces": control_list(can_repeat=False),
     },
     Sections.TOKENS: {
         "agent": control_agent_token,
