@@ -46,12 +46,6 @@ def generate_basic_built_config():
             "replace": {Sections.SERVER: {"websocket_port": "9001"}},
         },  # None error as parse int
         {
-            "id_str": "Error: No workspaces",
-            "remove": {Sections.SERVER: ["workspaces"]},
-            "replace": {},
-            "expected_exception": ValueError,
-        },
-        {
             "id_str": "Error: agent token length",
             "remove": {},
             "replace": {Sections.TOKENS: {"agent": "invalid_token"}},
@@ -439,16 +433,16 @@ def generate_executor_options():
             "logs": [
                 {"levelname": "INFO", "msg": "Data not contains execution id"},
             ],
-            "ws_responses": [{"error": "'execution_id' key is mandatory in this websocket connection"}],
+            "ws_responses": [{"error": "'execution_ids' key is mandatory in this websocket connection"}],
         },
         {
             "id_str": "OK",
             "data": {
                 "action": "RUN",
-                "execution_id": 1,
+                "execution_ids": [1],
                 "agent_id": 1,
                 "executor": "ex1",
-                "workspace": "{}",
+                "workspaces": ["{}"],
                 "args": {"out": "json"},
             },
             "logs": [
@@ -460,14 +454,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -479,8 +473,8 @@ def generate_executor_options():
                 "action": "RUN",
                 "agent_id": 1,
                 "executor": "ex1",
-                "execution_id": 1,
-                "workspace": "{}",
+                "execution_ids": [1],
+                "workspaces": ["{}"],
                 "args": {"out": "json", "count": "5"},
             },
             "logs": [
@@ -498,14 +492,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -517,8 +511,8 @@ def generate_executor_options():
                 "action": "RUN",
                 "agent_id": 1,
                 "executor": "ex1",
-                "execution_id": 1,
-                "workspace": "{}",
+                "execution_ids": [1],
+                "workspaces": ["{}"],
                 "args": {"out": "json", "count": "5", "spare": "T"},
             },
             "logs": [
@@ -534,14 +528,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -552,8 +546,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "execution_id": 1,
-                "workspace": "{}",
+                "execution_ids": [1],
+                "workspaces": ["{}"],
                 "executor": "ex1",
                 "args": {"out": "json", "spaced_before": "T"},
             },
@@ -565,14 +559,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -584,8 +578,8 @@ def generate_executor_options():
                 "action": "RUN",
                 "agent_id": 1,
                 "executor": "ex1",
-                "execution_id": 1,
-                "workspace": "{}",
+                "execution_ids": [1],
+                "workspaces": ["{}"],
                 "args": {
                     "out": "json",
                     "spaced_middle": "T",
@@ -606,14 +600,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -624,8 +618,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "execution_id": 1,
-                "workspace": "{}",
+                "execution_ids": [1],
+                "workspaces": ["{}"],
                 "executor": "ex1",
                 "args": {"out": "bad_json"},
             },
@@ -647,14 +641,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -665,8 +659,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "executor": "ex1",
                 "args": {"out": "str"},
             },
@@ -685,14 +679,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -704,8 +698,8 @@ def generate_executor_options():
                 "action": "RUN",
                 "agent_id": 1,
                 "executor": "ex1",
-                "execution_id": 1,
-                "workspace": "{}",
+                "execution_ids": [1],
+                "workspaces": ["{}"],
                 "args": {"out": "none", "err": "T"},
             },
             "logs": [
@@ -724,14 +718,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -743,8 +737,8 @@ def generate_executor_options():
                 "action": "RUN",
                 "agent_id": 1,
                 "executor": "ex1",
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "args": {"out": "none", "fails": "T"},
             },
             "logs": [
@@ -765,14 +759,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": False,
                     "message": "Executor ex1 from unnamed_agent failed",
                 },
@@ -783,9 +777,9 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
+                "workspaces": ["{}"],
                 "executor": "ex1",
-                "execution_id": 1,
+                "execution_ids": [1],
                 "args": {"out": "none", "err": "T", "fails": "T"},
             },
             "logs": [
@@ -807,14 +801,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": False,
                     "message": "Executor ex1 from unnamed_agent failed",
                 },
@@ -825,9 +819,9 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
+                "workspaces": ["{}"],
                 "executor": "ex1",
-                "execution_id": 1,
+                "execution_ids": [1],
                 "args": {"out": "json"},
             },
             "logs": [
@@ -845,14 +839,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -863,8 +857,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "executor": "ex1",
                 "args": {"err": "T", "fails": "T"},
             },
@@ -881,7 +875,7 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": False,
                     "message": "Mandatory argument(s) not passed to ex1 executor from unnamed_agent agent",
                 }
@@ -893,8 +887,8 @@ def generate_executor_options():
                 "action": "RUN",
                 "agent_id": 1,
                 "executor": "ex1",
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "args": {"out": "json", "WTF": "T"},
             },
             "logs": [
@@ -922,7 +916,7 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": False,
                     "message": "Unexpected argument(s) passed to ex1 executor from unnamed_agent agent",
                 }
@@ -933,8 +927,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "executor": "ex1",
                 "args": {"out": "json"},
             },
@@ -957,14 +951,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -975,8 +969,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "execution_id": 1,
-                "workspace": "{}",
+                "execution_ids": [1],
+                "workspaces": ["{}"],
                 "executor": "ex1",
                 "args": {"out": "json"},
             },
@@ -999,14 +993,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -1017,8 +1011,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "executor": "ex1",
                 "args": {"out": "json"},
             },
@@ -1041,14 +1035,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -1059,8 +1053,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "args": {"out": "json"},
             },
             "logs": [
@@ -1087,7 +1081,7 @@ def generate_executor_options():
             "ws_responses": [
                 {
                     "action": "RUN_STATUS",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": False,
                     "message": "No executor selected to unnamed_agent agent",
                 }
@@ -1098,8 +1092,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "executor": "NOT_4N_CORRECT_EXECUTOR",
                 "args": {"out": "json"},
             },
@@ -1128,7 +1122,7 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "NOT_4N_CORRECT_EXECUTOR",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": False,
                     "message": "The selected executor NOT_4N_CORRECT_EXECUTOR not exists in unnamed_agent agent",
                 }
@@ -1139,8 +1133,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "executor": "add_ex1",
                 "args": {"out": "json"},
             },
@@ -1153,14 +1147,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "add_ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running add_ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "add_ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor add_ex1 from unnamed_agent finished successfully",
                 },
@@ -1172,51 +1166,23 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "execution_id": 1,
+                "execution_ids": [1],
                 "executor": "ex1",
                 "args": {"out": "json"},
             },
             "logs": [
-                {"levelname": "INFO", "msg": "Data not contains workspace name"},
+                {"levelname": "INFO", "msg": "Data not contains workspaces list"},
             ],
-            "ws_responses": [{"error": "'workspace' key is mandatory in this websocket connection"}],
-        },
-        {
-            "id_str": "JUST in WS wrong workspace",
-            "data": {
-                "action": "RUN",
-                "execution_id": 1,
-                "agent_id": 1,
-                "executor": "ex1",
-                "workspace": "asd{}",
-                "args": {"out": "json"},
-            },
-            "logs": [
-                {
-                    "levelname": "INFO",
-                    "msg": "Running ex1 executor",
-                    "max_count": 0,
-                    "min_count": 0,
-                },
-                {"levelname": "ERROR", "msg": "Invalid workspace passed"},
-            ],
-            "ws_responses": [
-                {
-                    "action": "RUN_STATUS",
-                    "execution_id": 1,
-                    "running": False,
-                    "message": "Invalid workspace passed to unnamed_agent agent",
-                }
-            ],
+            "ws_responses": [{"error": "'workspaces' key is mandatory in this websocket connection"}],
         },
         {
             "id_str": "Post to other workspace",
             "data": {
                 "action": "RUN",
-                "execution_id": 1,
+                "execution_ids": [1],
                 "agent_id": 1,
                 "executor": "ex1",
-                "workspace": "{}",
+                "workspaces": ["{}"],
                 "args": {"out": "json"},
             },
             "logs": [
@@ -1238,14 +1204,14 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": True,
                     "message": "Running ex1 executor from unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "successful": True,
                     "message": "Executor ex1 from unnamed_agent finished successfully",
                 },
@@ -1256,8 +1222,8 @@ def generate_executor_options():
             "data": {
                 "action": "RUN",
                 "agent_id": 1,
-                "workspace": "{}",
-                "execution_id": 1,
+                "workspaces": ["{}"],
+                "execution_ids": [1],
                 "executor": "ex1",
                 "args": {"out": "json", "count": "count", "spare": "spare"},
             },
@@ -1275,7 +1241,7 @@ def generate_executor_options():
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "ex1",
-                    "execution_id": 1,
+                    "execution_ids": [1],
                     "running": False,
                     "message": "Validation error:\n"
                     "count = count did not validate correctly: Not a valid integer.\n"

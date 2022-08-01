@@ -10,7 +10,8 @@ def main():
     # If the script is run outside the dispatcher
     # the environment variables
     # are checked.
-
+    ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = my_envs.get("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     tool = os.environ.get("EXECUTOR_CONFIG_TOOL", None)
 
     if "EXECUTOR_CONFIG_REPORT_NAME" in my_envs:
@@ -26,7 +27,7 @@ def main():
         sys.exit()
 
     filepath = Path(report_dir) / report_name
-    manager = PluginsManager()
+    manager = PluginsManager(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
 
     if tool is not None:
         plugin = manager.get_plugin(tool)

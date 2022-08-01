@@ -12,7 +12,6 @@ from faraday_agent_dispatcher.utils.url_utils import api_url
 
 from tests.data.basic_executor import host_data, vuln_data
 from tests.utils.text_utils import fuzzy_string
-
 import os
 from pathlib import Path
 from requests import Session
@@ -65,6 +64,8 @@ def test_execute_agent():
         json={"email": USER, "password": PASS},
     )
     assert res.status_code == 200, res.text
+    res = session.get(api_url(HOST, API_PORT, postfix="/_api/v3/agents"))
+    count = len(res.json())
     # session_res = session.get(api_url(HOST, API_PORT, postfix="/_api/session"))
     res = session.post(api_url(HOST, API_PORT, postfix="/_api/v3/ws"), json={"name": WORKSPACE})
     assert res.status_code == 201, res.text
@@ -75,7 +76,6 @@ def test_execute_agent():
     # Config set up
     if Sections.TOKENS in config:
         config.pop(Sections.TOKENS)
-    config[Sections.SERVER]["workspaces"] = [WORKSPACE]
     config[Sections.SERVER]["ssl"] = SSL
     config[Sections.AGENT]["agent_name"] = AGENT_NAME
     config[Sections.AGENT]["executors"][EXECUTOR_NAME] = {}
@@ -111,11 +111,11 @@ def test_execute_agent():
         time.sleep(2)  # If fails check time
 
         # Checking dispatcher connection
-        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v3/ws/{WORKSPACE}/agents"))
+        res = session.get(api_url(HOST, API_PORT, postfix="/_api/v3/agents"))
         assert res.status_code == 200, res.text
         res_data = res.json()
-        assert len(res_data) == 1, p.communicate(timeout=0.1)
-        agent = res_data[0]
+        assert len(res_data) == count + 1, p.communicate(timeout=0.1)
+        agent = res_data[-1]
         agent_id = agent["id"]
         if agent_ok_status_keys_set != set(agent.keys()):
             print("Keys set from agent endpoint differ from expected ones, checking if its a superset")
@@ -133,20 +133,20 @@ def test_execute_agent():
             api_url(
                 HOST,
                 API_PORT,
-                postfix=f'/_api/v3/ws/{WORKSPACE}/agents/{agent["id"]}/run',
+                postfix=f'/_api/v3/agents/{agent["id"]}/run',
             ),
             json={
                 # "csrf_token": session_res.json()["csrf_token"],
-                "executorData": {
+                "executor_data": {
                     "agent_id": agent_id,
                     "executor": EXECUTOR_NAME,
                     "args": {"out": "json"},
                 },
+                "workspaces_names": [WORKSPACE],
             },
         )
         assert res.status_code == 200, res.text
-
-        command_id = res.json()["command_id"]
+        command_id = res.json()["commands_id"][0]
 
         # Command ID should be in progress!
         res = session.get(

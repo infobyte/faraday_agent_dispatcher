@@ -17,6 +17,8 @@ def main():
     # ["EXECUTOR_CONFIG_OPENVAS_USER", "EXECUTOR_CONFIG_OPENVAS_PASSW",
     # "EXECUTOR_CONFIG_OPENVAS_HOST", "EXECUTOR_CONFIG_OPENVAS_PORT",
     # "EXECUTOR_CONFIG_OPENVAS_SCAN_URL", "EXECUTOR_CONFIG_OPENVAS_SCAN_ID"]
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     user = os.environ.get("EXECUTOR_CONFIG_OPENVAS_USER")
     passw = os.environ.get("EXECUTOR_CONFIG_OPENVAS_PASSW")
     host = os.environ.get("EXECUTOR_CONFIG_OPENVAS_HOST")
@@ -136,7 +138,7 @@ def main():
         xml_format,
     ]
     p_xml = subprocess.run(cmd_get_xml, stdout=subprocess.PIPE, shell=False)
-    plugin = OpenvasPlugin()
+    plugin = OpenvasPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
     plugin.parseOutputString(p_xml.stdout)
     print(plugin.get_json())
 
