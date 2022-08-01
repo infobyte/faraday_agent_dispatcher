@@ -19,6 +19,8 @@ def main():
     # the environment variables are checked.
     # ['INSIGHTVM_HOST', 'INSIGHTVM_USR', 'INSIGHTVM_PASSWD', 'EXECUTOR_CONFIG_SITE_ID'
     # or 'EXECUTOR_CONFIG_EXECUTIVE_REPORT_ID']
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     INSIGHTVM_HOST = os.getenv("INSIGHTVM_HOST")
     INSIGHTVM_USR = os.getenv("INSIGHTVM_USR")
     INSIGHTVM_PASSWD = os.getenv("INSIGHTVM_PASSWD")
@@ -56,7 +58,7 @@ def main():
     else:
         log("site_id or executive_id is required")
         sys.exit(1)
-    plugin = NexposeFullPlugin()
+    plugin = NexposeFullPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
     plugin.parseOutputString(report_response_text)
     print(plugin.get_json())
 

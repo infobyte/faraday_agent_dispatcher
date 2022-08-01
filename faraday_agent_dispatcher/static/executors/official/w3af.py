@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 import os
 import sys
-from faraday_plugins.plugins.manager import PluginsManager
+from faraday_plugins.plugins.repo.w3af.plugin import W3afPlugin
 import subprocess
 import tempfile
 from pathlib import Path
 
 
 def main():
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     url_target = os.environ.get("EXECUTOR_CONFIG_W3AF_TARGET_URL")
     if not url_target:
         print("URL not provided", file=sys.stderr)
@@ -67,7 +69,7 @@ def main():
                         file=sys.stderr,
                     )
 
-                plugin = PluginsManager().get_plugin("w3af")
+                plugin = W3afPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
                 plugin.parseOutputString(f"{tempdirname}/output-w3af.xml")
                 print(plugin.get_json())
             else:

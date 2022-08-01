@@ -123,7 +123,6 @@ async def test_start_and_register(
         configuration[Sections.SERVER]["host"] = client.host
 
     configuration[Sections.SERVER]["api_port"] = str(client.port)
-    configuration[Sections.SERVER]["workspaces"] = test_config.workspaces
     if "ex1" not in configuration[Sections.AGENT][Sections.EXECUTORS]:
         configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"] = {
             "max_size": "65536",
@@ -167,13 +166,11 @@ async def test_start_and_register(
             await dispatcher.register(token)
 
     history = test_logger_handler.history
-
     logs_ok, failed_logs = await check_logs(history, register_options["logs"])
 
     if "optional_logs" in register_options and not logs_ok:
         logs_ok, new_failed_logs = await check_logs(history, register_options["optional_logs"])
         failed_logs = {"logs": failed_logs, "optional_logs": new_failed_logs}
-
     assert logs_ok, failed_logs
 
 
@@ -223,7 +220,6 @@ async def test_run_once(
 
     configuration[Sections.SERVER]["api_port"] = str(test_config.client.port)
     configuration[Sections.SERVER]["websocket_port"] = str(test_config.client.port)
-    configuration[Sections.SERVER]["workspaces"] = workspaces
     if Sections.TOKENS not in configuration:
         configuration[Sections.TOKENS] = {}
     configuration[Sections.TOKENS]["agent"] = test_config.agent_token
@@ -291,12 +287,11 @@ async def test_run_once(
     # Init and register it
     dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
     selected_workspace = random.choice(workspaces)
-    print(selected_workspace)
 
     ws_responses = deepcopy(executor_options["ws_responses"])
     run_data = deepcopy(executor_options["data"])
-    if "workspace" in run_data:
-        run_data["workspace"] = run_data["workspace"].format(selected_workspace)
+    if "workspaces" in run_data:
+        run_data["workspaces"] = [run_data["workspaces"][0].format(selected_workspace)]
     test_config.ws_data = {"run_data": run_data, "ws_responses": ws_responses}
 
     await dispatcher.register(test_config.registration_token)
