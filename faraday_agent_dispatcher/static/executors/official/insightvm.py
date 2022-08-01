@@ -134,7 +134,7 @@ def create_and_generate_report(user, passwd, host, scan_id):
                 generate_report_url, verify=False, auth=HTTPBasicAuth(user, passwd)
             )
             if report_generate_response.status_code != 200:
-                log(f"Couldnt create report, Status codae {report_generate_response.status_code}")
+                log(f"Couldnt create report, Status code {report_generate_response.status_code}")
                 sys.exit()
             # Wait till the report is generated
             time.sleep(60)
