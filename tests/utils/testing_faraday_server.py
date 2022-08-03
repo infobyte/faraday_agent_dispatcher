@@ -29,7 +29,9 @@ from tests.utils.text_utils import fuzzy_string
 
 class FaradayTestConfig:
     def __init__(self, is_ssl: bool = False, has_base_route: bool = False):
-        self.workspaces = [fuzzy_string(8) for _ in range(0, random.randint(2, 6))]
+        self.workspaces = [
+            fuzzy_string(8) for _ in range(0, random.randint(2, 6))
+        ]
         self.registration_token = f"{random.randint(0, 999999):06}"
         self.agent_token = fuzzy_string(64)
         self.agent_id = random.randint(1, 1000)
@@ -72,15 +74,25 @@ class FaradayTestConfig:
                 self.wrap_route(f"/_api/v3/ws/{workspace}/bulk_create"),
                 get_bulk_create(self),
             )
-        app.router.add_post(self.wrap_route("/_api/v3/ws/error500/bulk_create"), get_bulk_create(self))
-        app.router.add_post(self.wrap_route("/_api/v3/ws/error429/bulk_create"), get_bulk_create(self))
-        app.router.add_get(self.wrap_route("/websockets"), get_ws_handler(self))
+        app.router.add_post(
+            self.wrap_route("/_api/v3/ws/error500/bulk_create"),
+            get_bulk_create(self),
+        )
+        app.router.add_post(
+            self.wrap_route("/_api/v3/ws/error429/bulk_create"),
+            get_bulk_create(self),
+        )
+        app.router.add_get(
+            self.wrap_route("/websockets"), get_ws_handler(self)
+        )
 
         server = TestServer(app)
         server_params = {}
         if self.is_ssl:
             ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            ssl_context.load_cert_chain(self.ssl_cert_path / "ok.crt", self.ssl_cert_path / "ok.key")
+            ssl_context.load_cert_chain(
+                self.ssl_cert_path / "ok.crt", self.ssl_cert_path / "ok.key"
+            )
             server_params["ssl"] = ssl_context
         await server.start_server(**server_params)
         client = TestClient(server, raise_for_status=True)
@@ -96,22 +108,33 @@ def get_agent_registration(test_config: FaradayTestConfig):
     async def agent_registration(request: Request):
         data = await request.text()
         data = json.loads(data)
-        if "token" not in data or data["token"] != test_config.registration_token:
+        if (
+            "token" not in data
+            or data["token"] != test_config.registration_token
+        ):
             return web.HTTPUnauthorized()
         response_dict = {
             "name": data["name"],
             "token": test_config.agent_token,
             "id": test_config.agent_id,
         }
-        return web.HTTPCreated(text=json.dumps(response_dict), headers={"content-type": "application/json"})
+        return web.HTTPCreated(
+            text=json.dumps(response_dict),
+            headers={"content-type": "application/json"},
+        )
 
     return agent_registration
 
 
 def verify_token(test_config, request):
-    if test_config.app_config["SECURITY_TOKEN_AUTHENTICATION_HEADER"] not in request.headers:
+    if (
+        test_config.app_config["SECURITY_TOKEN_AUTHENTICATION_HEADER"]
+        not in request.headers
+    ):
         return web.HTTPUnauthorized()
-    header = request.headers[test_config.app_config["SECURITY_TOKEN_AUTHENTICATION_HEADER"]]
+    header = request.headers[
+        test_config.app_config["SECURITY_TOKEN_AUTHENTICATION_HEADER"]
+    ]
     try:
         (auth_type, token) = header.split(None, 1)
     except ValueError:
@@ -130,11 +153,16 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
             return error
 
         # ######### Sing and send
-        signer = TimestampSigner(test_config.app_config["SECRET_KEY"], salt="websocket_agent")
+        signer = TimestampSigner(
+            test_config.app_config["SECRET_KEY"], salt="websocket_agent"
+        )
         assert test_config.agent_id is not None
         test_config.ws_token = signer.sign(str(test_config.agent_id)).decode()
         response_dict = {"token": test_config.ws_token}
-        return web.Response(text=json.dumps(response_dict), headers={"content-type": "application/json"})
+        return web.Response(
+            text=json.dumps(response_dict),
+            headers={"content-type": "application/json"},
+        )
 
     return agent_websocket_token
 
@@ -142,7 +170,10 @@ def get_agent_websocket_token(test_config: FaradayTestConfig):
 def get_info(_: FaradayTestConfig):
     async def info(_):
         response_dict = {"Faraday Server": "Running", "Version": "3.14.2"}
-        return web.Response(text=json.dumps(response_dict), headers={"content-type": "application/json"})
+        return web.Response(
+            text=json.dumps(response_dict),
+            headers={"content-type": "application/json"},
+        )
 
     return info
 
@@ -157,7 +188,10 @@ def get_bulk_create(test_config: FaradayTestConfig):
             return web.HTTPInternalServerError()
         if "error429" in request.url.path:
             return web.HTTPTooManyRequests()
-        if all(workspace not in request.url.path for workspace in test_config.workspaces):
+        if all(
+            workspace not in request.url.path
+            for workspace in test_config.workspaces
+        ):
             return web.HTTPNotFound()
         _host_data = host_data.copy()
         _host_data["vulnerabilities"] = [vuln_data.copy()]
@@ -173,7 +207,10 @@ def get_bulk_create(test_config: FaradayTestConfig):
 
 
 def order_dict(bare_dict: Dict) -> Dict:
-    return {k: order_dict(v) if isinstance(v, dict) else v for k, v in sorted(bare_dict.items())}
+    return {
+        k: order_dict(v) if isinstance(v, dict) else v
+        for k, v in sorted(bare_dict.items())
+    }
 
 
 def get_ws_handler(test_config: FaradayTestConfig):
@@ -187,8 +224,12 @@ def get_ws_handler(test_config: FaradayTestConfig):
             if "action" in msg_ and msg_["action"] == "JOIN_AGENT":
                 assert test_config.ws_token == msg_["token"]
                 assert sorted(
-                    [order_dict(elem) for elem in test_config.executors], key=lambda elem: elem["executor_name"]
-                ) == sorted([order_dict(elem) for elem in msg_["executors"]], key=lambda elem: elem["executor_name"])
+                    [order_dict(elem) for elem in test_config.executors],
+                    key=lambda elem: elem["executor_name"],
+                ) == sorted(
+                    [order_dict(elem) for elem in msg_["executors"]],
+                    key=lambda elem: elem["executor_name"],
+                )
 
                 await ws.send_json(test_config.ws_data["run_data"])
             else:
@@ -212,7 +253,8 @@ test_config_params = [
 
 @pytest.fixture(
     params=test_config_params,
-    ids=lambda elem: f"SSL: {elem['is_ssl']}, BaseRoute: " f"{elem['has_base_route']}",
+    ids=lambda elem: f"SSL: {elem['is_ssl']}, BaseRoute: "
+    f"{elem['has_base_route']}",
 )
 async def test_config(request):
     config = FaradayTestConfig(**request.param)
@@ -240,7 +282,9 @@ def tmp_default_config():
 @pytest.fixture
 def tmp_custom_config():
     config = TmpConfig()
-    ini_path = pathlib.Path(__file__).parent.parent / "data" / "test_config.ini"
+    ini_path = (
+        pathlib.Path(__file__).parent.parent / "data" / "test_config.ini"
+    )
     shutil.copyfile(ini_path, config.config_file_path.with_suffix(".ini"))
     reset_config(config.config_file_path)
     yield config

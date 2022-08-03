@@ -24,7 +24,9 @@ from syslog_rfc5424_formatter import RFC5424Formatter
 
 
 def log_file():
-    return os.path.expanduser(os.path.join(config.LOGS_PATH, "faraday-dispatcher.log"))
+    return os.path.expanduser(
+        os.path.join(config.LOGS_PATH, "faraday-dispatcher.log")
+    )
 
 
 MAX_LOG_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
@@ -63,7 +65,9 @@ def setup_console_logging(formatter):
 def setup_file_logging(formatter):
     create_logging_path()
     file_handler = logging.handlers.RotatingFileHandler(
-        log_file(), maxBytes=MAX_LOG_FILE_SIZE, backupCount=MAX_LOG_FILE_BACKUP_COUNT
+        log_file(),
+        maxBytes=MAX_LOG_FILE_SIZE,
+        backupCount=MAX_LOG_FILE_BACKUP_COUNT,
     )
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)

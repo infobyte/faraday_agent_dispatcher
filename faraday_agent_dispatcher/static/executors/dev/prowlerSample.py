@@ -53,7 +53,9 @@ def vuln_parse(json_str: str):
         "accountability": True,
         "availability": False,
     }
-    vuln["policy_violations"] = [f"{get_check(dic['Control'])}:{dic['Control ID']}"]
+    vuln["policy_violations"] = [
+        f"{get_check(dic['Control'])}:{dic['Control ID']}"
+    ]
     return vuln
 
 
@@ -67,13 +69,19 @@ def process_bytes_line(line):
     if len(parts):
         if REGION is None:
             REGION = json.loads(parts[0])["Region"]
-        return list(filter(lambda v: v is not None, [vuln_parse(part) for part in parts]))
+        return list(
+            filter(
+                lambda v: v is not None, [vuln_parse(part) for part in parts]
+            )
+        )
 
 
 async def main():
 
     command = f"{os.path.expanduser('~/tools/prowler/prowler')} -b -M json"
-    prowler_cmd = await asyncio.create_subprocess_shell(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    prowler_cmd = await asyncio.create_subprocess_shell(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     to_send_vulns = []
     end = False
     while not end:

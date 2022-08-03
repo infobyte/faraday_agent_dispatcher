@@ -40,7 +40,10 @@ class FileLineProcessor:
                 else:
                     break
             except ValueError:
-                logger.error(f"ValueError raised processing {name}, try with bigger " "limiting size in config")
+                logger.error(
+                    f"ValueError raised processing {name}, try with bigger "
+                    "limiting size in config"
+                )
         await end_f()
         print(f"{Bcolors.WARNING}{name} sent empty data, {Bcolors.ENDC}")
 
@@ -60,7 +63,9 @@ class FileLineProcessor:
         raise NotImplementedError("Must be implemented")
 
     async def process_f(self):
-        return await FileLineProcessor._process_lines(self.next_line, self.processing, self.log, self.end_f, self.name)
+        return await FileLineProcessor._process_lines(
+            self.next_line, self.processing, self.log, self.end_f, self.name
+        )
 
 
 class StdOutLineProcessor(FileLineProcessor):
@@ -104,8 +109,12 @@ class StdOutLineProcessor(FileLineProcessor):
         try:
             loaded_json = json.loads(line)
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
-            headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
-            for workspace, execution_id in zip(self.workspaces, self.execution_ids):
+            headers = [
+                ("authorization", f"agent {config['tokens'].get('agent')}")
+            ]
+            for workspace, execution_id in zip(
+                self.workspaces, self.execution_ids
+            ):
                 loaded_json["execution_id"] = execution_id
                 loaded_json["command"] = self.command_json
 
@@ -120,7 +129,8 @@ class StdOutLineProcessor(FileLineProcessor):
                     logger.info("Data sent to bulk create")
                 else:
                     logger.error(
-                        "Invalid data supplied by the executor to the bulk create "
+                        "Invalid data supplied by the executor to"
+                        " the bulk create "
                         f"endpoint. Server responded: {res.status} "
                         f"{await res.text()}"
                     )
@@ -135,8 +145,14 @@ class StdOutLineProcessor(FileLineProcessor):
 
     async def end_f(self):
         headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
-        for workspace, execution_id in zip(self.workspaces, self.execution_ids):
-            loaded_json = {"hosts": [], "execution_id": execution_id, "command": self.command_json}
+        for workspace, execution_id in zip(
+            self.workspaces, self.execution_ids
+        ):
+            loaded_json = {
+                "hosts": [],
+                "execution_id": execution_id,
+                "command": self.command_json,
+            }
             loaded_json["command"]["duration"] = (
                 datetime.utcnow() - self.start_date
             ).total_seconds() * 1000000  # microsecs

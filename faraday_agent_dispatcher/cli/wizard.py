@@ -64,11 +64,14 @@ class Wizard:
     async def run(self):
         end = False
         ignore_changes = False
-        def_value, choices = get_default_value_and_choices("Q", ["A", "E", "Q"])
+        def_value, choices = get_default_value_and_choices(
+            "Q", ["A", "E", "Q"]
+        )
 
         while not end:
             value = click.prompt(
-                "Do you want to edit the [A]gent or the [E]xecutors? Do you " "want to [Q]uit?",
+                "Do you want to edit the [A]gent or the [E]xecutors? Do you "
+                "want to [Q]uit?",
                 type=click.Choice(choices=choices, case_sensitive=False),
                 default=def_value,
             )
@@ -80,12 +83,23 @@ class Wizard:
                 process_choice_errors(value)
                 try:
                     if Sections.AGENT in config.instance:
-                        click.echo(self.status_report(sections=config.instance))
+                        click.echo(
+                            self.status_report(sections=config.instance)
+                        )
                         config.control_config()
                         end = True
                     else:
-                        if confirm_prompt(click.style("File configuration not saved. Are you sure?", fg="yellow")):
-                            click.echo(self.status_report(sections=config.instance.sections()))
+                        if confirm_prompt(
+                            click.style(
+                                "File configuration not saved. Are you sure?",
+                                fg="yellow",
+                            )
+                        ):
+                            click.echo(
+                                self.status_report(
+                                    sections=config.instance.sections()
+                                )
+                            )
                             end = True
                             ignore_changes = True
                         else:
@@ -98,7 +112,9 @@ class Wizard:
 
     def load_executors(self):
         if Sections.AGENT in config.instance:
-            self.executors_dict = config.instance[Sections.AGENT].get("executors", {})
+            self.executors_dict = config.instance[Sections.AGENT].get(
+                "executors", {}
+            )
 
     async def process_executors(self):
         end = False
@@ -117,8 +133,14 @@ class Wizard:
             elif value.upper() == "D":
                 self.delete_executor()
             else:
-                quit_executor_msg = click.style("There are no executors loaded. Are you sure?", fg="yellow")
-                return confirm_prompt(quit_executor_msg, default=False) if not self.executors_dict else True
+                quit_executor_msg = click.style(
+                    "There are no executors loaded. Are you sure?", fg="yellow"
+                )
+                return (
+                    confirm_prompt(quit_executor_msg, default=False)
+                    if not self.executors_dict
+                    else True
+                )
 
     def check_executors_name(self, show_text: str, default=None):
         name = click.prompt(show_text, default=default)
@@ -127,7 +149,10 @@ class Wizard:
             return
         for character in Wizard.SPECIAL_CHARACTER:
             if character in name:
-                click.secho(f"The executor cannot contain {character} in its name", fg="yellow")
+                click.secho(
+                    f"The executor cannot contain {character} in its name",
+                    fg="yellow",
+                )
                 return
         return name
 
@@ -135,7 +160,9 @@ class Wizard:
         name = self.check_executors_name("Name")
         if name:
             self.executors_dict[name] = {}
-            custom_executor = confirm_prompt("Is a custom executor?", default=False)
+            custom_executor = confirm_prompt(
+                "Is a custom executor?", default=False
+            )
             if custom_executor:
                 self.new_custom_executor(name)
             else:
@@ -148,13 +175,22 @@ class Wizard:
             if re.match("(.*_manifest.json|__pycache__)", executor) is None
         ]
 
-        executors_names = list(map(lambda x: re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", x).group(1), executors))
+        executors_names = list(
+            map(
+                lambda x: re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", x).group(
+                    1
+                ),
+                executors,
+            )
+        )
 
         async def control_base_repo(chosen_option: str) -> Optional[dict]:
             metadata = executor_metadata(chosen_option)
             try:
                 if not check_metadata(metadata):
-                    click.secho(f"Invalid manifest for: {chosen_option}", fg="yellow")
+                    click.secho(
+                        f"Invalid manifest for: {chosen_option}", fg="yellow"
+                    )
                 else:
                     if not await check_commands(metadata):
                         print(
@@ -165,10 +201,14 @@ class Wizard:
                     else:
                         return metadata
             except FileNotFoundError:
-                click.secho(f"Not existent manifest for: {chosen_option}", fg="yellow")
+                click.secho(
+                    f"Not existent manifest for: {chosen_option}", fg="yellow"
+                )
             return None
 
-        return await choice_paged_option(executors_names, self.PAGE_SIZE, control_base_repo)
+        return await choice_paged_option(
+            executors_names, self.PAGE_SIZE, control_base_repo
+        )
 
     async def new_repo_executor(self, name):
         try:
@@ -214,11 +254,16 @@ class Wizard:
         section = Sections.EXECUTOR_DATA.format(name)
         repo_executor = self.executors_dict[section].get("repo_executor")
         if repo_executor:
-            repo_name = re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", repo_executor).group(1)
+            repo_name = re.search(
+                r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", repo_executor
+            ).group(1)
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(name, metadata)
         else:
-            cmd = click.prompt("Command to execute", default=self.executors_dict[section]["cmd"])
+            cmd = click.prompt(
+                "Command to execute",
+                default=self.executors_dict[section]["cmd"],
+            )
             self.executors_dict[section]["cmd"] = cmd
             process_var_envs(name)
             process_params(name)
@@ -237,10 +282,14 @@ class Wizard:
         if check:
             msj = click.style("File configuration OK.", fg="green")
         else:
-            msj = click.style("File configuration not complete. Missing section.", fg="yellow")
+            msj = click.style(
+                "File configuration not complete. Missing section.",
+                fg="yellow",
+            )
         if Sections.TOKENS not in sections:
             msj += (
                 f"\n{Bcolors.WARNING}Token not found, "
-                f'remember to run "faraday-dispatcher run --token {{TOKEN}}"{Bcolors.ENDC}'
+                f'remember to run "faraday-dispatcher '
+                f'run --token {{TOKEN}}"{Bcolors.ENDC}'
             )
         return msj

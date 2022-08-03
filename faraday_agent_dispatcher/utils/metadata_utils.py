@@ -9,8 +9,20 @@ from faraday_agent_dispatcher import __version__ as current_version
 
 logger = logging.get_logger()
 
-MANDATORY_METADATA_KEYS = ["cmd", "check_cmds", "arguments", "environment_variables"]
-INFO_METADATA_KEYS = ["category", "name", "title", "website", "description", "image"]
+MANDATORY_METADATA_KEYS = [
+    "cmd",
+    "check_cmds",
+    "arguments",
+    "environment_variables",
+]
+INFO_METADATA_KEYS = [
+    "category",
+    "name",
+    "title",
+    "website",
+    "description",
+    "image",
+]
 
 
 # Path can be treated as str
@@ -32,7 +44,9 @@ def check_metadata(metadata) -> bool:
 
 
 def full_check_metadata(metadata) -> bool:
-    return all(k in metadata for k in INFO_METADATA_KEYS) and check_metadata(metadata)
+    return all(k in metadata for k in INFO_METADATA_KEYS) and check_metadata(
+        metadata
+    )
 
 
 async def check_commands(metadata: dict) -> bool:
@@ -43,9 +57,14 @@ async def check_commands(metadata: dict) -> bool:
         while True:
             stdout, stderr = await proc.communicate()
             if len(stdout) > 0:
-                logger.debug(f"Dependency check {cmd} prints: {stdout.decode()}")
+                logger.debug(
+                    f"Dependency check {cmd} prints: {stdout.decode()}"
+                )
             if len(stderr) > 0:
-                logger.error(f"Dependency check {cmd} prints to error: {stderr.decode()}")
+                logger.error(
+                    f"Dependency check {cmd} prints to "
+                    f"error: {stderr.decode()}"
+                )
             if len(stdout) == 0 and len(stderr) == 0:
                 break
 

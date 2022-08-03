@@ -40,7 +40,9 @@ from faraday_agent_dispatcher.executor_helper import (
     StdErrLineProcessor,
     StdOutLineProcessor,
 )
-from faraday_agent_dispatcher.utils.control_values_utils import control_registration_token
+from faraday_agent_dispatcher.utils.control_values_utils import (
+    control_registration_token,
+)
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
 import faraday_agent_dispatcher.logger as logging
@@ -50,7 +52,10 @@ from faraday_agent_dispatcher.config import (
     save_config,
     control_config,
 )
-from faraday_agent_dispatcher.utils.metadata_utils import executor_metadata, check_metadata
+from faraday_agent_dispatcher.utils.metadata_utils import (
+    executor_metadata,
+    check_metadata,
+)
 from faraday_agent_dispatcher.cli.utils.model_load import set_repo_params
 from faraday_agent_dispatcher.executor import Executor
 from faraday_agent_parameters_types.utils import type_validate
@@ -75,9 +80,13 @@ class Dispatcher:
         self.config_path = config_path
         self.host = config.instance[Sections.SERVER]["host"]
         self.api_port = config.instance[Sections.SERVER]["api_port"]
-        self.websocket_port = config.instance[Sections.SERVER]["websocket_port"]
+        self.websocket_port = config.instance[Sections.SERVER][
+            "websocket_port"
+        ]
         self.agent_token = (
-            config.instance[Sections.TOKENS].get("agent") if Sections.TOKENS in config.instance else None
+            config.instance[Sections.TOKENS].get("agent")
+            if Sections.TOKENS in config.instance
+            else None
         )
         self.agent_name = config.instance[Sections.AGENT]["agent_name"]
         self.session = session
@@ -85,16 +94,24 @@ class Dispatcher:
         self.websocket_token = None
         self.executors = {
             executor_name: Executor(executor_name, executor_data)
-            for executor_name, executor_data in config.instance[Sections.AGENT].get("executors", {}).items()
+            for executor_name, executor_data in config.instance[Sections.AGENT]
+            .get("executors", {})
+            .items()
         }
-        self.ws_ssl_enabled = self.api_ssl_enabled = config.instance[Sections.SERVER].get("ssl", False)
+        self.ws_ssl_enabled = self.api_ssl_enabled = config.instance[
+            Sections.SERVER
+        ].get("ssl", False)
         ssl_cert_path = config.instance[Sections.SERVER].get("ssl_cert", None)
         ssl_ignore = config.instance[Sections.SERVER].get("ssl_ignore", False)
         if not Path(ssl_cert_path).exists():
-            raise ValueError(f"SSL cert does not exist in path {ssl_cert_path}")
+            raise ValueError(
+                f"SSL cert does not exist in path {ssl_cert_path}"
+            )
         if self.api_ssl_enabled:
             if ssl_cert_path:
-                ssl_cert_context = ssl.create_default_context(cafile=ssl_cert_path)
+                ssl_cert_context = ssl.create_default_context(
+                    cafile=ssl_cert_path
+                )
                 self.api_kwargs = {"ssl": ssl_cert_context}
                 self.ws_kwargs = {"ssl": ssl_cert_context}
             else:
@@ -156,7 +173,10 @@ class Dispatcher:
             try:
                 token_response = await self.session.post(
                     token_registration_url,
-                    json={"token": registration_token, "name": self.agent_name},
+                    json={
+                        "token": registration_token,
+                        "name": self.agent_name,
+                    },
                     **self.api_kwargs,
                 )
                 token = await token_response.json()
@@ -167,15 +187,19 @@ class Dispatcher:
                 save_config(self.config_path)
             except ClientResponseError as e:
                 if e.status == 404:
-                    logger.error("404 HTTP ERROR received: Can't connect to the server")
+                    logger.error(
+                        "404 HTTP ERROR received: Can't connect to the server"
+                    )
                 elif e.status == 401:
                     logger.error(
                         "Invalid registration token, please reset and retry. "
                         "If the error persist, you should try to edit the "
                         "registration token with the wizard command "
-                        "`faraday-dispatcher config-wizard`\nHint: If the faraday "
-                        "version is not the expected this could fail, check "
-                        "https://github.com/infobyte/faraday_agent_dispatcher/blob/master/RELEASE.md"
+                        "`faraday-dispatcher config-wizard`\nHint: "
+                        "If the faraday version is not the expected this"
+                        "could fail, check "
+                        "https://github.com/infobyte/faraday_agent_dispatcher"
+                        "/blob/master/RELEASE.md"
                     )
                 else:
                     logger.info(f"Unexpected error: {e}")
@@ -213,7 +237,8 @@ class Dispatcher:
                 "action": "JOIN_AGENT",
                 "token": self.websocket_token,
                 "executors": [
-                    {"executor_name": executor.name, "args": executor.params} for executor in self.executors.values()
+                    {"executor_name": executor.name, "args": executor.params}
+                    for executor in self.executors.values()
                 ],
             }
         )
@@ -240,7 +265,9 @@ class Dispatcher:
             try:
                 data = await self.websocket.recv()
                 executor_task = asyncio.create_task(self.run_once(data))
-                self.executor_tasks[Dispatcher.TaskLabels.EXECUTOR].append(executor_task)
+                self.executor_tasks[Dispatcher.TaskLabels.EXECUTOR].append(
+                    executor_task
+                )
             except ConnectionClosedError:
                 logger.info("The connection unexpectedly")
                 break
@@ -256,7 +283,12 @@ class Dispatcher:
             if "action" not in data_dict:
                 logger.info("Data not contains action to do")
                 await self.websocket.send(
-                    json.dumps({"error": "'action' key is mandatory in this websocket " "connection"})
+                    json.dumps(
+                        {
+                            "error": "'action' key is mandatory"
+                            " in this websocket connection"
+                        }
+                    )
                 )
                 return
 
@@ -264,21 +296,38 @@ class Dispatcher:
             if data_dict["action"] not in ["RUN"]:
                 logger.info("Unrecognized action")
                 await self.websocket.send(
-                    json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"})
+                    json.dumps(
+                        {
+                            f"{data_dict['action']}_RESPONSE": "Error: "
+                            "Unrecognized "
+                            "action"
+                        }
+                    )
                 )
                 return
 
             if "execution_ids" not in data_dict:
                 logger.info("Data not contains execution id")
                 await self.websocket.send(
-                    json.dumps({"error": "'execution_ids' key is mandatory in this " "websocket connection"})
+                    json.dumps(
+                        {
+                            "error": "'execution_ids' key is mandatory"
+                            " in this "
+                            "websocket connection"
+                        }
+                    )
                 )
                 return
             self.execution_ids = data_dict["execution_ids"]
             if "workspaces" not in data_dict:
                 logger.info("Data not contains workspaces list")
                 await self.websocket.send(
-                    json.dumps({"error": "'workspaces' key is mandatory in this " "websocket connection"})
+                    json.dumps(
+                        {
+                            "error": "'workspaces' key is mandatory in this "
+                            "websocket connection"
+                        }
+                    )
                 )
                 return
             workspaces_selected = data_dict["workspaces"]
@@ -292,7 +341,8 @@ class Dispatcher:
                                 "action": "RUN_STATUS",
                                 "execution_ids": self.execution_ids,
                                 "running": False,
-                                "message": "No executor selected to " f"{self.agent_name} agent",
+                                "message": "No executor selected to "
+                                f"{self.agent_name} agent",
                             }
                         )
                     )
@@ -318,16 +368,24 @@ class Dispatcher:
                 executor = self.executors[data_dict["executor"]]
 
                 params = list(executor.params.keys()).copy()
-                passed_params = data_dict["args"] if "args" in data_dict else {}
+                passed_params = (
+                    data_dict["args"] if "args" in data_dict else {}
+                )
 
                 all_accepted = all(
                     [
-                        any([param in passed_param for param in params])  # Control any available param  # was passed
-                        for passed_param in passed_params  # For all passed params
+                        any(
+                            [param in passed_param for param in params]
+                        )  # Control any available param  # was passed
+                        for passed_param in passed_params
+                        # For all passed params
                     ]
                 )
                 if not all_accepted:
-                    logger.error(f"Unexpected argument passed to {executor.name} executor")
+                    logger.error(
+                        f"Unexpected argument passed to {executor.name}"
+                        f" executor"
+                    )
                     await self.websocket.send(
                         json.dumps(
                             {
@@ -343,13 +401,23 @@ class Dispatcher:
                     )
                 mandatory_full = all(
                     [
-                        not executor.params[param]["mandatory"]  # All params is not mandatory
-                        or any([param in passed_param for passed_param in passed_params])  # Or was passed
+                        not executor.params[param][
+                            "mandatory"
+                        ]  # All params is not mandatory
+                        or any(
+                            [
+                                param in passed_param
+                                for passed_param in passed_params
+                            ]
+                        )  # Or was passed
                         for param in params
                     ]
                 )
                 if not mandatory_full:
-                    logger.error(f"Mandatory argument not passed to {executor.name} executor")
+                    logger.error(
+                        f"Mandatory argument not passed "
+                        f"to {executor.name} executor"
+                    )
                     await self.websocket.send(
                         json.dumps(
                             {
@@ -357,7 +425,8 @@ class Dispatcher:
                                 "execution_ids": self.execution_ids,
                                 "executor_name": executor.name,
                                 "running": False,
-                                "message": f"Mandatory argument(s) not passed to "
+                                "message": f"Mandatory argument(s) "
+                                f"not passed to "
                                 f"{executor.name} executor from "
                                 f"{self.agent_name} agent",
                             }
@@ -367,18 +436,24 @@ class Dispatcher:
                 # VALIDATE
                 errors = dict()
                 for param in passed_params:
-                    param_errors = type_validate(executor.params[param]["type"], passed_params[param])
+                    param_errors = type_validate(
+                        executor.params[param]["type"], passed_params[param]
+                    )
                     if param_errors:
                         errors[param] = ",".join(param_errors["data"])
                         logger.error(
-                            f'Validation error on parameter "{param}", of type "{executor.params[param]["type"]}":'
+                            f'Validation error on parameter "{param}", of type'
+                            f' "{executor.params[param]["type"]}":'
                             f" {errors[param]}"
                         )
 
                 if errors:
                     error_msg = "Validation error:"
                     for param in errors:
-                        error_msg += f"\n{param} = {passed_params[param]} did not validate correctly: {errors[param]}"
+                        error_msg += (
+                            f"\n{param} = {passed_params[param]} "
+                            f"did not validate correctly: {errors[param]}"
+                        )
                     logger.error(error_msg)
                     await self.websocket.send(
                         json.dumps(
@@ -397,19 +472,29 @@ class Dispatcher:
                     if not await executor.check_cmds():
                         # The function logs why cant run
                         return
-                    running_msg = f"Running {executor.name} executor from " f"{self.agent_name} agent"
+                    running_msg = (
+                        f"Running {executor.name} executor from "
+                        f"{self.agent_name} agent"
+                    )
                     logger.info(f"Running {executor.name} executor")
 
                     #                TODO move all checks to another function
                     plugin_args = data_dict.get("plugin_args", {})
-                    process = await self.create_process(executor, passed_params, plugin_args)
+                    process = await self.create_process(
+                        executor, passed_params, plugin_args
+                    )
                     start_date = datetime.utcnow()
                     command_json = {
                         "tool": self.agent_name,
                         "command": executor.name,
                         "user": "",
                         "hostname": "",
-                        "params": ", ".join([f"{key}={value}" for (key, value) in passed_params.items()]),
+                        "params": ", ".join(
+                            [
+                                f"{key}={value}"
+                                for (key, value) in passed_params.items()
+                            ]
+                        ),
                         "import_source": "agent",
                         "start_date": start_date.isoformat(),
                     }
@@ -441,7 +526,9 @@ class Dispatcher:
                     await process.communicate()
                     assert process.returncode is not None
                     if process.returncode == 0:
-                        logger.info(f"Executor {executor.name} finished successfully")
+                        logger.info(
+                            f"Executor {executor.name} finished successfully"
+                        )
                         await self.websocket.send(
                             json.dumps(
                                 {
@@ -449,14 +536,18 @@ class Dispatcher:
                                     "execution_ids": self.execution_ids,
                                     "executor_name": executor.name,
                                     "successful": True,
-                                    "message": f"Executor {executor.name} from "
+                                    "message": f"Executor "
+                                    f"{executor.name} from "
                                     f"{self.agent_name} finished "
                                     "successfully",
                                 }
                             )
                         )
                     else:
-                        logger.warning(f"Executor {executor.name} finished with exit code" f" {process.returncode}")
+                        logger.warning(
+                            f"Executor {executor.name} finished with exit code"
+                            f" {process.returncode}"
+                        )
                         await self.websocket.send(
                             json.dumps(
                                 {
@@ -464,7 +555,8 @@ class Dispatcher:
                                     "execution_ids": self.execution_ids,
                                     "executor_name": executor.name,
                                     "successful": False,
-                                    "message": f"Executor {executor.name} " f"from {self.agent_name} failed",
+                                    "message": f"Executor {executor.name} "
+                                    f"from {self.agent_name} failed",
                                 }
                             )
                         )
@@ -477,20 +569,25 @@ class Dispatcher:
                         "execution_ids": self.execution_ids,
                         "executor_name": executor.name,
                         "successful": False,
-                        "message": f"Executor {executor.name} " f"from {self.agent_name} failed",
+                        "message": f"Executor {executor.name} "
+                        f"from {self.agent_name} failed",
                     }
                 )
             )
 
     @staticmethod
-    async def create_process(executor: Executor, args: dict, plugin_args: dict):
+    async def create_process(
+        executor: Executor, args: dict, plugin_args: dict
+    ):
         env = os.environ.copy()
         if isinstance(args, dict):
             for k in args:
                 env[f"EXECUTOR_CONFIG_{k.upper()}"] = str(args[k])
         else:
             logger.error("Args from data received has a not supported type")
-            raise ValueError("Args from data received has a not supported type")
+            raise ValueError(
+                "Args from data received has a not supported type"
+            )
         for pa in plugin_args:
             env[f"AGENT_CONFIG_{pa.upper()}"] = str(plugin_args.get(pa))
         for varenv, value in executor.varenvs.items():
@@ -520,16 +617,26 @@ class Dispatcher:
             for task in self.executor_tasks[Dispatcher.TaskLabels.EXECUTOR]:
                 task.cancel()
             await self.websocket.close(code=1000, reason=f"{signal} received")
-        for task in self.executor_tasks[Dispatcher.TaskLabels.CONNECTION_CHECK]:
+        for task in self.executor_tasks[
+            Dispatcher.TaskLabels.CONNECTION_CHECK
+        ]:
             task.cancel()
         await asyncio.sleep(0.25)
 
     async def check_connection(self):
-        server_url = api_url(self.host, self.api_port, postfix="/_api/v3/info", secure=self.api_ssl_enabled)
+        server_url = api_url(
+            self.host,
+            self.api_port,
+            postfix="/_api/v3/info",
+            secure=self.api_ssl_enabled,
+        )
         logger.debug(f"Validating server connection with {server_url}")
         try:
             kwargs = self.api_kwargs.copy()
-            if "DISPATCHER_TEST" in os.environ and os.environ["DISPATCHER_TEST"] == "True":
+            if (
+                "DISPATCHER_TEST" in os.environ
+                and os.environ["DISPATCHER_TEST"] == "True"
+            ):
                 kwargs["timeout"] = ClientTimeout(total=1)
             # > The below code allows this get to be canceled,
             # > But breaks only ours Gitlab CI tests (local OK)
@@ -554,7 +661,9 @@ class Dispatcher:
             logger.debug("Connect failed traceback", exc_info=e)
             return False
         except asyncio.TimeoutError as e:
-            logger.error("Faraday server timed-out. " "TIP: Check ssl configuration")
+            logger.error(
+                "Faraday server timed-out. " "TIP: Check ssl configuration"
+            )
             logger.debug("Timeout error. Check ssl", exc_info=e)
             return False
         except asyncio.CancelledError:
@@ -571,11 +680,16 @@ class Dispatcher:
                 metadata = executor_metadata(repo_name)
                 if metadata:
                     if not check_metadata(metadata):
-                        click.secho(f"Invalid manifest for: {executor_name}", fg="yellow")
+                        click.secho(
+                            f"Invalid manifest for: {executor_name}",
+                            fg="yellow",
+                        )
                     set_repo_params(executor_name, metadata)
                     for env_varb in metadata.get("environment_variables"):
                         if env_varb not in executor_data.get("varenvs"):
                             logger.warning(
-                                f"{Bcolors.WARNING}The enviroment variable {env_varb} of executor {repo_name}"
-                                f" is not defined in config file.{Bcolors.ENDC}"
+                                f"{Bcolors.WARNING}The enviroment variable"
+                                f" {env_varb} of executor {repo_name}"
+                                f" is not defined in config file."
+                                f"{Bcolors.ENDC}"
                             )
