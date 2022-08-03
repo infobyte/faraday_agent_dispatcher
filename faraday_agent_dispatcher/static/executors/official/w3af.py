@@ -9,7 +9,9 @@ from pathlib import Path
 
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    hostname_resolution = (
+        os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    )
     url_target = os.environ.get("EXECUTOR_CONFIG_W3AF_TARGET_URL")
     if not url_target:
         print("URL not provided", file=sys.stderr)
@@ -57,7 +59,9 @@ def main():
                     "-s",
                     name_result,
                 ]
-                w3af_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                w3af_process = subprocess.run(
+                    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
                 if len(w3af_process.stdout) > 0:
                     print(
                         f"W3AF stdout: {w3af_process.stdout.decode('utf-8')}",
@@ -69,7 +73,10 @@ def main():
                         file=sys.stderr,
                     )
 
-                plugin = W3afPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+                plugin = W3afPlugin(
+                    ignore_info=ignore_info,
+                    hostname_resolution=hostname_resolution,
+                )
                 plugin.parseOutputString(f"{tempdirname}/output-w3af.xml")
                 print(plugin.get_json())
             else:

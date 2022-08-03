@@ -18,7 +18,9 @@ def is_ip(url):
 
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    hostname_resolution = (
+        os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    )
     # separate the target list with comma
     NUCLEI_TARGET = os.getenv("EXECUTOR_CONFIG_NUCLEI_TARGET")
     # separate the exclude list with comma
@@ -74,15 +76,25 @@ def main():
                 cmd += ["-exclude", str(Path(NUCLEI_TEMPLATES) / exclude)]
 
         cmd += ["-json", "-o", name_output]
-        nuclei_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        nuclei_process = subprocess.run(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
 
         if len(nuclei_process.stdout) > 0:
-            print(f"Nuclei stdout: {nuclei_process.stdout.decode('utf-8')}", file=sys.stderr)
+            print(
+                f"Nuclei stdout: {nuclei_process.stdout.decode('utf-8')}",
+                file=sys.stderr,
+            )
 
         if len(nuclei_process.stderr) > 0:
-            print(f"Nuclei stderr: {nuclei_process.stderr.decode('utf-8')}", file=sys.stderr)
+            print(
+                f"Nuclei stderr: {nuclei_process.stderr.decode('utf-8')}",
+                file=sys.stderr,
+            )
 
-        plugin = NucleiPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+        plugin = NucleiPlugin(
+            ignore_info=ignore_info, hostname_resolution=hostname_resolution
+        )
         plugin.parseOutputString(nuclei_process.stdout.decode("utf-8"))
         print(plugin.get_json())
 

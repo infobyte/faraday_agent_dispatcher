@@ -12,7 +12,9 @@ from gvm.transforms import EtreeCheckCommandTransform
 
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    hostname_resolution = (
+        os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    )
     user = os.environ.get("GVM_USER")
     passw = os.environ.get("GVM_PASSW")
     userssh = os.environ.get("EXECUTOR_CONFIG_SSH_USER")
@@ -27,9 +29,15 @@ def main():
     connection_type = os.environ.get("EXECUTOR_CONFIG_CONNECTION_TYPE").lower()
     scan_url = os.environ.get("EXECUTOR_CONFIG_SCAN_TARGET")
     # Defaults to: Full and Fast
-    scan_id = os.environ.get("EXECUTOR_CONFIG_SCAN_ID") or "daba56c8-73ec-11df-a475-002264764cea"
+    scan_id = (
+        os.environ.get("EXECUTOR_CONFIG_SCAN_ID")
+        or "daba56c8-73ec-11df-a475-002264764cea"
+    )
     # Defaults to: All IANA assigned TCP
-    port_list = os.environ.get("EXECUTOR_CONFIG_PORT_LIST_ID") or "33d0cd82-57c6-11e1-8ed1-406186ea4fc5"
+    port_list = (
+        os.environ.get("EXECUTOR_CONFIG_PORT_LIST_ID")
+        or "33d0cd82-57c6-11e1-8ed1-406186ea4fc5"
+    )
 
     # RAW XML FORMAT
     xml_format = "a994b278-1f62-11e1-96ac-406186ea4fc5"
@@ -38,7 +46,11 @@ def main():
     scanner = "08b69003-5fc2-4037-a479-93b440211c73"
 
     if not user or not passw or not host or not port:
-        print("Data config ['User', 'Passw', 'Host', 'Port'] GVM_OpenVas not provided", file=sys.stderr)
+        print(
+            "Data config ['User', 'Passw', 'Host', 'Port']"
+            " GVM_OpenVas not provided",
+            file=sys.stderr,
+        )
         sys.exit()
 
     if not scan_url:
@@ -47,7 +59,10 @@ def main():
 
     valid_connections = ("socket", "ssh", "tls")
     if connection_type not in valid_connections:
-        print("Not a valid connection_type, Choose between socket-ssh-tls", file=sys.stderr)
+        print(
+            "Not a valid connection_type, Choose between socket-ssh-tls",
+            file=sys.stderr,
+        )
         sys.exit()
 
     if connection_type == "socket":
@@ -65,10 +80,17 @@ def main():
     if connection_type == "socket":
         connection = UnixSocketConnection(path=socket)
     elif connection_type == "ssh":
-        connection = SSHConnection(hostname=host, port=port, username=userssh, password=passwssh)
+        connection = SSHConnection(
+            hostname=host, port=port, username=userssh, password=passwssh
+        )
     elif connection_type == "tls":
         connection = TLSConnection(
-            hostname=host, port=port, certfile=tls_certfile, cafile=tls_cafile, keyfile=tls_keyfile, password=tls_passw
+            hostname=host,
+            port=port,
+            certfile=tls_certfile,
+            cafile=tls_cafile,
+            keyfile=tls_keyfile,
+            password=tls_passw,
         )
 
     # Create Target
@@ -76,7 +98,9 @@ def main():
         gmp.authenticate(user, passw)
         name = f"Suspect Host {scan_url} {str(datetime.datetime.now())}"
 
-        response = gmp.create_target(name=name, hosts=[scan_url], port_list_id=port_list)
+        response = gmp.create_target(
+            name=name, hosts=[scan_url], port_list_id=port_list
+        )
 
     target_id = response.get("id")
 
@@ -84,7 +108,12 @@ def main():
     with Gmp(connection=connection, transform=transform) as gmp:
         gmp.authenticate(user, passw)
         name = f"Scan Suspect Host {scan_url} {str(datetime.datetime.now())}"
-        response = gmp.create_task(name=name, config_id=scan_id, target_id=target_id, scanner_id=scanner)
+        response = gmp.create_task(
+            name=name,
+            config_id=scan_id,
+            target_id=target_id,
+            scanner_id=scanner,
+        )
 
     task_id = response.get("id")
 
@@ -120,13 +149,16 @@ def main():
         report = gmp.get_report(
             report_id=report_id,
             report_format_id=xml_format,
-            filter="apply_overrides=0 levels=hml rows=-1 min_qod=70 first=1 sort-reverse=severity "
+            filter="apply_overrides=0 levels=hml rows=-1 min_qod=70 "
+            "first=1 sort-reverse=severity "
             "notes=0 overrides=0",
             details=True,
         )
 
     # Parse report and send to Faraday
-    plugin = OpenvasPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+    plugin = OpenvasPlugin(
+        ignore_info=ignore_info, hostname_resolution=hostname_resolution
+    )
     plugin.parseOutputString(ET.tostring(report[0], encoding="unicode"))
     print(plugin.get_json())
 

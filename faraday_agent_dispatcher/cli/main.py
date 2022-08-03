@@ -44,7 +44,10 @@ def cli():
 
 def process_config_file(config_filepath: Path, logger):
     if config_filepath is None and not os.path.exists(config.CONFIG_FILENAME):
-        logger.info("Config file doesn't exist. Run the command " "`faraday-dispatcher config-wizard` to create one")
+        logger.info(
+            "Config file doesn't exist. Run the command "
+            "`faraday-dispatcher config-wizard` to create one"
+        )
         exit(1)
     config_filepath = config_filepath or Path(config.CONFIG_FILENAME)
     config_filepath = Path(config_filepath)
@@ -60,8 +63,14 @@ async def main(config_file, logger, token):
         try:
             dispatcher = Dispatcher(session, config_file)
         except ValueError as ex:
-            print(f"{Bcolors.FAIL}Error configuring dispatcher: " f"{Bcolors.BOLD}{str(ex)}{Bcolors.ENDC}")
-            print(f"Try checking your config file located at {Bcolors.BOLD}" f"{config.CONFIG_FILENAME}{Bcolors.ENDC}")
+            print(
+                f"{Bcolors.FAIL}Error configuring dispatcher: "
+                f"{Bcolors.BOLD}{str(ex)}{Bcolors.ENDC}"
+            )
+            print(
+                f"Try checking your config file located at {Bcolors.BOLD}"
+                f"{config.CONFIG_FILENAME}{Bcolors.ENDC}"
+            )
             return 1
 
         loop = asyncio.get_event_loop()
@@ -78,7 +87,9 @@ async def main(config_file, logger, token):
 
 
 @click.command(help="faraday-dispatcher run")
-@click.option("-c", "--config-file", default=None, help="Path to config ini file")
+@click.option(
+    "-c", "--config-file", default=None, help="Path to config ini file"
+)
 @click.option("--logdir", default="~", help="Path to logger directory")
 @click.option(
     "--log-level",
@@ -116,7 +127,9 @@ def setting_logger(debug, log_level, logdir):
 
 
 @click.command(help="faraday-dispatcher config_wizard")
-@click.option("-c", "--config-filepath", default=None, help="Path to config ini file")
+@click.option(
+    "-c", "--config-filepath", default=None, help="Path to config ini file"
+)
 @click.option("--logdir", default="~", help="Path to logger directory")
 @click.option(
     "--log-level",
