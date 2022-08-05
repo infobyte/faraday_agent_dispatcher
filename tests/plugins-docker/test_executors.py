@@ -57,8 +57,7 @@ executors_to_test = [
         "name": "nuclei",
         "script": "nuclei.py",
         "varenvs": {
-            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei"
-            "/v2/cmd/nuclei/nuclei-templates",
+            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei" "/v2/cmd/nuclei/nuclei-templates",
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
         },
     },
@@ -66,31 +65,22 @@ executors_to_test = [
         "name": "nuclei_multi",
         "script": "nuclei.py",
         "varenvs": {
-            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei"
-            "/v2/cmd/nuclei/nuclei-templates",
-            "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org,"
-            "https://grafana.faradaysec.com",
+            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei" "/v2/cmd/nuclei/nuclei-templates",
+            "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org," "https://grafana.faradaysec.com",
         },
     },
     {
         "name": "nuclei_exclude",
         "script": "nuclei.py",
         "varenvs": {
-            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei"
-            "/nuclei-templates",
+            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei" "/nuclei-templates",
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
             "NUCLEI_EXCLUDE": "files/",
         },
     },
 ]
 
-executors_path = (
-    Path(__file__).parent.parent.parent
-    / "faraday_agent_dispatcher"
-    / "static"
-    / "executors"
-    / "official"
-)
+executors_path = Path(__file__).parent.parent.parent / "faraday_agent_dispatcher" / "static" / "executors" / "official"
 
 
 def sort_dict_multilevel(value):
@@ -106,9 +96,7 @@ def sort_dict_multilevel(value):
     return value
 
 
-@pytest.mark.parametrize(
-    "executor_data", executors_to_test, ids=lambda i: i["name"]
-)
+@pytest.mark.parametrize("executor_data", executors_to_test, ids=lambda i: i["name"])
 def test_executors(executor_data):
     script = executor_data["script"]
     env = os.environ.copy()
@@ -121,14 +109,8 @@ def test_executors(executor_data):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    responses_list = [
-        json.loads(json_elem)
-        for json_elem in process.stdout.decode().split("\n")
-        if len(json_elem) > 0
-    ]
+    responses_list = [json.loads(json_elem) for json_elem in process.stdout.decode().split("\n") if len(json_elem) > 0]
     for response in responses_list:
         assert "hosts" in response, response
-    responses_list = [
-        sort_dict_multilevel(response["hosts"]) for response in responses_list
-    ]
+    responses_list = [sort_dict_multilevel(response["hosts"]) for response in responses_list]
     assert len(responses_list) > 0

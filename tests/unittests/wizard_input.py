@@ -221,15 +221,9 @@ class DispatcherInput:
         delete_agent_token: bool = None,
         empty=False,
     ):
-        self.ssl = (
-            ssl is None
-            or (isinstance(ssl, bool) and ssl)
-            or ssl.lower() != "false"
-        )
+        self.ssl = ssl is None or (isinstance(ssl, bool) and ssl) or ssl.lower() != "false"
         self.ssl_ignore = (
-            ssl_ignore is None
-            or (isinstance(ssl_ignore, bool) and ssl_ignore)
-            or ssl_ignore.lower() != "false"
+            ssl_ignore is None or (isinstance(ssl_ignore, bool) and ssl_ignore) or ssl_ignore.lower() != "false"
         )
         self.server_input = {
             "ssl": "Y" if self.ssl else "N",
@@ -245,9 +239,7 @@ class DispatcherInput:
     def input_str(self):
         if self.ssl:
             input_str = (
-                f"{self.server_input['host']}\n"
-                f"{self.server_input['ssl']}\n"
-                f"{self.server_input['api_port']}\n"
+                f"{self.server_input['host']}\n" f"{self.server_input['ssl']}\n" f"{self.server_input['api_port']}\n"
             )
             input_str = f"{input_str}{self.server_input['ssl_ignore']}\n"
         else:
@@ -259,9 +251,7 @@ class DispatcherInput:
             )
 
         if self.delete_agent_token is not None:
-            input_str = (
-                f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
-            )
+            input_str = f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
         input_str = f"{input_str}{self.agent}\n"
         return input_str
 

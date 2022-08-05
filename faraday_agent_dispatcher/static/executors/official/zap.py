@@ -12,9 +12,7 @@ def main():
     # are checked.
     # ['EXECUTOR_CONFIG_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = (
-        os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
-    )
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     try:
         target = os.environ["EXECUTOR_CONFIG_TARGET_URL"]
         api_key = os.environ["EXECUTOR_CONFIG_API_KEY"]
@@ -35,9 +33,7 @@ def main():
             time.sleep(1)
         # If finish the scan and the xml is generated
         zap_result = zap.core.xmlreport()
-        plugin = ZapPlugin(
-            ignore_info=ignore_info, hostname_resolution=hostname_resolution
-        )
+        plugin = ZapPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
         plugin.parseOutputString(zap_result)
         print(plugin.get_json())
 

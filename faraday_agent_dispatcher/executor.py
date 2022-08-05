@@ -30,9 +30,7 @@ class Executor:
         self.name = name
         self.repo_executor = config.get("repo_executor")
         if self.repo_executor:
-            self.repo_name = re.search(
-                r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", self.repo_executor
-            ).group(1)
+            self.repo_name = re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", self.repo_executor).group(1)
             metadata = executor_metadata(self.repo_name)
             repo_path = executor_folder() / self.repo_executor
             self.cmd = metadata["cmd"].format(EXECUTOR_FILE_PATH=repo_path)
@@ -40,23 +38,12 @@ class Executor:
             self.cmd = config.get("cmd")
 
         self.max_size = int(config.get("max_size", 64 * 1024))
-        self.params = (
-            dict(config[Sections.EXECUTOR_PARAMS])
-            if Sections.EXECUTOR_PARAMS in config
-            else {}
-        )
-        self.varenvs = (
-            dict(config[Sections.EXECUTOR_VARENVS])
-            if Sections.EXECUTOR_VARENVS in config
-            else {}
-        )
+        self.params = dict(config[Sections.EXECUTOR_PARAMS]) if Sections.EXECUTOR_PARAMS in config else {}
+        self.varenvs = dict(config[Sections.EXECUTOR_VARENVS]) if Sections.EXECUTOR_VARENVS in config else {}
 
     def control_config(self, name, config):
         if " " in name:
-            raise ValueError(
-                "Executor names can't contains space character, passed name:"
-                f"{name}"
-            )
+            raise ValueError("Executor names can't contains space character, passed name:" f"{name}")
 
         for option in self.__control_dict:
             value = config[option] if option in config else None
@@ -70,14 +57,11 @@ class Executor:
     async def check_cmds(self):
         if self.repo_executor is None:
             return True
-        repo_name = re.search(
-            r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", self.repo_executor
-        ).group(1)
+        repo_name = re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", self.repo_executor).group(1)
         metadata = executor_metadata(repo_name)
         if not await check_commands(metadata):
             logger.info(
-                f"{Bcolors.WARNING}Invalid bash dependency for "
-                f"{Bcolors.BOLD}{self.repo_name}{Bcolors.ENDC}"
+                f"{Bcolors.WARNING}Invalid bash dependency for " f"{Bcolors.BOLD}{self.repo_name}{Bcolors.ENDC}"
             )
             return False
         else:

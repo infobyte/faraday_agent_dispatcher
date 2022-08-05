@@ -6,17 +6,11 @@ def control_int(nullable=False):
         if value is None and nullable:
             return
         if value is None:
-            raise ValueError(
-                f"Trying to parse {field_name} with None value and should be "
-                "an int"
-            )
+            raise ValueError(f"Trying to parse {field_name} with None value and should be " "an int")
         try:
             int(value)
         except ValueError:
-            raise ValueError(
-                f"Trying to parse {field_name} with value {value} and should "
-                "be an int"
-            )
+            raise ValueError(f"Trying to parse {field_name} with value {value} and should " "be an int")
 
     return control
 
@@ -38,33 +32,21 @@ def control_host(field_name, value):
 def control_list(can_repeat=True):
     def control(field_name, value):
         if not isinstance(value, list):
-            raise ValueError(
-                f"Trying to parse {field_name} with value {value} and should "
-                "be a list"
-            )
+            raise ValueError(f"Trying to parse {field_name} with value {value} and should " "be a list")
         if len(value) != len(set(value)) and not can_repeat:
-            raise ValueError(
-                f"Trying to parse {field_name} with value {value} and "
-                f"contains repeated values"
-            )
+            raise ValueError(f"Trying to parse {field_name} with value {value} and " f"contains repeated values")
 
     return control
 
 
 def control_bool(field_name, value):
     if str(value).lower() not in ["true", "false", "t", "f"]:
-        raise ValueError(
-            f"Trying to parse {field_name} with value {value} and should be a "
-            f"bool"
-        )
+        raise ValueError(f"Trying to parse {field_name} with value {value} and should be a " f"bool")
 
 
 def control_registration_token(field_name: str, value: str):
     if value is None:
-        raise ValueError(
-            "No connected before, provide a token. For more "
-            "help see `faraday-dispatcher run --help`"
-        )
+        raise ValueError("No connected before, provide a token. For more " "help see `faraday-dispatcher run --help`")
     if not value.isnumeric():
         raise ValueError(f"{field_name} must be a number")
     control_token(field_name, 6, value)
@@ -99,19 +81,11 @@ class ParamsField(fields.Field):
             if not isinstance(param_val, dict):
                 raise ValidationError(f"{param} must be a dictionary")
             if not isinstance(param_val.get("mandatory"), bool):
-                raise ValidationError(
-                    f'{param} - "mandatory" field missing or not boolean'
-                )
-            if not isinstance(param_val.get("type"), str) and not isinstance(
-                param_val.get("type"), list
-            ):
-                raise ValidationError(
-                    f'{param} - "type" field missing or not string/list'
-                )
+                raise ValidationError(f'{param} - "mandatory" field missing or not boolean')
+            if not isinstance(param_val.get("type"), str) and not isinstance(param_val.get("type"), list):
+                raise ValidationError(f'{param} - "type" field missing or not string/list')
             if not isinstance(param_val.get("base"), str):
-                raise ValidationError(
-                    f'{param} - "base" field missing or not string'
-                )
+                raise ValidationError(f'{param} - "base" field missing or not string')
 
 
 class ExecutorSchema(schema.Schema):

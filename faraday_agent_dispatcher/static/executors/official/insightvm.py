@@ -20,9 +20,7 @@ def main():
     # the environment variables are checked.
     # ['TARGET_URL', 'EXECUTIVE_REPORT_ID']
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = (
-        os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
-    )
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     INSIGHTVM_HOST = os.getenv("INSIGHTVM_HOST")
     INSIGHTVM_USR = os.getenv("INSIGHTVM_USR")
     INSIGHTVM_PASSWD = os.getenv("INSIGHTVM_PASSWD")
@@ -42,16 +40,10 @@ def main():
         sys.exit(1)
 
     if not host_re.match(INSIGHTVM_HOST):
-        log(
-            f"INSIGHTVM_HOST is invalid, must be "
-            f"http(s)://HOST(:PORT) [{INSIGHTVM_HOST}]"
-        )
+        log(f"INSIGHTVM_HOST is invalid, must be " f"http(s)://HOST(:PORT) [{INSIGHTVM_HOST}]")
         sys.exit(1)
     log(f"Fetching from: {INSIGHTVM_HOST}")
-    report_url = (
-        f"{INSIGHTVM_HOST}/api/3/reports/{EXECUTIVE_REPORT_ID}"
-        f"/history/latest/output"
-    )
+    report_url = f"{INSIGHTVM_HOST}/api/3/reports/{EXECUTIVE_REPORT_ID}" f"/history/latest/output"
     log(f"Connecting to insightvm on {INSIGHTVM_HOST}")
     try:
         report_response = requests.get(
@@ -60,17 +52,12 @@ def main():
             auth=HTTPBasicAuth(INSIGHTVM_USR, INSIGHTVM_PASSWD),
         )
         if report_response.status_code != 200:
-            log(
-                f"API gets no response. "
-                f"Status code: {report_response.status_code}"
-            )
+            log(f"API gets no response. " f"Status code: {report_response.status_code}")
             sys.exit()
     except Exception as e:
         log(f"ERROR connecting to insightvm api on {INSIGHTVM_HOST} [{e}]")
         sys.exit()
-    plugin = NexposeFullPlugin(
-        ignore_info=ignore_info, hostname_resolution=hostname_resolution
-    )
+    plugin = NexposeFullPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
     plugin.parseOutputString(report_response.text)
     print(plugin.get_json())
 

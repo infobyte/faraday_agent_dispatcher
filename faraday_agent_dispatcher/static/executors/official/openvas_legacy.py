@@ -18,9 +18,7 @@ def main():
     # "EXECUTOR_CONFIG_OPENVAS_HOST", "EXECUTOR_CONFIG_OPENVAS_PORT",
     # "EXECUTOR_CONFIG_OPENVAS_SCAN_URL", "EXECUTOR_CONFIG_OPENVAS_SCAN_ID"]
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = (
-        os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
-    )
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     user = os.environ.get("EXECUTOR_CONFIG_OPENVAS_USER")
     passw = os.environ.get("EXECUTOR_CONFIG_OPENVAS_PASSW")
     host = os.environ.get("EXECUTOR_CONFIG_OPENVAS_HOST")
@@ -30,8 +28,7 @@ def main():
     xml_format = "a994b278-1f62-11e1-96ac-406186ea4fc5"
     if not user or not passw or not host or not port:
         print(
-            "Data config ['Host', 'Port', 'User', 'Passw'] OpenVas not "
-            "provided",
+            "Data config ['Host', 'Port', 'User', 'Passw'] OpenVas not " "provided",
             file=sys.stderr,
         )
         sys.exit()
@@ -45,10 +42,7 @@ def main():
         scan_id = "daba56c8-73ec-11df-a475-002264764cea"
 
     # Create task and get task_id
-    xml_create_task = (
-        "<create_target><name>Suspect Host</name><hosts>"
-        f"{scan_url}</hosts></create_target>"
-    )
+    xml_create_task = "<create_target><name>Suspect Host</name><hosts>" f"{scan_url}</hosts></create_target>"
     cmd_create_task = [
         "omp",
         "-u",
@@ -88,9 +82,7 @@ def main():
         "--target",
         task_id,
     ]
-    p_scan = subprocess.run(
-        cmd_create_scan, stdout=subprocess.PIPE, shell=False
-    )
+    p_scan = subprocess.run(cmd_create_scan, stdout=subprocess.PIPE, shell=False)
     scan = p_scan.stdout.decode().split("\n")
 
     # Start task get id for use report XML
@@ -108,9 +100,7 @@ def main():
         scan[0],
     ]
 
-    p_start_scan = subprocess.run(
-        cmd_start_scan, stdout=subprocess.PIPE, shell=False
-    )
+    p_start_scan = subprocess.run(cmd_start_scan, stdout=subprocess.PIPE, shell=False)
     id_for_xml = p_start_scan.stdout.decode().split("\n")
 
     cmd_status = [
@@ -128,9 +118,7 @@ def main():
     ]
     status_level = -1
     while status_level <= 0:
-        p_status = subprocess.run(
-            cmd_status, stdout=subprocess.PIPE, shell=False
-        )
+        p_status = subprocess.run(cmd_status, stdout=subprocess.PIPE, shell=False)
         status_level = p_status.stdout.decode().find("Done")
         time.sleep(5)
 
@@ -150,9 +138,7 @@ def main():
         xml_format,
     ]
     p_xml = subprocess.run(cmd_get_xml, stdout=subprocess.PIPE, shell=False)
-    plugin = OpenvasPlugin(
-        ignore_info=ignore_info, hostname_resolution=hostname_resolution
-    )
+    plugin = OpenvasPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
     plugin.parseOutputString(p_xml.stdout)
     print(plugin.get_json())
 

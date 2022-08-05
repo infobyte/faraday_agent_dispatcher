@@ -83,9 +83,7 @@ def test_execute_agent():
     config[Sections.SERVER]["ssl"] = SSL
     config[Sections.AGENT]["agent_name"] = AGENT_NAME
     config[Sections.AGENT]["executors"][EXECUTOR_NAME] = {}
-    path_to_basic_executor = (
-        Path(__file__).parent.parent.parent / "data" / "basic_executor.py"
-    )
+    path_to_basic_executor = Path(__file__).parent.parent.parent / "data" / "basic_executor.py"
     executor_section = config[Sections.AGENT]["executors"][EXECUTOR_NAME]
     executor_section["params"] = {
         "out": {"mandatory": True, "base": "string", "type": "string"},
@@ -121,9 +119,7 @@ def test_execute_agent():
             f"--token={token}",
             "--debug",
         ]
-        p = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         time.sleep(2)  # If fails check time
 
         # Checking dispatcher connection
@@ -134,10 +130,7 @@ def test_execute_agent():
         agent = res_data[-1]
         agent_id = agent["id"]
         if agent_ok_status_keys_set != set(agent.keys()):
-            print(
-                "Keys set from agent endpoint differ from expected ones, "
-                "checking if its a superset"
-            )
+            print("Keys set from agent endpoint differ from expected ones, " "checking if its a superset")
             print(f"agent_ok_status_keys_set= {agent_ok_status_keys_set}")
             print(f"agent.keys() = {agent.keys()}")
             assert agent_ok_status_keys_set.issubset(set(agent.keys()))
@@ -196,9 +189,7 @@ def test_execute_agent():
         assert command_check_response["duration"] != "In progress"
 
         # Test results
-        res = session.get(
-            api_url(HOST, API_PORT, postfix=f"/_api/v3/ws/{WORKSPACE}/hosts")
-        )
+        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v3/ws/{WORKSPACE}/hosts"))
         host_dict = res.json()
         assert host_dict["count"] == 1, (res.text, host_dict)
         host = host_dict["rows"][0]["value"]
@@ -209,9 +200,7 @@ def test_execute_agent():
                 assert host[key] == host_data[key]
         assert host["vulns"] == 1
 
-        res = session.get(
-            api_url(HOST, API_PORT, postfix=f"/_api/v3/ws/{WORKSPACE}/vulns")
-        )
+        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v3/ws/{WORKSPACE}/vulns"))
         vuln_dict = res.json()
         assert vuln_dict["count"] == 1
         vuln = vuln_dict["vulnerabilities"][0]["value"]
@@ -219,9 +208,7 @@ def test_execute_agent():
             if key == "impact":
                 for k_key in vuln["impact"]:
                     if k_key in vuln_data["impact"]:
-                        assert (
-                            vuln["impact"][k_key] == vuln_data["impact"][k_key]
-                        )
+                        assert vuln["impact"][k_key] == vuln_data["impact"][k_key]
                     else:
                         assert not vuln["impact"][k_key]
             else:

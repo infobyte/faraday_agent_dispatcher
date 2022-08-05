@@ -35,9 +35,7 @@ def choose_adm(subject: str, ignore: List[str] = None) -> str:
     def_value, choices = get_default_value_and_choices("Q", values)
     a_or_an = "an" if subject[0] in ("a", "e", "i", "o", "u") else "a"
     value = click.prompt(
-        f"Do you want to [A]dd, [M]odify or [D]elete"
-        f" {a_or_an} {subject}? Do you "
-        f"want to [Q]uit?",
+        f"Do you want to [A]dd, [M]odify or [D]elete" f" {a_or_an} {subject}? Do you " f"want to [Q]uit?",
         type=click.Choice(choices=choices, case_sensitive=False),
         default=def_value,
     ).upper()
@@ -78,14 +76,9 @@ async def choice_paged_option(
                 page_next -= page_size
 
             elif chosen == "Q":
-                raise WizardCanceledOption(
-                    "Repository executor selection canceled"
-                )
+                raise WizardCanceledOption("Repository executor selection canceled")
             else:
-                print(
-                    f"{Bcolors.WARNING}Invalid option "
-                    f"{Bcolors.BOLD}{chosen}{Bcolors.ENDC}"
-                )
+                print(f"{Bcolors.WARNING}Invalid option " f"{Bcolors.BOLD}{chosen}{Bcolors.ENDC}")
         else:
             chosen = paged_executors[int(chosen) - 1]
             metadata: T = await control_option(chosen)

@@ -37,9 +37,7 @@ def generate_basic_built_config():
         {
             "id_str": "Error: WS port not number",
             "remove": {},
-            "replace": {
-                Sections.SERVER: {"websocket_port": "Not a port number"}
-            },
+            "replace": {Sections.SERVER: {"websocket_port": "Not a port number"}},
             "expected_exception": ValueError,
         },
         {
@@ -57,10 +55,7 @@ def generate_basic_built_config():
             "id_str": "Error: agent token length (after strip)",
             "remove": {},
             "replace": {
-                Sections.TOKENS: {
-                    "agent": "   46aasdje446aasdje446aa46aasd"
-                    "je446aasdje446aa46aasdje446aasdje"
-                }
+                Sections.TOKENS: {"agent": "   46aasdje446aasdje446aa46aasd" "je446aasdje446aa46aasdje446aasdje"}
             },
             "expected_exception": ValueError,
         },
@@ -68,10 +63,7 @@ def generate_basic_built_config():
             "id_str": "OK: agent token",
             "remove": {},
             "replace": {
-                Sections.TOKENS: {
-                    "agent": "QWE46aasdje446aasdje446aaQWE46aa"
-                    "sdje446aasdje446aaQWE46aasdje446"
-                }
+                Sections.TOKENS: {"agent": "QWE46aasdje446aasdje446aaQWE46aa" "sdje446aasdje446aaQWE46aasdje446"}
             },
         },
         {
@@ -266,9 +258,7 @@ def generate_basic_built_config():
         {
             "id_str": "Error: ssl crt do not exists",
             "remove": {},
-            "replace": {
-                Sections.SERVER: {"ssl": "True", "ssl_cert": "/tmp/sarasa.pub"}
-            },
+            "replace": {Sections.SERVER: {"ssl": "True", "ssl_cert": "/tmp/sarasa.pub"}},
             "expected_exception": ValueError,
         },
     ]
@@ -332,10 +322,7 @@ def generate_register_options():
         {
             "id_str": "Bad agent token",
             "replace_data": {
-                Sections.TOKENS: {
-                    "agent": "QWE46aasdje446aasdje446aaQWE46aasdj"
-                    "e446aasdje446aaQWE46aasdje446"
-                }
+                Sections.TOKENS: {"agent": "QWE46aasdje446aasdje446aaQWE46aasdj" "e446aasdje446aaQWE46aasdje446"}
             },
             "logs": [
                 {
@@ -357,11 +344,7 @@ def generate_register_options():
         },
         {
             "id_str": "Non-existent host",
-            "replace_data": {
-                Sections.SERVER: {
-                    "host": "cizfyteurbsc06aolxe0qtzsr2mftvy7bwvvd47e.com"
-                }
-            },
+            "replace_data": {Sections.SERVER: {"host": "cizfyteurbsc06aolxe0qtzsr2mftvy7bwvvd47e.com"}},
             "logs": [
                 {
                     "levelname": "ERROR",
@@ -381,8 +364,7 @@ def generate_register_options():
             "logs": [
                 {
                     "levelname": "ERROR",
-                    "msg": "Faraday server timed-out. "
-                    "TIP: Check ssl configuration",
+                    "msg": "Faraday server timed-out. " "TIP: Check ssl configuration",
                 },
                 {"levelname": "DEBUG", "msg": "Timeout error. Check ssl"},
             ],
@@ -397,11 +379,7 @@ def generate_register_options():
             "replace_data": {
                 Sections.SERVER: {
                     "ssl": "True",
-                    "ssl_cert": str(
-                        Path(__file__).parent.parent.parent
-                        / "data"
-                        / "wrong.crt"
-                    ),
+                    "ssl_cert": str(Path(__file__).parent.parent.parent / "data" / "wrong.crt"),
                 }
             },
             "logs": [
@@ -422,9 +400,7 @@ def generate_register_options():
                 Sections.SERVER: {
                     "host": "127.0.0.1",
                     "ssl": "True",
-                    "ssl_cert": str(
-                        Path(__file__).parent.parent.parent / "data" / "ok.crt"
-                    ),
+                    "ssl_cert": str(Path(__file__).parent.parent.parent / "data" / "ok.crt"),
                 }
             },
             "logs": [
@@ -444,12 +420,7 @@ def generate_executor_options():
             "logs": [
                 {"levelname": "INFO", "msg": "Data not contains action to do"},
             ],
-            "ws_responses": [
-                {
-                    "error": "'action' key is mandatory in this "
-                    "websocket connection"
-                }
-            ],
+            "ws_responses": [{"error": "'action' key is mandatory in this " "websocket connection"}],
         },
         {
             "id_str": "Bad action in ws",
@@ -470,12 +441,7 @@ def generate_executor_options():
             "logs": [
                 {"levelname": "INFO", "msg": "Data not contains execution id"},
             ],
-            "ws_responses": [
-                {
-                    "error": "'execution_ids' key is mandatory"
-                    " in this websocket connection"
-                }
-            ],
+            "ws_responses": [{"error": "'execution_ids' key is mandatory" " in this websocket connection"}],
         },
         {
             "id_str": "OK",
@@ -508,8 +474,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent"
-                    " finished successfully",
+                    "message": "Executor ex1 from unnamed_agent" " finished successfully",
                 },
             ],
         },
@@ -553,8 +518,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent"
-                    " finished successfully",
+                    "message": "Executor ex1 from unnamed_agent" " finished successfully",
                 },
             ],
         },
@@ -593,8 +557,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent "
-                    "finished successfully",
+                    "message": "Executor ex1 from unnamed_agent " "finished successfully",
                 },
             ],
         },
@@ -628,8 +591,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent "
-                    "finished successfully",
+                    "message": "Executor ex1 from unnamed_agent " "finished successfully",
                 },
             ],
         },
@@ -673,8 +635,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent "
-                    "finished successfully",
+                    "message": "Executor ex1 from unnamed_agent " "finished successfully",
                 },
             ],
         },
@@ -698,8 +659,7 @@ def generate_executor_options():
                 },
                 {
                     "levelname": "ERROR",
-                    "msg": "Invalid data supplied by the executor to "
-                    "the bulk create endpoint. Server responded: ",
+                    "msg": "Invalid data supplied by the executor to " "the bulk create endpoint. Server responded: ",
                 },
                 {
                     "levelname": "INFO",
@@ -719,8 +679,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent "
-                    "finished successfully",
+                    "message": "Executor ex1 from unnamed_agent " "finished successfully",
                 },
             ],
         },
@@ -764,8 +723,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent"
-                    " finished successfully",
+                    "message": "Executor ex1 from unnamed_agent" " finished successfully",
                 },
             ],
         },
@@ -810,8 +768,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent"
-                    " finished successfully",
+                    "message": "Executor ex1 from unnamed_agent" " finished successfully",
                 },
             ],
         },
@@ -941,8 +898,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent"
-                    " finished successfully",
+                    "message": "Executor ex1 from unnamed_agent" " finished successfully",
                 },
             ],
         },
@@ -971,8 +927,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "running": False,
-                    "message": "Mandatory argument(s) not passed to ex1 "
-                    "executor from unnamed_agent agent",
+                    "message": "Mandatory argument(s) not passed to ex1 " "executor from unnamed_agent agent",
                 }
             ],
         },
@@ -1013,8 +968,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "running": False,
-                    "message": "Unexpected argument(s) passed to ex1 "
-                    "executor from unnamed_agent agent",
+                    "message": "Unexpected argument(s) passed to ex1 " "executor from unnamed_agent agent",
                 }
             ],
         },
@@ -1032,8 +986,7 @@ def generate_executor_options():
                 {"levelname": "INFO", "msg": "Running ex1 executor"},
                 {
                     "levelname": "ERROR",
-                    "msg": "Invalid data supplied by the executor to "
-                    "the bulk create endpoint. Server responded: ",
+                    "msg": "Invalid data supplied by the executor to " "the bulk create endpoint. Server responded: ",
                 },
                 {
                     "levelname": "INFO",
@@ -1060,8 +1013,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent"
-                    " finished successfully",
+                    "message": "Executor ex1 from unnamed_agent" " finished successfully",
                 },
             ],
         },
@@ -1079,8 +1031,7 @@ def generate_executor_options():
                 {"levelname": "INFO", "msg": "Running ex1 executor"},
                 {
                     "levelname": "ERROR",
-                    "msg": "Invalid data supplied by the executor to"
-                    " the bulk create endpoint. Server responded: ",
+                    "msg": "Invalid data supplied by the executor to" " the bulk create endpoint. Server responded: ",
                 },
                 {
                     "levelname": "INFO",
@@ -1107,8 +1058,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent finished "
-                    "successfully",
+                    "message": "Executor ex1 from unnamed_agent finished " "successfully",
                 },
             ],
         },
@@ -1132,8 +1082,7 @@ def generate_executor_options():
                 },
                 {
                     "levelname": "ERROR",
-                    "msg": "ValueError raised processing stdout, "
-                    "try with bigger limiting size in config",
+                    "msg": "ValueError raised processing stdout, " "try with bigger limiting size in config",
                 },
                 {
                     "levelname": "INFO",
@@ -1154,8 +1103,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent "
-                    "finished successfully",
+                    "message": "Executor ex1 from unnamed_agent " "finished successfully",
                 },
             ],
         },
@@ -1238,8 +1186,7 @@ def generate_executor_options():
                     "executor_name": "NOT_4N_CORRECT_EXECUTOR",
                     "execution_ids": [1],
                     "running": False,
-                    "message": "The selected executor NOT_4N_CORRECT_EXECUTOR"
-                    " not exists in unnamed_agent agent",
+                    "message": "The selected executor NOT_4N_CORRECT_EXECUTOR" " not exists in unnamed_agent agent",
                 }
             ],
         },
@@ -1267,16 +1214,14 @@ def generate_executor_options():
                     "executor_name": "add_ex1",
                     "execution_ids": [1],
                     "running": True,
-                    "message": "Running add_ex1 executor from "
-                    "unnamed_agent agent",
+                    "message": "Running add_ex1 executor from " "unnamed_agent agent",
                 },
                 {
                     "action": "RUN_STATUS",
                     "executor_name": "add_ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor add_ex1 from unnamed_agent"
-                    " finished successfully",
+                    "message": "Executor add_ex1 from unnamed_agent" " finished successfully",
                 },
             ],
             "extra": ["add_ex1"],
@@ -1296,12 +1241,7 @@ def generate_executor_options():
                     "msg": "Data not contains workspaces list",
                 },
             ],
-            "ws_responses": [
-                {
-                    "error": "'workspaces' key is mandatory in this"
-                    " websocket connection"
-                }
-            ],
+            "ws_responses": [{"error": "'workspaces' key is mandatory in this" " websocket connection"}],
         },
         {
             "id_str": "Post to other workspace",
@@ -1323,8 +1263,7 @@ def generate_executor_options():
                 },
                 {
                     "levelname": "ERROR",
-                    "msg": "Invalid data supplied by the executor to"
-                    " the bulk create endpoint. Server responded: ",
+                    "msg": "Invalid data supplied by the executor to" " the bulk create endpoint. Server responded: ",
                 },
                 {
                     "levelname": "INFO",
@@ -1345,8 +1284,7 @@ def generate_executor_options():
                     "executor_name": "ex1",
                     "execution_ids": [1],
                     "successful": True,
-                    "message": "Executor ex1 from unnamed_agent "
-                    "finished successfully",
+                    "message": "Executor ex1 from unnamed_agent " "finished successfully",
                 },
             ],
         },
@@ -1363,13 +1301,11 @@ def generate_executor_options():
             "logs": [
                 {
                     "levelname": "ERROR",
-                    "msg": 'Validation error on parameter "spare", of type'
-                    ' "boolean": Not a valid boolean.',
+                    "msg": 'Validation error on parameter "spare", of type' ' "boolean": Not a valid boolean.',
                 },
                 {
                     "levelname": "ERROR",
-                    "msg": 'Validation error on parameter "count", of type'
-                    ' "integer": Not a valid integer.',
+                    "msg": 'Validation error on parameter "count", of type' ' "integer": Not a valid integer.',
                 },
             ],
             "ws_responses": [
