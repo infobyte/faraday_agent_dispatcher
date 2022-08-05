@@ -60,22 +60,15 @@ def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
     for section in config_changes_dict["replace"]:
         for option in config_changes_dict["replace"][section]:
             if section == "executor":
-                if (
-                    "ex1"
-                    not in configuration[Sections.AGENT][Sections.EXECUTORS]
-                ):
-                    configuration[Sections.AGENT][Sections.EXECUTORS][
-                        "ex1"
-                    ] = {}
-                configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"][
-                    option
-                ] = config_changes_dict["replace"][section][option]
+                if "ex1" not in configuration[Sections.AGENT][Sections.EXECUTORS]:
+                    configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"] = {}
+                configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"][option] = config_changes_dict["replace"][
+                    section
+                ][option]
                 continue
             elif section not in configuration:
                 configuration[section] = {}
-            configuration[section][option] = config_changes_dict["replace"][
-                section
-            ][option]
+            configuration[section][option] = config_changes_dict["replace"][section][option]
     for section in config_changes_dict["remove"]:
         if "section" in config_changes_dict["remove"][section]:
             if section in configuration:
@@ -84,18 +77,11 @@ def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
             for option in config_changes_dict["remove"][section]:
                 if (
                     section == "executor"
-                    and "ex1"
-                    in configuration[Sections.AGENT][Sections.EXECUTORS]
-                    and option
-                    in configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"]
+                    and "ex1" in configuration[Sections.AGENT][Sections.EXECUTORS]
+                    and option in configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"]
                 ):
-                    configuration[Sections.AGENT][Sections.EXECUTORS][
-                        "ex1"
-                    ].pop(option)
-                elif (
-                    section in configuration
-                    and option in configuration[section]
-                ):
+                    configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"].pop(option)
+                elif section in configuration and option in configuration[section]:
                     configuration[section].pop(option)
     save_config(config_path)
     if "expected_exception" in config_changes_dict:
@@ -135,9 +121,7 @@ async def test_start_and_register(
     # Config
     configuration[Sections.SERVER]["ssl"] = str(test_config.is_ssl)
     if test_config.is_ssl:
-        configuration[Sections.SERVER]["ssl_cert"] = str(
-            test_config.ssl_cert_path / "ok.crt"
-        )
+        configuration[Sections.SERVER]["ssl_cert"] = str(test_config.ssl_cert_path / "ok.crt")
         configuration[Sections.SERVER]["host"] = "localhost"
     else:
         configuration[Sections.SERVER]["host"] = client.host
@@ -155,28 +139,20 @@ async def test_start_and_register(
         for option in register_options["replace_data"][section]:
             if section not in configuration:
                 configuration[section] = {}
-            configuration[section][option] = register_options["replace_data"][
-                section
-            ][option]
+            configuration[section][option] = register_options["replace_data"][section][option]
 
     tmp_default_config.save()
 
     # Init and register it
-    dispatcher = Dispatcher(
-        client.session, tmp_default_config.config_file_path
-    )
+    dispatcher = Dispatcher(client.session, tmp_default_config.config_file_path)
 
     if "expected_exception" not in register_options:
         await dispatcher.register(test_config.registration_token)
         # Control tokens
         assert dispatcher.agent_token == test_config.agent_token
 
-        signer = TimestampSigner(
-            test_config.app_config["SECRET_KEY"], salt="websocket_agent"
-        )
-        agent_id = int(
-            signer.unsign(dispatcher.websocket_token).decode("utf-8")
-        )
+        signer = TimestampSigner(test_config.app_config["SECRET_KEY"], salt="websocket_agent")
+        agent_id = int(signer.unsign(dispatcher.websocket_token).decode("utf-8"))
         assert test_config.agent_id == agent_id
     else:
         if "bad_registration_token" in register_options:
@@ -198,9 +174,7 @@ async def test_start_and_register(
     logs_ok, failed_logs = await check_logs(history, register_options["logs"])
 
     if "optional_logs" in register_options and not logs_ok:
-        logs_ok, new_failed_logs = await check_logs(
-            history, register_options["optional_logs"]
-        )
+        logs_ok, new_failed_logs = await check_logs(history, register_options["optional_logs"])
         failed_logs = {"logs": failed_logs, "optional_logs": new_failed_logs}
     assert logs_ok, failed_logs
 
@@ -216,8 +190,7 @@ async def check_logs(history, logs):
             >= len(
                 list(
                     filter(
-                        lambda x: (log["msg"] in x.message)
-                        and (x.levelname == log["levelname"]),
+                        lambda x: (log["msg"] in x.message) and (x.levelname == log["levelname"]),
                         history,
                     )
                 )
@@ -255,26 +228,18 @@ async def test_run_once(
         configuration[Sections.SERVER]["base_route"] = test_config.base_route
 
     configuration[Sections.SERVER]["api_port"] = str(test_config.client.port)
-    configuration[Sections.SERVER]["websocket_port"] = str(
-        test_config.client.port
-    )
+    configuration[Sections.SERVER]["websocket_port"] = str(test_config.client.port)
     if Sections.TOKENS not in configuration:
         configuration[Sections.TOKENS] = {}
     configuration[Sections.TOKENS]["agent"] = test_config.agent_token
     configuration[Sections.SERVER]["ssl"] = str(test_config.is_ssl)
     if test_config.is_ssl:
-        configuration[Sections.SERVER]["ssl_cert"] = str(
-            test_config.ssl_cert_path / "ok.crt"
-        )
+        configuration[Sections.SERVER]["ssl_cert"] = str(test_config.ssl_cert_path / "ok.crt")
         configuration[Sections.SERVER]["host"] = "localhost"
     else:
         configuration[Sections.SERVER]["host"] = test_config.client.host
-    path_to_basic_executor = (
-        Path(__file__).parent.parent / "data" / "basic_executor.py"
-    )
-    executor_names = ["ex1"] + (
-        [] if "extra" not in executor_options else executor_options["extra"]
-    )
+    path_to_basic_executor = Path(__file__).parent.parent / "data" / "basic_executor.py"
+    executor_names = ["ex1"] + ([] if "extra" not in executor_options else executor_options["extra"])
 
     test_config.executors = []
     for ex in executor_names:
@@ -294,17 +259,13 @@ async def test_run_once(
             "varenvs": {},
         }
         for param in false_params:
-            configuration[Sections.AGENT][Sections.EXECUTORS][ex][
-                Sections.EXECUTOR_PARAMS
-            ][param] = {
+            configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_PARAMS][param] = {
                 "mandatory": False,
                 "type": false_params[param].type.class_name,
                 "base": false_params[param].type.base,
             }
 
-        configuration[Sections.AGENT][Sections.EXECUTORS][ex][
-            Sections.EXECUTOR_PARAMS
-        ]["out"] = {
+        configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_PARAMS]["out"] = {
             "mandatory": True,
             "type": DATA_TYPE["string"].type.class_name,
             "base": DATA_TYPE["string"].type.base,
@@ -312,25 +273,19 @@ async def test_run_once(
 
         if "varenvs" in executor_options:
             for varenv in executor_options["varenvs"]:
-                configuration[Sections.AGENT][Sections.EXECUTORS][ex][
-                    Sections.EXECUTOR_VARENVS
-                ][varenv] = executor_options["varenvs"][varenv]
+                configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_VARENVS][
+                    varenv
+                ] = executor_options["varenvs"][varenv]
 
-        max_size = (
-            str(64 * 1024)
-            if "max_size" not in executor_options
-            else executor_options["max_size"]
-        )
-        configuration[Sections.AGENT][Sections.EXECUTORS][ex][
-            "max_size"
-        ] = max_size
+        max_size = str(64 * 1024) if "max_size" not in executor_options else executor_options["max_size"]
+        configuration[Sections.AGENT][Sections.EXECUTORS][ex]["max_size"] = max_size
         executor_metadata = {
             "executor_name": ex,
             "args": {
                 param: value
-                for param, value in configuration[Sections.AGENT][
-                    Sections.EXECUTORS
-                ][ex][Sections.EXECUTOR_PARAMS].items()
+                for param, value in configuration[Sections.AGENT][Sections.EXECUTORS][ex][
+                    Sections.EXECUTOR_PARAMS
+                ].items()
             },
         }
         executor_metadata["args"]["out"] = {
@@ -343,17 +298,13 @@ async def test_run_once(
     tmp_default_config.save()
 
     # Init and register it
-    dispatcher = Dispatcher(
-        test_config.client.session, tmp_default_config.config_file_path
-    )
+    dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
     selected_workspace = random.choice(workspaces)
 
     ws_responses = deepcopy(executor_options["ws_responses"])
     run_data = deepcopy(executor_options["data"])
     if "workspaces" in run_data:
-        run_data["workspaces"] = [
-            run_data["workspaces"][0].format(selected_workspace)
-        ]
+        run_data["workspaces"] = [run_data["workspaces"][0].format(selected_workspace)]
     test_config.ws_data = {"run_data": run_data, "ws_responses": ws_responses}
 
     await dispatcher.register(test_config.registration_token)
@@ -369,8 +320,7 @@ async def test_run_once(
             >= len(
                 list(
                     filter(
-                        lambda x: x.levelname == log["levelname"]
-                        and log["msg"] in x.message,
+                        lambda x: x.levelname == log["levelname"] and log["msg"] in x.message,
                         history,
                     )
                 )

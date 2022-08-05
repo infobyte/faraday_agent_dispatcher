@@ -26,8 +26,7 @@ try:
     NETWORK_RANGE = os.environ["RUMBLE_NETWORK_RANGE"]
 except KeyError:
     print(
-        "You must set the environment variables RUMBLE_BIN_PATH, "
-        "RUMBLE_OUTPUT_DIR and RUMBLE_NETWORK_RANGE",
+        "You must set the environment variables RUMBLE_BIN_PATH, " "RUMBLE_OUTPUT_DIR and RUMBLE_NETWORK_RANGE",
         file=sys.stderr,
     )
     sys.exit()
@@ -86,9 +85,7 @@ def convert_rumble_assets(assets: list):
             if len(service_name) > 120:
                 service_name = service_name[:120]
 
-            services.append(
-                dict(name=service_name, protocol=ip_protocol, port=port)
-            )
+            services.append(dict(name=service_name, protocol=ip_protocol, port=port))
 
         host["services"] = services
 
@@ -104,15 +101,9 @@ async def main():
         os.mkdir(OUTPUT_DIR)
 
     # TODO: run with sudo for better results
-    scan_output = (
-        os.path.join(OUTPUT_DIR, NETWORK_RANGE.replace("/", "_"))
-        + "_"
-        + str(int(time.time()))
-    )
+    scan_output = os.path.join(OUTPUT_DIR, NETWORK_RANGE.replace("/", "_")) + "_" + str(int(time.time()))
     command = f"{RUMBLE_BIN} {NETWORK_RANGE} -o {scan_output}"
-    rumble_proc = await asyncio.create_subprocess_shell(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
+    rumble_proc = await asyncio.create_subprocess_shell(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print(f"Running Rumble: {command}", file=sys.stderr)
     await rumble_proc.wait()
 

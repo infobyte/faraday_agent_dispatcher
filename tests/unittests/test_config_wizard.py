@@ -26,12 +26,8 @@ all_ini_configs = no_ssl_ini_configs + ssl_ini_configs
 error_ini_configs = generate_error_ini_configs()
 
 
-@pytest.mark.parametrize(
-    "testing_inputs", inputs, ids=lambda elem: elem["id_str"]
-)
-@pytest.mark.parametrize(
-    "ini_config", all_ini_configs, ids=lambda elem: elem["id_str"]
-)
+@pytest.mark.parametrize("testing_inputs", inputs, ids=lambda elem: elem["id_str"])
+@pytest.mark.parametrize("ini_config", all_ini_configs, ids=lambda elem: elem["id_str"])
 def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
     runner = CliRunner()
 
@@ -62,18 +58,11 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
         env = os.environ
         env["DEBUG_INPUT_MODE"] = "True"
 
-        result = runner.invoke(
-            config_wizard, args=["-c", path], input=in_data, env=env
-        )
-        assert (
-            result.exit_code == testing_inputs["exit_code"]
-        ), result.exception
+        result = runner.invoke(config_wizard, args=["-c", path], input=in_data, env=env)
+        assert result.exit_code == testing_inputs["exit_code"], result.exception
         if "exception" in testing_inputs:
             assert str(result.exception) == str(testing_inputs["exception"])
-            assert (
-                testing_inputs["exception"].__class__
-                == result.exception.__class__
-            )
+            assert testing_inputs["exception"].__class__ == result.exception.__class__
         else:
             # Control '\0' is not passed in the output, as the input is echoed
             assert "\0\n" not in result.output
@@ -81,16 +70,12 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
             for expected_output in testing_inputs["expected_outputs"]:
                 assert expected_output in result.output
 
-        expected_executors_set = set.union(
-            ini_config["old_executors"], testing_inputs["after_executors"]
-        )
+        expected_executors_set = set.union(ini_config["old_executors"], testing_inputs["after_executors"])
 
         if path.suffix == ".ini":
             path = path.with_suffix(".yaml")
         config_mod.reset_config(path)
-        executor_config_set = set(
-            config_mod.instance[Sections.AGENT].get("executors")
-        )
+        executor_config_set = set(config_mod.instance[Sections.AGENT].get("executors"))
         assert executor_config_set == expected_executors_set
 
         assert f"Section: {Sections.TOKENS}" not in result.output

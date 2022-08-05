@@ -77,9 +77,7 @@ def ask_value(agent_dict, opt, section, ssl, control_opt=None):
         if def_value is None:
             def_value = agent_dict[section][opt]["default_value"](ssl)
     else:
-        def_value = config.instance[section].get(opt, None) or agent_dict[
-            section
-        ][opt]["default_value"](ssl)
+        def_value = config.instance[section].get(opt, None) or agent_dict[section][opt]["default_value"](ssl)
 
     value = None
     while value is None:
@@ -138,27 +136,20 @@ def process_agent():
     ssl = True
 
     for section in agent_dict:
-        if Sections.TOKENS == section and (
-            section not in config.instance
-            or "agent" not in config.instance[section]
-        ):
+        if Sections.TOKENS == section and (section not in config.instance or "agent" not in config.instance[section]):
             continue
         print(f"{Bcolors.OKBLUE}Section: {section}{Bcolors.ENDC}")
         for opt in agent_dict[section]:
             if section not in config.instance:
                 config.instance[section] = dict()
             if section == Sections.TOKENS and opt == "agent":
-                if "agent" in config.instance[section] and confirm_prompt(
-                    "Delete agent token?", default=None
-                ):
+                if "agent" in config.instance[section] and confirm_prompt("Delete agent token?", default=None):
                     config.instance[section].pop(opt)
             else:
                 if opt == "host":
                     value, url_json = ask_value(agent_dict, opt, section, ssl)
                     if url_json["url_path"]:
-                        config.instance[section]["base_route"] = str(
-                            url_json["url_path"]
-                        )
+                        config.instance[section]["base_route"] = str(url_json["url_path"])
                 elif opt == "ssl":
                     old_ssl_value = config.instance[section].get("ssl", None)
                     if url_json["check_ssl"] is None:
@@ -186,12 +177,8 @@ def process_agent():
                             agent_dict[Sections.SERVER].pop(type_ports, None)
 
                     else:
-                        config.instance[section]["api_port"] = url_json[
-                            "api_port"
-                        ]
-                        config.instance[section]["websocket_port"] = url_json[
-                            "websocket_port"
-                        ]
+                        config.instance[section]["api_port"] = url_json["api_port"]
+                        config.instance[section]["websocket_port"] = url_json["websocket_port"]
                 elif opt == "ssl_ignore" and not ssl:
                     continue
                 else:
@@ -201,18 +188,9 @@ def process_agent():
 
 def process_var_envs(executor_name):
     end = False
-    if (
-        "varenvs"
-        not in config.instance[Sections.AGENT][Sections.EXECUTORS][
-            executor_name
-        ]
-    ):
-        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name][
-            "varenvs"
-        ] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][
-        executor_name
-    ].get("varenvs")
+    if "varenvs" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
+        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("varenvs")
 
     while not end:
         print(
@@ -225,35 +203,22 @@ def process_var_envs(executor_name):
         if value == "A":
             env_var = click.prompt("Environment variable name").lower()
             if env_var in section:
-                print(
-                    f"{Bcolors.WARNING}The environment variable {env_var} "
-                    f"already exists{Bcolors.ENDC}"
-                )
+                print(f"{Bcolors.WARNING}The environment variable {env_var} " f"already exists{Bcolors.ENDC}")
             else:
                 value = click.prompt("Environment variable value")
                 section[env_var] = value
         elif value == "M":
             env_var = click.prompt("Environment variable name").lower()
             if env_var not in section:
-                print(
-                    f"{Bcolors.WARNING}There is no {env_var} environment "
-                    f"variable{Bcolors.ENDC}"
-                )
+                print(f"{Bcolors.WARNING}There is no {env_var} environment " f"variable{Bcolors.ENDC}")
             else:
-                def_value, env_var = get_new_name(
-                    env_var, section, "environment variable"
-                )
-                value = click.prompt(
-                    "Environment variable value", default=def_value
-                )
+                def_value, env_var = get_new_name(env_var, section, "environment variable")
+                value = click.prompt("Environment variable value", default=def_value)
                 section[env_var] = value
         elif value == "D":
             env_var = click.prompt("Environment variable name").lower()
             if env_var not in section:
-                print(
-                    f"{Bcolors.WARNING}There is no {env_var}"
-                    f"environment variable{Bcolors.ENDC}"
-                )
+                print(f"{Bcolors.WARNING}There is no {env_var}" f"environment variable{Bcolors.ENDC}")
             else:
                 section.pop(env_var)
         else:
@@ -262,18 +227,9 @@ def process_var_envs(executor_name):
 
 def process_params(executor_name):
     end = False
-    if (
-        "params"
-        not in config.instance[Sections.AGENT][Sections.EXECUTORS][
-            executor_name
-        ]
-    ):
-        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name][
-            "params"
-        ] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][
-        executor_name
-    ].get("params")
+    if "params" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
+        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("params")
 
     while not end:
         print(
@@ -286,15 +242,10 @@ def process_params(executor_name):
         if value == "A":
             param = click.prompt("Argument name").lower()
             if param in section:
-                print(
-                    f"{Bcolors.WARNING}The argument {param} already exists"
-                    f"{Bcolors.ENDC}"
-                )
+                print(f"{Bcolors.WARNING}The argument {param} already exists" f"{Bcolors.ENDC}")
             else:
                 mandatory = confirm_prompt("Is mandatory?")
-                input_type = click.prompt(
-                    "Type?", type=click.Choice(DATA_TYPE.keys())
-                )
+                input_type = click.prompt("Type?", type=click.Choice(DATA_TYPE.keys()))
                 input_base_type = DATA_TYPE[input_type].type().base
                 section[param] = {
                     "mandatory": mandatory,
@@ -304,15 +255,10 @@ def process_params(executor_name):
         elif value == "M":
             param = click.prompt("Argument name").lower()
             if param not in section:
-                print(
-                    f"{Bcolors.WARNING}There is no {param} argument"
-                    f"{Bcolors.ENDC}"
-                )
+                print(f"{Bcolors.WARNING}There is no {param} argument" f"{Bcolors.ENDC}")
             else:
                 def_value, param = get_new_name(param, section, "argument")
-                mandatory = confirm_prompt(
-                    "Is mandatory?", default=def_value["mandatory"]
-                )
+                mandatory = confirm_prompt("Is mandatory?", default=def_value["mandatory"])
                 input_type = click.prompt(
                     "Type?",
                     type=click.Choice(DATA_TYPE.keys()),
@@ -327,10 +273,7 @@ def process_params(executor_name):
         elif value == "D":
             param = click.prompt("Argument name").lower()
             if param not in section:
-                print(
-                    f"{Bcolors.WARNING}There is no {param} argument"
-                    f"{Bcolors.ENDC}"
-                )
+                print(f"{Bcolors.WARNING}There is no {param} argument" f"{Bcolors.ENDC}")
             else:
                 section.pop(param)
         else:
@@ -339,41 +282,21 @@ def process_params(executor_name):
 
 def process_repo_var_envs(executor_name, metadata: dict):
     env_vars = metadata["environment_variables"]
-    if (
-        "varenvs"
-        not in config.instance[Sections.AGENT][Sections.EXECUTORS][
-            executor_name
-        ]
-    ):
-        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name][
-            "varenvs"
-        ] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][
-        executor_name
-    ].get("varenvs")
+    if "varenvs" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
+        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["varenvs"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("varenvs")
 
     for env_var in env_vars:
         def_value = section.get(env_var, None)
-        value = click.prompt(
-            f"Environment variable {env_var} value", default=def_value
-        )
+        value = click.prompt(f"Environment variable {env_var} value", default=def_value)
         section[env_var] = value
 
 
 def set_repo_params(executor_name, metadata: dict):
     params: dict = metadata["arguments"]
-    if (
-        "params"
-        not in config.instance[Sections.AGENT][Sections.EXECUTORS][
-            executor_name
-        ]
-    ):
-        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name][
-            "params"
-        ] = {}
-    section = config.instance[Sections.AGENT][Sections.EXECUTORS][
-        executor_name
-    ].get("params")
+    if "params" not in config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]:
+        config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name]["params"] = {}
+    section = config.instance[Sections.AGENT][Sections.EXECUTORS][executor_name].get("params")
     section.clear()
     for param, value in params.items():
         section[param] = value

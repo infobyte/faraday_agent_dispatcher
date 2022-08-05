@@ -45,11 +45,7 @@ CONFIG_PATH = FARADAY_PATH / "config"
 
 
 if not FARADAY_PATH.exists():
-    print(
-        f"{Bcolors.WARNING}The configuration folder"
-        f" does not exist, creating"
-        f" it{Bcolors.ENDC}"
-    )
+    print(f"{Bcolors.WARNING}The configuration folder" f" does not exist, creating" f" it{Bcolors.ENDC}")
     FARADAY_PATH.mkdir()
 if not LOGS_PATH.exists():
     LOGS_PATH.mkdir()
@@ -79,9 +75,7 @@ def reset_config(filepath: Path):
         filepath = filepath.parent
     if not filename.is_file():
         if (filepath / "dispatcher.ini").is_file():
-            filename = update_config_from_ini_to_yaml(
-                (filepath / "dispatcher.ini")
-            )
+            filename = update_config_from_ini_to_yaml((filepath / "dispatcher.ini"))
         else:
             copy(EXAMPLE_CONFIG_FILENAME, filename)
     elif filename.suffix == ".ini":
@@ -127,55 +121,35 @@ def update_config_from_ini_to_yaml(filepath: Path):
 
     try:
         if not old_instance.read(filepath):
-            raise ValueError(
-                f"Unable to read config file located" f" at {filepath}", False
-            )
+            raise ValueError(f"Unable to read config file located" f" at {filepath}", False)
     except configparser.DuplicateSectionError:
-        raise ValueError(
-            f"The config in {filepath} contains " f"duplicated sections", True
-        )
+        raise ValueError(f"The config in {filepath} contains " f"duplicated sections", True)
 
     if OldSections.AGENT not in old_instance:
         if OldSections.EXECUTOR in old_instance:
             agent_name = old_instance.get(OldSections.EXECUTOR, "agent_name")
             executor_name = DEFAULT_EXECUTOR_VERIFY_NAME
-            old_instance.add_section(
-                OldSections.EXECUTOR_DATA.format(executor_name)
-            )
-            old_instance.add_section(
-                OldSections.EXECUTOR_VARENVS.format(executor_name)
-            )
-            old_instance.add_section(
-                OldSections.EXECUTOR_PARAMS.format(executor_name)
-            )
+            old_instance.add_section(OldSections.EXECUTOR_DATA.format(executor_name))
+            old_instance.add_section(OldSections.EXECUTOR_VARENVS.format(executor_name))
+            old_instance.add_section(OldSections.EXECUTOR_PARAMS.format(executor_name))
             old_instance.add_section(OldSections.AGENT)
             old_instance.set(OldSections.AGENT, "agent_name", agent_name)
             old_instance.set(OldSections.AGENT, "executors", executor_name)
             cmd = old_instance.get(OldSections.EXECUTOR, "cmd")
-            old_instance.set(
-                OldSections.EXECUTOR_DATA.format(executor_name), "cmd", cmd
-            )
+            old_instance.set(OldSections.EXECUTOR_DATA.format(executor_name), "cmd", cmd)
             old_instance.remove_section(OldSections.EXECUTOR)
     else:
         data = []
 
         if "executors" in old_instance[OldSections.AGENT]:
-            executor_list = old_instance.get(
-                OldSections.AGENT, "executors"
-            ).split(",")
+            executor_list = old_instance.get(OldSections.AGENT, "executors").split(",")
             if "" in executor_list:
                 executor_list.remove("")
             for executor_name in executor_list:
                 executor_name = executor_name.strip()
-                if (
-                    OldSections.EXECUTOR_DATA.format(executor_name)
-                    not in old_instance.sections()
-                ):
+                if OldSections.EXECUTOR_DATA.format(executor_name) not in old_instance.sections():
 
-                    data.append(
-                        f"{OldSections.EXECUTOR_DATA.format(executor_name)}"
-                        f" section does not exist"
-                    )
+                    data.append(f"{OldSections.EXECUTOR_DATA.format(executor_name)}" f" section does not exist")
         else:
             data.append(f"executors option not in {OldSections.AGENT} section")
 
@@ -192,9 +166,7 @@ def update_config_from_ini_to_yaml(filepath: Path):
         raise ValueError("Server section missing in config file")
 
     if "workspace" in old_instance[OldSections.SERVER]:
-        workspace_loaded_value = old_instance.get(
-            section=OldSections.SERVER, option="workspace"
-        )
+        workspace_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspace")
         workspaces_value = workspace_loaded_value
 
         if "workspaces" in old_instance[OldSections.SERVER]:
@@ -204,16 +176,10 @@ def update_config_from_ini_to_yaml(filepath: Path):
                 f"{Bcolors.BOLD}workspaces{Bcolors.ENDC}"
                 f"{Bcolors.WARNING} found. Merging them"
             )
-            logging.warning(
-                "Both section workspace and workspaces " "found. Merging them"
-            )
-            workspaces_loaded_value = old_instance.get(
-                section=OldSections.SERVER, option="workspaces"
-            )
+            logging.warning("Both section workspace and workspaces " "found. Merging them")
+            workspaces_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspaces")
             if len(workspaces_value) >= 0:
-                workspaces_value = (
-                    f"{workspaces_value}," f"{workspaces_loaded_value}"
-                )
+                workspaces_value = f"{workspaces_value}," f"{workspaces_loaded_value}"
         old_instance.set(
             section=OldSections.SERVER,
             option="workspaces",
@@ -235,9 +201,7 @@ def update_config_from_ini_to_yaml(filepath: Path):
 
     if OldSections.AGENT in old_instance:
         if "executors" in old_instance[OldSections.AGENT]:
-            executor_list = old_instance.get(
-                OldSections.AGENT, "executors"
-            ).split(",")
+            executor_list = old_instance.get(OldSections.AGENT, "executors").split(",")
             if "" in executor_list:
                 executor_list.remove("")
             for executor_name in executor_list:
@@ -246,9 +210,7 @@ def update_config_from_ini_to_yaml(filepath: Path):
                 executors[executor_name] = {}
 
                 # Data
-                for key, value in old_instance[
-                    OldSections.EXECUTOR_DATA.format(executor_name)
-                ].items():
+                for key, value in old_instance[OldSections.EXECUTOR_DATA.format(executor_name)].items():
                     executors[executor_name][key] = value
 
                 if "max_size" not in executors[executor_name]:
@@ -256,24 +218,14 @@ def update_config_from_ini_to_yaml(filepath: Path):
 
                 # Varenvs
                 executors[executor_name]["varenvs"] = {}
-                if (
-                    OldSections.EXECUTOR_VARENVS.format(executor_name)
-                    in old_instance
-                ):
-                    for key, value in old_instance[
-                        OldSections.EXECUTOR_VARENVS.format(executor_name)
-                    ].items():
+                if OldSections.EXECUTOR_VARENVS.format(executor_name) in old_instance:
+                    for key, value in old_instance[OldSections.EXECUTOR_VARENVS.format(executor_name)].items():
                         executors[executor_name]["varenvs"][key] = value
 
                 # Params
                 executors[executor_name]["params"] = {}
-                if (
-                    OldSections.EXECUTOR_PARAMS.format(executor_name)
-                    in old_instance
-                ):
-                    for key, value in old_instance[
-                        OldSections.EXECUTOR_PARAMS.format(executor_name)
-                    ].items():
+                if OldSections.EXECUTOR_PARAMS.format(executor_name) in old_instance:
+                    for key, value in old_instance[OldSections.EXECUTOR_PARAMS.format(executor_name)].items():
                         executors[executor_name]["params"][key] = {
                             "mandatory": value.lower() in ["true", "t"],
                             "type": "string",
@@ -300,9 +252,7 @@ def update_config_from_ini_to_yaml(filepath: Path):
         for key, value in old_instance[OldSections.SERVER].items():
             yaml_config[Sections.SERVER][key] = value
 
-    if "workspaces" in yaml_config[Sections.SERVER] and isinstance(
-        yaml_config[Sections.SERVER]["workspaces"], str
-    ):
+    if "workspaces" in yaml_config[Sections.SERVER] and isinstance(yaml_config[Sections.SERVER]["workspaces"], str):
         str_list = yaml_config[Sections.SERVER]["workspaces"].split(",")
         if "" in str_list:
             str_list.remove("")
@@ -323,43 +273,24 @@ def update_config(config: Dict):
     if Sections.SERVER in config:
         if "ssl_ignore" not in config[Sections.SERVER]:
             config[Sections.SERVER]["ssl_ignore"] = False
-        if "api_port" in config[Sections.SERVER] and isinstance(
-            config[Sections.SERVER]["api_port"], str
-        ):
-            config[Sections.SERVER]["api_port"] = int(
-                config[Sections.SERVER]["api_port"]
-            )
-        if "websocket_port" in config[Sections.SERVER] and isinstance(
-            config[Sections.SERVER]["websocket_port"], str
-        ):
-            config[Sections.SERVER]["websocket_port"] = int(
-                config[Sections.SERVER]["websocket_port"]
-            )
+        if "api_port" in config[Sections.SERVER] and isinstance(config[Sections.SERVER]["api_port"], str):
+            config[Sections.SERVER]["api_port"] = int(config[Sections.SERVER]["api_port"])
+        if "websocket_port" in config[Sections.SERVER] and isinstance(config[Sections.SERVER]["websocket_port"], str):
+            config[Sections.SERVER]["websocket_port"] = int(config[Sections.SERVER]["websocket_port"])
         if isinstance(config[Sections.SERVER]["ssl"], str):
-            config[Sections.SERVER]["ssl"] = (
-                config[Sections.SERVER]["ssl"] == "True"
-            )
-    if (
-        Sections.AGENT in config
-        and Sections.EXECUTORS in config[Sections.AGENT]
-    ):
+            config[Sections.SERVER]["ssl"] = config[Sections.SERVER]["ssl"] == "True"
+    if Sections.AGENT in config and Sections.EXECUTORS in config[Sections.AGENT]:
         for executor in config[Sections.AGENT]["executors"]:
             if (
                 isinstance(config[Sections.AGENT]["executors"], dict)
-                and "repo_executor"
-                in config[Sections.AGENT]["executors"][executor]
-                and "repo_name"
-                not in config[Sections.AGENT]["executors"][executor]
+                and "repo_executor" in config[Sections.AGENT]["executors"][executor]
+                and "repo_name" not in config[Sections.AGENT]["executors"][executor]
             ):
                 new_repo_name = get_repo_exec().get(
-                    config[Sections.AGENT]["executors"][executor][
-                        "repo_executor"
-                    ],
+                    config[Sections.AGENT]["executors"][executor]["repo_executor"],
                     "",
                 )
-                config[Sections.AGENT]["executors"][executor][
-                    "repo_name"
-                ] = new_repo_name
+                config[Sections.AGENT]["executors"][executor]["repo_name"] = new_repo_name
                 if len(new_repo_name) == 0:
                     logging.warning(
                         f"{Bcolors.WARNING}We tried to update the executor "
@@ -414,19 +345,9 @@ def control_config():
                     continue
                 raise ValueError(f"{section} section missing in config file")
             else:
-                if (
-                    option not in instance[section]
-                    and section != Sections.TOKENS
-                ):
-                    raise ValueError(
-                        f"{option} option missing in {section} section of "
-                        f"the config file"
-                    )
-            value = (
-                instance[section][option]
-                if option in instance[section]
-                else None
-            )
+                if option not in instance[section] and section != Sections.TOKENS:
+                    raise ValueError(f"{option} option missing in {section} section of " f"the config file")
+            value = instance[section][option] if option in instance[section] else None
             __control_dict[section][option](option, value)
 
 

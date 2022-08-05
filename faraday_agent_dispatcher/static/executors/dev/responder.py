@@ -50,9 +50,7 @@ output_pattern = re.compile(
 
 
 if __name__ == "__main__":
-    results = subprocess.run(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    )
+    results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     data = dict()
     hosts = []
@@ -63,16 +61,12 @@ if __name__ == "__main__":
                 # host
                 host_data_ = host_data.copy()
                 host_data_["ip"] = host_data_["ip"].format(m.group("ip"))
-                host_data_["description"] = host_data_["description"].format(
-                    m.group("os")
-                )
+                host_data_["description"] = host_data_["description"].format(m.group("os"))
                 host_data_["hostnames"] = [m.group("hostname")]
 
                 # service
                 service_data_ = service_data.copy()
-                service_data_["version"] = service_data_["version"].format(
-                    m.group("version")
-                )
+                service_data_["version"] = service_data_["version"].format(m.group("version"))
                 host_data_["services"] = [service_data_]
 
                 print(service_data_)
@@ -94,11 +88,9 @@ if __name__ == "__main__":
                     "SMB server."
                 )
                 vuln_data_["refs"] = [
-                    "https://support.microsoft.com/en-us/help/887429/"
-                    "overview-of-server-message-block-signing",
+                    "https://support.microsoft.com/en-us/help/887429/" "overview-of-server-message-block-signing",
                     "http://technet.microsoft.com/en-us/library/cc731957.aspx",
-                    "https://www.samba.org/samba/docs/current/man-html"
-                    "/smb.conf.5.html",
+                    "https://www.samba.org/samba/docs/current/man-html" "/smb.conf.5.html",
                 ]
 
                 vuln_data_["severity"] = "medium"
@@ -112,10 +104,7 @@ if __name__ == "__main__":
 
             if m.group("ms17") == "True":
                 vuln_data_ = vuln_data.copy()
-                vuln_data_["name"] = (
-                    "MS17-010: Security Update for "
-                    "Microsoft Windows SMB Server"
-                )
+                vuln_data_["name"] = "MS17-010: Security Update for " "Microsoft Windows SMB Server"
                 vuln_data_["desc"] = (
                     "The remote Windows host is missing a security update. "
                     "It is, therefore, affected by the following "
@@ -146,8 +135,7 @@ if __name__ == "__main__":
                     "and then spreads via ETERNALBLUE."
                 )
                 vuln_data_["refs"] = [
-                    "https://www.rapid7.com/db/modules/exploit/windows/smb/"
-                    "ms17_010_eternalblue",
+                    "https://www.rapid7.com/db/modules/exploit/windows/smb/" "ms17_010_eternalblue",
                     "CVE-2017-0143",
                     "CVE-2017-0144",
                     "CVE-2017-0145",

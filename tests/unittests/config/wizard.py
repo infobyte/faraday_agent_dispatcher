@@ -493,9 +493,7 @@ def generate_inputs():
                     base="4",
                     varenvs=[
                         RepoVarEnvInput(name="NESSUS_USERNAME", value="asd"),
-                        RepoVarEnvInput(
-                            name="NESSUS_PASSWORD", value="asdsad"
-                        ),
+                        RepoVarEnvInput(name="NESSUS_PASSWORD", value="asdsad"),
                         RepoVarEnvInput(name="NESSUS_URL", value="asdasd"),
                     ],
                     adm_type=ADMType.ADD,
@@ -504,9 +502,7 @@ def generate_inputs():
                     name="ex1",
                     varenvs=[
                         RepoVarEnvInput(name="NESSUS_USERNAME", value="asd"),
-                        RepoVarEnvInput(
-                            name="NESSUS_PASSWORD", value="asdsad"
-                        ),
+                        RepoVarEnvInput(name="NESSUS_PASSWORD", value="asdsad"),
                         RepoVarEnvInput(name="NESSUS_URL", value="asdasd"),
                     ],
                     adm_type=ADMType.MODIFY,
@@ -531,8 +527,7 @@ def generate_inputs():
             "after_workspaces": {"aworkspace"},
         },
         {
-            "id_str": "Delete an non-existent executor (Test modify do "
-            "nothing)",
+            "id_str": "Delete an non-existent executor (Test modify do " "nothing)",
             "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
@@ -1044,8 +1039,7 @@ def generate_error_ini_configs():
         {
             "id_str": "1.0.ini missing a executor section",
             "dir": old_version_path() / "1.0_error0.ini",
-            "exception_message": "notAConfiguredExecutor section does not "
-            "exists",
+            "exception_message": "notAConfiguredExecutor section does not " "exists",
         },
         {
             "id_str": "1.0.ini missing executor option",
@@ -1061,9 +1055,7 @@ def parse_inputs(testing_inputs: Dict):
         dispatcher_input: DispatcherInput = testing_inputs["dispatcher_input"]
         result_input = f"A\n{dispatcher_input.input_str()}"
     if "executors_input" in testing_inputs:
-        executors_input: List[ExecutorInput] = testing_inputs[
-            "executors_input"
-        ]
+        executors_input: List[ExecutorInput] = testing_inputs["executors_input"]
         result_input = f"{result_input}E\n"
         for executor_input in executors_input:
             result_input = f"{result_input}{executor_input.input_str()}"

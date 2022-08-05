@@ -12,9 +12,7 @@ from gvm.transforms import EtreeCheckCommandTransform
 
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = (
-        os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
-    )
+    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
     user = os.environ.get("GVM_USER")
     passw = os.environ.get("GVM_PASSW")
     userssh = os.environ.get("EXECUTOR_CONFIG_SSH_USER")
@@ -29,15 +27,9 @@ def main():
     connection_type = os.environ.get("EXECUTOR_CONFIG_CONNECTION_TYPE").lower()
     scan_url = os.environ.get("EXECUTOR_CONFIG_SCAN_TARGET")
     # Defaults to: Full and Fast
-    scan_id = (
-        os.environ.get("EXECUTOR_CONFIG_SCAN_ID")
-        or "daba56c8-73ec-11df-a475-002264764cea"
-    )
+    scan_id = os.environ.get("EXECUTOR_CONFIG_SCAN_ID") or "daba56c8-73ec-11df-a475-002264764cea"
     # Defaults to: All IANA assigned TCP
-    port_list = (
-        os.environ.get("EXECUTOR_CONFIG_PORT_LIST_ID")
-        or "33d0cd82-57c6-11e1-8ed1-406186ea4fc5"
-    )
+    port_list = os.environ.get("EXECUTOR_CONFIG_PORT_LIST_ID") or "33d0cd82-57c6-11e1-8ed1-406186ea4fc5"
 
     # RAW XML FORMAT
     xml_format = "a994b278-1f62-11e1-96ac-406186ea4fc5"
@@ -47,8 +39,7 @@ def main():
 
     if not user or not passw or not host or not port:
         print(
-            "Data config ['User', 'Passw', 'Host', 'Port']"
-            " GVM_OpenVas not provided",
+            "Data config ['User', 'Passw', 'Host', 'Port']" " GVM_OpenVas not provided",
             file=sys.stderr,
         )
         sys.exit()
@@ -80,9 +71,7 @@ def main():
     if connection_type == "socket":
         connection = UnixSocketConnection(path=socket)
     elif connection_type == "ssh":
-        connection = SSHConnection(
-            hostname=host, port=port, username=userssh, password=passwssh
-        )
+        connection = SSHConnection(hostname=host, port=port, username=userssh, password=passwssh)
     elif connection_type == "tls":
         connection = TLSConnection(
             hostname=host,
@@ -98,9 +87,7 @@ def main():
         gmp.authenticate(user, passw)
         name = f"Suspect Host {scan_url} {str(datetime.datetime.now())}"
 
-        response = gmp.create_target(
-            name=name, hosts=[scan_url], port_list_id=port_list
-        )
+        response = gmp.create_target(name=name, hosts=[scan_url], port_list_id=port_list)
 
     target_id = response.get("id")
 
@@ -156,9 +143,7 @@ def main():
         )
 
     # Parse report and send to Faraday
-    plugin = OpenvasPlugin(
-        ignore_info=ignore_info, hostname_resolution=hostname_resolution
-    )
+    plugin = OpenvasPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
     plugin.parseOutputString(ET.tostring(report[0], encoding="unicode"))
     print(plugin.get_json())
 
