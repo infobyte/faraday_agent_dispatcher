@@ -17,8 +17,8 @@ def is_ip(url):
 
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     # separate the target list with comma
     NUCLEI_TARGET = os.getenv("EXECUTOR_CONFIG_NUCLEI_TARGET")
     # separate the exclude list with comma

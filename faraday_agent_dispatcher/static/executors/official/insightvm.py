@@ -19,8 +19,8 @@ def main():
     # If the script is run outside the dispatcher
     # the environment variables are checked.
     # ['TARGET_URL', 'EXECUTIVE_REPORT_ID']
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = os.getenv("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     INSIGHTVM_HOST = os.getenv("INSIGHTVM_HOST")
     INSIGHTVM_USR = os.getenv("INSIGHTVM_USR")
     INSIGHTVM_PASSWD = os.getenv("INSIGHTVM_PASSWD")
