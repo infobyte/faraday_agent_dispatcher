@@ -10,8 +10,8 @@ def main():
     # If the script is run outside the dispatcher
     # the environment variables
     # are checked.
-    ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", False) == "True"
-    hostname_resolution = my_envs.get("AGENT_CONFIG_HOSTNAME_RESOLUTION", "True") == "True"
+    ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    hostname_resolution = my_envs.get("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     tool = os.environ.get("EXECUTOR_CONFIG_TOOL", None)
 
     if "EXECUTOR_CONFIG_REPORT_NAME" in my_envs:
