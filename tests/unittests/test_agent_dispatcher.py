@@ -91,7 +91,11 @@ def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
         Dispatcher(None, config_path)
 
 
-@pytest.mark.parametrize("register_options", generate_register_options(), ids=lambda elem: elem["id_str"])
+@pytest.mark.parametrize(
+    "register_options",
+    generate_register_options(),
+    ids=lambda elem: elem["id_str"],
+)
 @pytest.mark.asyncio
 async def test_start_and_register(
     register_options,
@@ -155,7 +159,8 @@ async def test_start_and_register(
             if register_options["bad_registration_token"] is None:
                 token = None
             elif register_options["bad_registration_token"] == "incorrect":
-                token = f"{((int(test_config.registration_token) + 1) % 1000000):06}"
+                incorrect_token = int(test_config.registration_token) + 1
+                token = f"{(incorrect_token % 1000000):06}"
             elif register_options["bad_registration_token"] == "bad format":
                 token = "qewqwe"
             else:  # == "bad"
@@ -201,7 +206,11 @@ async def check_logs(history, logs):
 
 
 # TODO: FROM HERE NOT CHECKED YET
-@pytest.mark.parametrize("executor_options", generate_executor_options(), ids=lambda elem: elem["id_str"])
+@pytest.mark.parametrize(
+    "executor_options",
+    generate_executor_options(),
+    ids=lambda elem: elem["id_str"],
+)
 @pytest.mark.asyncio
 async def test_run_once(
     test_config: FaradayTestConfig,  # noqa F811
@@ -279,7 +288,11 @@ async def test_run_once(
                 ].items()
             },
         }
-        executor_metadata["args"]["out"] = {"mandatory": True, "type": "string", "base": "string"}
+        executor_metadata["args"]["out"] = {
+            "mandatory": True,
+            "type": "string",
+            "base": "string",
+        }
         test_config.executors.append(executor_metadata)
 
     tmp_default_config.save()

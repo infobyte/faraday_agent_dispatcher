@@ -35,7 +35,12 @@ def nessus_login(url, user, password):
 def nessus_templates(url, token, x_token="", target=""):
     headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
     payload = {}
-    response = requests.get(urljoin(url, "editor/scan/templates"), json=payload, headers=headers, verify=False)
+    response = requests.get(
+        urljoin(url, "editor/scan/templates"),
+        json=payload,
+        headers=headers,
+        verify=False,
+    )
     if (
         response.status_code == 200
         and "templates" in response.json()
@@ -57,8 +62,14 @@ def nessus_add_target(url, token, x_token="", target="", template="basic", name=
         print("Templates not available", file=sys.stderr)
         return None
     if template not in templates:
-        print(f"Template {template} not valid. Setting basic as default", file=sys.stderr)
-        print(f"The templates available are {list(templates.keys())}", file=sys.stderr)
+        print(
+            f"Template {template} not valid. Setting basic as default",
+            file=sys.stderr,
+        )
+        print(
+            f"The templates available are {list(templates.keys())}",
+            file=sys.stderr,
+        )
         template = "basic"
 
     payload = {
@@ -145,7 +156,10 @@ def nessus_scan_export(url, scan_id, token, x_token=""):
     ):
         export_token = response.json()["token"]
     else:
-        print(f"Export failed with status {response.status_code}", file=sys.stderr)
+        print(
+            f"Export failed with status {response.status_code}",
+            file=sys.stderr,
+        )
         return None
 
     status = "processing"
@@ -175,7 +189,11 @@ def nessus_scan_export(url, scan_id, token, x_token=""):
         time.sleep(TIME_BETWEEN_TRIES)
 
     print(f"Report export status {status}", file=sys.stderr)
-    response = requests.get(urljoin(url, f"tokens/{export_token}/download"), allow_redirects=True, verify=False)
+    response = requests.get(
+        urljoin(url, f"tokens/{export_token}/download"),
+        allow_redirects=True,
+        verify=False,
+    )
     if response.status_code == 200:
         return response.content
 

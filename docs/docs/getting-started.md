@@ -40,13 +40,10 @@ Examples:
          (A, E, Q) [Q]: **A**  
         _Section: server_  
         host [127.0.0.1]:  
-        ssl [True]:  
-        ssl_port [443]:  
-        Default SSL behavior? (Y, N): **N**  
-        ssl_cert []:  
-        _Trying to save with empty value_  
-        ssl_cert []: **/home/path/to/the/cert.pub**  
-        workspace [workspace]: **sslWorkspace**  
+        ssl [Y/n]:  
+        api_port [443]:  
+        websocket_port [443]:  
+        ssl_ignore [y/N]: **N**  
         _Section: agent_  
         agent_name [agent]: **sslAgent**  
         Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?  
@@ -62,7 +59,6 @@ Examples:
         ssl [True]: **False**  
         api_port [5985]:  
         websocket_port [9000]:  
-        workspace [workspace]: **sslFalseWorkspace**  
         _Section: agent_  
         agent_name [agent]: **sslFalseAgent**  
         Do you want to edit the [A]gent or the [E]xecutors? Do you want to [Q]uit?  
@@ -89,20 +85,25 @@ official and custom executor:
         Do you want to [A]dd, [M]odify or [D]elete an executor? Do you want to  
         [Q]uit? (A, M, D, Q) [Q]: **A**  
         Name: **official**  
-        Is a custom executor? (Y, N) [N]: **N**  
+        Is a custom executor? [y/N]: **N**  
         The executors are:  
-        _1: wpscan.py_  
-        _2: sublist3r.sh_  
-        _3: nikto2.py_  
-        _4: nessus.py_  
-        _5: w3af.py_  
+        _1: arachni_  
+        _2: burp_  
+        _3: crackmapexec_  
+        _4: gvm_openvas_  
+        _5: insightvm_  
+        _6: nessus_  
+        _7: nikto2_  
+        _8: nmap_  
+        _9: nuclei_  
+        _10: openvas_legacy_  
         _+: Next page_  
         _Q: Don't choose_  
-        Choose one: **4**  
-        Max data sent to server [65536]: **65536**  
+        Choose one: **6**  
         Environment variable NESSUS_USERNAME value: **username**  
         Environment variable NESSUS_PASSWORD value: **password**  
         Environment variable NESSUS_URL value: **https://nessus_url.com**  
+        New repository executor added  
         The actual configured executors are: _['official']_  
         Do you want to [A]dd, [M]odify or [D]elete an executor? Do you want to  
         [Q]uit? (A, M, D, Q) [Q]: **Q**  
@@ -118,10 +119,9 @@ official and custom executor:
         Do you want to [A]dd, [M]odify or [D]elete an executor? Do you want to
         [Q]uit? (A, M, D, Q) [Q]: **A**  
         Name: **custom**  
-        Is a custom executor? (Y, N) [N]: **Y**  
+        Is a custom executor? [y/N]: **Y**  
         Command to execute [exit 1]: **python3
         {REPO_FOLDER}/faraday_agent_dispatcher/static/executors/official/nessus.py**  
-        Max data sent to server [65536]: **65536**  
         The actual custom executor's environment variables are: _[]_  
         Do you want to [A]dd, [M]odify or [D]elete an environment variable? Do you
          want to [Q]uit? (A, M, D, Q) [Q]: **A**  
@@ -146,24 +146,24 @@ official and custom executor:
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
          [Q]uit? (A, M, D, Q) [Q]: **A**  
         Argument name: **NESSUS_SCAN_NAME**  
-        Is mandatory? (Y, N): **N**  
+        Is mandatory? [y,N]: **N**  
         The actual custom executor's arguments are: _['nessus_scan_name']_  
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
          [Q]uit? (A, M, D, Q) [Q]: **A**  
         Argument name: **NESSUS_URL**  
-        Is mandatory? (Y, N): **N**  
+        Is mandatory? [y,N]: **N**  
         The actual custom executor's arguments are: _['nessus_scan_name',
          'nessus_url']_  
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
          [Q]uit? (A, M, D, Q) [Q]: **A**  
         Argument name: **NESSUS_SCAN_TARGET**  
-        Is mandatory? (Y, N): **Y**  
+        Is mandatory? [y,N]: **Y**  
         The actual custom executor's arguments are: _['nessus_scan_name',
         'nessus_url', 'nessus_scan_target']_  
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
          [Q]uit? (A, M, D, Q) [Q]: **A**  
         Argument name: **NESSUS_SCAN_TEMPLATE**  
-        Is mandatory? (Y, N): **N**  
+        Is mandatory? [y,N]: **N**  
         The actual custom executor's arguments are: _['nessus_scan_name',
         'nessus_url', 'nessus_scan_target', 'nessus_scan_template']_  
         Do you want to [A]dd, [M]odify or [D]elete an argument? Do you want to
@@ -191,8 +191,10 @@ The first time you run an agent, you need a token provided by the server
 That required token can be taken from the http(s)://__{faraday_server_host}__/#/admin/agents
 
 For example in:
+
 ![token_example](images/token.png)
-Your token is: _562107_
+
+Your token is: _225230_
 
 The dispatcher can be executed with the `run` command, passing this token as an option: <!--Add link to proper
 page-->
@@ -218,17 +220,18 @@ $ faraday-dispatcher run --token={TOKEN}
 
 ### Running an executor from faraday
 
-1. Go to https://__{faraday_server_host}__/#/admin/agents
-1. Select your workspace in the dropdown
-   ![Agents view](images/agent_example.png)
-1. Click Execute in the agent
-1. Select the executor and fill the arguments
+1. Go to https://__{faraday_server_host}__/automation/agents
+   ![Executor view](images/agent_example.png)
+2. Click the green play bottom in the agent
+3. Select the executor, fill the arguments
    ![Executor view](images/executor_example.png)
-1. Click `Run`
+4. Click `Run`
 
 ???+ success "Expected output"
     ```shell
-    INFO - Parsing data: {"execution_id": XX, "agent_id": XX, "action": "RUN", "executor": {EXECUTOR_NAME}, "args": {EXECUTOR_ARGS}}
+    INFO - Parsing data: {"execution_ids": [XX], "agent_id": XX, "workspaces": [{WORKSPACE_NAME}], "action": "RUN",
+"executor": "nmapOfficial", "args": {EXECUTOR_ARGS},
+"plugin_args": {"ignore_info": true, "resolve_hotname": true}}
     INFO - Running {EXECUTOR_NAME} executor
     [Executor data]
     INFO - Executor {EXECUTOR_NAME} finished successfully
@@ -236,7 +239,9 @@ $ faraday-dispatcher run --token={TOKEN}
 
 ???+ Fail "Error output"
     ```shell
-    INFO - Parsing data: {"execution_id": XX, "agent_id": XX, "action": "RUN", "executor": {EXECUTOR_NAME}, "args": {EXECUTOR_ARGS}}
+    INFO - Parsing data: {"execution_ids": [XX], "agent_id": XX, "workspaces": [{WORKSPACE_NAME}], "action": "RUN",
+"executor": "nmapOfficial", "args": {EXECUTOR_ARGS},
+"plugin_args": {"ignore_info": true, "resolve_hotname": true}}
     INFO - Running {EXECUTOR_NAME} executor
     [Executor data and errors]
     WARNING - Executor {EXECUTOR_NAME} finished with exit code 1
