@@ -501,17 +501,20 @@ class Dispatcher:
     @staticmethod
     async def create_process(executor: Executor, args: dict, plugin_args: dict):
         env = os.environ.copy()
+        # Executor Variables
         if isinstance(args, dict):
             for k in args:
                 env[f"EXECUTOR_CONFIG_{k.upper()}"] = str(args[k])
         else:
             logger.error("Args from data received has a not supported type")
             raise ValueError("Args from data received has a not supported type")
+        # Plugins Variables
         for pa in plugin_args:
             if isinstance(plugin_args.get(pa), list):
                 env[f"AGENT_CONFIG_{pa.upper()}"] = ",".join(plugin_args.get(pa))
-            else:
+            elif plugin_args.get(pa):
                 env[f"AGENT_CONFIG_{pa.upper()}"] = str(plugin_args.get(pa))
+        # Executor Defaults
         for varenv, value in executor.varenvs.items():
             env[f"{varenv.upper()}"] = value
         process = await asyncio.create_subprocess_shell(
