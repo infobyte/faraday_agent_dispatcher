@@ -12,9 +12,9 @@ def main():
     # are checked.
     ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = my_envs.get("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "").split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "").split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "").split(",")
     tool = os.environ.get("EXECUTOR_CONFIG_TOOL", None)
 
     if "EXECUTOR_CONFIG_REPORT_NAME" in my_envs:

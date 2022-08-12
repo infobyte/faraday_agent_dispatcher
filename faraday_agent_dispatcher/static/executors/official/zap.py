@@ -13,9 +13,9 @@ def main():
     # ['EXECUTOR_CONFIG_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "").split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "").split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "").split(",")
     try:
         target = os.environ["EXECUTOR_CONFIG_TARGET_URL"]
         api_key = os.environ["EXECUTOR_CONFIG_API_KEY"]

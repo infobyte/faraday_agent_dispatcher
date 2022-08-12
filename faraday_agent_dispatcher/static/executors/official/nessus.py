@@ -212,9 +212,9 @@ def get_x_api_token(url, token):
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "").split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "").split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "").split(",")
     NESSUS_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_NAME", get_report_name())
     NESSUS_URL = os.getenv("EXECUTOR_CONFIG_NESSUS_URL")  # https://nessus:port
     NESSUS_USERNAME = os.getenv("NESSUS_USERNAME")

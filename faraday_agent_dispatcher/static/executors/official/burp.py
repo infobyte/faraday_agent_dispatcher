@@ -100,9 +100,9 @@ def main():
     # ['TARGET_URL', 'NAMED_CONFIGURATION']
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "").split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "").split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "").split(",")
     BURP_HOST = os.getenv("BURP_HOST")
     BURP_API_KEY = os.getenv("BURP_API_KEY")
     TARGET_URL = os.getenv("EXECUTOR_CONFIG_TARGET_URL")

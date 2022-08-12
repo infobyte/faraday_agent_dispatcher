@@ -18,9 +18,9 @@ def main():
     # ['TARGET_URL', 'EXECUTIVE_REPORT_ID']
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "").split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "").split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "").split(",")
     INSIGHTVM_HOST = os.getenv("INSIGHTVM_HOST")
     INSIGHTVM_USR = os.getenv("INSIGHTVM_USR")
     INSIGHTVM_PASSWD = os.getenv("INSIGHTVM_PASSWD")
