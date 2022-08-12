@@ -25,9 +25,9 @@ def main():
     my_envs = os.environ
     ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = my_envs.get("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = my_envs.get("AGENT_CONFIG_VULN_TAG", "")
-    service_tag = my_envs.get("AGENT_CONFIG_SERVICE_TAG", "")
-    host_tag = my_envs.get("AGENT_CONFIG_HOSTNAME_TAG", "")
+    vuln_tag = my_envs.get("AGENT_CONFIG_VULN_TAG", "").split(",")
+    service_tag = my_envs.get("AGENT_CONFIG_SERVICE_TAG", "").split(",")
+    host_tag = my_envs.get("AGENT_CONFIG_HOSTNAME_TAG", "").split(",")
     # If the script is run outside the dispatcher
     # the environment variables
     # are checked.

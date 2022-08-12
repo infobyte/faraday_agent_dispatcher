@@ -10,9 +10,9 @@ from pathlib import Path
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "")
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "").split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "").split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "").split(",")
     url_target = os.environ.get("EXECUTOR_CONFIG_W3AF_TARGET_URL")
     if not url_target:
         print("URL not provided", file=sys.stderr)
