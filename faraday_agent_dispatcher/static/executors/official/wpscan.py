@@ -10,9 +10,15 @@ from faraday_plugins.plugins.repo.wpscan.plugin import WPScanPlugin
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "").split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "").split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "").split(",")
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
+    if vuln_tag:
+        vuln_tag = vuln_tag.split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
+    if service_tag:
+        service_tag = service_tag.split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
+    if host_tag:
+        host_tag = host_tag.split(",")
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_WPSCAN_TARGET_URL']

@@ -19,9 +19,15 @@ def main():
     # "EXECUTOR_CONFIG_OPENVAS_SCAN_URL", "EXECUTOR_CONFIG_OPENVAS_SCAN_ID"]
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", "").split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", "").split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", "").split(",")
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
+    if vuln_tag:
+        vuln_tag = vuln_tag.split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
+    if service_tag:
+        service_tag = service_tag.split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
+    if host_tag:
+        host_tag = host_tag.split(",")
     user = os.environ.get("EXECUTOR_CONFIG_OPENVAS_USER")
     passw = os.environ.get("EXECUTOR_CONFIG_OPENVAS_PASSW")
     host = os.environ.get("EXECUTOR_CONFIG_OPENVAS_HOST")
