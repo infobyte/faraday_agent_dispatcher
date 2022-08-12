@@ -40,7 +40,9 @@ from faraday_agent_dispatcher.executor_helper import (
     StdErrLineProcessor,
     StdOutLineProcessor,
 )
-from faraday_agent_dispatcher.utils.control_values_utils import control_registration_token
+from faraday_agent_dispatcher.utils.control_values_utils import (
+    control_registration_token,
+)
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.utils.url_utils import api_url, websocket_url
 import faraday_agent_dispatcher.logger as logging
@@ -50,7 +52,10 @@ from faraday_agent_dispatcher.config import (
     save_config,
     control_config,
 )
-from faraday_agent_dispatcher.utils.metadata_utils import executor_metadata, check_metadata
+from faraday_agent_dispatcher.utils.metadata_utils import (
+    executor_metadata,
+    check_metadata,
+)
 from faraday_agent_dispatcher.cli.utils.model_load import set_repo_params
 from faraday_agent_dispatcher.executor import Executor
 from faraday_agent_parameters_types.utils import type_validate
@@ -156,7 +161,10 @@ class Dispatcher:
             try:
                 token_response = await self.session.post(
                     token_registration_url,
-                    json={"token": registration_token, "name": self.agent_name},
+                    json={
+                        "token": registration_token,
+                        "name": self.agent_name,
+                    },
                     **self.api_kwargs,
                 )
                 token = await token_response.json()
@@ -173,9 +181,11 @@ class Dispatcher:
                         "Invalid registration token, please reset and retry. "
                         "If the error persist, you should try to edit the "
                         "registration token with the wizard command "
-                        "`faraday-dispatcher config-wizard`\nHint: If the faraday "
-                        "version is not the expected this could fail, check "
-                        "https://github.com/infobyte/faraday_agent_dispatcher/blob/master/RELEASE.md"
+                        "`faraday-dispatcher config-wizard`\nHint: "
+                        "If the faraday version is not the expected this"
+                        "could fail, check "
+                        "https://github.com/infobyte/faraday_agent_dispatcher"
+                        "/blob/master/RELEASE.md"
                     )
                 else:
                     logger.info(f"Unexpected error: {e}")
@@ -256,7 +266,7 @@ class Dispatcher:
             if "action" not in data_dict:
                 logger.info("Data not contains action to do")
                 await self.websocket.send(
-                    json.dumps({"error": "'action' key is mandatory in this websocket " "connection"})
+                    json.dumps({"error": "'action' key is mandatory" " in this websocket connection"})
                 )
                 return
 
@@ -264,14 +274,14 @@ class Dispatcher:
             if data_dict["action"] not in ["RUN"]:
                 logger.info("Unrecognized action")
                 await self.websocket.send(
-                    json.dumps({f"{data_dict['action']}_RESPONSE": "Error: Unrecognized action"})
+                    json.dumps({f"{data_dict['action']}_RESPONSE": "Error: " "Unrecognized " "action"})
                 )
                 return
 
             if "execution_ids" not in data_dict:
                 logger.info("Data not contains execution id")
                 await self.websocket.send(
-                    json.dumps({"error": "'execution_ids' key is mandatory in this " "websocket connection"})
+                    json.dumps({"error": "'execution_ids' key is mandatory" " in this " "websocket connection"})
                 )
                 return
             self.execution_ids = data_dict["execution_ids"]
@@ -323,11 +333,12 @@ class Dispatcher:
                 all_accepted = all(
                     [
                         any([param in passed_param for param in params])  # Control any available param  # was passed
-                        for passed_param in passed_params  # For all passed params
+                        for passed_param in passed_params
+                        # For all passed params
                     ]
                 )
                 if not all_accepted:
-                    logger.error(f"Unexpected argument passed to {executor.name} executor")
+                    logger.error(f"Unexpected argument passed to {executor.name}" f" executor")
                     await self.websocket.send(
                         json.dumps(
                             {
@@ -349,7 +360,7 @@ class Dispatcher:
                     ]
                 )
                 if not mandatory_full:
-                    logger.error(f"Mandatory argument not passed to {executor.name} executor")
+                    logger.error(f"Mandatory argument not passed " f"to {executor.name} executor")
                     await self.websocket.send(
                         json.dumps(
                             {
@@ -357,7 +368,8 @@ class Dispatcher:
                                 "execution_ids": self.execution_ids,
                                 "executor_name": executor.name,
                                 "running": False,
-                                "message": f"Mandatory argument(s) not passed to "
+                                "message": f"Mandatory argument(s) "
+                                f"not passed to "
                                 f"{executor.name} executor from "
                                 f"{self.agent_name} agent",
                             }
@@ -371,14 +383,17 @@ class Dispatcher:
                     if param_errors:
                         errors[param] = ",".join(param_errors["data"])
                         logger.error(
-                            f'Validation error on parameter "{param}", of type "{executor.params[param]["type"]}":'
+                            f'Validation error on parameter "{param}", of type'
+                            f' "{executor.params[param]["type"]}":'
                             f" {errors[param]}"
                         )
 
                 if errors:
                     error_msg = "Validation error:"
                     for param in errors:
-                        error_msg += f"\n{param} = {passed_params[param]} did not validate correctly: {errors[param]}"
+                        error_msg += (
+                            f"\n{param} = {passed_params[param]} " f"did not validate correctly: {errors[param]}"
+                        )
                     logger.error(error_msg)
                     await self.websocket.send(
                         json.dumps(
@@ -449,7 +464,8 @@ class Dispatcher:
                                     "execution_ids": self.execution_ids,
                                     "executor_name": executor.name,
                                     "successful": True,
-                                    "message": f"Executor {executor.name} from "
+                                    "message": f"Executor "
+                                    f"{executor.name} from "
                                     f"{self.agent_name} finished "
                                     "successfully",
                                 }
@@ -528,7 +544,12 @@ class Dispatcher:
         await asyncio.sleep(0.25)
 
     async def check_connection(self):
-        server_url = api_url(self.host, self.api_port, postfix="/_api/v3/info", secure=self.api_ssl_enabled)
+        server_url = api_url(
+            self.host,
+            self.api_port,
+            postfix="/_api/v3/info",
+            secure=self.api_ssl_enabled,
+        )
         logger.debug(f"Validating server connection with {server_url}")
         try:
             kwargs = self.api_kwargs.copy()
@@ -574,11 +595,16 @@ class Dispatcher:
                 metadata = executor_metadata(repo_name)
                 if metadata:
                     if not check_metadata(metadata):
-                        click.secho(f"Invalid manifest for: {executor_name}", fg="yellow")
+                        click.secho(
+                            f"Invalid manifest for: {executor_name}",
+                            fg="yellow",
+                        )
                     set_repo_params(executor_name, metadata)
                     for env_varb in metadata.get("environment_variables"):
                         if env_varb not in executor_data.get("varenvs"):
                             logger.warning(
-                                f"{Bcolors.WARNING}The enviroment variable {env_varb} of executor {repo_name}"
-                                f" is not defined in config file.{Bcolors.ENDC}"
+                                f"{Bcolors.WARNING}The enviroment variable"
+                                f" {env_varb} of executor {repo_name}"
+                                f" is not defined in config file."
+                                f"{Bcolors.ENDC}"
                             )

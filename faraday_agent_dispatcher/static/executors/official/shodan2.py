@@ -30,9 +30,15 @@ def main():
 
         shodan_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if len(shodan_process.stdout) > 0:
-            print(f"Shodan stdout: {shodan_process.stdout.decode('utf-8')}", file=sys.stderr)
+            print(
+                f"Shodan stdout: {shodan_process.stdout.decode('utf-8')}",
+                file=sys.stderr,
+            )
         if len(shodan_process.stderr) > 0:
-            print(f"Shodan stderr: {shodan_process.stderr.decode('utf-8')}", file=sys.stderr)
+            print(
+                f"Shodan stderr: {shodan_process.stderr.decode('utf-8')}",
+                file=sys.stderr,
+            )
         plugin = ShodanPlugin(
             ignore_info=ignore_info,
             hostname_resolution=hostname_resolution,

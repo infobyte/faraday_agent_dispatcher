@@ -80,10 +80,16 @@ def main():
         nuclei_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if len(nuclei_process.stdout) > 0:
-            print(f"Nuclei stdout: {nuclei_process.stdout.decode('utf-8')}", file=sys.stderr)
+            print(
+                f"Nuclei stdout: {nuclei_process.stdout.decode('utf-8')}",
+                file=sys.stderr,
+            )
 
         if len(nuclei_process.stderr) > 0:
-            print(f"Nuclei stderr: {nuclei_process.stderr.decode('utf-8')}", file=sys.stderr)
+            print(
+                f"Nuclei stderr: {nuclei_process.stderr.decode('utf-8')}",
+                file=sys.stderr,
+            )
 
         plugin = NucleiPlugin(
             ignore_info=ignore_info,
