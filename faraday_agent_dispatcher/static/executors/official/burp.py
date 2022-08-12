@@ -135,7 +135,8 @@ def main():
     if check_api.status_code != 200:
         log(f"API gets no response. Status code: {check_api.status_code}")
         sys.exit()
-    # handling multiple targets, can be provided with: "https://example.com, https://test.com"
+    # handling multiple targets, can be provided with:
+    # "https://example.com, https://test.com"
     targets = TARGET_URL.replace(" ", "").split(",")
     scope = []
     targets_urls = []
@@ -148,7 +149,7 @@ def main():
     if targets_urls:
         log(f"Scanning {targets_urls} with burp on: {BURP_HOST}")
         with tempfile.TemporaryFile() as tmp_file:
-            issue_def = f"{BURP_HOST}/{BURP_API_KEY}/v0.1/knowledge_base/issue_definitions"
+            issue_def = f"{BURP_HOST}/{BURP_API_KEY}/v0.1/" f"knowledge_base/issue_definitions"
             rg_issue_definitions = requests.get(issue_def)
             json_issue_definitions = rg_issue_definitions.json()
             json_scan = {
@@ -184,7 +185,10 @@ def main():
                 else:
                     log("Scan finished OK")
                     generate_xml(issues, tmp_file, json_issue_definitions)
-                    plugin = BurpPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+                    plugin = BurpPlugin(
+                        ignore_info=ignore_info,
+                        hostname_resolution=hostname_resolution,
+                    )
                     tmp_file.seek(0)
                     plugin.parseOutputString(tmp_file.read())
                     print(plugin.get_json())

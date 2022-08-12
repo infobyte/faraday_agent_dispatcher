@@ -69,7 +69,10 @@ def main():
                         file=sys.stderr,
                     )
 
-                plugin = W3afPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+                plugin = W3afPlugin(
+                    ignore_info=ignore_info,
+                    hostname_resolution=hostname_resolution,
+                )
                 plugin.parseOutputString(f"{tempdirname}/output-w3af.xml")
                 print(plugin.get_json())
             else:
