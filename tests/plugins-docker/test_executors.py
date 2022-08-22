@@ -21,10 +21,21 @@ executors_to_test = [
     {
         "name": "arachni",
         "script": "arachni.py",
-        "varenvs": {"ARACHNI_PATH": "/usr/local/src/arachni/bin", "EXECUTOR_CONFIG_NAME_URL": "www.scanme.org"},
+        "varenvs": {
+            "ARACHNI_PATH": "/usr/local/src/arachni/bin",
+            "EXECUTOR_CONFIG_NAME_URL": "www.scanme.org",
+        },
     },
-    {"name": "nikto2", "script": "nikto2.py", "varenvs": {"EXECUTOR_CONFIG_TARGET_URL": "http://www.scanme.org"}},
-    {"name": "nmap", "script": "nmap.py", "varenvs": {"EXECUTOR_CONFIG_TARGET": "www.scanme.org"}},
+    {
+        "name": "nikto2",
+        "script": "nikto2.py",
+        "varenvs": {"EXECUTOR_CONFIG_TARGET_URL": "http://www.scanme.org"},
+    },
+    {
+        "name": "nmap",
+        "script": "nmap.py",
+        "varenvs": {"EXECUTOR_CONFIG_TARGET": "www.scanme.org"},
+    },
     {
         "name": "complex_nmap",
         "script": "nmap.py",
@@ -46,7 +57,7 @@ executors_to_test = [
         "name": "nuclei",
         "script": "nuclei.py",
         "varenvs": {
-            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
+            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei" "/v2/cmd/nuclei/nuclei-templates",
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
         },
     },
@@ -54,15 +65,15 @@ executors_to_test = [
         "name": "nuclei_multi",
         "script": "nuclei.py",
         "varenvs": {
-            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
-            "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org,https://grafana.faradaysec.com",
+            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei" "/v2/cmd/nuclei/nuclei-templates",
+            "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org," "https://grafana.faradaysec.com",
         },
     },
     {
         "name": "nuclei_exclude",
         "script": "nuclei.py",
         "varenvs": {
-            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates",
+            "NUCLEI_TEMPLATES": "/usr/local/src/nuclei/v2/cmd/nuclei" "/nuclei-templates",
             "EXECUTOR_CONFIG_NUCLEI_TARGET": "www.scanme.org",
             "NUCLEI_EXCLUDE": "files/",
         },
@@ -93,7 +104,10 @@ def test_executors(executor_data):
         env[key] = str(executor_data["varenvs"][key])
     cmd = "python3" if "cmd" not in executor_data else executor_data["cmd"]
     process = subprocess.run(
-        [cmd, str(executors_path / f"{script}")], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        [cmd, str(executors_path / f"{script}")],
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     responses_list = [json.loads(json_elem) for json_elem in process.stdout.decode().split("\n") if len(json_elem) > 0]
     for response in responses_list:

@@ -48,7 +48,14 @@ def main():
 
     timeout = os.environ.get("EXECUTOR_CONFIG_TIMEOUT", "")
     if re.match(r"(\d\d:[0-5][0-9]:[0-5][0-9])", timeout):
-        cmd = ["./arachni", url_analyze, "--timeout", timeout, "--report-save-path", file_afr.name]
+        cmd = [
+            "./arachni",
+            url_analyze,
+            "--timeout",
+            timeout,
+            "--report-save-path",
+            file_afr.name,
+        ]
     else:
         cmd = ["./arachni", url_analyze, "--report-save-path", file_afr.name]
     arachni_command = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

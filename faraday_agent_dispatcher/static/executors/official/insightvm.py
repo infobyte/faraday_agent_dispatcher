@@ -11,7 +11,10 @@ from faraday_plugins.plugins.repo.nexpose_full.plugin import NexposeFullPlugin
 
 
 def log(message):
-    print(f"{datetime.datetime.utcnow()} - INSISGHTVM-NEXPOSE: {message}", file=sys.stderr)
+    print(
+        f"{datetime.datetime.utcnow()} - INSISGHTVM-NEXPOSE: {message}",
+        file=sys.stderr,
+    )
 
 
 def main():
@@ -41,7 +44,7 @@ def main():
         sys.exit(1)
 
     if not host_re.match(INSIGHTVM_HOST):
-        log(f"INSIGHTVM_HOST is invalid, must be http(s)://HOST(:PORT) [{INSIGHTVM_HOST}]")
+        log(f"INSIGHTVM_HOST is invalid, must be " f"http(s)://HOST(:PORT) [{INSIGHTVM_HOST}]")
         sys.exit(1)
 
     if SITE_ID:
@@ -69,8 +72,14 @@ def get_report(user, passwd, host, report_id):
     log(f"Connecting to insightvm on {host}")
     try:
         report_response = requests.get(report_url, verify=False, auth=HTTPBasicAuth(user, passwd))
+    try:
+        report_response = requests.get(
+            report_url,
+            verify=False,
+            auth=HTTPBasicAuth(user, passwd),
+        )
         if report_response.status_code != 200:
-            log(f"API gets no response. Status code: {report_response.status_code}")
+            log(f"API gets no response. " f"Status code: {report_response.status_code}")
             sys.exit()
     except Exception as e:
         log(f"ERROR connecting to insightvm api on {host} [{e}]")
