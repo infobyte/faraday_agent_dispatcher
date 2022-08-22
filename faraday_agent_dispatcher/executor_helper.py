@@ -120,7 +120,8 @@ class StdOutLineProcessor(FileLineProcessor):
                     logger.info("Data sent to bulk create")
                 else:
                     logger.error(
-                        "Invalid data supplied by the executor to the bulk create "
+                        "Invalid data supplied by the executor to"
+                        " the bulk create "
                         f"endpoint. Server responded: {res.status} "
                         f"{await res.text()}"
                     )
@@ -136,7 +137,11 @@ class StdOutLineProcessor(FileLineProcessor):
     async def end_f(self):
         headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
         for workspace, execution_id in zip(self.workspaces, self.execution_ids):
-            loaded_json = {"hosts": [], "execution_id": execution_id, "command": self.command_json}
+            loaded_json = {
+                "hosts": [],
+                "execution_id": execution_id,
+                "command": self.command_json,
+            }
             loaded_json["command"]["duration"] = (
                 datetime.utcnow() - self.start_date
             ).total_seconds() * 1000000  # microsecs
