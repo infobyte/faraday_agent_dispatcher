@@ -71,8 +71,6 @@ def get_report(user, passwd, host, report_id):
     report_url = f"{host}/api/3/reports/{report_id}/history/latest/output"
     log(f"Connecting to insightvm on {host}")
     try:
-        report_response = requests.get(report_url, verify=False, auth=HTTPBasicAuth(user, passwd))
-    try:
         report_response = requests.get(
             report_url,
             verify=False,
