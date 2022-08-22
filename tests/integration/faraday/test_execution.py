@@ -66,8 +66,12 @@ def test_execute_agent():
     assert res.status_code == 200, res.text
     res = session.get(api_url(HOST, API_PORT, postfix="/_api/v3/agents"))
     count = len(res.json())
-    # session_res = session.get(api_url(HOST, API_PORT, postfix="/_api/session"))
-    res = session.post(api_url(HOST, API_PORT, postfix="/_api/v3/ws"), json={"name": WORKSPACE})
+    # session_res = session.get(api_url(HOST, API_PORT,
+    # postfix="/_api/session"))
+    res = session.post(
+        api_url(HOST, API_PORT, postfix="/_api/v3/ws"),
+        json={"name": WORKSPACE},
+    )
     assert res.status_code == 201, res.text
     res = session.get(api_url(HOST, API_PORT, postfix="/_api/v3/agent_token"))
     assert res.status_code == 200, res.text
@@ -85,8 +89,16 @@ def test_execute_agent():
         "out": {"mandatory": True, "base": "string", "type": "string"},
         "count": {"mandatory": False, "base": "string", "type": "string"},
         "space": {"mandatory": False, "base": "string", "type": "string"},
-        "spaced_before": {"mandatory": False, "base": "string", "type": "string"},
-        "spaced_middle": {"mandatory": False, "base": "string", "type": "string"},
+        "spaced_before": {
+            "mandatory": False,
+            "base": "string",
+            "type": "string",
+        },
+        "spaced_middle": {
+            "mandatory": False,
+            "base": "string",
+            "type": "string",
+        },
         "err": {"mandatory": False, "base": "string", "type": "string"},
         "fails": {"mandatory": False, "base": "string", "type": "string"},
     }
@@ -118,7 +130,7 @@ def test_execute_agent():
         agent = res_data[-1]
         agent_id = agent["id"]
         if agent_ok_status_keys_set != set(agent.keys()):
-            print("Keys set from agent endpoint differ from expected ones, checking if its a superset")
+            print("Keys set from agent endpoint differ from expected ones, " "checking if its a superset")
             print(f"agent_ok_status_keys_set= {agent_ok_status_keys_set}")
             print(f"agent.keys() = {agent.keys()}")
             assert agent_ok_status_keys_set.issubset(set(agent.keys()))

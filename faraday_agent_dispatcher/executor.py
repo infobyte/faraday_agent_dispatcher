@@ -6,7 +6,11 @@ from faraday_agent_dispatcher.utils.metadata_utils import (
     executor_folder,
     check_commands,
 )
-from faraday_agent_dispatcher.utils.control_values_utils import control_int, control_str, ParamsSchema
+from faraday_agent_dispatcher.utils.control_values_utils import (
+    control_int,
+    control_str,
+    ParamsSchema,
+)
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 from faraday_agent_dispatcher.logger import get_logger
 

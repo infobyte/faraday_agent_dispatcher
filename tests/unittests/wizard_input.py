@@ -33,7 +33,14 @@ class Input:
 
 
 class VarEnvInput(Input):
-    def __init__(self, name: str, value: str, adm_type: ADMType, error_name=None, new_name=None):
+    def __init__(
+        self,
+        name: str,
+        value: str,
+        adm_type: ADMType,
+        error_name=None,
+        new_name=None,
+    ):
         if adm_type == ADMType.ADD and value == "":
             raise ValueError('IF ADMTYPE = ADD, VALUE CAN NOT BE ""')
         self.name = name
@@ -58,7 +65,15 @@ class VarEnvInput(Input):
 
 
 class ParamInput(Input):
-    def __init__(self, name: str, mandatory: bool, type: str, adm_type: ADMType, error_type=None, new_name=None):
+    def __init__(
+        self,
+        name: str,
+        mandatory: bool,
+        type: str,
+        adm_type: ADMType,
+        error_type=None,
+        new_name=None,
+    ):
         self.name = name
         self.mandatory = mandatory
         self.type = type
