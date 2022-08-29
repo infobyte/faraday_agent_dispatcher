@@ -1,0 +1,1 @@
+Add tags for plugins

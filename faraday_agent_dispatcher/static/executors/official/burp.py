@@ -100,6 +100,15 @@ def main():
     # ['TARGET_URL', 'NAMED_CONFIGURATION']
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
+    if vuln_tag:
+        vuln_tag = vuln_tag.split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
+    if service_tag:
+        service_tag = service_tag.split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
+    if host_tag:
+        host_tag = host_tag.split(",")
     BURP_HOST = os.getenv("BURP_HOST")
     BURP_API_KEY = os.getenv("BURP_API_KEY")
     TARGET_URL = os.getenv("EXECUTOR_CONFIG_TARGET_URL")
@@ -188,6 +197,9 @@ def main():
                     plugin = BurpPlugin(
                         ignore_info=ignore_info,
                         hostname_resolution=hostname_resolution,
+                        host_tag=host_tag,
+                        service_tag=service_tag,
+                        vuln_tag=vuln_tag,
                     )
                     tmp_file.seek(0)
                     plugin.parseOutputString(tmp_file.read())

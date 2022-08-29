@@ -230,6 +230,15 @@ def get_x_api_token(url, token):
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
+    if vuln_tag:
+        vuln_tag = vuln_tag.split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
+    if service_tag:
+        service_tag = service_tag.split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
+    if host_tag:
+        host_tag = host_tag.split(",")
     NESSUS_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_NESSUS_SCAN_NAME", get_report_name())
     NESSUS_URL = os.getenv("EXECUTOR_CONFIG_NESSUS_URL")  # https://nessus:port
     NESSUS_USERNAME = os.getenv("NESSUS_USERNAME")
@@ -276,7 +285,13 @@ def main():
         scan_file = nessus_scan_export(NESSUS_URL, scan_id, token, x_token)
 
     if scan_file:
-        plugin = NessusPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+        plugin = NessusPlugin(
+            ignore_info=ignore_info,
+            hostname_resolution=hostname_resolution,
+            host_tag=host_tag,
+            service_tag=service_tag,
+            vuln_tag=vuln_tag,
+        )
         plugin.parseOutputString(scan_file)
         print(plugin.get_json())
     else:
