@@ -10,7 +10,7 @@ from faraday_plugins.plugins.repo.zap.plugin import ZapPlugin
 def main():
     # If the script is run outside the dispatcher the environment variables
     # are checked.
-    # ['EXECUTOR_CONFIG_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
+    # ['ZAP_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
@@ -24,7 +24,7 @@ def main():
         host_tag = host_tag.split(",")
     try:
         target = os.environ["EXECUTOR_CONFIG_TARGET_URL"]
-        api_key = os.environ["EXECUTOR_CONFIG_API_KEY"]
+        api_key = os.environ["ZAP_API_KEY"]
     except KeyError:
         print("environment variable not found", file=sys.stderr)
         sys.exit()
