@@ -80,6 +80,7 @@ def main():
     plugin.parseOutputString(report_response_text)
     print(plugin.get_json())
 
+
 def get_report(user, passwd, host, report_id):
     log(f"Fetching from: {host}")
     report_url = f"{host}/api/3/reports/{report_id}/history/latest/output"
