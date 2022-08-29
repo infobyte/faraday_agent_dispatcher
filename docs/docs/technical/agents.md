@@ -35,6 +35,14 @@ Some executors are parametrized by:
   to not conflict with actual environment variables. It is configurable if they
   are mandatory or not.
 
+Also faraday server can send plugins arguments when you run an executer.
+These are:
+- AGENT_CONFIG_IGNORE_INFO: Bool, will ignore info level vulnerabilities.
+- AGENT_CONFIG_RESOLVE_HOSTNAME: Bool, will resolve the hostname if posible.
+- AGENT_CONFIG_VULN_TAG: List of strings, will add the tags to the vulns.
+- AGENT_CONFIG_SERVICE_TAG: List of strings, will add the tags to the services.
+- AGENT_CONFIG_HOSTNAME_TAG: List of strings, will add the tags to the hosts.
+
 !!! info
     All that configuration allows executor debugging being a lot more easier,
     not needing the Agent to be run, only with a shell command

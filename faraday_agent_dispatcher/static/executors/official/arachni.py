@@ -25,6 +25,15 @@ def main():
     my_envs = os.environ
     ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = my_envs.get("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+    vuln_tag = my_envs.get("AGENT_CONFIG_VULN_TAG", None)
+    if vuln_tag:
+        vuln_tag = vuln_tag.split(",")
+    service_tag = my_envs.get("AGENT_CONFIG_SERVICE_TAG", None)
+    if service_tag:
+        service_tag = service_tag.split(",")
+    host_tag = my_envs.get("AGENT_CONFIG_HOSTNAME_TAG", None)
+    if host_tag:
+        host_tag = host_tag.split(",")
     # If the script is run outside the dispatcher
     # the environment variables
     # are checked.
@@ -73,7 +82,13 @@ def main():
     arachni_reporter_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     flush_messages(arachni_reporter_process)
 
-    plugin = ArachniPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+    plugin = ArachniPlugin(
+        ignore_info=ignore_info,
+        hostname_resolution=hostname_resolution,
+        host_tag=host_tag,
+        service_tag=service_tag,
+        vuln_tag=vuln_tag,
+    )
     with open(name_xml.name, "r") as f:
         plugin.parseOutputString(f.read())
         print(plugin.get_json())
