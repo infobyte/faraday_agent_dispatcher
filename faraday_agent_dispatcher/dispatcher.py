@@ -485,7 +485,7 @@ class Dispatcher:
                             )
                         )
         except Exception as e:
-            logger.error(f"Exception occour {e}")
+            logger.error(f"Exception occurred {e}")
             await self.websocket.send(
                 json.dumps(
                     {
