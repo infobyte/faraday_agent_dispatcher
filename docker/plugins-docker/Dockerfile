@@ -47,7 +47,7 @@ RUN apt-get update && \
         # openvas
         openvas
 #RUN python3 -m pip install -U pip
-RUN run apt-get install --yes  python-pip python2.7 python2.7-dev && \
+RUN apt-get install --yes  python-pip python2.7 python2.7-dev && \
 # Clean commands
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /var/cache/apt && \
