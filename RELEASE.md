@@ -1,3 +1,12 @@
+2.3.0 [Sep 5th, 2022]:
+---
+ * Now InsighVM's executer will executa a scan if a site_id is provided
+ * Add tags for plugins
+ * Add installation in docker file for nmap script: vulners
+ * Now the api-key from zap is a enviroment variable
+ * [FIX] Change AGENT_CONFIG_HOSTNAME_RESOLUTION por AGENT_CONFIG_RESOLVE_HOSTNAME
+ * Update docs
+
 2.2.0 [Jul 25th, 2022]:
 ---
  * Add timeout parameter to arachni's executor
