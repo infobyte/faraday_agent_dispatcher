@@ -46,7 +46,7 @@ RUN apt-get update && \
         libffi-dev \
         # openvas
         openvas
-#RUN python3 -m pip install -U pip
+RUN python3 -m pip install -U pip
 RUN apt-get install --yes  python-pip python2.7 python2.7-dev && \
 # Clean commands
     rm -rf /var/lib/apt/lists/* && \
