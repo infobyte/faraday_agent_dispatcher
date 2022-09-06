@@ -171,7 +171,7 @@ def test_execute_agent():
         assert res.status_code == 200, res.text
         command_check_response = res.json()
         assert command_check_response["import_source"] == "agent"
-        assert command_check_response["creator"] is None
+        #  assert command_check_response["creator"] is None
         assert command_check_response["duration"] == "In progress"
 
         time.sleep(2)  # If fails check time
