@@ -2,7 +2,7 @@
 import os
 import sys
 import time
-import subprocess
+import psutil
 from zapv2 import ZAPv2
 from faraday_plugins.plugins.repo.zap.plugin import ZapPlugin
 
@@ -30,9 +30,7 @@ def main():
         sys.exit()
 
     # zap is required to be started
-    zap_run = subprocess.check_output("pgrep -f zap", shell=True)
-
-    if len(zap_run.decode("utf-8").split("\n")) > 3:
+    if zap_is_running():
         # the apikey from ZAP->Tools->Options-API
         zap = ZAPv2(apikey=api_key)
         # it passes the url to scan and starts
@@ -55,6 +53,16 @@ def main():
     else:
         print("ZAP not running", file=sys.stderr)
         sys.exit()
+
+
+def zap_is_running():
+    try:
+        for proc in psutil.process_iter():
+            if ("zap" in proc.cmdline()[-1]) if len(proc.cmdline()) > 0 else False:
+                return True
+    except:
+        pass
+    return False
 
 
 if __name__ == "__main__":
