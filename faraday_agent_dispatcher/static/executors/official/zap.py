@@ -60,9 +60,8 @@ def zap_is_running():
         for proc in psutil.process_iter():
             if ("zap" in proc.cmdline()[-1]) if len(proc.cmdline()) > 0 else False:
                 return True
-    except:
-        pass
-    return False
+    finally:
+        return False
 
 
 if __name__ == "__main__":
