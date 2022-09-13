@@ -518,8 +518,8 @@ class Dispatcher:
         for varenv, value in executor.varenvs.items():
             env[f"{varenv.upper()}"] = value
         command = executor.cmd
-        if "python3" in command:
-            command = executor.cmd.replace("python3", sys.executable)
+        if command.endswith(".py"):
+            command = f"{sys.executable} {command}"
         process = await asyncio.create_subprocess_shell(
             command,
             stdout=asyncio.subprocess.PIPE,
