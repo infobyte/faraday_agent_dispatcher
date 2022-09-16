@@ -57,10 +57,9 @@ def main():
     get_or_create_ip(ip, auth)
     scan_ref = launch_scan(ip, option_profile, auth)
     wait_scan_to_finish(scan_ref, auth)
-    log(f"Wait over")
     log(f"{scan_ref}")
     scan_report = get_scan_report(scan_ref, auth)
-    log(f"Report Downloaded")
+    log("Report Downloaded")
 
     plugin = QualysguardPlugin(
         ignore_info=ignore_info,
@@ -70,8 +69,7 @@ def main():
         vuln_tag=vuln_tag,
     )
     plugin.parseOutputString(scan_report)
-    log(f"Parcing report")
-    log(f"{plugin.get_json()}")
+    log("Parcing report")
     print(plugin.get_json())
 
 
@@ -121,6 +119,7 @@ def wait_scan_to_finish(scan_ref, auth):
         response_xml = ET.fromstring(launch_scan_response.text)
         scan_status = response_xml.find("RESPONSE/SCAN_LIST/SCAN/STATUS/STATE").text
         if scan_status == "Finished":
+            log("scan ended successfully")
             return
         elif not (scan_status in ["Queued", "Running"]):
             log("scan ended with errors")
