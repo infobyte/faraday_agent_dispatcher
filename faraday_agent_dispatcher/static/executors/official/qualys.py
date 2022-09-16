@@ -8,6 +8,7 @@ import time
 from faraday_plugins.plugins.repo.qualysguard.plugin import QualysguardPlugin
 import xml.etree.ElementTree as ET
 import urllib3
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://qualysguard.qg4.apps.qualys.com"
@@ -18,6 +19,7 @@ def log(message):
         f"{datetime.datetime.utcnow()} - QualysGuard: {message}",
         file=sys.stderr,
     )
+
 
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
@@ -75,12 +77,7 @@ def main():
 
 def get_or_create_ip(target, auth):
     url = BASE_URL + "/api/2.0/fo/asset/ip/?action=list"
-    ip_response = requests.get(
-        url,
-        verify=False,
-        auth=auth,
-        headers={"X-Requested-With": "Faraday-executor"}
-    )
+    ip_response = requests.get(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
     response_xml = ET.fromstring(ip_response.text)
     ips = response_xml.findall("RESPONSE/IP_SET/IP")
     if len(ips) == 0:
@@ -96,12 +93,7 @@ def get_or_create_ip(target, auth):
 
 def create_ip(target, auth):
     url = BASE_URL + f"/api/2.0/fo/asset/ip/?action=add&ips={target}&enable_vm=1&enable_pc=1"
-    requests.post(
-        url,
-        verify=False,
-        auth=auth,
-        headers={"X-Requested-With": "Faraday-executor"}
-    )
+    requests.post(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
     log("ip created")
 
 
@@ -112,10 +104,7 @@ def launch_scan(ip, option_profile, auth):
     else:
         url += f"&option_title={option_profile}"
     launch_scan_response = requests.post(
-        url,
-        verify=False,
-        auth=auth,
-        headers={"X-Requested-With": "Faraday-executor"}
+        url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"}
     )
     log("scan launched")
     response_xml = ET.fromstring(launch_scan_response.text)
@@ -127,10 +116,7 @@ def wait_scan_to_finish(scan_ref, auth):
     url = BASE_URL + f"/api/2.0/fo/scan/?action=list&scan_ref={scan_ref}"
     while True:
         launch_scan_response = requests.get(
-            url,
-            verify=False,
-            auth=auth,
-            headers={"X-Requested-With": "Faraday-executor"}
+            url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"}
         )
         response_xml = ET.fromstring(launch_scan_response.text)
         scan_status = response_xml.find("RESPONSE/SCAN_LIST/SCAN/STATUS/STATE").text
@@ -146,12 +132,7 @@ def wait_scan_to_finish(scan_ref, auth):
 
 def get_scan_report(scan_ref, auth):
     url = BASE_URL + f"/msp/scan_report.php?ref={scan_ref}"
-    scan_report = requests.get(
-        url,
-        verify=False,
-        auth=auth,
-        headers={"X-Requested-With": "Faraday-executor"}
-    )
+    scan_report = requests.get(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
     log("Downloading Report")
     return scan_report.text
 
