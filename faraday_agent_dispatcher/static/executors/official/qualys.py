@@ -41,6 +41,7 @@ def main():
     option_profile = os.getenv("EXECUTOR_CONFIG_OPTION_PROFILE")
     username = os.getenv("QUALYS_USERNAME")
     password = os.getenv("QUALYS_PASSWORD")
+    pull_interval = os.getenv("BURP_API_PULL_INTERVAL")
     if not ip:
         log("Param TARGET_IP no passed")
         sys.exit()
@@ -53,10 +54,12 @@ def main():
     if not password:
         log("Environment variable PASSWORD no set")
         sys.exit()
+    if not pull_interval:
+        pull_interval = 180
     auth = HTTPBasicAuth(username, password)
     get_or_create_ip(ip, auth)
     scan_ref = launch_scan(ip, option_profile, auth)
-    wait_scan_to_finish(scan_ref, auth)
+    wait_scan_to_finish(scan_ref, auth, pull_interval)
     log(f"{scan_ref}")
     scan_report = get_scan_report(scan_ref, auth)
     log("Report Downloaded")
@@ -69,30 +72,39 @@ def main():
         vuln_tag=vuln_tag,
     )
     plugin.parseOutputString(scan_report)
-    log("Parcing report")
+    log("Parsing report")
     print(plugin.get_json())
 
 
 def get_or_create_ip(target, auth):
     url = BASE_URL + "/api/2.0/fo/asset/ip/?action=list"
-    ip_response = requests.get(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
-    response_xml = ET.fromstring(ip_response.text)
-    ips = response_xml.findall("RESPONSE/IP_SET/IP")
-    if len(ips) == 0:
-        ips = response_xml.findall("RESPONSE/IP_SET/IP_RANGE")
-    for ip in ips:
-        if target in ip.text:
-            log("ip found")
-            return
+    response = requests.get(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    response_xml = ET.fromstring(response.text)
+    if response.status_code == 200:
+        ips = response_xml.findall("RESPONSE/IP_SET/IP")
+        if len(ips) == 0:
+            ips = response_xml.findall("RESPONSE/IP_SET/IP_RANGE")
+        for ip in ips:
+            if target in ip.text:
+                log("ip found")
+                return
+        else:
+            log("ip not found")
+            create_ip(target, auth)
     else:
-        log("ip not found")
-        create_ip(target, auth)
+        log("Error getting ips")
+        log_error(response_xml)
 
 
 def create_ip(target, auth):
-    url = BASE_URL + f"/api/2.0/fo/asset/ip/?action=add&ips={target}&enable_vm=1&enable_pc=1"
-    requests.post(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
-    log("ip created")
+    url = BASE_URL + f"/api/2.0/fo/asset/ip/?action=add&ips={target}&enable_vm=1&enable_pc=1&enable_pci=1"
+    response = requests.post(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    if response.status_code == 200:
+        log("ip created")
+    else:
+        log("Error creating ip")
+        response_xml = ET.fromstring(response.text)
+        log_error(response_xml)
 
 
 def launch_scan(ip, option_profile, auth):
@@ -101,16 +113,37 @@ def launch_scan(ip, option_profile, auth):
         url += f"&option_id={option_profile}"
     else:
         url += f"&option_title={option_profile}"
-    launch_scan_response = requests.post(
+    response = requests.post(
         url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"}
     )
-    log("scan launched")
-    response_xml = ET.fromstring(launch_scan_response.text)
-    scan_ref = response_xml.findall("RESPONSE/ITEM_LIST/ITEM/VALUE")[-1].text
-    return scan_ref
+    response_xml = ET.fromstring(response.text)
+    if response.status_code == 200:
+        scan_ref = response_xml.findall("RESPONSE/ITEM_LIST/ITEM/VALUE")[-1].text
+        log("Scan launched")
+        return scan_ref
+    else:
+        if response_xml.findall("RESPONSE/CODE")[-1].text == "1905":
+            show_available_profiles(auth)
+        log_error(response_xml)
 
 
-def wait_scan_to_finish(scan_ref, auth):
+def show_available_profiles(auth):
+    options = "pc", "pci", "vm"
+    log("The available profiles are: ")
+    for option in options:
+        url = BASE_URL + f"/api/2.0/fo/subscription/option_profile/{option}/?action=list"
+        launch_scan_response = requests.get(
+            url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"}
+        )
+        response_xml = ET.fromstring(launch_scan_response.text)
+        if launch_scan_response.status_code == 200:
+            log(option)
+            profile_ids = response_xml.findall("OPTION_PROFILE/BASIC_INFO/ID")
+            for p_id in profile_ids:
+                log(p_id.text)
+
+
+def wait_scan_to_finish(scan_ref, auth, pull_interval):
     url = BASE_URL + f"/api/2.0/fo/scan/?action=list&scan_ref={scan_ref}"
     while True:
         launch_scan_response = requests.get(
@@ -126,14 +159,23 @@ def wait_scan_to_finish(scan_ref, auth):
             sys.exit()
         else:
             log("scan still running")
-            time.sleep(180)
+            time.sleep(pull_interval)
 
 
 def get_scan_report(scan_ref, auth):
     url = BASE_URL + f"/msp/scan_report.php?ref={scan_ref}"
-    scan_report = requests.get(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
-    log("Downloading Report")
-    return scan_report.text
+    response = requests.get(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    if response.status_code == 200:
+        return response.text
+    else:
+        response_xml = ET.fromstring(response.text)
+        log_error(response_xml)
+
+
+def log_error(response_xml):
+    error = response_xml.find("RESPONSE/TEXT").text
+    log(error)
+    sys.exit()
 
 
 if __name__ == "__main__":
