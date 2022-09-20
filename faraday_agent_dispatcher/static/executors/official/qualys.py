@@ -97,7 +97,7 @@ def get_or_create_ip(target, auth):
 
 
 def create_ip(target, auth):
-    url = BASE_URL + f"/api/2.0/fo/asset/ip/?action=add&ips={target}&enable_vm=1&enable_pc=1&enable_pci=1"
+    url = BASE_URL + f"/api/2.0/fo/asset/ip/?action=add&ips={target}&enable_vm=1&enable_pc=1"
     response = requests.post(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
     if response.status_code == 200:
         log("ip created")
@@ -128,7 +128,7 @@ def launch_scan(ip, option_profile, auth):
 
 
 def show_available_profiles(auth):
-    options = "pc", "pci", "vm"
+    options = "pci", "vm"
     log("The available profiles are: ")
     for option in options:
         url = BASE_URL + f"/api/2.0/fo/subscription/option_profile/{option}/?action=list"
