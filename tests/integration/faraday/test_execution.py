@@ -39,7 +39,6 @@ agent_ok_status_keys_set = {
     "creator",
     "id",
     "name",
-    "token",
     "is_online",
     "active",
     "status",
