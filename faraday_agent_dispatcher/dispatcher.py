@@ -428,6 +428,7 @@ class Dispatcher:
                         "import_source": "agent",
                         "start_date": start_date.isoformat(),
                     }
+                    error_processor = StdErrLineProcessor(process)
                     tasks = [
                         StdOutLineProcessor(
                             process,
@@ -439,7 +440,7 @@ class Dispatcher:
                             command_json,
                             start_date,
                         ).process_f(),
-                        StdErrLineProcessor(process).process_f(),
+                        error_processor.process_f(),
                     ]
                     await self.websocket.send(
                         json.dumps(
@@ -480,7 +481,8 @@ class Dispatcher:
                                     "execution_ids": self.execution_ids,
                                     "executor_name": executor.name,
                                     "successful": False,
-                                    "message": f"Executor {executor.name} " f"from {self.agent_name} failed",
+                                    "message": f"Executor {executor.name} " f"from {self.agent_name} failed:"
+                                               f" {error_processor.messsage[-1]}",
                                 }
                             )
                         )

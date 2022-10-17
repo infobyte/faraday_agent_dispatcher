@@ -31,18 +31,21 @@ logger = logging.get_logger()
 class FileLineProcessor:
     @staticmethod
     async def _process_lines(line_getter, process_f, logger_f, end_f, name):
+        empty = True
         while True:
             try:
                 line = await line_getter()
                 if line != "":
                     await process_f(line)
                     logger_f(line)
+                    empty = False
                 else:
                     break
             except ValueError:
                 logger.error(f"ValueError raised processing {name}, try with bigger " "limiting size in config")
         await end_f()
-        print(f"{Bcolors.WARNING}{name} sent empty data, {Bcolors.ENDC}")
+        if empty:
+            print(f"{Bcolors.WARNING}{name} sent empty data, {Bcolors.ENDC}")
 
     def __init__(self, name):
         self.name = name
@@ -167,6 +170,7 @@ class StdErrLineProcessor(FileLineProcessor):
     def __init__(self, process):
         super().__init__("stderr")
         self.process = process
+        self.messsage = []
 
     async def next_line(self):
         line = await self.process.stderr.readline()
@@ -174,6 +178,7 @@ class StdErrLineProcessor(FileLineProcessor):
         return line[:-1]
 
     async def processing(self, line):
+        self.messsage += [line]
         print(f"{Bcolors.FAIL}{line}{Bcolors.ENDC}")
 
     def log(self, line):

@@ -71,7 +71,7 @@ def main():
     elif connection_type == "ssh":
         if not userssh or not passwssh:
             print("SSH username or password not provided", file=sys.stderr)
-            sys.exit()
+            sys.exit(1)
 
     # CONNECTION
     transform = EtreeCheckCommandTransform()
