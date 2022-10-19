@@ -43,6 +43,7 @@ requirements = [
     "python-gvm",
     "faraday_agent_parameters_types>=1.0.4",
     "pyyaml",
+    "psutil",
 ]
 
 setup_requirements = ["pytest-runner", "click", "setuptools_scm"]

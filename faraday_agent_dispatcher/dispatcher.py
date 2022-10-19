@@ -24,7 +24,7 @@ from datetime import datetime
 from pathlib import Path
 from asyncio import Task
 from typing import List, Dict
-
+import sys
 import websockets
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from aiohttp import ClientTimeout
@@ -517,8 +517,11 @@ class Dispatcher:
         # Executor Defaults
         for varenv, value in executor.varenvs.items():
             env[f"{varenv.upper()}"] = value
+        command = executor.cmd
+        if command.endswith(".py"):
+            command = f"{sys.executable} {command}"
         process = await asyncio.create_subprocess_shell(
-            executor.cmd,
+            command,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=env,
