@@ -254,7 +254,7 @@ async def test_run_once(
             "fails": DATA_TYPE["boolean"],
         }
         configuration[Sections.AGENT][Sections.EXECUTORS][ex] = {
-            "cmd": f"python {path_to_basic_executor}",
+            "cmd": f"{path_to_basic_executor}",
             "params": {},
             "varenvs": {},
         }
