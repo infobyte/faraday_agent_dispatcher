@@ -113,9 +113,7 @@ def launch_scan(ip, option_profile, auth):
         url += f"&option_id={option_profile}"
     else:
         url += f"&option_title={option_profile}"
-    response = requests.post(
-        url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"}
-    )
+    response = requests.post(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
     response_xml = ET.fromstring(response.text)
     if response.status_code == 200:
         scan_ref = response_xml.findall("RESPONSE/ITEM_LIST/ITEM/VALUE")[-1].text
