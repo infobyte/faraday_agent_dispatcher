@@ -23,9 +23,7 @@ def get_ip(url):
     except socket.error:
         ip = url_data.netloc
     return ip
-# Allow api without access key
-# BURP_API_PULL_INTERVAL
-# MAX_SIZE insuficiente
+
 
 def get_issue_data(issue_type_id, json_issue_definitions):
     desc = "No information"
