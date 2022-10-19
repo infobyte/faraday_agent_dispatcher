@@ -39,7 +39,6 @@ agent_ok_status_keys_set = {
     "creator",
     "id",
     "name",
-    "token",
     "is_online",
     "active",
     "status",
@@ -120,7 +119,7 @@ def test_execute_agent():
             "--debug",
         ]
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        time.sleep(2)  # If fails check time
+        time.sleep(3)  # If fails check time
 
         # Checking dispatcher connection
         res = session.get(api_url(HOST, API_PORT, postfix="/_api/v3/agents"))
@@ -173,7 +172,7 @@ def test_execute_agent():
         assert command_check_response["import_source"] == "agent"
         assert command_check_response["duration"] == "In progress"
 
-        time.sleep(2)  # If fails check time
+        time.sleep(3)  # If fails check time
 
         # Command ID should not be in progress!
         res = session.get(
