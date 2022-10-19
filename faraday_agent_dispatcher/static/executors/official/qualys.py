@@ -44,16 +44,16 @@ def main():
     pull_interval = os.getenv("BURP_API_PULL_INTERVAL")
     if not ip:
         log("Param TARGET_IP no passed")
-        sys.exit()
+        sys.exit(1)
     if not option_profile:
         log("Param OPTION_PROFILE no passed")
-        sys.exit()
+        sys.exit(1)
     if not username:
         log("Environment variable USERNAME no set")
-        sys.exit()
+        sys.exit(1)
     if not password:
         log("Environment variable PASSWORD no set")
-        sys.exit()
+        sys.exit(1)
     if not pull_interval:
         pull_interval = 180
     auth = HTTPBasicAuth(username, password)
@@ -155,8 +155,8 @@ def wait_scan_to_finish(scan_ref, auth, pull_interval):
             log("scan ended successfully")
             return
         elif not (scan_status in ["Queued", "Running"]):
-            log("scan ended with errors")
-            sys.exit()
+            log(f"scan ended with status {scan_status}")
+            sys.exit(1)
         else:
             log("scan still running")
             time.sleep(pull_interval)
@@ -175,7 +175,7 @@ def get_scan_report(scan_ref, auth):
 def log_error(response_xml):
     error = response_xml.find("RESPONSE/TEXT").text
     log(error)
-    sys.exit()
+    sys.exit(1)
 
 
 if __name__ == "__main__":
