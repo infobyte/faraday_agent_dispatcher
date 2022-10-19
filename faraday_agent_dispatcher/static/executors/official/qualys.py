@@ -41,7 +41,7 @@ def main():
     option_profile = os.getenv("EXECUTOR_CONFIG_OPTION_PROFILE")
     username = os.getenv("QUALYS_USERNAME")
     password = os.getenv("QUALYS_PASSWORD")
-    pull_interval = os.getenv("BURP_API_PULL_INTERVAL")
+    pull_interval = os.getenv("EXECUTOR_CONFIG_PULL_INTERVAL")
     if not ip:
         log("Param TARGET_IP no passed")
         sys.exit(1)
