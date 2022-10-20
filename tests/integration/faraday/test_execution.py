@@ -103,7 +103,7 @@ def test_execute_agent():
     }
     executor_section["varenvs"] = {}
     executor_section["max_size"] = 65536
-    executor_section["cmd"] = f"python {path_to_basic_executor}"
+    executor_section["cmd"] = f"{path_to_basic_executor}"
 
     with tempfile.TemporaryDirectory() as tempdirfile:
         config_pathfile = Path(tempdirfile)
