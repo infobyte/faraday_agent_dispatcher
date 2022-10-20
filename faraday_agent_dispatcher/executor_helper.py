@@ -32,6 +32,7 @@ class FileLineProcessor:
     @staticmethod
     async def _process_lines(line_getter, process_f, logger_f, end_f, name):
         empty = True
+        blanks = 3
         while True:
             try:
                 line = await line_getter()
@@ -39,8 +40,11 @@ class FileLineProcessor:
                     await process_f(line)
                     logger_f(line)
                     empty = False
+                    blanks = 3
                 else:
-                    break
+                    blanks -= 1
+                    if blanks == 0:
+                        break
             except ValueError:
                 logger.error(f"ValueError raised processing {name}, try with bigger " "limiting size in config")
         await end_f()

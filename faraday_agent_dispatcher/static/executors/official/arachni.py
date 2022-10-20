@@ -6,7 +6,7 @@ import tempfile
 import subprocess
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.arachni.plugin import ArachniPlugin
-
+from faraday_agent_dispatcher.utils.executor_utils import get_plugins_args
 
 def remove_multiple_new_line(text: str):
     return re.sub(r"\n+", "\n", text)
@@ -23,17 +23,7 @@ def flush_messages(process):
 
 def main():
     my_envs = os.environ
-    ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = my_envs.get("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = my_envs.get("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = my_envs.get("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = my_envs.get("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    plugins_args = get_plugins_args(my_envs)
     # If the script is run outside the dispatcher
     # the environment variables
     # are checked.
@@ -45,13 +35,13 @@ def main():
             url_analyze = f"http://{url_analyze}"
     else:
         print("Param NAME_URL no passed", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     if "ARACHNI_PATH" in my_envs:
         path_arachni = os.environ.get("ARACHNI_PATH")
     else:
         print("Environment variable ARACHNI_PATH no set", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
     os.chdir(path_arachni)
     file_afr = tempfile.NamedTemporaryFile(mode="w", suffix=".afr")
 
@@ -83,11 +73,7 @@ def main():
     flush_messages(arachni_reporter_process)
 
     plugin = ArachniPlugin(
-        ignore_info=ignore_info,
-        hostname_resolution=hostname_resolution,
-        host_tag=host_tag,
-        service_tag=service_tag,
-        vuln_tag=vuln_tag,
+        **plugins_args
     )
     with open(name_xml.name, "r") as f:
         plugin.parseOutputString(f.read())

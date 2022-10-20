@@ -52,9 +52,12 @@ def main():
             service_tag=service_tag,
             vuln_tag=vuln_tag,
         )
-        with gzip.open(name_result, "rb") as f:
-            plugin.parseOutputString(f.read().decode("utf-8"))
-            print(plugin.get_json())
+        try:
+            with gzip.open(name_result, "rb") as f:
+                plugin.parseOutputString(f.read().decode("utf-8"))
+                print(plugin.get_json())
+        except:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

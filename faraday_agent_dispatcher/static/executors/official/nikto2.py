@@ -25,7 +25,7 @@ def main():
     url_target = os.environ.get("EXECUTOR_CONFIG_TARGET_URL")
     if not url_target:
         print("URL not provided", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     with tempfile.TemporaryDirectory() as tempdirname:
         tmpdir = Path(tempdirname)
@@ -46,7 +46,8 @@ def main():
                 file=sys.stderr,
             )
         if len(nikto_process.stderr) > 0:
-            print(f"Nikto stderr: {nikto_process.stderr.decode('utf-8')}", file=sys.stderr)
+            print(f"Nikto stderr", file=sys.stderr)
+            print(f"{nikto_process.stderr.decode('utf-8')}", file=sys.stderr)
         plugin = NiktoPlugin(
             ignore_info=ignore_info,
             hostname_resolution=hostname_resolution,
@@ -54,9 +55,12 @@ def main():
             service_tag=service_tag,
             vuln_tag=vuln_tag,
         )
-        with open(name_result, "r") as f:
-            plugin.parseOutputString(f.read())
-            print(plugin.get_json())
+        try:
+            with open(name_result, "r") as f:
+                plugin.parseOutputString(f.read())
+                print(plugin.get_json())
+        except:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

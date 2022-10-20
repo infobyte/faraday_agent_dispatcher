@@ -51,11 +51,11 @@ def main():
             "Data config ['User', 'Passw', 'Host', 'Port']" " GVM_OpenVas not provided",
             file=sys.stderr,
         )
-        sys.exit()
+        sys.exit(1)
 
     if not scan_url:
         print("Scan Url not provided", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     valid_connections = ("socket", "ssh", "tls")
     if connection_type not in valid_connections:
@@ -63,7 +63,7 @@ def main():
             "Not a valid connection_type, Choose between socket-ssh-tls",
             file=sys.stderr,
         )
-        sys.exit()
+        sys.exit(1)
 
     if connection_type == "socket":
         # Default Socket according to official docs

@@ -10,6 +10,7 @@ import re
 import xml.etree.cElementTree as ET
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.burp.plugin import BurpPlugin
+from faraday_agent_dispatcher.utils.executor_utils import get_plugins_args
 
 
 def log(message):
@@ -95,20 +96,10 @@ def generate_xml(issues, name_result, json_issue_definitions):
 
 
 def main():
+    plugins_args = get_plugins_args(os.environ)
     # If the script is run outside the dispatcher
     # the environment variables are checked.
     # ['TARGET_URL', 'NAMED_CONFIGURATION']
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
     BURP_HOST = os.getenv("BURP_HOST")
     BURP_API_KEY = os.getenv("BURP_API_KEY")
     TARGET_URL = os.getenv("EXECUTOR_CONFIG_TARGET_URL")

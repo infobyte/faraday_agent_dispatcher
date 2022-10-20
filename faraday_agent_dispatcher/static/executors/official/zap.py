@@ -27,7 +27,7 @@ def main():
         api_key = os.environ["ZAP_API_KEY"]
     except KeyError:
         print("environment variable not found", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     # zap is required to be started
     zap_run = subprocess.check_output("pgrep -f zap", shell=True)
@@ -54,7 +54,7 @@ def main():
 
     else:
         print("ZAP not running", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -73,14 +73,14 @@ def main():
 
     if not ip:
         print("IP not provided", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     try:
         socket.inet_aton(ip)
 
     except socket.error:
         print("The IP passed is invalid", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     command = [
         "crackmapexec",

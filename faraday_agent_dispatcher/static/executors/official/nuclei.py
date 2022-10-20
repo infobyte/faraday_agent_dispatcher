@@ -63,7 +63,7 @@ def main():
             url_parse = urlparse(NUCLEI_TARGET)
             if is_ip(url_parse.hostname) or is_ip(url_parse.path):
                 print(f"Is {NUCLEI_TARGET} not valid.", file=sys.stderr)
-                sys.exit()
+                sys.exit(1)
             else:
                 if not url_parse.scheme:
                     url = f"http://{NUCLEI_TARGET}"
@@ -96,7 +96,6 @@ def main():
                 f"Nuclei stderr: {nuclei_process.stderr.decode('utf-8')}",
                 file=sys.stderr,
             )
-
         plugin = NucleiPlugin(
             ignore_info=ignore_info,
             hostname_resolution=hostname_resolution,
@@ -104,8 +103,11 @@ def main():
             service_tag=service_tag,
             vuln_tag=vuln_tag,
         )
-        plugin.parseOutputString(nuclei_process.stdout.decode("utf-8"))
-        print(plugin.get_json())
+        try:
+            plugin.parseOutputString(nuclei_process.stdout.decode("utf-8"))
+            print(plugin.get_json())
+        except:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

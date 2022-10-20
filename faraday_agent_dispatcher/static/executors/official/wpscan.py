@@ -27,7 +27,7 @@ def main():
     random_user_agent = os.environ.get("EXECUTOR_CONFIG_WPSCAN_RANDOM_USER_AGENT")
     if not url_target:
         print("URL not provided", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     with tempfile.TemporaryDirectory() as tempdirname:
         tempdir = Path(tempdirname)
@@ -65,9 +65,12 @@ def main():
             service_tag=service_tag,
             vuln_tag=vuln_tag,
         )
-        with open(out_file, "r") as f:
-            plugin.parseOutputString(f.read())
-            print(plugin.get_json())
+        try:
+            with open(out_file, "r") as f:
+                plugin.parseOutputString(f.read())
+                print(plugin.get_json())
+        except:
+            sys.exit(1)
 
 
 if __name__ == "__main__":
