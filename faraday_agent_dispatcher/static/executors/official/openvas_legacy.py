@@ -40,11 +40,11 @@ def main():
             "Data config ['Host', 'Port', 'User', 'Passw'] OpenVas not " "provided",
             file=sys.stderr,
         )
-        sys.exit()
+        sys.exit(1)
 
     if not scan_url:
         print("Scan Url not provided", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     if not scan_id:
         # Scan_ID Full and fast
@@ -70,7 +70,7 @@ def main():
     task_id = task_create.get("id")
     if task_id is None:
         print("Target Id not found", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     # Config and get scan
     cmd_create_scan = [

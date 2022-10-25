@@ -93,10 +93,10 @@ def get_report(user, passwd, host, report_id):
         )
         if report_response.status_code != 200:
             log(f"API gets no response. " f"Status code: {report_response.status_code}")
-            sys.exit()
+            sys.exit(1)
     except Exception as e:
         log(f"ERROR connecting to insightvm api on {host} [{e}]")
-        sys.exit()
+        sys.exit(1)
     return report_response.text
 
 
@@ -107,10 +107,10 @@ def run_scan(user, passwd, host, site_id):
         scan_response = requests.post(start_scan_url, verify=False, auth=HTTPBasicAuth(user, passwd))
         if scan_response.status_code != 201:
             log(f"API gets no response. Status code: {scan_response.status_code}")
-            sys.exit()
+            sys.exit(1)
     except Exception as e:
         log(f"ERROR connecting to insightvm api on {host} [{e}]")
-        sys.exit()
+        sys.exit(1)
     return scan_response.json()["id"]
 
 
@@ -124,10 +124,10 @@ def wait_scan(user, passwd, host, scan_id):
             scan_status = scan_status_response.json()["status"]
             if scan_status_response.status_code != 200:
                 log(f"API gets no response. Status code: {scan_status_response.status_code}")
-                sys.exit()
+                sys.exit(1)
         except Exception as e:
             log(f"ERROR connecting to insightvm api on {host} [{e}]")
-            sys.exit()
+            sys.exit(1)
         time.sleep(20)
     return scan_status
 
@@ -147,7 +147,7 @@ def create_and_generate_report(user, passwd, host, scan_id):
         )
         if report_create_response.status_code != 201:
             log(f"Couldnt create report, Status codae {report_create_response.status_code}")
-            sys.exit()
+            sys.exit(1)
         else:
             report_id = report_create_response.json()["id"]
             log(report_create_response.json())
@@ -157,13 +157,13 @@ def create_and_generate_report(user, passwd, host, scan_id):
             )
             if report_generate_response.status_code != 200:
                 log(f"Couldnt create report, Status code {report_generate_response.status_code}")
-                sys.exit()
+                sys.exit(1)
             # Wait till the report is generated
             time.sleep(60)
             return report_id
     except Exception as e:
         log(f"ERROR connecting to insightvm api on {host} [{e}]")
-        sys.exit()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
