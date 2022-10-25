@@ -5,20 +5,11 @@ import subprocess
 import tempfile
 from pathlib import Path
 from faraday_plugins.plugins.repo.wpscan.plugin import WPScanPlugin
-
+from faraday_agent_dispatcher.utils.executor_utils import get_plugins_args
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    my_envs = os.environ
+    plugins_args = get_plugins_args(my_envs)
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_WPSCAN_TARGET_URL']
@@ -57,13 +48,7 @@ def main():
                 file=sys.stderr,
             )
 
-        plugin = WPScanPlugin(
-            ignore_info=ignore_info,
-            hostname_resolution=hostname_resolution,
-            host_tag=host_tag,
-            service_tag=service_tag,
-            vuln_tag=vuln_tag,
-        )
+        plugin = WPScanPlugin(**plugins_args)
         out_file = tempdir / name_output_file
         with open(out_file, "r") as f:
             plugin.parseOutputString(f.read())

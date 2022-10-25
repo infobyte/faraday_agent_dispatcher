@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
+from faraday_agent_dispatcher.utils.executor_utils import get_plugins_args
 
 
 def main():
@@ -10,17 +11,7 @@ def main():
     # If the script is run outside the dispatcher
     # the environment variables
     # are checked.
-    ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = my_envs.get("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    plugins_args = get_plugins_args(my_envs)
     tool = os.environ.get("EXECUTOR_CONFIG_TOOL", None)
 
     if "EXECUTOR_CONFIG_REPORT_NAME" in my_envs:
@@ -36,13 +27,7 @@ def main():
         sys.exit(1)
 
     filepath = Path(report_dir) / report_name
-    manager = PluginsManager(
-        ignore_info=ignore_info,
-        hostname_resolution=hostname_resolution,
-        host_tag=host_tag,
-        service_tag=service_tag,
-        vuln_tag=vuln_tag,
-    )
+    manager = PluginsManager(**plugins_args)
 
     if tool is not None:
         plugin = manager.get_plugin(tool)

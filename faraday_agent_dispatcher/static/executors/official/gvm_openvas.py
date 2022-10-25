@@ -8,20 +8,11 @@ from faraday_plugins.plugins.repo.openvas.plugin import OpenvasPlugin
 from gvm.connections import UnixSocketConnection, SSHConnection, TLSConnection
 from gvm.protocols.gmp import Gmp
 from gvm.transforms import EtreeCheckCommandTransform
-
+from faraday_agent_dispatcher.utils.executor_utils import get_plugins_args
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    my_envs = os.environ
+    plugins_args = get_plugins_args(my_envs)
     user = os.environ.get("GVM_USER")
     passw = os.environ.get("GVM_PASSW")
     userssh = os.environ.get("EXECUTOR_CONFIG_SSH_USER")
@@ -152,13 +143,7 @@ def main():
         )
 
     # Parse report and send to Faraday
-    plugin = OpenvasPlugin(
-        ignore_info=ignore_info,
-        hostname_resolution=hostname_resolution,
-        host_tag=host_tag,
-        service_tag=service_tag,
-        vuln_tag=vuln_tag,
-    )
+    plugin = OpenvasPlugin(**plugins_args)
     plugin.parseOutputString(ET.tostring(report[0], encoding="unicode"))
     print(plugin.get_json())
 

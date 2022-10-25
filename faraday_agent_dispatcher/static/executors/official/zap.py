@@ -5,23 +5,14 @@ import time
 import psutil
 from zapv2 import ZAPv2
 from faraday_plugins.plugins.repo.zap.plugin import ZapPlugin
-
+from faraday_agent_dispatcher.utils.executor_utils import get_plugins_args
 
 def main():
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['ZAP_API_KEY', 'EXECUTOR_CONFIG_TARGET_URL']
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    my_envs = os.environ
+    plugins_args = get_plugins_args(my_envs)
     try:
         target = os.environ["EXECUTOR_CONFIG_TARGET_URL"]
         api_key = os.environ["ZAP_API_KEY"]
@@ -40,13 +31,7 @@ def main():
             time.sleep(1)
         # If finish the scan and the xml is generated
         zap_result = zap.core.xmlreport()
-        plugin = ZapPlugin(
-            ignore_info=ignore_info,
-            hostname_resolution=hostname_resolution,
-            host_tag=host_tag,
-            service_tag=service_tag,
-            vuln_tag=vuln_tag,
-        )
+        plugin = ZapPlugin(**plugins_args)
         plugin.parseOutputString(zap_result)
         print(plugin.get_json())
 

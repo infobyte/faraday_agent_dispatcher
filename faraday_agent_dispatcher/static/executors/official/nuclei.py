@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.nuclei.plugin import NucleiPlugin
-
+from faraday_agent_dispatcher.utils.executor_utils import get_plugins_args
 
 def is_ip(url):
     try:
@@ -17,17 +17,8 @@ def is_ip(url):
 
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    my_envs = os.environ
+    plugins_args = get_plugins_args(my_envs)
     # separate the target list with comma
     NUCLEI_TARGET = os.getenv("EXECUTOR_CONFIG_NUCLEI_TARGET")
     # separate the exclude list with comma
@@ -96,13 +87,7 @@ def main():
                 f"Nuclei stderr: {nuclei_process.stderr.decode('utf-8')}",
                 file=sys.stderr,
             )
-        plugin = NucleiPlugin(
-            ignore_info=ignore_info,
-            hostname_resolution=hostname_resolution,
-            host_tag=host_tag,
-            service_tag=service_tag,
-            vuln_tag=vuln_tag,
-        )
+        plugin = NucleiPlugin(**plugins_args)
         plugin.parseOutputString(nuclei_process.stdout.decode("utf-8"))
         print(plugin.get_json())
 
