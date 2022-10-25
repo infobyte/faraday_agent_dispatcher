@@ -9,6 +9,7 @@ from gvm.connections import UnixSocketConnection, SSHConnection, TLSConnection
 from gvm.protocols.gmp import Gmp
 from gvm.transforms import EtreeCheckCommandTransform
 import defusedxml
+
 defusedxml.defuse_stdlib()
 
 
