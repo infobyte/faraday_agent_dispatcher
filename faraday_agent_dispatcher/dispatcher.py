@@ -520,7 +520,7 @@ class Dispatcher:
         for varenv, value in executor.varenvs.items():
             env[f"{varenv.upper()}"] = value
         command = executor.cmd
-        if command.endswith(".py"):
+        if command.endswith(".py") and executor.repo_executor:
             command = f"{sys.executable} {command}"
         process = await asyncio.create_subprocess_shell(
             command,
