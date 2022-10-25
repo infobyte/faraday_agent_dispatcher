@@ -1,0 +1,1 @@
+[MOD] Now when the executors ends with and exit code 1 dispatcher will send a the last logged message in the command's message
