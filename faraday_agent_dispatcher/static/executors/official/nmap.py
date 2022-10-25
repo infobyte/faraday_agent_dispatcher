@@ -76,10 +76,7 @@ def main():
         host_tag = host_tag.split(",")
     targets = os.environ.get("EXECUTOR_CONFIG_TARGET")
     if not targets:
-        print(
-            "Targets were not passed",
-            file=sys.stderr
-        )
+        print("Targets were not passed", file=sys.stderr)
         exit(1)
 
     if " " in targets:

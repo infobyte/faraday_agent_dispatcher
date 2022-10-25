@@ -6,6 +6,7 @@ import subprocess
 import xml.etree.ElementTree as ET
 from faraday_plugins.plugins.repo.openvas.plugin import OpenvasPlugin
 import defusedxml
+
 defusedxml.defuse_stdlib()
 
 
