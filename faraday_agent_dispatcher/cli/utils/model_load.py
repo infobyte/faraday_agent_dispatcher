@@ -27,7 +27,13 @@ def append_keys(agent_dict, section):
 
 
 def url_setting(url):
-    url_info = {"url_name": None, "url_path": None, "check_ssl": False, "api_port": None, "websocket_port": None}
+    url_info = {
+        "url_name": None,
+        "url_path": None,
+        "check_ssl": False,
+        "api_port": None,
+        "websocket_port": None,
+    }
     url_host = urlparse(url)
 
     if not url_host.scheme:
@@ -78,7 +84,11 @@ def ask_value(agent_dict, opt, section, ssl, control_opt=None):
         if agent_dict[section][opt]["type"] == click.BOOL:
             value = confirm_prompt(f"{opt}", default=def_value)
         else:
-            value = click.prompt(f"{opt}", default=def_value, type=agent_dict[section][opt]["type"])
+            value = click.prompt(
+                f"{opt}",
+                default=def_value,
+                type=agent_dict[section][opt]["type"],
+            )
         if opt == "host":
             info_url = url_setting(value)
             value = info_url["url_name"]
@@ -111,10 +121,6 @@ def process_agent():
                 "default_value": lambda _: False,
                 "type": click.BOOL,
             },
-            "workspaces": {
-                "default_value": lambda _: "workspace",
-                "type": click.STRING,
-            },
         },
         Sections.TOKENS: {
             "agent": {},
@@ -139,8 +145,6 @@ def process_agent():
             if section == Sections.TOKENS and opt == "agent":
                 if "agent" in config.instance[section] and confirm_prompt("Delete agent token?", default=None):
                     config.instance[section].pop(opt)
-            elif opt == "workspaces":
-                process_workspaces()
             else:
                 if opt == "host":
                     value, url_json = ask_value(agent_dict, opt, section, ssl)
@@ -162,7 +166,13 @@ def process_agent():
                     if url_json["api_port"] is None:
                         agent_dict = append_keys(agent_dict, Sections.SERVER)
                         for type_ports in ["api_port", "websocket_port"]:
-                            value_port, _ = ask_value(agent_dict, type_ports, section, ssl, type_ports)
+                            value_port, _ = ask_value(
+                                agent_dict,
+                                type_ports,
+                                section,
+                                ssl,
+                                type_ports,
+                            )
                             config.instance[section][type_ports] = value_port
                             agent_dict[Sections.SERVER].pop(type_ports, None)
 
@@ -174,33 +184,6 @@ def process_agent():
                 else:
                     value, _ = ask_value(agent_dict, opt, section, ssl)
                 config.instance[section][opt] = value
-
-
-def process_workspaces() -> None:
-    end = False
-    section = Sections.SERVER
-
-    workspaces = config.instance[Sections.SERVER].get("workspaces", [])
-
-    while not end:
-        print(f"The current workspaces{Bcolors.ENDC} are:" f" {Bcolors.OKGREEN}{workspaces}{Bcolors.ENDC}")
-        value = choose_adm("workspace", ignore=["M"])
-        if value == "A":
-            workspace_name = click.prompt("Workspace name")
-            if workspace_name in workspaces:
-                print(f"{Bcolors.WARNING}The workspace {workspace_name} already " f"exists{Bcolors.ENDC}")
-            else:
-                workspaces.append(workspace_name)
-        elif value == "D":
-            workspace_name = click.prompt("workspace name")
-            if workspace_name not in workspaces:
-                print(f"{Bcolors.WARNING}There is no {workspace_name}" f"workspace{Bcolors.ENDC}")
-            else:
-                workspaces.remove(workspace_name)
-        else:
-            end = True
-
-    config.instance[section]["workspaces"] = workspaces
 
 
 def process_var_envs(executor_name):
@@ -264,7 +247,11 @@ def process_params(executor_name):
                 mandatory = confirm_prompt("Is mandatory?")
                 input_type = click.prompt("Type?", type=click.Choice(DATA_TYPE.keys()))
                 input_base_type = DATA_TYPE[input_type].type().base
-                section[param] = {"mandatory": mandatory, "type": input_type, "base": input_base_type}
+                section[param] = {
+                    "mandatory": mandatory,
+                    "type": input_type,
+                    "base": input_base_type,
+                }
         elif value == "M":
             param = click.prompt("Argument name").lower()
             if param not in section:
@@ -272,9 +259,17 @@ def process_params(executor_name):
             else:
                 def_value, param = get_new_name(param, section, "argument")
                 mandatory = confirm_prompt("Is mandatory?", default=def_value["mandatory"])
-                input_type = click.prompt("Type?", type=click.Choice(DATA_TYPE.keys()), default=def_value["type"])
+                input_type = click.prompt(
+                    "Type?",
+                    type=click.Choice(DATA_TYPE.keys()),
+                    default=def_value["type"],
+                )
                 input_base_type = DATA_TYPE[input_type].type().base
-                section[param] = {"mandatory": mandatory, "type": input_type, "base": input_base_type}
+                section[param] = {
+                    "mandatory": mandatory,
+                    "type": input_type,
+                    "base": input_base_type,
+                }
         elif value == "D":
             param = click.prompt("Argument name").lower()
             if param not in section:

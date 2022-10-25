@@ -62,6 +62,17 @@ def command_create(target_list):
 
 
 def main():
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
+    if vuln_tag:
+        vuln_tag = vuln_tag.split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
+    if service_tag:
+        service_tag = service_tag.split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
+    if host_tag:
+        host_tag = host_tag.split(",")
     targets = os.environ.get("EXECUTOR_CONFIG_TARGET")
 
     if " " in targets:
@@ -81,7 +92,13 @@ def main():
 
     cmd = command_create(target_list=urls)
     results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    nmap = NmapPlugin()
+    nmap = NmapPlugin(
+        ignore_info=ignore_info,
+        hostname_resolution=hostname_resolution,
+        host_tag=host_tag,
+        service_tag=service_tag,
+        vuln_tag=vuln_tag,
+    )
     nmap.parseOutputString(results.stdout.encode())
     print(nmap.get_json())
 

@@ -1,3 +1,25 @@
+2.3.0 [Sep 5th, 2022]:
+---
+ * Now InsighVM's executer will executa a scan if a site_id is provided
+ * Add tags for plugins
+ * Add installation in docker file for nmap script: vulners
+ * Now the api-key from zap is a enviroment variable
+ * [FIX] Change AGENT_CONFIG_HOSTNAME_RESOLUTION por AGENT_CONFIG_RESOLVE_HOSTNAME
+ * Update docs
+
+2.2.0 [Jul 25th, 2022]:
+---
+ * Add timeout parameter to arachni's executor
+ * Add python2.7, w3af and its dependencies to docker image
+ * Add ignore_info and hostname_resolution options for most executors.
+ * Nessus now list in the logs the available templates and uses posixpath.join instead of concat strings.
+Nikto now uses only requieres TARGET_URL argument.
+ * Fix logs and change .format to fstrings
+ * Remove ws from dispatcher.yaml.
+ * Now faraday-dispatcher send the parameters of the executors when it
+connects to faraday server. Also it checks if there are new enviroment
+variables defined in the manifest file and warn the user.
+
 2.1.3 [Dec 13th, 2021]:
 ---
  * Add --api-token --random-user-agent to wpscan

@@ -9,7 +9,7 @@ The image is already published in our [dockehub page][dockerhub], so you just
 $ docker pull faradaysec/faraday_agent_dispatcher
 ```
 
-After that you only need a .ini file to pass to the image. We already have some
+After that you only need a .yaml file to pass to the image. We already have some
  [templates](#templates) to use. For these you have to edit it in
  the first lines:
 
@@ -20,7 +20,6 @@ server:
   ssl: 'False'
   ssl_cert: ''
   websocket_port: '9000'
-  workspaces: [] # TODO be filled with available workspaces
 ```
 
 After setting the values in the .yaml file, you can run the agent as:

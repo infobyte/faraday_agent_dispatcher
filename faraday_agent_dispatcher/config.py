@@ -22,7 +22,6 @@ from faraday_agent_dispatcher.utils.control_values_utils import (
     control_str,
     control_host,
     control_agent_token,
-    control_list,
     control_bool,
     control_executors,
 )
@@ -46,7 +45,7 @@ CONFIG_PATH = FARADAY_PATH / "config"
 
 
 if not FARADAY_PATH.exists():
-    print(f"{Bcolors.WARNING}The configuration folder does not exist, creating" f" it{Bcolors.ENDC}")
+    print(f"{Bcolors.WARNING}The configuration folder" f" does not exist, creating" f" it{Bcolors.ENDC}")
     FARADAY_PATH.mkdir()
 if not LOGS_PATH.exists():
     LOGS_PATH.mkdir()
@@ -85,7 +84,10 @@ def reset_config(filepath: Path):
     try:
         with filename.open() as yaml_file:
             if not yaml_file:
-                raise ValueError(f"Unable to read config file located at {filename}", False)
+                raise ValueError(
+                    f"Unable to read config " f"file located at {filename}",
+                    False,
+                )
             instance.clear()
             instance.update(update_config(yaml.safe_load(yaml_file)))
     except EnvironmentError:
@@ -119,9 +121,9 @@ def update_config_from_ini_to_yaml(filepath: Path):
 
     try:
         if not old_instance.read(filepath):
-            raise ValueError(f"Unable to read config file located at {filepath}", False)
+            raise ValueError(f"Unable to read config file located" f" at {filepath}", False)
     except configparser.DuplicateSectionError:
-        raise ValueError(f"The config in {filepath} contains duplicated sections", True)
+        raise ValueError(f"The config in {filepath} contains " f"duplicated sections", True)
 
     if OldSections.AGENT not in old_instance:
         if OldSections.EXECUTOR in old_instance:
@@ -147,7 +149,7 @@ def update_config_from_ini_to_yaml(filepath: Path):
                 executor_name = executor_name.strip()
                 if OldSections.EXECUTOR_DATA.format(executor_name) not in old_instance.sections():
 
-                    data.append(f"{OldSections.EXECUTOR_DATA.format(executor_name)} section does not exist")
+                    data.append(f"{OldSections.EXECUTOR_DATA.format(executor_name)}" f" section does not exist")
         else:
             data.append(f"executors option not in {OldSections.AGENT} section")
 
@@ -178,7 +180,11 @@ def update_config_from_ini_to_yaml(filepath: Path):
             workspaces_loaded_value = old_instance.get(section=OldSections.SERVER, option="workspaces")
             if len(workspaces_value) >= 0:
                 workspaces_value = f"{workspaces_value}," f"{workspaces_loaded_value}"
-        old_instance.set(section=OldSections.SERVER, option="workspaces", value=workspaces_value)
+        old_instance.set(
+            section=OldSections.SERVER,
+            option="workspaces",
+            value=workspaces_value,
+        )
         old_instance.remove_option(OldSections.SERVER, "workspace")
 
         if "ssl" not in old_instance[OldSections.SERVER]:
@@ -280,12 +286,17 @@ def update_config(config: Dict):
                 and "repo_executor" in config[Sections.AGENT]["executors"][executor]
                 and "repo_name" not in config[Sections.AGENT]["executors"][executor]
             ):
-                new_repo_name = get_repo_exec().get(config[Sections.AGENT]["executors"][executor]["repo_executor"], "")
+                new_repo_name = get_repo_exec().get(
+                    config[Sections.AGENT]["executors"][executor]["repo_executor"],
+                    "",
+                )
                 config[Sections.AGENT]["executors"][executor]["repo_name"] = new_repo_name
                 if len(new_repo_name) == 0:
                     logging.warning(
-                        f"{Bcolors.WARNING}We tried to update the executor {executor} but faild. Its recommended "
-                        f"to delete and add it by faraday-dispatcher config-wizard{Bcolors.ENDC}"
+                        f"{Bcolors.WARNING}We tried to update the executor "
+                        f"{executor} but faild. Its recommended "
+                        f"to delete and add it by faraday-dispatcher"
+                        f" config-wizard{Bcolors.ENDC}"
                     )
 
     return config
@@ -315,7 +326,6 @@ __control_dict = {
         "ssl_cert": control_str(nullable=True),
         "api_port": control_int(),
         "websocket_port": control_int(),
-        "workspaces": control_list(can_repeat=False),
     },
     Sections.TOKENS: {
         "agent": control_agent_token,
@@ -336,7 +346,7 @@ def control_config():
                 raise ValueError(f"{section} section missing in config file")
             else:
                 if option not in instance[section] and section != Sections.TOKENS:
-                    raise ValueError(f"{option} option missing in {section} section of the config file")
+                    raise ValueError(f"{option} option missing in {section} section of " f"the config file")
             value = instance[section][option] if option in instance[section] else None
             __control_dict[section][option](option, value)
 
