@@ -185,13 +185,7 @@ def main():
                 else:
                     log("Scan finished OK")
                     generate_xml(issues, tmp_file, json_issue_definitions)
-                    plugin = BurpPlugin(
-                        ignore_info=ignore_info,
-                        hostname_resolution=hostname_resolution,
-                        host_tag=host_tag,
-                        service_tag=service_tag,
-                        vuln_tag=vuln_tag,
-                    )
+                    plugin = BurpPlugin(**plugins_args)
                     tmp_file.seek(0)
                     plugin.parseOutputString(tmp_file.read())
                     print(plugin.get_json())

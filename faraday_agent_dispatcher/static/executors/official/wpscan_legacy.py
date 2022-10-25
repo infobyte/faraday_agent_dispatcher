@@ -65,12 +65,9 @@ def main():
             vuln_tag=vuln_tag,
         )
         out_file = tempdir / name_output_file
-        try:
-            with open(out_file, "r") as f:
-                plugin.parseOutputString(f.read())
-                print(plugin.get_json())
-        except:
-            sys.exit(1)
+        with open(out_file, "r") as f:
+            plugin.parseOutputString(f.read())
+            print(plugin.get_json())
 
 
 if __name__ == "__main__":

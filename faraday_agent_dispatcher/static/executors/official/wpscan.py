@@ -65,12 +65,9 @@ def main():
             service_tag=service_tag,
             vuln_tag=vuln_tag,
         )
-        try:
-            with open(out_file, "r") as f:
-                plugin.parseOutputString(f.read())
-                print(plugin.get_json())
-        except:
-            sys.exit(1)
+        with open(out_file, "r") as f:
+            plugin.parseOutputString(f.read())
+            print(plugin.get_json())
 
 
 if __name__ == "__main__":

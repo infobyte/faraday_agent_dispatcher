@@ -103,11 +103,8 @@ def main():
             service_tag=service_tag,
             vuln_tag=vuln_tag,
         )
-        try:
-            plugin.parseOutputString(nuclei_process.stdout.decode("utf-8"))
-            print(plugin.get_json())
-        except:
-            sys.exit(1)
+        plugin.parseOutputString(nuclei_process.stdout.decode("utf-8"))
+        print(plugin.get_json())
 
 
 if __name__ == "__main__":

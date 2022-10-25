@@ -481,8 +481,9 @@ class Dispatcher:
                                     "execution_ids": self.execution_ids,
                                     "executor_name": executor.name,
                                     "successful": False,
-                                    "message": f"Executor {executor.name} " f"from {self.agent_name} failed:"
-                                               f" {error_processor.messsage[-1]}",
+                                    "message": f"Executor {executor.name} "
+                                    f"from {self.agent_name} failed:"
+                                    f" {error_processor.messsage[-1]}",
                                 }
                             )
                         )

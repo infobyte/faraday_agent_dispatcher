@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.arachni.plugin import ArachniPlugin
 from faraday_agent_dispatcher.utils.executor_utils import get_plugins_args
 
+
 def remove_multiple_new_line(text: str):
     return re.sub(r"\n+", "\n", text)
 
@@ -72,9 +73,7 @@ def main():
     arachni_reporter_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     flush_messages(arachni_reporter_process)
 
-    plugin = ArachniPlugin(
-        **plugins_args
-    )
+    plugin = ArachniPlugin(**plugins_args)
     with open(name_xml.name, "r") as f:
         plugin.parseOutputString(f.read())
         print(plugin.get_json())

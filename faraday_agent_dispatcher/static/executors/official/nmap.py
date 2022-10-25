@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from faraday_agent_dispatcher.utils.executor_utils import get_plugins_args
 from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
 
+
 def command_create(target_list):
     my_envs = os.environ
     cmd = ["nmap"]

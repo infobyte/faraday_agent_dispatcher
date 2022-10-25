@@ -46,7 +46,7 @@ def main():
                 file=sys.stderr,
             )
         if len(nikto_process.stderr) > 0:
-            print(f"Nikto stderr", file=sys.stderr)
+            print("Nikto stderr", file=sys.stderr)
             print(f"{nikto_process.stderr.decode('utf-8')}", file=sys.stderr)
         plugin = NiktoPlugin(
             ignore_info=ignore_info,
@@ -55,12 +55,9 @@ def main():
             service_tag=service_tag,
             vuln_tag=vuln_tag,
         )
-        try:
-            with open(name_result, "r") as f:
-                plugin.parseOutputString(f.read())
-                print(plugin.get_json())
-        except:
-            sys.exit(1)
+        with open(name_result, "r") as f:
+            plugin.parseOutputString(f.read())
+            print(plugin.get_json())
 
 
 if __name__ == "__main__":

@@ -1,5 +1,3 @@
-
-
 def get_plugins_args(my_envs):
     ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = my_envs.get("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
