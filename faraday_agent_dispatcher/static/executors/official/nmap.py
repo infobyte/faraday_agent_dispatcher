@@ -3,6 +3,7 @@
 import os
 import subprocess
 from urllib.parse import urlparse
+import sys
 
 """You need to clone and install faraday plugins"""
 from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
@@ -74,6 +75,12 @@ def main():
     if host_tag:
         host_tag = host_tag.split(",")
     targets = os.environ.get("EXECUTOR_CONFIG_TARGET")
+    if not targets:
+        print(
+            "Targets were not passed",
+            file=sys.stderr
+        )
+        exit(1)
 
     if " " in targets:
         target_list = targets.split(" ")

@@ -5,10 +5,12 @@ import requests
 from requests.auth import HTTPBasicAuth
 import datetime
 import time
-from faraday_plugins.plugins.repo.qualysguard.plugin import QualysguardPlugin
 import xml.etree.ElementTree as ET
+import defusedxml
 import urllib3
+from faraday_plugins.plugins.repo.qualysguard.plugin import QualysguardPlugin
 
+defusedxml.defuse_stdlib()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://qualysguard.qg4.apps.qualys.com"
@@ -98,7 +100,7 @@ def get_or_create_ip(target, auth):
 
 def create_ip(target, auth):
     url = BASE_URL + f"/api/2.0/fo/asset/ip/?action=add&ips={target}&enable_vm=1&enable_pc=1"
-    response = requests.post(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    response = requests.post(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
     if response.status_code == 200:
         log("ip created")
     else:
@@ -113,7 +115,7 @@ def launch_scan(ip, option_profile, auth):
         url += f"&option_id={option_profile}"
     else:
         url += f"&option_title={option_profile}"
-    response = requests.post(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    response = requests.post(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
     response_xml = ET.fromstring(response.text)
     if response.status_code == 200:
         scan_ref = response_xml.findall("RESPONSE/ITEM_LIST/ITEM/VALUE")[-1].text
@@ -131,7 +133,7 @@ def show_available_profiles(auth):
     for option in options:
         url = BASE_URL + f"/api/2.0/fo/subscription/option_profile/{option}/?action=list"
         launch_scan_response = requests.get(
-            url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"}
+            url, auth=auth, headers={"X-Requested-With": "Faraday-executor"}
         )
         response_xml = ET.fromstring(launch_scan_response.text)
         if launch_scan_response.status_code == 200:
@@ -145,7 +147,7 @@ def wait_scan_to_finish(scan_ref, auth, pull_interval):
     url = BASE_URL + f"/api/2.0/fo/scan/?action=list&scan_ref={scan_ref}"
     while True:
         launch_scan_response = requests.get(
-            url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"}
+            url, auth=auth, headers={"X-Requested-With": "Faraday-executor"}
         )
         response_xml = ET.fromstring(launch_scan_response.text)
         scan_status = response_xml.find("RESPONSE/SCAN_LIST/SCAN/STATUS/STATE").text
@@ -162,7 +164,7 @@ def wait_scan_to_finish(scan_ref, auth, pull_interval):
 
 def get_scan_report(scan_ref, auth):
     url = BASE_URL + f"/msp/scan_report.php?ref={scan_ref}"
-    response = requests.get(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    response = requests.get(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
     if response.status_code == 200:
         return response.text
     else:
