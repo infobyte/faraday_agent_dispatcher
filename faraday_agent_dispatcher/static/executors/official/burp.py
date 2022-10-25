@@ -134,7 +134,7 @@ def main():
     check_api = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1")
     if check_api.status_code != 200:
         log(f"API gets no response. Status code: {check_api.status_code}")
-        sys.exit()
+        sys.exit(1)
     # handling multiple targets, can be provided with:
     # "https://example.com, https://test.com"
     targets = TARGET_URL.replace(" ", "").split(",")
@@ -162,7 +162,7 @@ def main():
                 rp_scan = requests.post(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan", json=json_scan)
             except Exception as e:
                 log(f"ERROR connecting to burp api on {BURP_HOST} [{e}]")
-                sys.exit()
+                sys.exit(1)
             if rp_scan.status_code == 201:
                 location = rp_scan.headers["Location"]
                 log(f"Running scan: {location}")
@@ -173,7 +173,7 @@ def main():
                         rg_issues = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan/{location}")
                     except Exception as e:
                         log(f"API - ERROR: {e}")
-                        sys.exit()
+                        sys.exit(1)
 
                     issues = rg_issues.json()
                     scan_status = issues["scan_status"]

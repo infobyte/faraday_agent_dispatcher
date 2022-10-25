@@ -29,7 +29,7 @@ except KeyError:
         "You must set the environment variables RUMBLE_BIN_PATH, " "RUMBLE_OUTPUT_DIR and RUMBLE_NETWORK_RANGE",
         file=sys.stderr,
     )
-    sys.exit()
+    sys.exit(1)
 
 
 def convert_rumble_assets(assets: list):
@@ -119,7 +119,7 @@ async def main():
                 assets.append(json.loads(line))
     except FileNotFoundError:
         print("Could not find assets.jsonl scan output!", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     faraday_assets = convert_rumble_assets(assets)
 

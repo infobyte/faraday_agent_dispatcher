@@ -22,7 +22,7 @@ def main():
     url_target = os.environ.get("EXECUTOR_CONFIG_W3AF_TARGET_URL")
     if not url_target:
         print("URL not provided", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     # If the script is run outside the dispatcher the environment variables
     # are checked.

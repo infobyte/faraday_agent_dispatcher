@@ -27,13 +27,13 @@ def main():
         report_name = os.environ.get("EXECUTOR_CONFIG_REPORT_NAME")
     else:
         print("Argument REPORT_NAME no set", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     if "REPORTS_PATH" in my_envs:
         report_dir = os.environ.get("REPORTS_PATH")
     else:
         print("Environment variable REPORT_DIR no set", file=sys.stderr)
-        sys.exit()
+        sys.exit(1)
 
     filepath = Path(report_dir) / report_name
     manager = PluginsManager(
