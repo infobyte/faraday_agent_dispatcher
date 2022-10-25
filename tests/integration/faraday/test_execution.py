@@ -12,7 +12,6 @@ from faraday_agent_dispatcher.utils.url_utils import api_url
 
 from tests.data.basic_executor import host_data, vuln_data
 from tests.utils.text_utils import fuzzy_string
-
 import os
 from pathlib import Path
 from requests import Session
@@ -40,7 +39,6 @@ agent_ok_status_keys_set = {
     "creator",
     "id",
     "name",
-    "token",
     "is_online",
     "active",
     "status",
@@ -65,8 +63,14 @@ def test_execute_agent():
         json={"email": USER, "password": PASS},
     )
     assert res.status_code == 200, res.text
-    # session_res = session.get(api_url(HOST, API_PORT, postfix="/_api/session"))
-    res = session.post(api_url(HOST, API_PORT, postfix="/_api/v3/ws"), json={"name": WORKSPACE})
+    res = session.get(api_url(HOST, API_PORT, postfix="/_api/v3/agents"))
+    count = len(res.json())
+    # session_res = session.get(api_url(HOST, API_PORT,
+    # postfix="/_api/session"))
+    res = session.post(
+        api_url(HOST, API_PORT, postfix="/_api/v3/ws"),
+        json={"name": WORKSPACE},
+    )
     assert res.status_code == 201, res.text
     res = session.get(api_url(HOST, API_PORT, postfix="/_api/v3/agent_token"))
     assert res.status_code == 200, res.text
@@ -75,7 +79,6 @@ def test_execute_agent():
     # Config set up
     if Sections.TOKENS in config:
         config.pop(Sections.TOKENS)
-    config[Sections.SERVER]["workspaces"] = [WORKSPACE]
     config[Sections.SERVER]["ssl"] = SSL
     config[Sections.AGENT]["agent_name"] = AGENT_NAME
     config[Sections.AGENT]["executors"][EXECUTOR_NAME] = {}
@@ -85,8 +88,16 @@ def test_execute_agent():
         "out": {"mandatory": True, "base": "string", "type": "string"},
         "count": {"mandatory": False, "base": "string", "type": "string"},
         "space": {"mandatory": False, "base": "string", "type": "string"},
-        "spaced_before": {"mandatory": False, "base": "string", "type": "string"},
-        "spaced_middle": {"mandatory": False, "base": "string", "type": "string"},
+        "spaced_before": {
+            "mandatory": False,
+            "base": "string",
+            "type": "string",
+        },
+        "spaced_middle": {
+            "mandatory": False,
+            "base": "string",
+            "type": "string",
+        },
         "err": {"mandatory": False, "base": "string", "type": "string"},
         "fails": {"mandatory": False, "base": "string", "type": "string"},
     }
@@ -108,17 +119,17 @@ def test_execute_agent():
             "--debug",
         ]
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        time.sleep(2)  # If fails check time
+        time.sleep(3)  # If fails check time
 
         # Checking dispatcher connection
-        res = session.get(api_url(HOST, API_PORT, postfix=f"/_api/v3/ws/{WORKSPACE}/agents"))
+        res = session.get(api_url(HOST, API_PORT, postfix="/_api/v3/agents"))
         assert res.status_code == 200, res.text
         res_data = res.json()
-        assert len(res_data) == 1, p.communicate(timeout=0.1)
-        agent = res_data[0]
+        assert len(res_data) == count + 1, p.communicate(timeout=0.1)
+        agent = res_data[-1]
         agent_id = agent["id"]
         if agent_ok_status_keys_set != set(agent.keys()):
-            print("Keys set from agent endpoint differ from expected ones, checking if its a superset")
+            print("Keys set from agent endpoint differ from expected ones, " "checking if its a superset")
             print(f"agent_ok_status_keys_set= {agent_ok_status_keys_set}")
             print(f"agent.keys() = {agent.keys()}")
             assert agent_ok_status_keys_set.issubset(set(agent.keys()))
@@ -133,20 +144,20 @@ def test_execute_agent():
             api_url(
                 HOST,
                 API_PORT,
-                postfix=f'/_api/v3/ws/{WORKSPACE}/agents/{agent["id"]}/run',
+                postfix=f'/_api/v3/agents/{agent["id"]}/run',
             ),
             json={
                 # "csrf_token": session_res.json()["csrf_token"],
-                "executorData": {
+                "executor_data": {
                     "agent_id": agent_id,
                     "executor": EXECUTOR_NAME,
                     "args": {"out": "json"},
                 },
+                "workspaces_names": [WORKSPACE],
             },
         )
         assert res.status_code == 200, res.text
-
-        command_id = res.json()["command_id"]
+        command_id = res.json()["commands_id"][0]
 
         # Command ID should be in progress!
         res = session.get(
@@ -159,10 +170,9 @@ def test_execute_agent():
         assert res.status_code == 200, res.text
         command_check_response = res.json()
         assert command_check_response["import_source"] == "agent"
-        assert command_check_response["creator"] is None
         assert command_check_response["duration"] == "In progress"
 
-        time.sleep(2)  # If fails check time
+        time.sleep(3)  # If fails check time
 
         # Command ID should not be in progress!
         res = session.get(

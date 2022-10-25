@@ -33,7 +33,7 @@ vuln_data = {
         "accountability": True,
         "availability": False,
     },
-    "refs": ["CVE-1234"],
+    "refs": [{"type": "other", "name": "http://www.ietf.org/rfc/rfc1323.txt"}],
 }
 
 if __name__ == "__main__":
