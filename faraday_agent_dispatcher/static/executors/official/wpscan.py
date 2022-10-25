@@ -5,6 +5,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 from faraday_plugins.plugins.repo.wpscan.plugin import WPScanPlugin
+import defusedxml
+defusedxml.defuse_stdlib()
 
 
 def main():

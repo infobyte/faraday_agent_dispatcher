@@ -10,7 +10,8 @@ import re
 import xml.etree.cElementTree as ET
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.burp.plugin import BurpPlugin
-
+import defusedxml
+defusedxml.defuse_stdlib()
 
 def log(message):
     print(f"{datetime.datetime.utcnow()} - BURP: {message}", file=sys.stderr)
