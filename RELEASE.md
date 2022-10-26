@@ -1,3 +1,8 @@
+2.4.0 [Oct 26th. 2022]:
+---
+ * Add Qualys executor
+ * [MOD] Change pgrep for psutil in zap executor
+
 2.3.0 [Sep 5th, 2022]:
 ---
  * Now InsighVM's executer will executa a scan if a site_id is provided

@@ -1,5 +1,5 @@
 ARG TAG=faraday-agent-dispatcher
-FROM registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:$TAG
+FROM registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:tools
 
 
 WORKDIR /usr/local/src/faraday_agent_dispatcher

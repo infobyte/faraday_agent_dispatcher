@@ -49,9 +49,9 @@ include:
   - local: .gitlab/ci/testing/.post-gitlab-ci.yml
 
   #- local: .gitlab/ci/plugins-integration/.build-gitlab-ci.yml
-  - local: .gitlab/ci/plugins-integration/.testing-gitlab-ci.yml
+  #- local: .gitlab/ci/plugins-integration/.testing-gitlab-ci.yml
 
-  #- local: .gitlab/ci/build_ci/.build-gitlab-ci.yml
+  - local: .gitlab/ci/build_ci/.build-gitlab-ci.yml
 
   - local: .gitlab/ci/publish/.pypi-gitlab-ci.yml
-  #- local: .gitlab/ci/publish/.publish-dockerhub-gitlab-ci.yml
+  - local: .gitlab/ci/publish/.publish-dockerhub-gitlab-ci.yml
