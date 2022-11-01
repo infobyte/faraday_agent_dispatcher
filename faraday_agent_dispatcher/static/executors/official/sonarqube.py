@@ -4,9 +4,10 @@ import sys
 import requests
 from faraday_plugins.plugins.repo.sonarqubeapi.plugin import SonarQubeAPIPlugin
 
-#ATTENTION: We only want to find vulnerabilities. Code smell and bugs doesn't matters for us.
-TYPE_VULNS = 'VULNERABILITY'
+# ATTENTION: We only want to find vulnerabilities. Code smell and bugs doesn't matters for us.
+TYPE_VULNS = "VULNERABILITY"
 PAGE_SIZE = 500
+
 
 def main():
     # If the script is run outside the dispatcher the environment variables
@@ -27,7 +28,7 @@ def main():
     try:
         sonar_qube_url = os.environ["SONAR_URL"]
         token = os.environ["EXECUTOR_CONFIG_TOKEN"]
-        component_key = os.environ.get('EXECUTOR_CONFIG_COMPONENT_KEY', None)
+        component_key = os.environ.get("EXECUTOR_CONFIG_COMPONENT_KEY", None)
     except KeyError:
         print("Environment variable not found", file=sys.stderr)
         sys.exit()
@@ -35,7 +36,7 @@ def main():
     session = requests.Session()
 
     # ATTENTION: SonarQube API requires an empty password when auth method is via token
-    session.auth = (token, '')
+    session.auth = (token, "")
 
     # Issues api config
     page = 0
@@ -46,32 +47,30 @@ def main():
     while has_more_vulns:
         page += 1
 
-        params = {
-            'types': TYPE_VULNS,
-            'p': page,
-            'ps': PAGE_SIZE
-        }
+        params = {"types": TYPE_VULNS, "p": page, "ps": PAGE_SIZE}
         if component_key:
-            params['componentKeys'] = component_key
+            params["componentKeys"] = component_key
         try:
             response = session.get(
-                url=f'{sonar_qube_url}api/issues/search',
+                url=f"{sonar_qube_url}api/issues/search",
                 params=params,
             )
             response_json = response.json()
         except Exception:
             print(
-                f"There was an error finding issues. Component Key {component_key}; Status Code {response.status_code} - {response.content}",
-                file=sys.stderr)
+                f"There was an error finding issues. Component Key {component_key}; "
+                f"Status Code {response.status_code} - {response.content}",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
-        issues = response_json.get('issues')
+        issues = response_json.get("issues")
         vulnerabilities.extend(issues)
-        total_items = response_json.get('paging').get('total')
+        total_items = response_json.get("paging").get("total")
 
         has_more_vulns = page * PAGE_SIZE < total_items
 
-    response_json['issues'] = vulnerabilities
+    response_json["issues"] = vulnerabilities
     sonar = SonarQubeAPIPlugin(
         ignore_info=ignore_info,
         hostname_resolution=hostname_resolution,
