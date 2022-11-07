@@ -52,7 +52,7 @@ def main():
             params["componentKeys"] = component_key
         try:
             response = session.get(
-                url=f"{sonar_qube_url}api/issues/search",
+                url=f"{sonar_qube_url}/api/issues/search",
                 params=params,
             )
             response_json = response.json()
