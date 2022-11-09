@@ -155,8 +155,8 @@ def main():
                 report_id=report_id,
                 report_format_id=xml_format,
                 filter_string="apply_overrides=0 levels=hml rows=-1 min_qod=70 "
-                       "first=1 sort-reverse=severity "
-                       "notes=0 overrides=0",
+                "first=1 sort-reverse=severity "
+                "notes=0 overrides=0",
                 details=True,
             )
 
