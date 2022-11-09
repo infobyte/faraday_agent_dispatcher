@@ -141,15 +141,24 @@ def main():
     # Get report
     with Gmp(connection=connection, transform=transform) as gmp:
         gmp.authenticate(user, passw)
-
-        report = gmp.get_report(
-            report_id=report_id,
-            report_format_id=xml_format,
-            filter="apply_overrides=0 levels=hml rows=-1 min_qod=70 "
-            "first=1 sort-reverse=severity "
-            "notes=0 overrides=0",
-            details=True,
-        )
+        try:
+            report = gmp.get_report(
+                report_id=report_id,
+                report_format_id=xml_format,
+                filter="apply_overrides=0 levels=hml rows=-1 min_qod=70 "
+                "first=1 sort-reverse=severity "
+                "notes=0 overrides=0",
+                details=True,
+            )
+        except TypeError:
+            report = gmp.get_report(
+                report_id=report_id,
+                report_format_id=xml_format,
+                filter_string="apply_overrides=0 levels=hml rows=-1 min_qod=70 "
+                       "first=1 sort-reverse=severity "
+                       "notes=0 overrides=0",
+                details=True,
+            )
 
     # Parse report and send to Faraday
     plugin = OpenvasPlugin(
