@@ -1,5 +1,5 @@
 import socket
-
+import sys
 from faraday_agent_dispatcher.config import Sections
 from faraday_agent_dispatcher import config
 
@@ -32,6 +32,7 @@ def resolve_hostname(hostname):
     try:
         ip_address = socket.gethostbyname(hostname)
     except Exception as e:
+        print(f"Error resolving hostname {e}", file=sys.stderr)
         return hostname
     else:
         return ip_address
