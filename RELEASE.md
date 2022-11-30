@@ -1,3 +1,16 @@
+2.5.0 [Nov 30th, 2022]:
+---
+ * [ADD] Add new Sonar Qube executor
+
+ * [ADD] Add tenableio executor
+
+
+ * [FIX] Make gvm executor compatible with new version of python-gvm
+
+ * [FIX] Now if a venv is int or float it will convert to string
+
+
+
 2.4.0 [Oct 26th. 2022]:
 ---
  * Add Qualys executor
