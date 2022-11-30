@@ -1,4 +1,4 @@
-# Faraday’s SonarQube Executor 
+# Faraday’s SonarQube Executor
 
 The SonarQube executor function is to download and import the vulnerabilities detected by SonarQube.
 

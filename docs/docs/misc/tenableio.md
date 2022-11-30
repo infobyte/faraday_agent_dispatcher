@@ -19,4 +19,4 @@ TENABLE_SCANNER_NAME: if you want to run the scan with an scanner you can pass t
 
 TENABLE_SCAN_TARGET: the scan target, can be an ip or hostname
 
-TENABLE_SCAN_TEMPLATE: if you want to use an specifict template 
+TENABLE_SCAN_TEMPLATE: if you want to use an specifict template
