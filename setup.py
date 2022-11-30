@@ -44,7 +44,7 @@ requirements = [
     "faraday_agent_parameters_types>=1.1.0",
     "pyyaml",
     "psutil",
-    "pytenable"
+    "pytenable",
 ]
 
 setup_requirements = ["pytest-runner", "click", "setuptools_scm"]
