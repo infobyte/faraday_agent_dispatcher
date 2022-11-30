@@ -1,4 +1,4 @@
-# Faraday’s Qualys Executor 
+# Faraday’s Qualys Executor
 
 The function of the Qualys Executor is to launch a Qualys scan with certain scan profile to a website.
 
