@@ -1,4 +1,3 @@
-
 import os
 import sys
 import time
@@ -13,10 +12,7 @@ HTTP_REGEX = re.compile("^(http|https)://")
 
 
 def log(msg):
-    print(
-        msg,
-        file=sys.stderr
-    )
+    print(msg, file=sys.stderr)
 
 
 def main():
@@ -35,16 +31,12 @@ def main():
     TENABLE_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_NAME", "faraday-scan")
     TENABLE_SCANNER_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCANNER_NAME")
     TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
-    TENABLE_SCAN_TARGET = os.getenv(
-        "EXECUTOR_CONFIG_TENABLE_SCAN_TARGET"
-    )
+    TENABLE_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_TARGET")
     TENABLE_SCAN_TEMPLATE = os.getenv(
         "EXECUTOR_CONFIG_TENABLE_SCAN_TEMPLATE",
         "basic",
     )
-    TENABLE_PULL_INTERVAL = os.getenv(
-        "TENABLE_PULL_INTERVAL", 30
-    )
+    TENABLE_PULL_INTERVAL = os.getenv("TENABLE_PULL_INTERVAL", 30)
     TENABLE_ACCESS_KEY = os.getenv("TENABLE_ACCESS_KEY")
     TENABLE_SECRET_KEY = os.getenv("TENABLE_SECRET_KEY")
     if not (TENABLE_ACCESS_KEY and TENABLE_SECRET_KEY):
@@ -77,19 +69,20 @@ def main():
             )
             exit(1)
     elif TENABLE_SCANNER_NAME:
-        scan = tio.scans.create(name=TENABLE_SCAN_NAME, targets=[target_ip], template=TENABLE_SCAN_TEMPLATE,
-                                scanner=TENABLE_SCANNER_NAME)
+        scan = tio.scans.create(
+            name=TENABLE_SCAN_NAME, targets=[target_ip], template=TENABLE_SCAN_TEMPLATE, scanner=TENABLE_SCANNER_NAME
+        )
     else:
         scan = tio.scans.create(name=TENABLE_SCAN_NAME, targets=[target_ip], template=TENABLE_SCAN_TEMPLATE)
-    tio.scans.launch(scan['id'])
-    status = 'pending'
-    while status[-2:] != 'ed':
+    tio.scans.launch(scan["id"])
+    status = "pending"
+    while status[-2:] != "ed":
         time.sleep(int(TENABLE_PULL_INTERVAL))
-        status = tio.scans.status(scan['id'])
+        status = tio.scans.status(scan["id"])
     if status != "completed":
         log(f"Scanner ended with status {status}")
         exit(1)
-    report = tio.scans.export(scan['id'])
+    report = tio.scans.export(scan["id"])
     plugin = NessusPlugin(
         ignore_info=ignore_info,
         hostname_resolution=hostname_resolution,
@@ -103,5 +96,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
