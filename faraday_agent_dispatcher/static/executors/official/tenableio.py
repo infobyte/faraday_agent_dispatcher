@@ -34,9 +34,7 @@ def main():
 
     TENABLE_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_NAME", "faraday-scan")
     TENABLE_SCANNER_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCANNER_NAME")
-    TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_ID")
-    TENABLE_ACCESS_KEY = os.getenv("TENABLE_ACCESS_KEY")
-    TENABLE_SECRET_KEY = os.getenv("TENABLE_SECRET_KEY")
+    TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
     TENABLE_SCAN_TARGET = os.getenv(
         "EXECUTOR_CONFIG_TENABLE_SCAN_TARGET"
     )
@@ -47,14 +45,15 @@ def main():
     TENABLE_PULL_INTERVAL = os.getenv(
         "TENABLE_PULL_INTERVAL", 30
     )
-
+    TENABLE_ACCESS_KEY = os.getenv("TENABLE_ACCESS_KEY")
+    TENABLE_SECRET_KEY = os.getenv("TENABLE_SECRET_KEY")
     if not (TENABLE_ACCESS_KEY and TENABLE_SECRET_KEY):
         log("TenableIo access_key and secret_key were not provided")
-        sys.exit(1)
+        exit(1)
 
     if not TENABLE_SCAN_TARGET:
         log("Scan Target were not provided")
-        sys.exit(1)
+        exit(1)
     if HTTP_REGEX.match(TENABLE_SCAN_TARGET):
         target = re.sub(HTTP_REGEX, "", TENABLE_SCAN_TARGET)
     else:
