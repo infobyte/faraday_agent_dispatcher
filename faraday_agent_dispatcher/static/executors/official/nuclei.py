@@ -1,19 +1,10 @@
 import os
 import sys
 import tempfile
-import ipaddress
 import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.nuclei.plugin import NucleiPlugin
-
-
-def is_ip(url):
-    try:
-        ipaddress.ip_address(url)
-        return True
-    except ValueError:
-        return False
 
 
 def main():
