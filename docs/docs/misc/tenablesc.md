@@ -1,6 +1,6 @@
-# Tenable.io
+# Tenable.sc
 
-The excecutor of tenable.io will launch a scan in your account of tenable.io. When the scan finish the executor
+The excecutor of tenable.sc will launch a scan in your account of tenable.sc. When the scan finish the executor
 will download the report and export it to faraday.
 
 ## Envioroment variables
@@ -10,6 +10,8 @@ TENABLE_ACCESS_KEY and TENABLE_SECRET_KEY can be generated in "My Account"->"API
 TENABLE_PULL_INTERVAL is the interval between each request after the scan started
 
 ## Parameters
+
+TENABLE_SCAN_REPO: the repository id for the scan
 
 TENABLE_SCAN_NAME (optional): the name of the scan
 

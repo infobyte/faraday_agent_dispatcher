@@ -2,9 +2,8 @@ import os
 import sys
 import time
 from urllib.parse import urlparse
-
-from tenable.io import TenableIO
-from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
+from tenable.sc import TenableSC
+from faraday_plugins.plugins.repo.nessus_sc.plugin import NessusScPlugin
 
 from faraday_agent_dispatcher.utils.url_utils import resolve_hostname
 
@@ -30,6 +29,7 @@ def main():
     TENABLE_SCANNER_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCANNER_NAME")
     TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
     TENABLE_SCAN_TARGETS = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_TARGETS")
+    TENABLE_SCAN_REPO = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_REPO")
     TENABLE_SCAN_TEMPLATE = os.getenv(
         "EXECUTOR_CONFIG_TENABLE_SCAN_TEMPLATE",
         "basic",
@@ -51,10 +51,10 @@ def main():
             targets.append(resolve_hostname(parse_target.netloc))
         else:
             targets.append(resolve_hostname(target))
-    log(f"Targets ip are {targets}")
-    tio = TenableIO(TENABLE_ACCESS_KEY, TENABLE_SECRET_KEY)
+    log(f"Targets ip {targets}")
+    tsc = TenableSC("sc.company.tld", TENABLE_ACCESS_KEY, TENABLE_SECRET_KEY)
     if TENABLE_SCAN_ID:
-        scans = tio.scans.list()
+        scans = tsc.scans.list()
         scans_id = ""
         for scan in scans:
             scans_id += f"{scan['id']} {scan['name']}"
@@ -69,21 +69,30 @@ def main():
             )
             exit(1)
     elif TENABLE_SCANNER_NAME:
-        scan = tio.scans.create(
-            name=TENABLE_SCAN_NAME, targets=targets, template=TENABLE_SCAN_TEMPLATE, scanner=TENABLE_SCANNER_NAME
+        scan = tsc.scans.create(
+            name=TENABLE_SCAN_NAME,
+            repo=TENABLE_SCAN_REPO,
+            targets=targets,
+            template=TENABLE_SCAN_TEMPLATE,
+            scanner=TENABLE_SCANNER_NAME
         )
     else:
-        scan = tio.scans.create(name=TENABLE_SCAN_NAME, targets=targets, template=TENABLE_SCAN_TEMPLATE)
-    tio.scans.launch(scan["id"])
+        scan = tsc.scans.create(
+            name=TENABLE_SCAN_NAME,
+            repo=TENABLE_SCAN_REPO,
+            targets=targets,
+            template=TENABLE_SCAN_TEMPLATE
+        )
+    tsc.scans.launch(scan["id"])
     status = "pending"
     while status[-2:] != "ed":
         time.sleep(int(TENABLE_PULL_INTERVAL))
-        status = tio.scans.status(scan["id"])
+        status = tsc.scans.status(scan["id"])
     if status != "completed":
         log(f"Scanner ended with status {status}")
         exit(1)
-    report = tio.scans.export(scan["id"])
-    plugin = NessusPlugin(
+    report = tsc.scans.export(scan["id"])
+    plugin = NessusScPlugin(
         ignore_info=ignore_info,
         hostname_resolution=hostname_resolution,
         host_tag=host_tag,
