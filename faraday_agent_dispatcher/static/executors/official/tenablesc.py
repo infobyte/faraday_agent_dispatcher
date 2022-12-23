@@ -37,12 +37,16 @@ def main():
     TENABLE_PULL_INTERVAL = os.getenv("TENABLE_PULL_INTERVAL", 30)
     TENABLE_ACCESS_KEY = os.getenv("TENABLE_ACCESS_KEY")
     TENABLE_SECRET_KEY = os.getenv("TENABLE_SECRET_KEY")
+    TENABLE_URL = os.getenv("TENABLE_URL")
     if not (TENABLE_ACCESS_KEY and TENABLE_SECRET_KEY):
         log("TenableIo access_key and secret_key were not provided")
         exit(1)
 
     if not TENABLE_SCAN_TARGETS:
         log("Scan Target were not provided")
+        exit(1)
+    if not TENABLE_URL:
+        log("Tenable Url not provided")
         exit(1)
     targets = []
     for target in TENABLE_SCAN_TARGETS.split(","):
@@ -52,7 +56,7 @@ def main():
         else:
             targets.append(resolve_hostname(target))
     log(f"Targets ip {targets}")
-    tsc = TenableSC("sc.company.tld", TENABLE_ACCESS_KEY, TENABLE_SECRET_KEY)
+    tsc = TenableSC(host=TENABLE_URL, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
     if TENABLE_SCAN_ID:
         scans = tsc.scans.list()
         scans_id = ""
