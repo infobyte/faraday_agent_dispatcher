@@ -74,14 +74,11 @@ def main():
             repo=TENABLE_SCAN_REPO,
             targets=targets,
             template=TENABLE_SCAN_TEMPLATE,
-            scanner=TENABLE_SCANNER_NAME
+            scanner=TENABLE_SCANNER_NAME,
         )
     else:
         scan = tsc.scans.create(
-            name=TENABLE_SCAN_NAME,
-            repo=TENABLE_SCAN_REPO,
-            targets=targets,
-            template=TENABLE_SCAN_TEMPLATE
+            name=TENABLE_SCAN_NAME, repo=TENABLE_SCAN_REPO, targets=targets, template=TENABLE_SCAN_TEMPLATE
         )
     tsc.scans.launch(scan["id"])
     status = "pending"
