@@ -529,7 +529,7 @@ class Dispatcher:
                 env[f"AGENT_CONFIG_{pa.upper()}"] = str(plugin_args.get(pa))
         # Executor Defaults
         for varenv, value in executor.varenvs.items():
-            env[f"{varenv.upper()}"] = value
+            env[f"{varenv.upper()}"] = str(value) if (isinstance(value, int) or isinstance(value, float)) else value
         command = executor.cmd
         if command.endswith(".py") and executor.repo_executor:
             command = f"{sys.executable} {command}"

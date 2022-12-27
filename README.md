@@ -104,6 +104,8 @@ The current official executors are:
 * [Nuclei][nuclei]
 * [Openvas][openvas]
 * Report processor: Consumes a local report where the dispatcher is with the [faraday plugins][plugins]
+* [QualysGuard] [qualys]
+* [Sonar Qube API][sonarqubeapi]
 * [Sublist3r][sublist3r]
 * [W3af][w3af]
 * [Wpscan][wpscan]
@@ -133,6 +135,8 @@ development executors. The most important of them are:
 [nikto]: https://cirt.net/Nikto2
 [nmap]: https://nmap.org
 [nuclei]: https://github.com/projectdiscovery/nuclei
+[qualys]: https://www.qualys.com/
+[sonarqubeapi]: https://www.sonarqube.org/
 [sublist3r]: https://github.com/aboul3la/Sublist3r
 [w3af]: http://w3af.org/
 [wpscan]: https://wpscan.org/
