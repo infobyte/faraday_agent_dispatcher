@@ -8,9 +8,6 @@ from faraday_plugins.plugins.repo.openvas.plugin import OpenvasPlugin
 from gvm.connections import UnixSocketConnection, SSHConnection, TLSConnection
 from gvm.protocols.gmp import Gmp
 from gvm.transforms import EtreeCheckCommandTransform
-import defusedxml
-
-defusedxml.defuse_stdlib()
 
 
 def main():

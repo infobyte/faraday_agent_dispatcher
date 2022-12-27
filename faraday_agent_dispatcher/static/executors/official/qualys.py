@@ -6,11 +6,9 @@ from requests.auth import HTTPBasicAuth
 import datetime
 import time
 import xml.etree.ElementTree as ET
-import defusedxml
 import urllib3
 from faraday_plugins.plugins.repo.qualysguard.plugin import QualysguardPlugin
 
-defusedxml.defuse_stdlib()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://qualysguard.qg4.apps.qualys.com"
