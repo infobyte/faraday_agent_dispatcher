@@ -6,7 +6,7 @@ SAST-bandit:
   script:
     - pip3 install bandit
     - mkdir /results
-    - "bandit -r ${CI_PROJECT_DIR}/faraday_agent_dispatcher -o /results/output.xml -f xml"
+    - "bandit -r ${CI_PROJECT_DIR}/faraday_agent_dispatcher -o /results/output.xml -f xml -s B314,B404,B405,B501,B603"
   after_script:
     - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
     - apt update
