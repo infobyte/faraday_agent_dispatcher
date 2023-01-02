@@ -1,19 +1,10 @@
 import os
 import sys
 import tempfile
-import ipaddress
 import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.nuclei.plugin import NucleiPlugin
-
-
-def is_ip(url):
-    try:
-        ipaddress.ip_address(url)
-        return True
-    except ValueError:
-        return False
 
 
 def main():
@@ -44,13 +35,10 @@ def main():
             with open(name_urls, "w") as f:
                 for url in target_list:
                     url_parse = urlparse(url)
-                    if is_ip(url_parse.netloc) or is_ip(url_parse.path):
-                        print(f"Is {url} not valid.", file=sys.stderr)
+                    if not url_parse.scheme:
+                        f.write(f"http://{url}\n")
                     else:
-                        if not url_parse.scheme:
-                            f.write(f"http://{url}\n")
-                        else:
-                            f.write(f"{url}\n")
+                        f.write(f"{url}\n")
             cmd = [
                 "nuclei",
                 "-l",
@@ -61,21 +49,17 @@ def main():
 
         else:
             url_parse = urlparse(NUCLEI_TARGET)
-            if is_ip(url_parse.hostname) or is_ip(url_parse.path):
-                print(f"Is {NUCLEI_TARGET} not valid.", file=sys.stderr)
-                sys.exit()
+            if not url_parse.scheme:
+                url = f"http://{NUCLEI_TARGET}"
             else:
-                if not url_parse.scheme:
-                    url = f"http://{NUCLEI_TARGET}"
-                else:
-                    url = f"{NUCLEI_TARGET}"
-                cmd = [
-                    "nuclei",
-                    "-target",
-                    url,
-                    "-t",
-                    NUCLEI_TEMPLATES,
-                ]
+                url = f"{NUCLEI_TARGET}"
+            cmd = [
+                "nuclei",
+                "-target",
+                url,
+                "-t",
+                NUCLEI_TEMPLATES,
+            ]
 
         if NUCLEI_EXCLUDE:
             exclude_list = NUCLEI_EXCLUDE.split(",")
