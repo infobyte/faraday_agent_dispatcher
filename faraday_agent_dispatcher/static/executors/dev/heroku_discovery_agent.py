@@ -58,13 +58,13 @@ def main():
     """heroku cli user must be logged to run this agent"""
 
     try:
-        subprocess.run(["heroku", "auth:whoami"], stdout=subprocess.DEVNULL, check=True)
+        subprocess.run(["heroku", "auth:whoami"], stdout=subprocess.DEVNULL, check=True)  # nosec
     except CalledProcessError:
 
         sys.exit(1)
 
     apps = json.loads(
-        subprocess.run(
+        subprocess.run(  # nosec
             ["heroku", "apps", "--json"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -75,7 +75,7 @@ def main():
     for app in apps:
 
         app_info = json.loads(
-            subprocess.run(
+            subprocess.run(  # nosec
                 ["heroku", "config", "--app", app["name"], "--json"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -104,7 +104,7 @@ def main():
                 try:
                     ipaddr = socket.gethostbyname(service_host_data.group(3))
                 except socket.gaierror:
-                    ipaddr = "0.0.0.0"
+                    ipaddr = "0.0.0.0"  # nosec
 
                 _host_data.update(ip=ipaddr, hostnames=[service_host_data.group(3)])
                 _host_data.update(services=[_service_data])
