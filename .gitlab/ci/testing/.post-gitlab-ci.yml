@@ -14,4 +14,3 @@ integration_faraday:
           when: on_success
         - if: $INTEGRATION
           when: on_success
-
