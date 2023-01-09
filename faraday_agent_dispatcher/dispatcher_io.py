@@ -19,6 +19,7 @@ import os
 import ssl
 import json
 
+import socketio
 import asyncio
 from datetime import datetime
 from pathlib import Path
@@ -62,14 +63,15 @@ from faraday_agent_parameters_types.utils import type_validate
 
 logger = logging.get_logger()
 logging.setup_logging()
+sio = socketio.AsyncClient(engineio_logger=True)
 
 
-class Dispatcher:
+class Dispatcher():
     class TaskLabels:
         CONNECTION_CHECK = "Connection check"
         EXECUTOR = "EXECUTOR"
 
-    def __init__(self, session, config_path=None):
+    def __init__(self, session, config_path=None, *args, **kwargs):
         reset_config(filepath=config_path)
         self.update_executors()
         try:
@@ -258,6 +260,7 @@ class Dispatcher:
                 if e.reason:
                     logger.info(f"The server ended connection: {e.reason}")
                 break
+
 
     async def run_once(self, data: str = None):
         try:
@@ -614,3 +617,241 @@ class Dispatcher:
                                 f" is not defined in config file."
                                 f"{Bcolors.ENDC}"
                             )
+
+
+class DispatcherNamespace(socketio.AsyncClientNamespace):
+    def __init__(self, dispatcher=None):
+        self.dispatcher = dispatcher
+        super().__init__()
+
+    async def on_connect(self):
+        print("Connected ")
+        connected_data = {
+                "action": "JOIN_AGENT",
+                "token": self.dispatcher.websocket_token,
+                "executors": [
+                    {"executor_name": executor.name, "args": executor.params}
+                    for executor in self.dispatcher.executors.values()
+                ],
+            }
+        await sio.emit("join_agent", connected_data)
+
+    async def on_disconnect(self):
+        await sio.disconnect()
+
+    def on_message(self, data):
+        print("#######")
+        print(data)
+
+    async def on_(self, event, data):
+        print("##########################")
+        print(event, data)
+        print("##########################")
+
+    async def on_run(self, data):
+        workspaces_selected = data["workspaces"]
+        self.dispatcher.execution_ids = data["execution_ids"]
+        if "executor" not in data:
+            logger.error("No executor selected")
+            # await self.websocket.send(
+            #     json.dumps(
+            #         {
+            #             "action": "RUN_STATUS",
+            #             "execution_ids": self.execution_ids,
+            #             "running": False,
+            #             "message": "No executor selected to " f"{self.agent_name} agent",
+            #         }
+            #     )
+            # )
+            return
+        if data["executor"] not in self.dispatcher.executors:
+            logger.error("The selected executor not exists")
+            await self.websocket.send(
+                json.dumps(
+                    {
+                        "action": "RUN_STATUS",
+                        "execution_ids": self.dispatcher.execution_ids,
+                        "executor_name": data["executor"],
+                        "running": False,
+                        "message": "The selected executor "
+                                   f"{data['executor']} not exists in "
+                                   f"{self.dispatcher.agent_name} agent",
+                    }
+                )
+            )
+            return
+
+        executor = self.dispatcher.executors[data["executor"]]
+
+        params = list(executor.params.keys()).copy()
+        passed_params = data["args"] if "args" in data else {}
+
+        all_accepted = all(
+            [
+                any([param in passed_param for param in params])  # Control any available param  # was passed
+                for passed_param in passed_params
+                # For all passed params
+            ]
+        )
+        if not all_accepted:
+            logger.error(f"Unexpected argument passed to {executor.name}" f" executor")
+            await self.dispatcher.websocket.send(
+                json.dumps(
+                    {
+                        "action": "RUN_STATUS",
+                        "execution_ids": self.dispatcher.execution_ids,
+                        "executor_name": executor.name,
+                        "running": False,
+                        "message": "Unexpected argument(s) passed to "
+                                   f"{executor.name} executor from "
+                                   f"{self.dispatcher.agent_name} agent",
+                    }
+                )
+            )
+        mandatory_full = all(
+            [
+                not executor.params[param]["mandatory"]  # All params is not mandatory
+                or any([param in passed_param for passed_param in passed_params])  # Or was passed
+                for param in params
+            ]
+        )
+        if not mandatory_full:
+            logger.error(f"Mandatory argument not passed " f"to {executor.name} executor")
+            await self.dispatcher.websocket.send(
+                json.dumps(
+                    {
+                        "action": "RUN_STATUS",
+                        "execution_ids": self.dispatcher.execution_ids,
+                        "executor_name": executor.name,
+                        "running": False,
+                        "message": f"Mandatory argument(s) "
+                                   f"not passed to "
+                                   f"{executor.name} executor from "
+                                   f"{self.dispatcher.agent_name} agent",
+                    }
+                )
+            )
+
+        # VALIDATE
+        errors = dict()
+        for param in passed_params:
+            param_errors = type_validate(executor.params[param]["type"], passed_params[param])
+            if param_errors:
+                errors[param] = ",".join(param_errors["data"])
+                logger.error(
+                    f'Validation error on parameter "{param}", of type'
+                    f' "{executor.params[param]["type"]}":'
+                    f" {errors[param]}"
+                )
+
+        if errors:
+            error_msg = "Validation error:"
+            for param in errors:
+                error_msg += (
+                    f"\n{param} = {passed_params[param]} " f"did not validate correctly: {errors[param]}"
+                )
+            logger.error(error_msg)
+            await self.dispatcher.websocket.send(
+                json.dumps(
+                    {
+                        "action": "RUN_STATUS",
+                        "execution_ids": self.dispatcher.execution_ids,
+                        "executor_name": executor.name,
+                        "running": False,
+                        "message": error_msg,
+                    }
+                )
+            )
+            return
+
+        if mandatory_full and all_accepted:
+            if not await executor.check_cmds():
+                # The function logs why cant run
+                return
+            running_msg = f"Running {executor.name} executor from " f"{self.dispatcher.agent_name} agent"
+            logger.info(f"Running {executor.name} executor")
+
+            #                TODO move all checks to another function
+            plugin_args = data.get("plugin_args", {})
+            process = await self.dispatcher.create_process(executor, passed_params, plugin_args)
+            start_date = datetime.utcnow()
+            command_json = {
+                "tool": self.dispatcher.agent_name,
+                "command": executor.name,
+                "user": "",
+                "hostname": "",
+                "params": ", ".join([f"{key}={value}" for (key, value) in passed_params.items()]),
+                "import_source": "agent",
+                "start_date": start_date.isoformat(),
+            }
+            print(self.dispatcher.session, self.dispatcher.execution_ids, workspaces_selected, self.dispatcher.api_kwargs)
+            tasks = [
+                StdOutLineProcessor(
+                    process,
+                    self.dispatcher.session,
+                    self.dispatcher.execution_ids,
+                    workspaces_selected,
+                    self.dispatcher.api_ssl_enabled,
+                    self.dispatcher.api_kwargs,
+                    command_json,
+                    start_date,
+                ).process_f(),
+                StdErrLineProcessor(process).process_f(),
+            ]
+            # await self.websocket.send(
+            #     json.dumps(
+            #         {
+            #             "action": "RUN_STATUS",
+            #             "execution_ids": self.dispatcher.execution_ids,
+            #             "executor_name": executor.name,
+            #             "running": True,
+            #             "message": running_msg,
+            #         }
+            #     )
+            # )
+            await asyncio.gather(*tasks)
+            await process.communicate()
+            assert process.returncode is not None
+            if process.returncode == 0:
+                logger.info(f"Executor {executor.name} finished successfully")
+                # await self.websocket.send(
+                #     json.dumps(
+                #         {
+                #             "action": "RUN_STATUS",
+                #             "execution_ids": self.execution_ids,
+                #             "executor_name": executor.name,
+                #             "successful": True,
+                #             "message": f"Executor "
+                #                        f"{executor.name} from "
+                #                        f"{self.agent_name} finished "
+                #                        "successfully",
+                #         }
+                #     )
+                # )
+                status_message = json.dumps(
+                    {
+                        "action": "RUN_STATUS",
+                        "execution_ids": self.dispatcher.execution_ids,
+                        "executor_name": executor.name,
+                        "successful": True,
+                        "message": f"Executor "
+                                   f"{executor.name} from "
+                                   f"{self.dispatcher.agent_name} finished "
+                                   "successfully",
+                    }
+                )
+                await sio.emit("run_status", status_message)
+                return
+            else:
+                logger.warning(f"Executor {executor.name} finished with exit code" f" {process.returncode}")
+                # await self.websocket.send(
+                #     json.dumps(
+                #         {
+                #             "action": "RUN_STATUS",
+                #             "execution_ids": self.execution_ids,
+                #             "executor_name": executor.name,
+                #             "successful": False,
+                #             "message": f"Executor {executor.name} " f"from {self.agent_name} failed",
+                #         }
+                #     )
+                # )

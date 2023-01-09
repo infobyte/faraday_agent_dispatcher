@@ -26,7 +26,7 @@ import asyncio
 from aiohttp import ClientSession
 
 from faraday_agent_dispatcher.cli.wizard import Wizard, DEFAULT_PAGE_SIZE
-from faraday_agent_dispatcher.dispatcher import Dispatcher
+from faraday_agent_dispatcher.dispatcher_io import Dispatcher, sio, DispatcherNamespace
 from faraday_agent_dispatcher import config, __version__
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 import faraday_agent_dispatcher.logger as logging
@@ -72,7 +72,12 @@ async def main(config_file, logger, token):
             )
 
         await dispatcher.register(token)
-        await dispatcher.connect()
+        # await dispatcher.connect()
+        namespace = DispatcherNamespace()
+        namespace.dispatcher = dispatcher
+        sio.register_namespace(namespace)
+        await sio.connect("http://10.211.55.6:5985/")
+        await sio.wait()
 
     return 0 if dispatcher.sigterm_received else 1
 
