@@ -73,10 +73,10 @@ async def main(config_file, logger, token):
 
         await dispatcher.register(token)
         # await dispatcher.connect()
-        namespace = DispatcherNamespace()
+        namespace = DispatcherNamespace(namespace="/dispatcher")
         namespace.dispatcher = dispatcher
         sio.register_namespace(namespace)
-        await sio.connect("http://10.211.55.6:5985/")
+        await sio.connect(f"http://{namespace.dispatcher.host}:5985")
         await sio.wait()
 
     return 0 if dispatcher.sigterm_received else 1
