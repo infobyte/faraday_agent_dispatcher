@@ -63,7 +63,7 @@ from faraday_agent_parameters_types.utils import type_validate
 
 logger = logging.get_logger()
 logging.setup_logging()
-sio = socketio.AsyncClient(engineio_logger=True)
+sio = socketio.AsyncClient(engineio_logger=True, logger=True)
 
 
 class Dispatcher():
@@ -620,12 +620,11 @@ class Dispatcher():
 
 
 class DispatcherNamespace(socketio.AsyncClientNamespace):
-    def __init__(self, dispatcher=None):
+    def __init__(self, dispatcher=None, namespace=""):
         self.dispatcher = dispatcher
-        super().__init__()
+        super().__init__(namespace=namespace)
 
     async def on_connect(self):
-        print("Connected ")
         connected_data = {
                 "action": "JOIN_AGENT",
                 "token": self.dispatcher.websocket_token,
@@ -634,10 +633,10 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                     for executor in self.dispatcher.executors.values()
                 ],
             }
-        await sio.emit("join_agent", connected_data)
+        await self.emit("join_agent", connected_data)
 
     async def on_disconnect(self):
-        await sio.disconnect()
+        await self.disconnect()
 
     def on_message(self, data):
         print("#######")
@@ -840,7 +839,7 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                                    "successfully",
                     }
                 )
-                await sio.emit("run_status", status_message)
+                await self.emit("run_status", status_message)
                 return
             else:
                 logger.warning(f"Executor {executor.name} finished with exit code" f" {process.returncode}")
