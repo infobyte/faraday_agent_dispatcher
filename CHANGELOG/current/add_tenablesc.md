@@ -1,1 +1,0 @@
-[ADD] Add TenableSC and now tenableio accepts multiple targets
