@@ -1,3 +1,16 @@
+2.5.1 [Jan 3rd, 2023]:
+---
+ * [DEL] Now nuclei doesn't check if the target is an ip
+ * [MOD] Replace assert return code with if
+ * [DEL] Remove default x_token in nessus executor
+
+2.5.0 [Nov 30th, 2022]:
+---
+ * [ADD] Add new Sonar Qube executor
+ * [ADD] Add tenableio executor
+ * [FIX] Make gvm executor compatible with new version of python-gvm
+ * [FIX] Now if a venv is int or float it will convert to string
+
 2.4.0 [Oct 26th. 2022]:
 ---
  * Add Qualys executor
@@ -5,7 +18,7 @@
 
 2.3.0 [Sep 5th, 2022]:
 ---
- * Now InsighVM's executer will executa a scan if a site_id is provided
+ * Now InsighVM's executor will launch a scan if a site_id is provided
  * Add tags for plugins
  * Add installation in docker file for nmap script: vulners
  * Now the api-key from zap is a enviroment variable

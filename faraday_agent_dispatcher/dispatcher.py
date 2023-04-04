@@ -454,7 +454,20 @@ class Dispatcher:
                     )
                     await asyncio.gather(*tasks)
                     await process.communicate()
-                    assert process.returncode is not None
+                    if process.returncode is None:
+                        await self.websocket.send(
+                            json.dumps(
+                                {
+                                    "action": "RUN_STATUS",
+                                    "execution_id": self.execution_id,
+                                    "executor_name": executor.name,
+                                    "successful": False,
+                                    "message": f"Executor {executor.name} " f"from {self.agent_name} failed",
+                                }
+                            )
+                        )
+                        logger.warning("Process return code was none")
+                        return
                     if process.returncode == 0:
                         logger.info(f"Executor {executor.name} finished successfully")
                         await self.websocket.send(
@@ -516,7 +529,7 @@ class Dispatcher:
                 env[f"AGENT_CONFIG_{pa.upper()}"] = str(plugin_args.get(pa))
         # Executor Defaults
         for varenv, value in executor.varenvs.items():
-            env[f"{varenv.upper()}"] = value
+            env[f"{varenv.upper()}"] = str(value) if (isinstance(value, int) or isinstance(value, float)) else value
         command = executor.cmd
         if command.endswith(".py") and executor.repo_executor:
             command = f"{sys.executable} {command}"
