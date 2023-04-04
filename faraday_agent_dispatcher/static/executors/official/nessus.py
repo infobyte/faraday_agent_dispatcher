@@ -32,7 +32,7 @@ def nessus_login(url, user, password):
     return None
 
 
-def nessus_templates(url, token, x_token="", target=""):
+def nessus_templates(url, token, x_token):
     headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
     payload = {}
     response = requests.get(
@@ -55,8 +55,8 @@ def nessus_templates(url, token, x_token="", target=""):
     return None
 
 
-def nessus_add_target(url, token, x_token="", target="", template="basic", name="nessus_scan"):
-    headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
+def nessus_add_target(url, token, x_token, target="", template="basic", name="nessus_scan"):
+    headers = {"X-Cookie": f"token={token}", "X-API-Token": x_token}
     templates = nessus_templates(url, token, x_token)
     if not templates:
         print("Templates not available", file=sys.stderr)
@@ -98,8 +98,8 @@ def nessus_add_target(url, token, x_token="", target="", template="basic", name=
     return None
 
 
-def nessus_scan_run(url, scan_id, token, x_token="", target="basic", policies=""):
-    headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
+def nessus_scan_run(url, scan_id, token, x_token):
+    headers = {"X-Cookie": f"token={token}", "X-API-Token": x_token}
 
     response = requests.post(urljoin(url, f"scans/{scan_id}/launch"), headers=headers, verify=False)
     if response.status_code != 200:
@@ -140,7 +140,7 @@ def nessus_scan_run(url, scan_id, token, x_token="", target="basic", policies=""
     return status
 
 
-def nessus_scan_export(url, scan_id, token, x_token=""):
+def nessus_scan_export(url, scan_id, token, x_token):
     headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
 
     response = requests.post(
