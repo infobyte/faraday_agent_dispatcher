@@ -76,7 +76,7 @@ async def main(config_file, logger, token):
         namespace = DispatcherNamespace(namespace="/dispatcher")
         namespace.dispatcher = dispatcher
         sio.register_namespace(namespace)
-        await sio.connect(f"http://{namespace.dispatcher.host}:5985")
+        await sio.connect(f"https://{namespace.dispatcher.host}:{namespace.dispatcher.websocket_port}")
         await sio.wait()
 
     return 0 if dispatcher.sigterm_received else 1
