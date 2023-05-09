@@ -75,7 +75,6 @@ if __name__ == "__main__":
                 host_data_["vulnerabilities"] = []
 
             if m.group("signing") == "False":
-
                 vuln_data_ = vuln_data.copy()
                 vuln_data_["name"] = "SMB Signing not required"
                 vuln_data_["desc"] = (

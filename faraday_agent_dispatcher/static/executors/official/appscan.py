@@ -1,4 +1,3 @@
-
 import os
 import sys
 import time
@@ -15,31 +14,25 @@ BASE_URL = "https://cloud.appscan.com"
 def get_report_name():
     return f"{datetime.datetime.now().timestamp()}-faraday-agent"
 
+
 def get_report(report_id, key_id, key_secret):
     print(report_id)
     token = get_api_token(key_id, key_secret)
-    headers = {
-        'Authorization': f"Bearer {token}"
-    }
+    headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(urljoin(BASE_URL, f"api/v2/Reports/Download/{report_id}"), headers=headers)
     if response.status_code == 200:
         report_file = response.content
     else:
-        print(
-            "Couldn't generate report. Response from server was "
-            f"{response.status_code}",
-            file=sys.stderr
-        )
+        print("Couldn't generate report. Response from server was " f"{response.status_code}", file=sys.stderr)
         exit(1)
     return report_file
+
 
 def wait_for_report(report_id, token, key_id, key_secret):
     tries = 0
     status = "Running"
     while status in ("Pending", "Starting", "Running"):
-        headers = {
-            'Authorization': f"Bearer {token}"
-        }
+        headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(urljoin(BASE_URL, f"api/V2/Reports/{report_id}"), headers=headers)
         if response.status_code == 200:
             status = response.json().get("Status")
@@ -50,18 +43,16 @@ def wait_for_report(report_id, token, key_id, key_secret):
         else:
             status = "error"
             print(
-                "Could not get report status. Response from server was "
-                f"{response.status_code}",
+                "Could not get report status. Response from server was " f"{response.status_code}",
                 file=sys.stderr,
             )
         time.sleep(TIME_BETWEEN_TRIES)
     return status
 
+
 def generate_report(execution_id, key_id, key_secret):
     token = get_api_token(key_id, key_secret)
-    headers = {
-        'Authorization': f"Bearer {token}"
-    }
+    headers = {"Authorization": f"Bearer {token}"}
     body = {
         "Configuration": {
             "Summary": True,
@@ -78,25 +69,20 @@ def generate_report(execution_id, key_id, key_secret):
             "ReportFileType": "xml",
             "Title": "string",
             "Notes": "string",
-            "Locale": "string"
+            "Locale": "string",
         },
-        "ApplyPolicies": "All"
+        "ApplyPolicies": "All",
     }
     response = requests.post(
-        urljoin(BASE_URL, f"api/v2/Reports/Security/ScanExecution/{execution_id}"),
-        json=body,
-        headers=headers
+        urljoin(BASE_URL, f"api/v2/Reports/Security/ScanExecution/{execution_id}"), json=body, headers=headers
     )
     if response.status_code == 200:
         report_id = response.json().get("Id")
     else:
-        print(
-            "Couldn't generate report. Response from server was "
-            f"{response.status_code}",
-            file=sys.stderr
-        )
+        print("Couldn't generate report. Response from server was " f"{response.status_code}", file=sys.stderr)
         exit(1)
     return report_id
+
 
 def wait_for_execution(execution_id, token, key_id, key_secret, scan_type):
     tries = 0
@@ -106,14 +92,9 @@ def wait_for_execution(execution_id, token, key_id, key_secret, scan_type):
     else:
         url = urljoin(BASE_URL, f"api/v2/Scans/StaticAnalyzerExecution/{execution_id}")
 
-    while status in ("InQueue", "Running") :
-        headers = {
-            'Authorization': f"Bearer {token}"
-        }
-        response = requests.get(
-            url,
-            headers=headers
-        )
+    while status in ("InQueue", "Running"):
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             status = response.json().get("Status")
             tries = 0
@@ -123,22 +104,20 @@ def wait_for_execution(execution_id, token, key_id, key_secret, scan_type):
         else:
             status = "error"
             print(
-                "Could not get scan status. Response from server was "
-                f"{response.status_code}",
+                "Could not get scan status. Response from server was " f"{response.status_code}",
                 file=sys.stderr,
             )
         time.sleep(TIME_BETWEEN_TRIES)
     return status
 
+
 def execute_scan(token, scan_id, target, scan_type):
-    headers = {
-        'Authorization': f"Bearer {token}"
-    }
-    if scan_type=="SAST":
+    headers = {"Authorization": f"Bearer {token}"}
+    if scan_type == "SAST":
         body = {"FileId": target}
-        response = requests.post(urljoin(BASE_URL, F"api/v2/Scans/{scan_id}/Executions"), json=body, headers=headers)
+        response = requests.post(urljoin(BASE_URL, f"api/v2/Scans/{scan_id}/Executions"), json=body, headers=headers)
     else:
-        response = requests.post(urljoin(BASE_URL, F"api/v2/Scans/{scan_id}/Executions"), headers=headers)
+        response = requests.post(urljoin(BASE_URL, f"api/v2/Scans/{scan_id}/Executions"), headers=headers)
     if response.status_code == 201:
         return response.json()["Id"]
     elif response.status_code == 403:
@@ -155,20 +134,19 @@ def execute_scan(token, scan_id, target, scan_type):
         )
         exit(1)
 
+
 def create_and_execute_dast_scan(token, target_url, app_id, scan_name):
     body = {
-      "ScanType": "Staging",
-      "StartingUrl": target_url,
-      "TestPolicy": "Default.policy",
-      "TestOptimizationLevel": "NoOptimization",
-      "ScanName": scan_name,
-      "AppId": app_id,
-      "Execute": True,
-      "Comment": "Scan Created from faraday"
+        "ScanType": "Staging",
+        "StartingUrl": target_url,
+        "TestPolicy": "Default.policy",
+        "TestOptimizationLevel": "NoOptimization",
+        "ScanName": scan_name,
+        "AppId": app_id,
+        "Execute": True,
+        "Comment": "Scan Created from faraday",
     }
-    headers = {
-        'Authorization': f"Bearer {token}"
-    }
+    headers = {"Authorization": f"Bearer {token}"}
     response = requests.post(urljoin(BASE_URL, "api/v2/Scans/DynamicAnalyzer"), json=body, headers=headers)
 
     if response.status_code == 201:
@@ -186,17 +164,16 @@ def create_and_execute_dast_scan(token, target_url, app_id, scan_name):
         )
         exit(1)
 
+
 def create_and_execute_sast_scan(token, app_target_id, app_id, scan_name):
     body = {
-      "ApplicationFileId": app_target_id,
-      "ScanName": scan_name,
-      "AppId": app_id,
-      "Execute": True,
-      "Comment": "Scan Created from faraday"
+        "ApplicationFileId": app_target_id,
+        "ScanName": scan_name,
+        "AppId": app_id,
+        "Execute": True,
+        "Comment": "Scan Created from faraday",
     }
-    headers = {
-        'Authorization': f"Bearer {token}"
-    }
+    headers = {"Authorization": f"Bearer {token}"}
     response = requests.post(urljoin(BASE_URL, "api/v2/Scans/StaticAnalyzer"), json=body, headers=headers)
 
     if response.status_code == 201:
@@ -214,15 +191,10 @@ def create_and_execute_sast_scan(token, app_target_id, app_id, scan_name):
         )
         exit(1)
 
+
 def get_api_token(key_id, key_secret):
-    body = {
-        "KeyId": key_id,
-        "KeySecret": key_secret
-    }
-    response = requests.post(
-        urljoin(BASE_URL, "api/v2/Account/ApiKeyLogin"),
-        json=body
-    )
+    body = {"KeyId": key_id, "KeySecret": key_secret}
+    response = requests.post(urljoin(BASE_URL, "api/v2/Account/ApiKeyLogin"), json=body)
     if response.status_code == 200:
         return response.json()["Token"]
     else:
@@ -251,44 +223,20 @@ def main():
     HCL_APP_ID = os.getenv("HCL_APP_ID")
 
     if not all(HCL_KEY_ID, HCL_KEY_SECRET, HCL_APP_ID):
-        print(
-            f"Key id, key secret or app_id missing, check executor configuration",
-            file=sys.stderr
-        )
+        print("Key id, key secret or app_id missing, check executor configuration", file=sys.stderr)
 
-    if not HCL_SCAN_TYPE in ("DAST", "SAST"):
-        print(
-            f"Invalid SCAN TYPE, it mus be DAST OR SAST not {HCL_SCAN_TYPE}",
-            file=sys.stderr
-        )
+    if HCL_SCAN_TYPE not in ("DAST", "SAST"):
+        print(f"Invalid SCAN TYPE, it mus be DAST OR SAST not {HCL_SCAN_TYPE}", file=sys.stderr)
     if not HCL_SCAN_TARGET and not HCL_SCAN_ID:
-        print(
-            "Not target specified, it must be a url or App target id",
-            file=sys.stderr
-        )
+        print("Not target specified, it must be a url or App target id", file=sys.stderr)
 
     token = get_api_token(HCL_KEY_ID, HCL_KEY_SECRET)
     if HCL_SCAN_ID:
-        execution_id = execute_scan(
-            token,
-            HCL_SCAN_ID,
-            HCL_SCAN_TARGET,
-            HCL_SCAN_TYPE
-        )
+        execution_id = execute_scan(token, HCL_SCAN_ID, HCL_SCAN_TARGET, HCL_SCAN_TYPE)
     elif HCL_SCAN_TYPE == "DAST":
-        execution_id = create_and_execute_dast_scan(
-            token,
-            HCL_SCAN_TARGET,
-            HCL_APP_ID,
-            HCL_SCAN_NAME
-        )
+        execution_id = create_and_execute_dast_scan(token, HCL_SCAN_TARGET, HCL_APP_ID, HCL_SCAN_NAME)
     else:
-        execution_id = create_and_execute_sast_scan(
-            token,
-            HCL_SCAN_TARGET,
-            HCL_APP_ID,
-            HCL_SCAN_NAME
-        )
+        execution_id = create_and_execute_sast_scan(token, HCL_SCAN_TARGET, HCL_APP_ID, HCL_SCAN_NAME)
 
     status = wait_for_execution(execution_id, token, HCL_KEY_ID, HCL_KEY_SECRET, HCL_SCAN_TYPE)
     if status == "Ready":
