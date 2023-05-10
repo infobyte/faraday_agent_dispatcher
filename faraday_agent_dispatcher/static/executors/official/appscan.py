@@ -19,7 +19,7 @@ def get_report(report_id, key_id, key_secret):
     print(report_id)
     token = get_api_token(key_id, key_secret)
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(urljoin(BASE_URL, f"api/v2/Reports/Download/{report_id}"), headers=headers)
+    response = requests.get(urljoin(BASE_URL, f"api/v2/Reports/Download/{report_id}"), headers=headers, timeout=60)
     if response.status_code == 200:
         report_file = response.content
     else:
@@ -33,7 +33,7 @@ def wait_for_report(report_id, token, key_id, key_secret):
     status = "Running"
     while status in ("Pending", "Starting", "Running"):
         headers = {"Authorization": f"Bearer {token}"}
-        response = requests.get(urljoin(BASE_URL, f"api/V2/Reports/{report_id}"), headers=headers)
+        response = requests.get(urljoin(BASE_URL, f"api/V2/Reports/{report_id}"), headers=headers, timeout=60)
         if response.status_code == 200:
             status = response.json().get("Status")
             tries = 0
@@ -74,7 +74,10 @@ def generate_report(execution_id, key_id, key_secret):
         "ApplyPolicies": "All",
     }
     response = requests.post(
-        urljoin(BASE_URL, f"api/v2/Reports/Security/ScanExecution/{execution_id}"), json=body, headers=headers
+        urljoin(BASE_URL, f"api/v2/Reports/Security/ScanExecution/{execution_id}"),
+        json=body,
+        headers=headers,
+        timeout=60
     )
     if response.status_code == 200:
         report_id = response.json().get("Id")
@@ -94,7 +97,7 @@ def wait_for_execution(execution_id, token, key_id, key_secret, scan_type):
 
     while status in ("InQueue", "Running"):
         headers = {"Authorization": f"Bearer {token}"}
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=60)
         if response.status_code == 200:
             status = response.json().get("Status")
             tries = 0
@@ -115,9 +118,9 @@ def execute_scan(token, scan_id, target, scan_type):
     headers = {"Authorization": f"Bearer {token}"}
     if scan_type == "SAST":
         body = {"FileId": target}
-        response = requests.post(urljoin(BASE_URL, f"api/v2/Scans/{scan_id}/Executions"), json=body, headers=headers)
+        response = requests.post(urljoin(BASE_URL, f"api/v2/Scans/{scan_id}/Executions"), json=body, headers=headers, timeout=60)
     else:
-        response = requests.post(urljoin(BASE_URL, f"api/v2/Scans/{scan_id}/Executions"), headers=headers)
+        response = requests.post(urljoin(BASE_URL, f"api/v2/Scans/{scan_id}/Executions"), headers=headers, timeout=60)
     if response.status_code == 201:
         return response.json()["Id"]
     elif response.status_code == 403:
@@ -147,7 +150,7 @@ def create_and_execute_dast_scan(token, target_url, app_id, scan_name):
         "Comment": "Scan Created from faraday",
     }
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.post(urljoin(BASE_URL, "api/v2/Scans/DynamicAnalyzer"), json=body, headers=headers)
+    response = requests.post(urljoin(BASE_URL, "api/v2/Scans/DynamicAnalyzer"), json=body, headers=headers, timeout=60)
 
     if response.status_code == 201:
         return response.json()["ExecutionsIds"][0]
@@ -174,7 +177,7 @@ def create_and_execute_sast_scan(token, app_target_id, app_id, scan_name):
         "Comment": "Scan Created from faraday",
     }
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.post(urljoin(BASE_URL, "api/v2/Scans/StaticAnalyzer"), json=body, headers=headers)
+    response = requests.post(urljoin(BASE_URL, "api/v2/Scans/StaticAnalyzer"), json=body, headers=headers, timeout=60)
 
     if response.status_code == 201:
         return response.json()["ExecutionsIds"][0]
@@ -194,7 +197,7 @@ def create_and_execute_sast_scan(token, app_target_id, app_id, scan_name):
 
 def get_api_token(key_id, key_secret):
     body = {"KeyId": key_id, "KeySecret": key_secret}
-    response = requests.post(urljoin(BASE_URL, "api/v2/Account/ApiKeyLogin"), json=body)
+    response = requests.post(urljoin(BASE_URL, "api/v2/Account/ApiKeyLogin"), json=body, timeout=60)
     if response.status_code == 200:
         return response.json()["Token"]
     else:

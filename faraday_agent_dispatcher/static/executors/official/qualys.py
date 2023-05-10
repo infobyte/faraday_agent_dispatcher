@@ -78,7 +78,7 @@ def main():
 
 def get_or_create_ip(target, auth):
     url = BASE_URL + "/api/2.0/fo/asset/ip/?action=list"
-    response = requests.get(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    response = requests.get(url, verify=False, auth=auth, headers={"X-Requested-With": "Faraday-executor"}, timeout=60)
     response_xml = ET.fromstring(response.text)
     if response.status_code == 200:
         ips = response_xml.findall("RESPONSE/IP_SET/IP")
@@ -98,7 +98,7 @@ def get_or_create_ip(target, auth):
 
 def create_ip(target, auth):
     url = BASE_URL + f"/api/2.0/fo/asset/ip/?action=add&ips={target}&enable_vm=1&enable_pc=1"
-    response = requests.post(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    response = requests.post(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"}, timeout=60)
     if response.status_code == 200:
         log("ip created")
     else:
@@ -113,7 +113,7 @@ def launch_scan(ip, option_profile, auth):
         url += f"&option_id={option_profile}"
     else:
         url += f"&option_title={option_profile}"
-    response = requests.post(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    response = requests.post(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"}, timeout=60)
     response_xml = ET.fromstring(response.text)
     if response.status_code == 200:
         scan_ref = response_xml.findall("RESPONSE/ITEM_LIST/ITEM/VALUE")[-1].text
@@ -130,7 +130,7 @@ def show_available_profiles(auth):
     log("The available profiles are: ")
     for option in options:
         url = BASE_URL + f"/api/2.0/fo/subscription/option_profile/{option}/?action=list"
-        launch_scan_response = requests.get(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+        launch_scan_response = requests.get(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"}, timeout=60)
         response_xml = ET.fromstring(launch_scan_response.text)
         if launch_scan_response.status_code == 200:
             log(option)
@@ -142,7 +142,7 @@ def show_available_profiles(auth):
 def wait_scan_to_finish(scan_ref, auth, pull_interval):
     url = BASE_URL + f"/api/2.0/fo/scan/?action=list&scan_ref={scan_ref}"
     while True:
-        launch_scan_response = requests.get(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+        launch_scan_response = requests.get(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"}, timeout=60)
         response_xml = ET.fromstring(launch_scan_response.text)
         scan_status = response_xml.find("RESPONSE/SCAN_LIST/SCAN/STATUS/STATE").text
         if scan_status == "Finished":
@@ -158,7 +158,7 @@ def wait_scan_to_finish(scan_ref, auth, pull_interval):
 
 def get_scan_report(scan_ref, auth):
     url = BASE_URL + f"/msp/scan_report.php?ref={scan_ref}"
-    response = requests.get(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"})
+    response = requests.get(url, auth=auth, headers={"X-Requested-With": "Faraday-executor"}, timeout=60)
     if response.status_code == 200:
         return response.text
     else:
