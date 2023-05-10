@@ -77,7 +77,7 @@ def generate_report(execution_id, key_id, key_secret):
         urljoin(BASE_URL, f"api/v2/Reports/Security/ScanExecution/{execution_id}"),
         json=body,
         headers=headers,
-        timeout=60
+        timeout=60,
     )
     if response.status_code == 200:
         report_id = response.json().get("Id")
@@ -118,7 +118,9 @@ def execute_scan(token, scan_id, target, scan_type):
     headers = {"Authorization": f"Bearer {token}"}
     if scan_type == "SAST":
         body = {"FileId": target}
-        response = requests.post(urljoin(BASE_URL, f"api/v2/Scans/{scan_id}/Executions"), json=body, headers=headers, timeout=60)
+        response = requests.post(
+            urljoin(BASE_URL, f"api/v2/Scans/{scan_id}/Executions"), json=body, headers=headers, timeout=60
+        )
     else:
         response = requests.post(urljoin(BASE_URL, f"api/v2/Scans/{scan_id}/Executions"), headers=headers, timeout=60)
     if response.status_code == 201:

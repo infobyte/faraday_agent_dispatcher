@@ -86,12 +86,7 @@ def get_report(user, passwd, host, report_id):
     report_url = f"{host}/api/3/reports/{report_id}/history/latest/output"
     log(f"Connecting to insightvm on {host}")
     try:
-        report_response = requests.get(
-            report_url,
-            verify=False,
-            auth=HTTPBasicAuth(user, passwd),
-            timeout = 60
-        )
+        report_response = requests.get(report_url, verify=False, auth=HTTPBasicAuth(user, passwd), timeout=60)
         if report_response.status_code != 200:
             log(f"API gets no response. " f"Status code: {report_response.status_code}")
             sys.exit()
@@ -121,7 +116,9 @@ def wait_scan(user, passwd, host, scan_id):
     log(f"Waiting scan {scan_id} to finish")
     while scan_status == "running":
         try:
-            scan_status_response = requests.get(check_scan_url, verify=False, auth=HTTPBasicAuth(user, passwd), timeout=60)
+            scan_status_response = requests.get(
+                check_scan_url, verify=False, auth=HTTPBasicAuth(user, passwd), timeout=60
+            )
             scan_status = scan_status_response.json()["status"]
             if scan_status_response.status_code != 200:
                 log(f"API gets no response. Status code: {scan_status_response.status_code}")

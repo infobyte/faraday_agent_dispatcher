@@ -36,11 +36,7 @@ def nessus_templates(url, token, x_token):
     headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
     payload = {}
     response = requests.get(
-        urljoin(url, "editor/scan/templates"),
-        json=payload,
-        headers=headers,
-        verify=False,
-        timeout=60
+        urljoin(url, "editor/scan/templates"), json=payload, headers=headers, verify=False, timeout=60
     )
     if (
         response.status_code == 200
@@ -149,7 +145,7 @@ def nessus_scan_export(url, scan_id, token, x_token):
         data={"format": "nessus"},
         headers=headers,
         verify=False,
-        timeout=60
+        timeout=60,
     )
     if (
         response.status_code == 200
@@ -192,10 +188,7 @@ def nessus_scan_export(url, scan_id, token, x_token):
 
     print(f"Report export status {status}", file=sys.stderr)
     response = requests.get(
-        urljoin(url, f"tokens/{export_token}/download"),
-        allow_redirects=True,
-        verify=False,
-        timeout=60
+        urljoin(url, f"tokens/{export_token}/download"), allow_redirects=True, verify=False, timeout=60
     )
     if response.status_code == 200:
         return response.content
