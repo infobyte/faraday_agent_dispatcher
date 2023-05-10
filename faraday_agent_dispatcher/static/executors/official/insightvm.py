@@ -90,6 +90,7 @@ def get_report(user, passwd, host, report_id):
             report_url,
             verify=False,
             auth=HTTPBasicAuth(user, passwd),
+            timeout = 60
         )
         if report_response.status_code != 200:
             log(f"API gets no response. " f"Status code: {report_response.status_code}")
@@ -104,7 +105,7 @@ def run_scan(user, passwd, host, site_id):
     start_scan_url = f"{host}/api/3/sites/{site_id}/scans"
     log("Running new scan")
     try:
-        scan_response = requests.post(start_scan_url, verify=False, auth=HTTPBasicAuth(user, passwd))
+        scan_response = requests.post(start_scan_url, verify=False, auth=HTTPBasicAuth(user, passwd), timeout=60)
         if scan_response.status_code != 201:
             log(f"API gets no response. Status code: {scan_response.status_code}")
             sys.exit()
@@ -120,7 +121,7 @@ def wait_scan(user, passwd, host, scan_id):
     log(f"Waiting scan {scan_id} to finish")
     while scan_status == "running":
         try:
-            scan_status_response = requests.get(check_scan_url, verify=False, auth=HTTPBasicAuth(user, passwd))
+            scan_status_response = requests.get(check_scan_url, verify=False, auth=HTTPBasicAuth(user, passwd), timeout=60)
             scan_status = scan_status_response.json()["status"]
             if scan_status_response.status_code != 200:
                 log(f"API gets no response. Status code: {scan_status_response.status_code}")
@@ -143,7 +144,7 @@ def create_and_generate_report(user, passwd, host, scan_id):
     try:
         log("Creating the report")
         report_create_response = requests.post(
-            create_report_url, verify=False, auth=HTTPBasicAuth(user, passwd), json=body
+            create_report_url, verify=False, auth=HTTPBasicAuth(user, passwd), json=body, timeout=60
         )
         if report_create_response.status_code != 201:
             log(f"Couldnt create report, Status codae {report_create_response.status_code}")
@@ -153,7 +154,7 @@ def create_and_generate_report(user, passwd, host, scan_id):
             log(report_create_response.json())
             generate_report_url = f"{host}/api/3/reports/{report_id}/generate"
             report_generate_response = requests.post(
-                generate_report_url, verify=False, auth=HTTPBasicAuth(user, passwd)
+                generate_report_url, verify=False, auth=HTTPBasicAuth(user, passwd), timeout=60
             )
             if report_generate_response.status_code != 200:
                 log(f"Couldnt create report, Status code {report_generate_response.status_code}")
