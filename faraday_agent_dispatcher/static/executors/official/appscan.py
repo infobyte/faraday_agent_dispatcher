@@ -227,7 +227,7 @@ def main():
     HCL_KEY_SECRET = os.getenv("HCL_KEY_SECRET")
     HCL_APP_ID = os.getenv("HCL_APP_ID")
 
-    if not all(HCL_KEY_ID, HCL_KEY_SECRET, HCL_APP_ID):
+    if not all([HCL_KEY_ID, HCL_KEY_SECRET, HCL_APP_ID]):
         print("Key id, key secret or app_id missing, check executor configuration", file=sys.stderr)
 
     if HCL_SCAN_TYPE not in ("DAST", "SAST"):
