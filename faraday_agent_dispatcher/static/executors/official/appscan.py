@@ -233,7 +233,7 @@ def main():
     if HCL_SCAN_TYPE not in ("DAST", "SAST"):
         print(f"Invalid SCAN TYPE, it mus be DAST OR SAST not {HCL_SCAN_TYPE}", file=sys.stderr)
     if not HCL_SCAN_TARGET and not HCL_SCAN_ID:
-        print("Not target specified, it must be a url or App target id", file=sys.stderr)
+        print("Target not specified, the executor needs HCL_SCAN_TARGET or HCL_SCAN_ID", file=sys.stderr)
 
     token = get_api_token(HCL_KEY_ID, HCL_KEY_SECRET)
     if HCL_SCAN_ID:
