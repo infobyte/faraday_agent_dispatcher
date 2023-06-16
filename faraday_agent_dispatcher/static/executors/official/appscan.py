@@ -220,7 +220,7 @@ def main():
     if host_tag:
         host_tag = host_tag.split(",")
     HCL_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_HCL_SCAN_NAME", get_report_name())
-    HCL_SCAN_TYPE = os.getenv("EXECUTOR_CONFIG_HCL_SCAN_TYPE")
+    HCL_SCAN_TYPE = os.getenv("EXECUTOR_CONFIG_HCL_SCAN_TYPE", "").upper()
     HCL_SCAN_ID = os.getenv("EXECUTOR_CONFIG_HCL_SCAN_ID")
     HCL_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_HCL_SCAN_TARGET")
     HCL_KEY_ID = os.getenv("HCL_KEY_ID")
