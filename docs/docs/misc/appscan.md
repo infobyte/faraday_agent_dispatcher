@@ -1,6 +1,6 @@
 # Faraday’s Appscan Executor 
 
-The function of the Appscan Executor is to creare and/or launch a Appscan scan.
+The function of the Appscan Executor is to create and/or launch an Appscan scan.
 
 ### Environment Variables
 
