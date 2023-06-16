@@ -7,7 +7,7 @@ The function of the Appscan Executor is to creare and/or launch a Appscan scan.
 The Appscan executor has 3 environment variables: HCL_KEY_ID, HCL_KEY_SECRET and HCL_APP_ID. 
 HCL_KEY_ID and HCL_KEY_SECRET are used to create the token to authenticate against Appscan.
 
-HCL_APP_ID is used to indicate in witch app launch the scanner
+HCL_APP_ID is used to indicate in which app launch the scanner
 
 
 ### Parameters:
