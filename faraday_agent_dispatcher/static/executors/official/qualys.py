@@ -17,6 +17,7 @@ HEADERS = {"X-Requested-With": "Faraday-executor"}
 
 TIMEOUT = 60
 
+
 def log(message):
     print(
         f"{datetime.datetime.utcnow()} - QualysGuard: {message}",
@@ -133,9 +134,7 @@ def show_available_profiles(auth):
     log("The available profiles are: ")
     for option in options:
         url = BASE_URL + f"/api/2.0/fo/subscription/option_profile/{option}/?action=list"
-        launch_scan_response = requests.get(
-            url, auth=auth, headers=HEADERS, timeout=TIMEOUT
-        )
+        launch_scan_response = requests.get(url, auth=auth, headers=HEADERS, timeout=TIMEOUT)
         response_xml = ET.fromstring(launch_scan_response.text)
         if launch_scan_response.status_code == 200:
             log(option)
@@ -147,9 +146,7 @@ def show_available_profiles(auth):
 def wait_scan_to_finish(scan_ref, auth, pull_interval):
     url = BASE_URL + f"/api/2.0/fo/scan/?action=list&scan_ref={scan_ref}"
     while True:
-        launch_scan_response = requests.get(
-            url, auth=auth, headers=HEADERS, timeout=TIMEOUT
-        )
+        launch_scan_response = requests.get(url, auth=auth, headers=HEADERS, timeout=TIMEOUT)
         response_xml = ET.fromstring(launch_scan_response.text)
         scan_status = response_xml.find("RESPONSE/SCAN_LIST/SCAN/STATUS/STATE").text
         if scan_status == "Finished":
