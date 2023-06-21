@@ -71,7 +71,6 @@ def process_bytes_line(line):
 
 
 async def main():
-
     command = f"{os.path.expanduser('~/tools/prowler/prowler')} -b -M json"
     prowler_cmd = await asyncio.create_subprocess_shell(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     to_send_vulns = []

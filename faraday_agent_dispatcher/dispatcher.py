@@ -214,7 +214,6 @@ class Dispatcher:
             exit(1)
 
     async def connect(self):
-
         if not self.websocket_token:
             return
 

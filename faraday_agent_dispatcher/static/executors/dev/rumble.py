@@ -56,7 +56,6 @@ def convert_rumble_assets(assets: list):
 
         services = []
         for service in asset["services"].keys():
-
             ip_address, port, ip_protocol = service.split("/")
             service_name_parts = []
             data_keys = [
