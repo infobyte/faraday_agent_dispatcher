@@ -53,7 +53,6 @@ def process_config_file(config_filepath: Path, logger):
 
 
 async def main(config_file, logger, token):
-
     config_file = process_config_file(config_file, logger)
 
     async with ClientSession(raise_for_status=True, trust_env=True) as session:
@@ -151,5 +150,4 @@ cli.add_command(config_wizard)
 cli.add_command(run)
 
 if __name__ == "__main__":
-
     cli()

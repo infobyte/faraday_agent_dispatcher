@@ -109,7 +109,6 @@ def main():
         ]
 
     if lport and lhost:
-
         command += [
             "--local-auth -M met_inject -o",
             "LHOST=",

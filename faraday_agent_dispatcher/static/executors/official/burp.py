@@ -140,7 +140,7 @@ def main():
         log(f"BURP_HOST is invalid, must be http(s)://HOST:PORT [{BURP_HOST}]")
         sys.exit(1)
 
-    check_api = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1")
+    check_api = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1", timeout=60)
     if check_api.status_code != 200:
         log(f"API gets no response. Status code: {check_api.status_code}")
         sys.exit()
@@ -159,7 +159,7 @@ def main():
         log(f"Scanning {targets_urls} with burp on: {BURP_HOST}")
         with tempfile.TemporaryFile() as tmp_file:
             issue_def = f"{BURP_HOST}/{BURP_API_KEY}/v0.1/" f"knowledge_base/issue_definitions"
-            rg_issue_definitions = requests.get(issue_def)
+            rg_issue_definitions = requests.get(issue_def, timeout=60)
             json_issue_definitions = rg_issue_definitions.json()
             json_scan = {
                 "scan_configurations": [{"name": NAMED_CONFIGURATION, "type": "NamedConfiguration"}],
@@ -168,7 +168,7 @@ def main():
             }
 
             try:
-                rp_scan = requests.post(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan", json=json_scan)
+                rp_scan = requests.post(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan", json=json_scan, timeout=60)
             except Exception as e:
                 log(f"ERROR connecting to burp api on {BURP_HOST} [{e}]")
                 sys.exit()
@@ -179,7 +179,7 @@ def main():
                 issues = None
                 while scan_status not in ("succeeded", "failed", "paused"):
                     try:
-                        rg_issues = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan/{location}")
+                        rg_issues = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan/{location}", timeout=60)
                     except Exception as e:
                         log(f"API - ERROR: {e}")
                         sys.exit()

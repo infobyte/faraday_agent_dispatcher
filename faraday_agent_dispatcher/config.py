@@ -148,7 +148,6 @@ def update_config_from_ini_to_yaml(filepath: Path):
             for executor_name in executor_list:
                 executor_name = executor_name.strip()
                 if OldSections.EXECUTOR_DATA.format(executor_name) not in old_instance.sections():
-
                     data.append(f"{OldSections.EXECUTOR_DATA.format(executor_name)}" f" section does not exist")
         else:
             data.append(f"executors option not in {OldSections.AGENT} section")
