@@ -193,7 +193,6 @@ def order_dict(bare_dict: Dict) -> Dict:
 
 def get_ws_handler(test_config: FaradayTestConfig):
     async def websocket_handler(request):
-
         ws = web.WebSocketResponse()
         await ws.prepare(request)
 
