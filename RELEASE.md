@@ -1,8 +1,13 @@
+2.6.0 [July 7th, 2023]:
+---
+ * [ADD] Add HCL Appscan executor. #186
+
 2.5.1 [Jan 3rd, 2023]:
 ---
  * [DEL] Now nuclei doesn't check if the target is an ip
- * [MOD] Replace assert return code with if
- * [DEL] Remove default x_token in nessus executor
+ * [MOD] Add a fixes for bandit vuln:
+      - Replace assert return code with a if
+      - Remove default x_token in nessus executor
 
 2.5.0 [Nov 30th, 2022]:
 ---
@@ -18,7 +23,7 @@
 
 2.3.0 [Sep 5th, 2022]:
 ---
- * Now InsighVM's executor will launch a scan if a site_id is provided
+ * Now InsighVM's executer will executa a scan if a site_id is provided
  * Add tags for plugins
  * Add installation in docker file for nmap script: vulners
  * Now the api-key from zap is a enviroment variable

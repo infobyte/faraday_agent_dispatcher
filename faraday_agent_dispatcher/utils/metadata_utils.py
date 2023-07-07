@@ -27,7 +27,6 @@ INFO_METADATA_KEYS = [
 
 # Path can be treated as str
 def executor_folder() -> Union[Path, str]:
-
     folder = Path(__file__).parent.parent / "static" / "executors"
     if "WIZARD_DEV" in os.environ:
         return folder / "dev"
