@@ -66,7 +66,7 @@ def main():
             for exclude in exclude_list:
                 cmd += ["-exclude", str(Path(NUCLEI_TEMPLATES) / exclude)]
 
-        cmd += ["-json", "-o", name_output]
+        cmd += ["-j", "-o", name_output]
         nuclei_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if len(nuclei_process.stdout) > 0:

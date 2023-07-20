@@ -1,13 +1,17 @@
+2.6.1 [July 20th, 2023]:
+---
+ * [FIX] Now nuclei executor use -j flag instead of -json. #187
+
 2.6.0 [July 7th, 2023]:
 ---
- * [ADD] Add HCL Appscan executor. #186
+ * [ADD] Add HCL Appscan executer #186
 
 2.5.1 [Jan 3rd, 2023]:
 ---
  * [DEL] Now nuclei doesn't check if the target is an ip
  * [MOD] Add a fixes for bandit vuln:
-      - Replace assert return code with a if
-      - Remove default x_token in nessus executor
+   - Replace assert return code with a if
+   - Remove default x_token in nessus executor
 
 2.5.0 [Nov 30th, 2022]:
 ---
