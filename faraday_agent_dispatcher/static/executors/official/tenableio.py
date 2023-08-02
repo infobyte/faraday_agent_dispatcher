@@ -78,25 +78,28 @@ def main():
         )
         plugin.parseOutputString(report.read())
         print(plugin.get_json())
-    if HTTP_REGEX.match(TENABLE_SCAN_TARGET):
-        target = re.sub(HTTP_REGEX, "", TENABLE_SCAN_TARGET)
-    else:
-        target = TENABLE_SCAN_TARGET
-    target_ip = resolve_hostname(target)
-    log(f"The target ip is {target_ip}")
     if TENABLE_SCAN_ID:
         scan = search_scan_id(tio, TENABLE_SCAN_ID)
-    elif TENABLE_SCANNER_NAME:
-        scan = tio.scans.create(
-            name=TENABLE_SCAN_NAME,
-            targets=[target_ip],
-            template=TENABLE_SCAN_TEMPLATE,
-            scanner=TENABLE_SCANNER_NAME,
-        )
     else:
-        scan = tio.scans.create(
-            name=TENABLE_SCAN_NAME, targets=[target_ip], template=TENABLE_SCAN_TEMPLATE
-        )
+        if HTTP_REGEX.match(TENABLE_SCAN_TARGET):
+            target = re.sub(HTTP_REGEX, "", TENABLE_SCAN_TARGET)
+        else:
+            target = TENABLE_SCAN_TARGET
+        target_ip = resolve_hostname(target)
+        log(f"The target ip is {target_ip}")
+        if TENABLE_SCANNER_NAME:
+            scan = tio.scans.create(
+                name=TENABLE_SCAN_NAME,
+                targets=[target_ip],
+                template=TENABLE_SCAN_TEMPLATE,
+                scanner=TENABLE_SCANNER_NAME,
+            )
+        else:
+            scan = tio.scans.create(
+                name=TENABLE_SCAN_NAME,
+                targets=[target_ip],
+                template=TENABLE_SCAN_TEMPLATE,
+            )
     tio.scans.launch(scan["id"])
     status = "pending"
     while status[-2:] != "ed":
