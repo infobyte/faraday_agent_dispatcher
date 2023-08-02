@@ -15,9 +15,29 @@ def log(msg):
     print(msg, file=sys.stderr)
 
 
+def search_scan_id(tio, TENABLE_SCAN_ID):
+    scans = tio.scans.list()
+    scans_id = ""
+    for scan in scans:
+        scans_id += f"{scan['id']} {scan['name']}"
+        if scan["id"] == TENABLE_SCAN_ID:
+            log(
+                f"Scan found: {scan['name']}",
+            )
+            break
+    else:
+        log(
+            f"Scan id {TENABLE_SCAN_ID} not found, the current scans available are: {scans_id}",
+        )
+        exit(1)
+    return scan
+
+
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+    hostname_resolution = (
+        os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+    )
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
     if vuln_tag:
         vuln_tag = vuln_tag.split(",")
@@ -31,6 +51,9 @@ def main():
     TENABLE_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_NAME", "faraday-scan")
     TENABLE_SCANNER_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCANNER_NAME")
     TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
+    TENABLE_RELAUNCH_SCAN = (
+        os.getenv("EXECUTOR_CONFIG_RELAUNCH_SCAN", "True").lower() == "true"
+    )
     TENABLE_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_TARGET")
     TENABLE_SCAN_TEMPLATE = os.getenv(
         "EXECUTOR_CONFIG_TENABLE_SCAN_TEMPLATE",
@@ -42,38 +65,38 @@ def main():
     if not (TENABLE_ACCESS_KEY and TENABLE_SECRET_KEY):
         log("TenableIo access_key and secret_key were not provided")
         exit(1)
-
-    if not TENABLE_SCAN_TARGET:
-        log("Scan Target were not provided")
-        exit(1)
+    tio = TenableIO(TENABLE_ACCESS_KEY, TENABLE_SECRET_KEY)
+    if TENABLE_SCAN_ID and not TENABLE_RELAUNCH_SCAN:
+        scan = search_scan_id(tio, TENABLE_SCAN_ID)
+        report = tio.scans.export(scan["id"])
+        plugin = NessusPlugin(
+            ignore_info=ignore_info,
+            hostname_resolution=hostname_resolution,
+            host_tag=host_tag,
+            service_tag=service_tag,
+            vuln_tag=vuln_tag,
+        )
+        plugin.parseOutputString(report.read())
+        print(plugin.get_json())
     if HTTP_REGEX.match(TENABLE_SCAN_TARGET):
         target = re.sub(HTTP_REGEX, "", TENABLE_SCAN_TARGET)
     else:
         target = TENABLE_SCAN_TARGET
     target_ip = resolve_hostname(target)
     log(f"The target ip is {target_ip}")
-    tio = TenableIO(TENABLE_ACCESS_KEY, TENABLE_SECRET_KEY)
     if TENABLE_SCAN_ID:
-        scans = tio.scans.list()
-        scans_id = ""
-        for scan in scans:
-            scans_id += f"{scan['id']} {scan['name']}"
-            if scan["id"] == TENABLE_SCAN_ID:
-                log(
-                    f"Scan found: {scan['name']}",
-                )
-                break
-        else:
-            log(
-                f"Scan id {TENABLE_SCAN_ID} not found, the current scans available are: {scans_id}",
-            )
-            exit(1)
+        scan = search_scan_id(tio, TENABLE_SCAN_ID)
     elif TENABLE_SCANNER_NAME:
         scan = tio.scans.create(
-            name=TENABLE_SCAN_NAME, targets=[target_ip], template=TENABLE_SCAN_TEMPLATE, scanner=TENABLE_SCANNER_NAME
+            name=TENABLE_SCAN_NAME,
+            targets=[target_ip],
+            template=TENABLE_SCAN_TEMPLATE,
+            scanner=TENABLE_SCANNER_NAME,
         )
     else:
-        scan = tio.scans.create(name=TENABLE_SCAN_NAME, targets=[target_ip], template=TENABLE_SCAN_TEMPLATE)
+        scan = tio.scans.create(
+            name=TENABLE_SCAN_NAME, targets=[target_ip], template=TENABLE_SCAN_TEMPLATE
+        )
     tio.scans.launch(scan["id"])
     status = "pending"
     while status[-2:] != "ed":
