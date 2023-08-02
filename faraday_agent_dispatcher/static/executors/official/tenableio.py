@@ -19,8 +19,8 @@ def search_scan_id(tio, TENABLE_SCAN_ID):
     scans = tio.scans.list()
     scans_id = ""
     for scan in scans:
-        scans_id += f"{scan['id']} {scan['name']}"
-        if scan["id"] == TENABLE_SCAN_ID:
+        scans_id += f"{scan['id']} {scan['name']}\n"
+        if str(scan["id"]) == str(TENABLE_SCAN_ID):
             log(
                 f"Scan found: {scan['name']}",
             )
