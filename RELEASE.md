@@ -1,3 +1,7 @@
+2.6.2 [Aug 3rd, 2023]:
+---
+ * [MOD] Now you can download a existing report in tenableio #192
+
 2.6.1 [July 20th, 2023]:
 ---
  * [FIX] Now nuclei executor use -j flag instead of -json. #187
