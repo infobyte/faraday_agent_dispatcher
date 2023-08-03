@@ -52,7 +52,7 @@ def main():
     TENABLE_SCANNER_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCANNER_NAME")
     TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
     TENABLE_RELAUNCH_SCAN = (
-        os.getenv("EXECUTOR_CONFIG_RELAUNCH_SCAN", "True").lower() == "true"
+        os.getenv("EXECUTOR_CONFIG_RELAUNCH_SCAN", "False").lower() == "true"
     )
     TENABLE_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_TARGET")
     TENABLE_SCAN_TEMPLATE = os.getenv(
@@ -78,6 +78,7 @@ def main():
         )
         plugin.parseOutputString(report.read())
         print(plugin.get_json())
+        return
     if TENABLE_SCAN_ID:
         scan = search_scan_id(tio, TENABLE_SCAN_ID)
     else:
