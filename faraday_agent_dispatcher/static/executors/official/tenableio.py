@@ -35,9 +35,7 @@ def search_scan_id(tio, TENABLE_SCAN_ID):
 
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = (
-        os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    )
+    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
     if vuln_tag:
         vuln_tag = vuln_tag.split(",")
@@ -51,9 +49,7 @@ def main():
     TENABLE_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_NAME", "faraday-scan")
     TENABLE_SCANNER_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCANNER_NAME")
     TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
-    TENABLE_RELAUNCH_SCAN = (
-        os.getenv("EXECUTOR_CONFIG_RELAUNCH_SCAN", "False").lower() == "true"
-    )
+    TENABLE_RELAUNCH_SCAN = os.getenv("EXECUTOR_CONFIG_RELAUNCH_SCAN", "False").lower() == "true"
     TENABLE_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_TARGET")
     TENABLE_SCAN_TEMPLATE = os.getenv(
         "EXECUTOR_CONFIG_TENABLE_SCAN_TEMPLATE",
