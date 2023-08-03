@@ -41,7 +41,7 @@ requirements = [
     "faraday-plugins>=1.12.1",
     "python-owasp-zap-v2.4",
     "python-gvm",
-    "faraday_agent_parameters_types>=1.3.0",
+    "faraday_agent_parameters_types>=1.3.1",
     "pyyaml",
     "psutil",
     "pytenable",
@@ -90,7 +90,9 @@ setup(
     include_package_data=True,
     keywords="faraday integration",
     name="faraday_agent_dispatcher",
-    packages=find_packages(include=["faraday_agent_dispatcher", "faraday_agent_dispatcher.*"]),
+    packages=find_packages(
+        include=["faraday_agent_dispatcher", "faraday_agent_dispatcher.*"]
+    ),
     use_scm_version=False,
     setup_requires=setup_requirements,
     url="https://github.com/infobyte/faraday_agent_dispatcher",
