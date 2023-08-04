@@ -1,22 +1,6 @@
-FROM alpine:3.12.0 as GETTER
-
-RUN apk update && \
-    apk add --no-cache git wget tar
-
-
-# Getting Sublist3r code
-RUN git clone --depth 1 https://github.com/aboul3la/Sublist3r.git Sublist3r
-
-# Getting arachni tar file (v1.5.1)
-RUN mkdir ./temp
-RUN mkdir ./arachni
-RUN wget https://github.com/Arachni/arachni/releases/download/v1.5.1/arachni-1.5.1-0.5.12-linux-x86_64.tar.gz \
-        -O ./temp/arachni-1.5.1-0.5.12-linux-x86_64.tar.gz
-RUN tar -xvzf ./temp/arachni-1.5.1-0.5.12-linux-x86_64.tar.gz --directory ./arachni
-RUN rm ./temp/arachni-1.5.1-0.5.12-linux-x86_64.tar.gz
-
-
 FROM kalilinux/kali-rolling as FINAL
+
+RUN groupadd -r user && useradd -r -g user faraday_user
 
 # Updating repos
 RUN apt-get update && \
@@ -45,7 +29,10 @@ RUN apt-get update && \
         # libs for wpscan
         libffi-dev \
         # openvas
-        openvas
+        openvas \
+        # libs for arachni
+        tar \
+        chromium
 # Clean commands
 RUN rm -rf /var/lib/apt/lists/* && \
     rm -rf /var/cache/apt && \
@@ -54,29 +41,25 @@ RUN rm -rf /var/lib/apt/lists/* && \
 
 RUN npm install -g retire@2.0.3
 RUN git clone https://github.com/andresriancho/w3af.git /usr/local/src/w3af
-
+# Remove prohibition of install python packages globally
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 # Installing CrackMapExec
 RUN pip3 install pipx
 RUN pipx ensurepath
 ENV PIPX_BIN_DIR=/usr/local/bin
 RUN pipx install crackmapexec
+RUN mkdir /usr/local/src/arachni
+# Getting arachni latest release
+RUN arachniTarUrl=$(curl -s https://api.github.com/repos/Arachni/arachni/releases/latest | tr ',' '\n' | grep browser_download_url | grep 'linux-x86_64.tar.gz\"' | cut -d\" -f4) && \
+    fileName="${arachniTarUrl##*/}" && \
+    echo "Downloading Arachni from Github: $arachniTarUrl" && \
+    curl -L $arachniTarUrl -o $fileName && \
+    tar -xvzf $fileName -C /usr/local/src/arachni --strip-components 1
 
-# Getting arachni from GETTER
-COPY --from=GETTER /arachni/arachni-1.5.1-0.5.12/ /usr/local/src/arachni
 # Adding to env PATH
 ENV PATH=${PATH}:/usr/local/src/arachni/bin
 ENV OPENSSL_CONF=/etc/ssl/
 ENV ARACHNI_PATH=/usr/local/src/arachni/bin
-
-# Installing dependencies for Sublist3r
-COPY --from=GETTER /Sublist3r/requirements.txt /usr/local/src/Sublist3r/requirements.txt
-WORKDIR /usr/local/src/Sublist3r
-RUN pip3 --no-cache install -r requirements.txt
-# Getting Sublist3r from GETTER
-COPY --from=GETTER /Sublist3r /usr/local/src/Sublist3r
-# Adding to env PATH
-ENV PATH=${PATH}:/usr/local/src/Sublist3r
-RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # Installing wpscan
 RUN gem install nokogiri
