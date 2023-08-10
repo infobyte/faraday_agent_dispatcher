@@ -41,8 +41,6 @@ RUN rm -rf /var/lib/apt/lists/* && \
 
 RUN npm install -g retire@2.0.3
 RUN git clone https://github.com/andresriancho/w3af.git /usr/local/src/w3af
-# Remove prohibition of install python packages globally
-RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 # Installing CrackMapExec
 RUN pip3 install pipx
 RUN pipx ensurepath
