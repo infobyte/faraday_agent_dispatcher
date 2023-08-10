@@ -52,11 +52,7 @@ def get_issue_data(issue_type_id, json_issue_definitions):
     desc = "No information"
     rem = "No information"
 
-    info_list = [
-        info
-        for info in json_issue_definitions
-        if info["issue_type_id"] == str(issue_type_id)
-    ]
+    info_list = [info for info in json_issue_definitions if info["issue_type_id"] == str(issue_type_id)]
 
     if len(info_list) == 1:
         if "remediation" in info_list[0]:
@@ -74,14 +70,10 @@ def generate_xml(issues, name_result, json_issue_definitions):
     xml_issues = ET.Element("issues")
     for issue in issues["issue_events"]:
         host_ip = get_ip(issue["issue"]["origin"])
-        info_issue = get_issue_data(
-            issue["issue"]["type_index"], json_issue_definitions
-        )
+        info_issue = get_issue_data(issue["issue"]["type_index"], json_issue_definitions)
 
         xml_issue = ET.SubElement(xml_issues, "issue")
-        ET.SubElement(xml_issue, "serialNumber").text = str(
-            issue["issue"]["serial_number"]
-        )
+        ET.SubElement(xml_issue, "serialNumber").text = str(issue["issue"]["serial_number"])
         ET.SubElement(xml_issue, "type").text = str(issue["issue"]["type_index"])
         ET.SubElement(xml_issue, "name").text = issue["issue"]["name"]
         ET.SubElement(xml_issue, "host", ip=host_ip).text = issue["issue"]["origin"]
@@ -90,9 +82,7 @@ def generate_xml(issues, name_result, json_issue_definitions):
         ET.SubElement(xml_issue, "severity").text = issue["issue"]["severity"]
         ET.SubElement(xml_issue, "confidence").text = issue["issue"]["confidence"]
         ET.SubElement(xml_issue, "issueBackground").text = info_issue["issueBackground"]
-        ET.SubElement(xml_issue, "remediationBackground").text = info_issue[
-            "remediationBackground"
-        ]
+        ET.SubElement(xml_issue, "remediationBackground").text = info_issue["remediationBackground"]
         xml_request_response = ET.SubElement(xml_issue, "requestresponse")
 
         try:
@@ -121,9 +111,7 @@ def generate_xml(issues, name_result, json_issue_definitions):
 
         ET.SubElement(xml_request_response, "request").text = request
         ET.SubElement(xml_request_response, "response").text = response
-        ET.SubElement(
-            xml_request_response, "responseRedirected"
-        ).text = response_redirected
+        ET.SubElement(xml_request_response, "responseRedirected").text = response_redirected
 
     tree = ET.ElementTree(xml_issues)
     tree.write(name_result)
@@ -134,9 +122,7 @@ def main():
     # the environment variables are checked.
     # ['TARGET_URL', 'NAMED_CONFIGURATION']
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    hostname_resolution = (
-        os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    )
+    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
     if vuln_tag:
         vuln_tag = vuln_tag.split(",")
@@ -195,23 +181,17 @@ def main():
     if targets_urls:
         log(f"Scanning {targets_urls} with burp on: {BURP_HOST}")
         with tempfile.TemporaryFile() as tmp_file:
-            issue_def = (
-                f"{BURP_HOST}/{BURP_API_KEY}/v0.1/" f"knowledge_base/issue_definitions"
-            )
+            issue_def = f"{BURP_HOST}/{BURP_API_KEY}/v0.1/" f"knowledge_base/issue_definitions"
             rg_issue_definitions = requests.get(issue_def, timeout=60)
             json_issue_definitions = rg_issue_definitions.json()
             json_scan = {
-                "scan_configurations": [
-                    {"name": NAMED_CONFIGURATION, "type": "NamedConfiguration"}
-                ],
+                "scan_configurations": [{"name": NAMED_CONFIGURATION, "type": "NamedConfiguration"}],
                 "scope": {"include": scope},
                 "urls": targets_urls,
             }
 
             try:
-                rp_scan = requests.post(
-                    f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan", json=json_scan, timeout=60
-                )
+                rp_scan = requests.post(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan", json=json_scan, timeout=60)
             except Exception as e:
                 log(f"ERROR connecting to burp api on {BURP_HOST} [{e}]")
                 sys.exit()
