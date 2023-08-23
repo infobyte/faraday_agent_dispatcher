@@ -196,7 +196,7 @@ def main():
             if rp_scan.status_code == 201:
                 location = rp_scan.headers.get("Location")
                 if not location:
-                    log("Burp responed with no Location")
+                    log("Burp responded with no Location")
                     exit(1)
                 log(f"Running scan: {location}")
                 scan_status = ""
