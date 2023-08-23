@@ -16,6 +16,27 @@ def log(message):
     print(f"{datetime.datetime.utcnow()} - BURP: {message}", file=sys.stderr)
 
 
+WAIT_ERROR_INTERVAL = 20
+
+
+def get_issues(host, api_key, location, retry=False):
+    try:
+        rg_issues = requests.get(f"{host}/{api_key}/v0.1/scan/{location}", timeout=60)
+        if rg_issues.status_code != 200 and retry:
+            log(f"Burp responded with status {rg_issues.status_code}. Trying again in {WAIT_ERROR_INTERVAL} seconds")
+            time.sleep(WAIT_ERROR_INTERVAL)
+            get_issues(host, api_key, location, retry=False)
+        elif rg_issues.status_code != 200:
+            log(f"Burp responded with status {rg_issues.status_code}")
+            log(f"Response: {rg_issues.json}")
+            sys.exit()
+        else:
+            return rg_issues.json()
+    except Exception as e:
+        log(f"API - ERROR: {e}")
+        sys.exit(1)
+
+
 def get_ip(url):
     url_data = urlparse(url)
     try:
@@ -173,19 +194,19 @@ def main():
                 log(f"ERROR connecting to burp api on {BURP_HOST} [{e}]")
                 sys.exit()
             if rp_scan.status_code == 201:
-                location = rp_scan.headers["Location"]
+                location = rp_scan.headers.get("Location")
+                if not location:
+                    log("Burp responded with no Location")
+                    exit(1)
                 log(f"Running scan: {location}")
                 scan_status = ""
                 issues = None
                 while scan_status not in ("succeeded", "failed", "paused"):
-                    try:
-                        rg_issues = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan/{location}", timeout=60)
-                    except Exception as e:
-                        log(f"API - ERROR: {e}")
-                        sys.exit()
-
-                    issues = rg_issues.json()
-                    scan_status = issues["scan_status"]
+                    issues = get_issues(BURP_HOST, BURP_API_KEY, location, retry=False)
+                    scan_status = issues.get("scan_status")
+                    if not scan_status:
+                        log("Burp responded with no scan status")
+                        exit(1)
                     if scan_status in WAIT_STATUS:
                         log(f"Waiting for results {scan_status}...")
                         time.sleep(PULL_INTERVAL)
