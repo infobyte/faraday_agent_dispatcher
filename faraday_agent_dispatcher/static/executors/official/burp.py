@@ -28,7 +28,7 @@ def get_issues(host, api_key, location, retry=False):
             get_issues(host, api_key, location, retry=False)
         elif rg_issues.status_code != 200:
             log(f"Burp responded with status {rg_issues.status_code}")
-            log(f"Respond: {rg_issues.json}")
+            log(f"Response: {rg_issues.json}")
             sys.exit()
         else:
             return rg_issues.json()
@@ -205,7 +205,7 @@ def main():
                     issues = get_issues(BURP_HOST, BURP_API_KEY, location, retry=False)
                     scan_status = issues.get("scan_status")
                     if not scan_status:
-                        log("Burp responed with no scan status")
+                        log("Burp responded with no scan status")
                         exit(1)
                     if scan_status in WAIT_STATUS:
                         log(f"Waiting for results {scan_status}...")
