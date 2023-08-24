@@ -1,3 +1,7 @@
+2.6.3 [Aug 24th, 2023]:
+---
+ * [FIX] Check the code response for burp executor #194
+
 2.6.2 [Aug 3rd, 2023]:
 ---
  * [MOD] Now you can download a existing report in tenableio #192
