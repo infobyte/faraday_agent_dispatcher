@@ -60,7 +60,6 @@ def main():
     try:
         subprocess.run(["heroku", "auth:whoami"], stdout=subprocess.DEVNULL, check=True)  # nosec
     except CalledProcessError:
-
         sys.exit(1)
 
     apps = json.loads(
@@ -73,7 +72,6 @@ def main():
     )
 
     for app in apps:
-
         app_info = json.loads(
             subprocess.run(  # nosec
                 ["heroku", "config", "--app", app["name"], "--json"],
