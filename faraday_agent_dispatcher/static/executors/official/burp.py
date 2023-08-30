@@ -16,6 +16,27 @@ def log(message):
     print(f"{datetime.datetime.utcnow()} - BURP: {message}", file=sys.stderr)
 
 
+WAIT_ERROR_INTERVAL = 20
+
+
+def get_issues(host, api_key, location, retry=False):
+    try:
+        rg_issues = requests.get(f"{host}/{api_key}/v0.1/scan/{location}", timeout=60)
+        if rg_issues.status_code != 200 and retry:
+            log(f"Burp responded with status {rg_issues.status_code}. Trying again in {WAIT_ERROR_INTERVAL} seconds")
+            time.sleep(WAIT_ERROR_INTERVAL)
+            get_issues(host, api_key, location, retry=False)
+        elif rg_issues.status_code != 200:
+            log(f"Burp responded with status {rg_issues.status_code}")
+            log(f"Response: {rg_issues.json}")
+            sys.exit()
+        else:
+            return rg_issues.json()
+    except Exception as e:
+        log(f"API - ERROR: {e}")
+        sys.exit(1)
+
+
 def get_ip(url):
     url_data = urlparse(url)
     try:
@@ -140,7 +161,7 @@ def main():
         log(f"BURP_HOST is invalid, must be http(s)://HOST:PORT [{BURP_HOST}]")
         sys.exit(1)
 
-    check_api = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1")
+    check_api = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1", timeout=60)
     if check_api.status_code != 200:
         log(f"API gets no response. Status code: {check_api.status_code}")
         sys.exit()
@@ -159,7 +180,7 @@ def main():
         log(f"Scanning {targets_urls} with burp on: {BURP_HOST}")
         with tempfile.TemporaryFile() as tmp_file:
             issue_def = f"{BURP_HOST}/{BURP_API_KEY}/v0.1/" f"knowledge_base/issue_definitions"
-            rg_issue_definitions = requests.get(issue_def)
+            rg_issue_definitions = requests.get(issue_def, timeout=60)
             json_issue_definitions = rg_issue_definitions.json()
             json_scan = {
                 "scan_configurations": [{"name": NAMED_CONFIGURATION, "type": "NamedConfiguration"}],
@@ -168,24 +189,24 @@ def main():
             }
 
             try:
-                rp_scan = requests.post(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan", json=json_scan)
+                rp_scan = requests.post(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan", json=json_scan, timeout=60)
             except Exception as e:
                 log(f"ERROR connecting to burp api on {BURP_HOST} [{e}]")
                 sys.exit()
             if rp_scan.status_code == 201:
-                location = rp_scan.headers["Location"]
+                location = rp_scan.headers.get("Location")
+                if not location:
+                    log("Burp responded with no Location")
+                    exit(1)
                 log(f"Running scan: {location}")
                 scan_status = ""
                 issues = None
                 while scan_status not in ("succeeded", "failed", "paused"):
-                    try:
-                        rg_issues = requests.get(f"{BURP_HOST}/{BURP_API_KEY}/v0.1/scan/{location}")
-                    except Exception as e:
-                        log(f"API - ERROR: {e}")
-                        sys.exit()
-
-                    issues = rg_issues.json()
-                    scan_status = issues["scan_status"]
+                    issues = get_issues(BURP_HOST, BURP_API_KEY, location, retry=False)
+                    scan_status = issues.get("scan_status")
+                    if not scan_status:
+                        log("Burp responded with no scan status")
+                        exit(1)
                     if scan_status in WAIT_STATUS:
                         log(f"Waiting for results {scan_status}...")
                         time.sleep(PULL_INTERVAL)

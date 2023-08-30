@@ -20,7 +20,7 @@ def get_report_name():
 
 def nessus_login(url, user, password):
     payload = {"username": user, "password": password}
-    response = requests.post(urljoin(url, "session"), payload, verify=False)
+    response = requests.post(urljoin(url, "session"), payload, verify=False, timeout=60)
 
     if response.status_code == 200:
         if response.headers["content-type"].lower() == "application/json" and "token" in response.json():
@@ -36,10 +36,7 @@ def nessus_templates(url, token, x_token):
     headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
     payload = {}
     response = requests.get(
-        urljoin(url, "editor/scan/templates"),
-        json=payload,
-        headers=headers,
-        verify=False,
+        urljoin(url, "editor/scan/templates"), json=payload, headers=headers, verify=False, timeout=60
     )
     if (
         response.status_code == 200
@@ -82,7 +79,7 @@ def nessus_add_target(url, token, x_token, target="", template="basic", name="ne
         },
     }
 
-    response = requests.post(urljoin(url, "scans"), json=payload, headers=headers, verify=False)
+    response = requests.post(urljoin(url, "scans"), json=payload, headers=headers, verify=False, timeout=60)
     if (
         response.status_code == 200
         and response.headers["content-type"].lower() == "application" "/json"
@@ -101,7 +98,7 @@ def nessus_add_target(url, token, x_token, target="", template="basic", name="ne
 def nessus_scan_run(url, scan_id, token, x_token):
     headers = {"X-Cookie": f"token={token}", "X-API-Token": x_token}
 
-    response = requests.post(urljoin(url, f"scans/{scan_id}/launch"), headers=headers, verify=False)
+    response = requests.post(urljoin(url, f"scans/{scan_id}/launch"), headers=headers, verify=False, timeout=60)
     if response.status_code != 200:
         print(
             "Could not launch scan. Response from server was" f" {response.status_code}",
@@ -112,7 +109,7 @@ def nessus_scan_run(url, scan_id, token, x_token):
     status = "running"
     tries = 0
     while status == "running":
-        response = requests.get(urljoin(url, f"scans/{scan_id}"), headers=headers, verify=False)
+        response = requests.get(urljoin(url, f"scans/{scan_id}"), headers=headers, verify=False, timeout=60)
         if response.status_code == 200:
             if (
                 response.headers["content-type"].lower() == "application/json"
@@ -148,6 +145,7 @@ def nessus_scan_export(url, scan_id, token, x_token):
         data={"format": "nessus"},
         headers=headers,
         verify=False,
+        timeout=60,
     )
     if (
         response.status_code == 200
@@ -165,7 +163,7 @@ def nessus_scan_export(url, scan_id, token, x_token):
     status = "processing"
     tries = 0
     while status != "ready":
-        response = requests.get(urljoin(url, f"tokens/{export_token}/status"), verify=False)
+        response = requests.get(urljoin(url, f"tokens/{export_token}/status"), verify=False, timeout=60)
         if response.status_code == 200:
             if response.headers["content-type"].lower() == "application/json" and "status" in response.json():
                 status = response.json()["status"]
@@ -190,9 +188,7 @@ def nessus_scan_export(url, scan_id, token, x_token):
 
     print(f"Report export status {status}", file=sys.stderr)
     response = requests.get(
-        urljoin(url, f"tokens/{export_token}/download"),
-        allow_redirects=True,
-        verify=False,
+        urljoin(url, f"tokens/{export_token}/download"), allow_redirects=True, verify=False, timeout=60
     )
     if response.status_code == 200:
         return response.content
@@ -210,7 +206,7 @@ def get_x_api_token(url, token):
         r"return\"([a-zA-Z0-9]*-[a-zA-Z0-9]*-[a-zA-Z0-9]*-"
         r"[a-zA-Z0-9]*-[a-zA-Z0-9]*)\"\}"
     )
-    response = requests.get(urljoin(url, "nessus6.js"), headers=headers, verify=False)
+    response = requests.get(urljoin(url, "nessus6.js"), headers=headers, verify=False, timeout=60)
 
     if response.status_code == 200:
         matched = re.search(pattern, str(response.content))

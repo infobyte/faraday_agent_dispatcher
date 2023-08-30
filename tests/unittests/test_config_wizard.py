@@ -39,7 +39,6 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
             content = content_file.read()
 
     with runner.isolated_filesystem() as file_system:
-
         if content:
             path = Path(file_system) / "dispatcher.ini"
             with path.open(mode="w") as content_file:
@@ -91,7 +90,6 @@ def test_with_agent_token(delete_token):
         content = content_file.read()
 
     with runner.isolated_filesystem() as file_system:
-
         path = Path(file_system) / "dispatcher.ini"
         with path.open(mode="w") as content_file:
             content_file.write(content)
