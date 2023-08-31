@@ -63,10 +63,10 @@ from faraday_agent_parameters_types.utils import type_validate
 
 logger = logging.get_logger()
 logging.setup_logging()
-sio = socketio.AsyncClient(engineio_logger=True, logger=True)
+sio = socketio.AsyncClient(engineio_logger=False, logger=False)
 
 
-class Dispatcher():
+class Dispatcher:
     class TaskLabels:
         CONNECTION_CHECK = "Connection check"
         EXECUTOR = "EXECUTOR"
@@ -216,7 +216,6 @@ class Dispatcher():
             exit(1)
 
     async def connect(self):
-        print("CONNECT!")
         if not self.websocket_token:
             return
 
@@ -229,7 +228,6 @@ class Dispatcher():
                 ],
             }
         )
-
         async with websockets.connect(
             websocket_url(
                 self.host,
@@ -260,7 +258,6 @@ class Dispatcher():
                 if e.reason:
                     logger.info(f"The server ended connection: {e.reason}")
                 break
-
 
     async def run_once(self, data: str = None):
         try:
@@ -626,26 +623,17 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
 
     async def on_connect(self):
         connected_data = {
-                "action": "JOIN_AGENT",
-                "token": self.dispatcher.websocket_token,
-                "executors": [
-                    {"executor_name": executor.name, "args": executor.params}
-                    for executor in self.dispatcher.executors.values()
-                ],
-            }
+            "action": "JOIN_AGENT",
+            "token": self.dispatcher.websocket_token,
+            "executors": [
+                {"executor_name": executor.name, "args": executor.params}
+                for executor in self.dispatcher.executors.values()
+            ],
+        }
         await self.emit("join_agent", connected_data)
 
     async def on_disconnect(self):
         await self.disconnect()
-
-    def on_message(self, data):
-        print("#######")
-        print(data)
-
-    async def on_(self, event, data):
-        print("##########################")
-        print(event, data)
-        print("##########################")
 
     async def on_run(self, data):
         workspaces_selected = data["workspaces"]
@@ -673,8 +661,8 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "executor_name": data["executor"],
                         "running": False,
                         "message": "The selected executor "
-                                   f"{data['executor']} not exists in "
-                                   f"{self.dispatcher.agent_name} agent",
+                        f"{data['executor']} not exists in "
+                        f"{self.dispatcher.agent_name} agent",
                     }
                 )
             )
@@ -702,8 +690,8 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "executor_name": executor.name,
                         "running": False,
                         "message": "Unexpected argument(s) passed to "
-                                   f"{executor.name} executor from "
-                                   f"{self.dispatcher.agent_name} agent",
+                        f"{executor.name} executor from "
+                        f"{self.dispatcher.agent_name} agent",
                     }
                 )
             )
@@ -724,9 +712,9 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "executor_name": executor.name,
                         "running": False,
                         "message": f"Mandatory argument(s) "
-                                   f"not passed to "
-                                   f"{executor.name} executor from "
-                                   f"{self.dispatcher.agent_name} agent",
+                        f"not passed to "
+                        f"{executor.name} executor from "
+                        f"{self.dispatcher.agent_name} agent",
                     }
                 )
             )
@@ -746,9 +734,7 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
         if errors:
             error_msg = "Validation error:"
             for param in errors:
-                error_msg += (
-                    f"\n{param} = {passed_params[param]} " f"did not validate correctly: {errors[param]}"
-                )
+                error_msg += f"\n{param} = {passed_params[param]} " f"did not validate correctly: {errors[param]}"
             logger.error(error_msg)
             await self.dispatcher.websocket.send(
                 json.dumps(
@@ -783,7 +769,6 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                 "import_source": "agent",
                 "start_date": start_date.isoformat(),
             }
-            print(self.dispatcher.session, self.dispatcher.execution_ids, workspaces_selected, self.dispatcher.api_kwargs)
             tasks = [
                 StdOutLineProcessor(
                     process,
@@ -834,9 +819,9 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "executor_name": executor.name,
                         "successful": True,
                         "message": f"Executor "
-                                   f"{executor.name} from "
-                                   f"{self.dispatcher.agent_name} finished "
-                                   "successfully",
+                        f"{executor.name} from "
+                        f"{self.dispatcher.agent_name} finished "
+                        "successfully",
                     }
                 )
                 await self.emit("run_status", status_message)
