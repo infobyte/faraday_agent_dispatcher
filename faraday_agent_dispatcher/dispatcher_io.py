@@ -753,10 +753,8 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
             if not await executor.check_cmds():
                 # The function logs why cant run
                 return
-            running_msg = f"Running {executor.name} executor from " f"{self.dispatcher.agent_name} agent"
             logger.info(f"Running {executor.name} executor")
 
-            #                TODO move all checks to another function
             plugin_args = data.get("plugin_args", {})
             process = await self.dispatcher.create_process(executor, passed_params, plugin_args)
             start_date = datetime.utcnow()
