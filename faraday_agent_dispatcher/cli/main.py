@@ -71,7 +71,6 @@ async def main(config_file, logger, token):
             )
 
         await dispatcher.register(token)
-        # await dispatcher.connect()
         namespace = DispatcherNamespace(namespace="/dispatcher")
         namespace.dispatcher = dispatcher
         sio.register_namespace(namespace)
