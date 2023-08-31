@@ -77,7 +77,9 @@ async def main(config_file, logger, token):
         schema = "http"
         if dispatcher.api_ssl_enabled:
             schema = "https"
-        await sio.connect(f"{schema}://{namespace.dispatcher.host}:{namespace.dispatcher.websocket_port}")
+        uri = f"{schema}://{namespace.dispatcher.host}:{namespace.dispatcher.websocket_port}"
+        logger.info(f"Trying to connect to: {uri}")
+        await sio.connect(uri)
         await sio.wait()
 
     return 0 if dispatcher.sigterm_received else 1
