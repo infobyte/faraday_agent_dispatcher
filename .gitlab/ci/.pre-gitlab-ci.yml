@@ -15,7 +15,6 @@ SAST-bandit:
     - apt update
     - apt install vault -y
     - setcap cap_ipc_lock= /usr/bin/vault
-    - !reference [ .get_secrets, script ]
     - pip3 install faraday-cli
     - echo "$FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD"
     - faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD
