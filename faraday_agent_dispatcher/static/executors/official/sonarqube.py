@@ -14,10 +14,7 @@ def get_hotspost_info(session, sonar_qube_url, hotspots_ids):
     for hotspot_id in hotspots_ids:
         params = {"hotspot": hotspot_id}
         try:
-            response = session.get(
-                f'{sonar_qube_url}/api/hotspots/show',
-                params=params
-            )
+            response = session.get(f"{sonar_qube_url}/api/hotspots/show", params=params)
             hotspots_data.append(response.json())
         except Exception:
             print(
@@ -32,15 +29,12 @@ def get_hotspost_info(session, sonar_qube_url, hotspots_ids):
 def get_hotspots_ids(session, sonar_qube_url, component_key):
     has_more_hotspots = True
     hotspots_ids = []
-    params = {"p": 0, "ps": PAGE_SIZE, 'sinceLeakPeriod': False, 'status': 'TO_REVIEW', "projectKey": component_key}
+    params = {"p": 0, "ps": PAGE_SIZE, "sinceLeakPeriod": False, "status": "TO_REVIEW", "projectKey": component_key}
 
     while has_more_hotspots:
-        params['p'] += 1
+        params["p"] += 1
         try:
-            response = session.get(
-                url=f"{sonar_qube_url}/api/hotspots/search",
-                params=params
-            )
+            response = session.get(url=f"{sonar_qube_url}/api/hotspots/search", params=params)
             response_json = response.json()
         except Exception:
             print(
@@ -52,10 +46,10 @@ def get_hotspots_ids(session, sonar_qube_url, component_key):
 
         hotspots = response_json.get("hotspots", [])
         for hotspot in hotspots:
-            hotspots_ids.append(hotspot.get('key', ''))
+            hotspots_ids.append(hotspot.get("key", ""))
         total_items = response_json.get("paging", {}).get("total", 0)
 
-        has_more_hotspots = params['p'] * PAGE_SIZE < total_items
+        has_more_hotspots = params["p"] * PAGE_SIZE < total_items
     return hotspots_ids
 
 
