@@ -1,7 +1,5 @@
 FROM kalilinux/kali-rolling as FINAL
 
-RUN groupadd -r user && useradd -r -g user faraday_user
-
 # Updating repos
 RUN apt-get update && \
 # Installing packages
@@ -68,8 +66,8 @@ RUN wpscan --update
 RUN curl https://raw.githubusercontent.com/vulnersCom/nmap-vulners/master/vulners.nse --output  /usr/share/nmap/scripts/vulners.nse
 # Installing Nuclei
 RUN cd /usr/local/src && git clone https://github.com/projectdiscovery/nuclei.git
-RUN cd /usr/local/src/nuclei/v2/cmd/nuclei/ &&  go build && mv nuclei /usr/local/bin/ && nuclei -version
-RUN cd /usr/local/src/nuclei/v2/cmd/nuclei/ && git clone https://github.com/projectdiscovery/nuclei-templates.git
+RUN cd /usr/local/src/nuclei/cmd/nuclei/ &&  go build && mv nuclei /usr/local/bin/ && nuclei -version
+RUN cd /usr/local/src/nuclei/cmd/nuclei/ && git clone https://github.com/projectdiscovery/nuclei-templates.git
 
 # Setting default folder and bash for entrypoint
 WORKDIR /home/

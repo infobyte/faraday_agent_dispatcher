@@ -64,7 +64,7 @@ extra_req = {
 
 setup(
     author="Faraday Development Team",
-    author_email="devel@infobytesec.com",
+    author_email="devel@faradaysec.com",
     python_requires=">=3.7",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -91,7 +91,7 @@ setup(
     keywords="faraday integration",
     name="faraday_agent_dispatcher",
     packages=find_packages(include=["faraday_agent_dispatcher", "faraday_agent_dispatcher.*"]),
-    use_scm_version=False,
+    use_scm_version=True,
     setup_requires=setup_requirements,
     url="https://github.com/infobyte/faraday_agent_dispatcher",
     version=version,
