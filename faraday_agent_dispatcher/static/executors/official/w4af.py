@@ -33,19 +33,6 @@ def main():
             name_result = Path(tempdirname) / "config_report_file.w4af"
 
             with open(name_result, "w") as f:
-                command_text = (
-                    "plugins\n output console,xml_file\n"
-                    " output\n output config xml_file\n "
-                    "set output_file "
-                    f"{tempdirname}/output-w4af.xml\n set verbose"
-                    " True\n back\n output config console\n set "
-                    "verbose False\n back\n crawl all, "
-                    "!bing_spider, !google_spider, !spider_man\n "
-                    "crawl\n grep all\n grep\n audit all\n "
-                    "audit\n bruteforce all\n bruteforce\n "
-                    f"back\n target\n set target {url_target}\n "
-                    f"back\n start\n exit"
-                )
                 commands = [
                     "plugins",
                     "output console,xml_file"
