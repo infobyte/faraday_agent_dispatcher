@@ -35,7 +35,7 @@ def main():
             with open(name_result, "w") as f:
                 commands = [
                     "plugins",
-                    "output console,xml_file"
+                    "output console,xml_file",
                     "output",
                     "output config xml_file",
                     f"set output_file {tempdirname}/output-w4af.xml",
@@ -56,7 +56,7 @@ def main():
                     f"set target {url_target}",
                     "back",
                     "start",
-                    "exit"
+                    "exit",
                 ]
                 f.write("\n".join(commands))
                 print("\n".join(commands))
@@ -74,13 +74,7 @@ def main():
                 sys.exit()
 
             if os.path.isfile("w4af_console"):
-                cmd = [
-                    "python",
-                    "./w4af_console",
-                    "-y",
-                    "-s",
-                    name_result
-                ]
+                cmd = ["python", "./w4af_console", "-y", "-s", name_result]
                 print(cmd)
                 w4af_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 print(cmd)

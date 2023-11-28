@@ -31,15 +31,7 @@ def main():
         tmpdir = Path(tempdirname)
         name_result = tmpdir / "output.xml"
 
-        cmd = [
-            "nikto",
-            "-h",
-            url_target,
-            "-o",
-            name_result,
-            "ask",
-            "no"
-        ]
+        cmd = ["nikto", "-h", url_target, "-o", name_result, "ask", "no"]
 
         nikto_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if len(nikto_process.stdout) > 0:
