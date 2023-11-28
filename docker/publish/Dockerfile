@@ -1,8 +1,6 @@
 ARG TAG=faraday-agent-dispatcher
 FROM registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:tools
 
-ENV PATH=${PATH}:/home/faraday_user/.local/bin
-
 WORKDIR /usr/local/src/faraday_agent_dispatcher
 COPY ./faraday_agent_dispatcher/ /usr/local/src/faraday_agent_dispatcher/faraday_agent_dispatcher
 COPY ./setup.py /usr/local/src/faraday_agent_dispatcher/setup.py
@@ -11,3 +9,5 @@ COPY ./RELEASE.md /usr/local/src/faraday_agent_dispatcher/RELEASE.md
 COPY ./MANIFEST.in /usr/local/src/faraday_agent_dispatcher/MANIFEST.in
 
 RUN pip3 install .
+
+ENTRYPOINT ["faraday-dispatcher", "run"]

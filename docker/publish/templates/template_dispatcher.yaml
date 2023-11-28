@@ -121,7 +121,7 @@ agent:
           type: string
       repo_executor: nuclei.py
       varenvs:
-        nuclei_templates: /usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates
+        nuclei_templates: /usr/local/src/nuclei/cmd/nuclei/nuclei-templates
     wpscan:
       max_size: '65536'
       params:

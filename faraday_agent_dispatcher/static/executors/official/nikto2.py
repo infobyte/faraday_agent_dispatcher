@@ -37,6 +37,8 @@ def main():
             url_target,
             "-o",
             name_result,
+            "ask",
+            "no"
         ]
 
         nikto_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
