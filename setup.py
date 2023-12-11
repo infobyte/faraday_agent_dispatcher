@@ -45,6 +45,7 @@ requirements = [
     "pyyaml",
     "psutil",
     "pytenable",
+    "python-socketio>=5.7.2",
 ]
 
 setup_requirements = ["pytest-runner", "click", "setuptools_scm"]
@@ -91,7 +92,6 @@ setup(
     keywords="faraday integration",
     name="faraday_agent_dispatcher",
     packages=find_packages(include=["faraday_agent_dispatcher", "faraday_agent_dispatcher.*"]),
-    use_scm_version=False,
     setup_requires=setup_requirements,
     url="https://github.com/infobyte/faraday_agent_dispatcher",
     version=version,
