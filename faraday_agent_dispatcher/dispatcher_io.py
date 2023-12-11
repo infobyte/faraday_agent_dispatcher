@@ -780,36 +780,11 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                 ).process_f(),
                 StdErrLineProcessor(process).process_f(),
             ]
-            # await self.websocket.send(
-            #     json.dumps(
-            #         {
-            #             "action": "RUN_STATUS",
-            #             "execution_ids": self.dispatcher.execution_ids,
-            #             "executor_name": executor.name,
-            #             "running": True,
-            #             "message": running_msg,
-            #         }
-            #     )
-            # )
             await asyncio.gather(*tasks)
             await process.communicate()
             assert process.returncode is not None
             if process.returncode == 0:
                 logger.info(f"Executor {executor.name} finished successfully")
-                # await self.websocket.send(
-                #     json.dumps(
-                #         {
-                #             "action": "RUN_STATUS",
-                #             "execution_ids": self.execution_ids,
-                #             "executor_name": executor.name,
-                #             "successful": True,
-                #             "message": f"Executor "
-                #                        f"{executor.name} from "
-                #                        f"{self.agent_name} finished "
-                #                        "successfully",
-                #         }
-                #     )
-                # )
                 status_message = json.dumps(
                     {
                         "action": "RUN_STATUS",
@@ -826,14 +801,3 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                 return
             else:
                 logger.warning(f"Executor {executor.name} finished with exit code" f" {process.returncode}")
-                # await self.websocket.send(
-                #     json.dumps(
-                #         {
-                #             "action": "RUN_STATUS",
-                #             "execution_ids": self.execution_ids,
-                #             "executor_name": executor.name,
-                #             "successful": False,
-                #             "message": f"Executor {executor.name} " f"from {self.agent_name} failed",
-                #         }
-                #     )
-                # )
