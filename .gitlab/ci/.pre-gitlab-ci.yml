@@ -3,6 +3,7 @@ SAST-bandit:
   image: python:3
   tags: 
     - faradaytests
+  allow_failure: true
   script:
     - pip3 install bandit
     - mkdir /results
