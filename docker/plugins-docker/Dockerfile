@@ -86,7 +86,7 @@ RUN wpscan --update
 # Add nmap script vulners
 RUN curl https://raw.githubusercontent.com/vulnersCom/nmap-vulners/master/vulners.nse --output  /usr/share/nmap/scripts/vulners.nse
 # Installing Nuclei
-RUN cd /usr/local/src && git clone https://github.com/projectdiscovery/nuclei.git
+RUN cd /usr/local/src && git clone https://github.com/projectdiscovery/nuclei.git --branch v2.9.15
 RUN cd /usr/local/src/nuclei/v2/cmd/nuclei/ &&  go build && mv nuclei /usr/local/bin/ && nuclei -version
 RUN cd /usr/local/src/nuclei/v2/cmd/nuclei/ && git clone https://github.com/projectdiscovery/nuclei-templates.git
 
