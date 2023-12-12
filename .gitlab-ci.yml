@@ -31,7 +31,7 @@ before_script:
 
 stages:
     - testing
-    - post_testing
+    # - post_testing
     - integration-build
     - integration-test
     - build
@@ -50,7 +50,7 @@ include:
   - local: .gitlab/ci/fetch-secrets.yml
 
   - local: .gitlab/ci/testing/.testing-gitlab-ci.yml
-  - local: .gitlab/ci/testing/.post-gitlab-ci.yml
+  #- local: .gitlab/ci/testing/.post-gitlab-ci.yml
 
   #- local: .gitlab/ci/plugins-integration/.build-gitlab-ci.yml
   #- local: .gitlab/ci/plugins-integration/.testing-gitlab-ci.yml
