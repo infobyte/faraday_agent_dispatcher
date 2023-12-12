@@ -1,3 +1,7 @@
+3.0.0:
+---
+ * [MOD] Now faraday-dispatcher works with socketio. #195
+
 2.6.3 [Aug 24th, 2023]:
 ---
  * [FIX] Check the code response for burp executor #194
