@@ -1,4 +1,4 @@
-3.0.0:
+3.0.0 [Dec 13th, 2023]:
 ---
  * [MOD] Now faraday-dispatcher works with socketio. #195
 
