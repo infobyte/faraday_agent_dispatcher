@@ -632,7 +632,7 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
         }
         await self.emit("join_agent", connected_data)
 
-    async def on_disconnect(self):
+    async def on_disconnect(self, *args, **kwargs):
         await self.disconnect()
 
     async def on_run(self, data):
