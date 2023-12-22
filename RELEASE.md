@@ -1,3 +1,7 @@
+3.0.1 [Dec 22th, 2023]:
+---
+ * [FIX] Fix on_diconnect method and limit python-socketio to 5.8.0 #199
+
 3.0.0 [Dec 13th, 2023]:
 ---
  * [MOD] Now faraday-dispatcher works with socketio. #195
