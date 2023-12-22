@@ -45,7 +45,7 @@ requirements = [
     "pyyaml",
     "psutil",
     "pytenable",
-    "python-socketio>=5.7.2",
+    "python-socketio==5.8.0",
 ]
 
 setup_requirements = ["pytest-runner", "click", "setuptools_scm"]
