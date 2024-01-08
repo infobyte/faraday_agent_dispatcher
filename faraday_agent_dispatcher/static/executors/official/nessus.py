@@ -95,10 +95,10 @@ def nessus_add_target(url, token, x_token, target="", template="basic", name="ne
     return None
 
 
-def nessus_scan_run(url, scan_id, token, x_token):
+def nessus_scan_run(url, scan_id, token, x_token, username, password):
     headers = {"X-Cookie": f"token={token}", "X-API-Token": x_token}
 
-    response = requests.post(urljoin(url, f"scans/{scan_id}/launch"), headers=headers, verify=False, timeout=60)
+    response = requests.post(urljoin(url, f"scans/{scan_id}/launch"), headers=headers, verify=False, timeout=600)
     if response.status_code != 200:
         print(
             "Could not launch scan. Response from server was" f" {response.status_code}",
@@ -109,7 +109,7 @@ def nessus_scan_run(url, scan_id, token, x_token):
     status = "running"
     tries = 0
     while status == "running":
-        response = requests.get(urljoin(url, f"scans/{scan_id}"), headers=headers, verify=False, timeout=60)
+        response = requests.get(urljoin(url, f"scans/{scan_id}"), headers=headers, verify=False, timeout=600)
         if response.status_code == 200:
             if (
                 response.headers["content-type"].lower() == "application/json"
@@ -132,20 +132,35 @@ def nessus_scan_run(url, scan_id, token, x_token):
                     f"time[s]",
                     file=sys.stderr,
                 )
+            if response.status_code == 401:
+                print(
+                    "The nessus respond with a 401 status code, I'm login and try again",
+                    file=sys.stderr,
+                )
+                # Some scans take too long and the token expires
+                token = nessus_login(url, username, password)
+                if not token:
+                    sys.exit(1)
+
+                x_token = get_x_api_token(url, token)
+                if not x_token:
+                    sys.exit(1)
+                headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
+
             tries += 1
         time.sleep(TIME_BETWEEN_TRIES)
     return status
 
 
-def nessus_scan_export(url, scan_id, token, x_token):
+def nessus_scan_export(url, scan_id, token, x_token, username, password):
     headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
 
     response = requests.post(
-        urljoin(url, f"scans/{scan_id}/export?limit=2500"),
+        urljoin(url, f"scans/{scan_id}/export?limit=500000"),
         data={"format": "nessus"},
         headers=headers,
         verify=False,
-        timeout=60,
+        timeout=600,
     )
     if (
         response.status_code == 200
@@ -163,7 +178,7 @@ def nessus_scan_export(url, scan_id, token, x_token):
     status = "processing"
     tries = 0
     while status != "ready":
-        response = requests.get(urljoin(url, f"tokens/{export_token}/status"), verify=False, timeout=60)
+        response = requests.get(urljoin(url, f"tokens/{export_token}/status"), verify=False, timeout=600)
         if response.status_code == 200:
             if response.headers["content-type"].lower() == "application/json" and "status" in response.json():
                 status = response.json()["status"]
@@ -182,6 +197,14 @@ def nessus_scan_export(url, scan_id, token, x_token):
                     f"time[s]",
                     file=sys.stderr,
                 )
+            if response.status_code == 401:
+                print(
+                    "The nessus respond with a 401 status code, I'm login and try again",
+                    file=sys.stderr,
+                )
+                # Some scans take too long and the token expires
+                nessus_login(url, username, password)
+
             tries += 1
 
         time.sleep(TIME_BETWEEN_TRIES)
@@ -276,9 +299,9 @@ def main():
     if not scan_id:
         sys.exit(1)
 
-    status = nessus_scan_run(NESSUS_URL, scan_id, token, x_token)
+    status = nessus_scan_run(NESSUS_URL, scan_id, token, x_token, NESSUS_USERNAME, NESSUS_PASSWORD)
     if status != "error":
-        scan_file = nessus_scan_export(NESSUS_URL, scan_id, token, x_token)
+        scan_file = nessus_scan_export(NESSUS_URL, scan_id, token, x_token, NESSUS_USERNAME, NESSUS_PASSWORD)
 
     if scan_file:
         plugin = NessusPlugin(
