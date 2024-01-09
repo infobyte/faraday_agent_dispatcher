@@ -18,6 +18,21 @@ def get_report_name():
     return f"{datetime.datetime.now().timestamp()}-faraday-agent"
 
 
+def log(msg):
+    print(msg, file=sys.stderr)
+
+
+def get_token_and_x_token(url, username, password):
+    token = nessus_login(url, username, password)
+    if not token:
+        sys.exit(1)
+
+    x_token = get_x_api_token(url, token)
+    if not x_token:
+        sys.exit(1)
+    return token, x_token
+
+
 def nessus_login(url, user, password):
     payload = {"username": user, "password": password}
     response = requests.post(urljoin(url, "session"), payload, verify=False, timeout=60)
@@ -25,9 +40,9 @@ def nessus_login(url, user, password):
     if response.status_code == 200:
         if response.headers["content-type"].lower() == "application/json" and "token" in response.json():
             return response.json()["token"]
-        print("Nessus did not response with a valid token", file=sys.stderr)
+        log("Nessus did not response with a valid token")
     else:
-        print(f"Login failed with status {response.status_code}", file=sys.stderr)
+        log(f"Login failed with status {response.status_code}")
 
     return None
 
@@ -56,16 +71,14 @@ def nessus_add_target(url, token, x_token, target="", template="basic", name="ne
     headers = {"X-Cookie": f"token={token}", "X-API-Token": x_token}
     templates = nessus_templates(url, token, x_token)
     if not templates:
-        print("Templates not available", file=sys.stderr)
+        log("Templates not available")
         return None
     if template not in templates:
-        print(
-            f"Template {template} not valid. Setting basic as default",
-            file=sys.stderr,
+        log(
+            f"Template {template} not valid. Setting basic as default"
         )
-        print(
-            f"The templates available are {list(templates.keys())}",
-            file=sys.stderr,
+        log(
+            f"The templates available are {list(templates.keys())}"
         )
         template = "basic"
 
@@ -88,9 +101,8 @@ def nessus_add_target(url, token, x_token, target="", template="basic", name="ne
     ):
         return response.json()["scan"]["id"]
     else:
-        print(
-            f"Could not create scan. Response from server was " f"{response.status_code}, {response.text}",
-            file=sys.stderr,
+        log(
+            f"Could not create scan. Response from server was " f"{response.status_code}, {response.text}"
         )
     return None
 
@@ -100,9 +112,8 @@ def nessus_scan_run(url, scan_id, token, x_token, username, password):
 
     response = requests.post(urljoin(url, f"scans/{scan_id}/launch"), headers=headers, verify=False, timeout=600)
     if response.status_code != 200:
-        print(
-            "Could not launch scan. Response from server was" f" {response.status_code}",
-            file=sys.stderr,
+        log(
+            "Could not launch scan. Response from server was" f" {response.status_code}"
         )
         return None
 
@@ -118,24 +129,21 @@ def nessus_scan_run(url, scan_id, token, x_token, username, password):
             ):
                 status = response.json()["info"]["status"]
             else:
-                print(
-                    "The nessus server give a 200 with unexpected response",
-                    file=sys.stderr,
+                log(
+                    "The nessus server give a 200 with unexpected response"
                 )
                 status = "error"
         else:
             if tries == MAX_TRIES:
                 status = "error"
-                print(
+                log(
                     "Could not get scan status. Response from server was "
                     f"{response.status_code}. This error ocurred {tries} "
-                    f"time[s]",
-                    file=sys.stderr,
+                    f"time[s]"
                 )
             if response.status_code == 401:
-                print(
-                    "The nessus respond with a 401 status code, I'm login and try again",
-                    file=sys.stderr,
+                log(
+                    "The nessus respond with a 401 status code, I'm login and try again"
                 )
                 # Some scans take too long and the token expires
                 token = nessus_login(url, username, password)
@@ -146,7 +154,10 @@ def nessus_scan_run(url, scan_id, token, x_token, username, password):
                 if not x_token:
                     sys.exit(1)
                 headers = {"X-Cookie": "token={}".format(token), "X-API-Token": x_token}
-
+            else:
+                log(
+                    f"Try number {tries}"
+                )
             tries += 1
         time.sleep(TIME_BETWEEN_TRIES)
     return status
@@ -169,9 +180,8 @@ def nessus_scan_export(url, scan_id, token, x_token, username, password):
     ):
         export_token = response.json()["token"]
     else:
-        print(
-            f"Export failed with status {response.status_code}",
-            file=sys.stderr,
+        log(
+            f"Export failed with status {response.status_code}"
         )
         return None
 
@@ -183,33 +193,34 @@ def nessus_scan_export(url, scan_id, token, x_token, username, password):
             if response.headers["content-type"].lower() == "application/json" and "status" in response.json():
                 status = response.json()["status"]
             else:
-                print(
-                    "The nessus server give a 200 with unexpected response",
-                    file=sys.stderr,
+                log(
+                    "The nessus server give a 200 with unexpected response"
                 )
                 status = "error"
         else:
             if tries == MAX_TRIES:
                 status = "error"
-                print(
+                log(
                     "Could not get export status. Response from server was "
                     f"{response.status_code}. This error ocurred {tries}"
-                    f"time[s]",
-                    file=sys.stderr,
+                    f"time[s]"
                 )
             if response.status_code == 401:
-                print(
-                    "The nessus respond with a 401 status code, I'm login and try again",
-                    file=sys.stderr,
+                log(
+                    "The nessus respond with a 401 status code, I'm login and try again"
                 )
                 # Some scans take too long and the token expires
                 nessus_login(url, username, password)
+            else:
+                log(
+                    f"Try number {tries}"
+                )
 
             tries += 1
 
         time.sleep(TIME_BETWEEN_TRIES)
 
-    print(f"Report export status {status}", file=sys.stderr)
+    log(f"Report export status {status}")
     response = requests.get(
         urljoin(url, f"tokens/{export_token}/download"), allow_redirects=True, verify=False, timeout=60
     )
@@ -236,11 +247,10 @@ def get_x_api_token(url, token):
         if matched:
             x_token = matched.group(1)
         else:
-            print("X-api-token not found :(", file=sys.stderr)
+            log("X-api-token not found :(")
     else:
-        print(
-            "Could not get x-api-token. Response from server was " f"{response.status_code}",
-            file=sys.stderr,
+        log(
+            "Could not get x-api-token. Response from server was " f"{response.status_code}"
         )
 
     return x_token
@@ -275,18 +285,12 @@ def main():
     if not NESSUS_URL:
         NESSUS_URL = os.getenv("NESSUS_URL")
         if not NESSUS_URL:
-            print("URL not provided", file=sys.stderr)
+            log("URL not provided")
             sys.exit(1)
 
     scan_file = None
 
-    token = nessus_login(NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD)
-    if not token:
-        sys.exit(1)
-
-    x_token = get_x_api_token(NESSUS_URL, token)
-    if not x_token:
-        sys.exit(1)
+    token, x_token = get_token_and_x_token(NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD)
 
     scan_id = nessus_add_target(
         NESSUS_URL,
@@ -301,6 +305,7 @@ def main():
 
     status = nessus_scan_run(NESSUS_URL, scan_id, token, x_token, NESSUS_USERNAME, NESSUS_PASSWORD)
     if status != "error":
+        token, x_token = get_token_and_x_token(NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD)
         scan_file = nessus_scan_export(NESSUS_URL, scan_id, token, x_token, NESSUS_USERNAME, NESSUS_PASSWORD)
 
     if scan_file:
@@ -314,7 +319,7 @@ def main():
         plugin.parseOutputString(scan_file)
         print(plugin.get_json())
     else:
-        print("Scan file was empty", file=sys.stderr)
+        log("Scan file was empty")
 
 
 if __name__ == "__main__":
