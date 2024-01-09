@@ -10,7 +10,7 @@ from posixpath import join as urljoin
 
 from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
-MAX_TRIES = 3
+MAX_TRIES = 1000
 TIME_BETWEEN_TRIES = 5
 
 
