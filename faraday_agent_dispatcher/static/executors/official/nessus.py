@@ -39,18 +39,21 @@ def get_token_and_x_token(url, username, password):
 
 def get_scans(url, scan_name, token, x_token):
     headers = {"X-Cookie": f"token={token}", "X-API-Token": x_token}
-    response = requests.get(urljoin(url, f"scans/"), headers=headers, verify=False, timeout=600)
+    response = requests.get(urljoin(url, "scans/"), headers=headers, verify=False, timeout=600)
     if response.status_code != 200:
         log("Could not get scan list. Response from server was" f" {response.status_code}")
         return None
-    for scan in response.json().get('scans', []):
-        if scan['name'] == scan_name:
-            if scan['status'].lower() == 'running':
-                log('A scan with the NESSUS_SCAN_NAME provided was found but is running,'
-                    'choose a different NESSUS_SCAN_NAME, cancel the scan manually or wait to finish')
+    for scan in response.json().get("scans", []):
+        if scan["name"] == scan_name:
+            if scan["status"].lower() == "running":
+                log(
+                    "A scan with the NESSUS_SCAN_NAME provided was found but is running,"
+                    "choose a different NESSUS_SCAN_NAME, cancel the scan manually or wait to finish"
+                )
                 exit(1)
             log(f'Scan {scan_name} was found with id {scan["id"]}')
-            return scan['id']
+            return scan["id"]
+
 
 def nessus_login(url, user, password):
     payload = {"username": user, "password": password}
