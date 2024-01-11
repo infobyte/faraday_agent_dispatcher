@@ -292,6 +292,9 @@ def main():
     scan_id = get_scans(NESSUS_URL, NESSUS_SCAN_NAME, token, x_token)
     # If NESSUS_SCAN_NAME is not found launch a new scan else relaunch the scan
     if not scan_id:
+        if not NESSUS_SCAN_TARGET:
+            log("Scan name wasn't found and scan target wasn't provided. Exiting executor")
+            exit(1)
         scan_id = nessus_add_target(
             NESSUS_URL,
             token,
