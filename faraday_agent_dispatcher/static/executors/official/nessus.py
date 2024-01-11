@@ -10,6 +10,10 @@ from posixpath import join as urljoin
 
 from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
+import urllib3
+
+urllib3.disable_warnings()
+
 MAX_TRIES = 1000
 TIME_BETWEEN_TRIES = 5
 
@@ -32,6 +36,21 @@ def get_token_and_x_token(url, username, password):
         sys.exit(1)
     return token, x_token
 
+
+def get_scans(url, scan_name, token, x_token):
+    headers = {"X-Cookie": f"token={token}", "X-API-Token": x_token}
+    response = requests.get(urljoin(url, f"scans/"), headers=headers, verify=False, timeout=600)
+    if response.status_code != 200:
+        log("Could not get scan list. Response from server was" f" {response.status_code}")
+        return None
+    for scan in response.json().get('scans', []):
+        if scan['name'] == scan_name:
+            if scan['status'].lower() == 'running':
+                log('A scan with the NESSUS_SCAN_NAME provided was found but is running,'
+                    'choose a different NESSUS_SCAN_NAME, cancel the scan manually or wait to finish')
+                exit(1)
+            log(f'Scan {scan_name} was found with id {scan["id"]}')
+            return scan['id']
 
 def nessus_login(url, user, password):
     payload = {"username": user, "password": password}
@@ -267,18 +286,19 @@ def main():
     scan_file = None
 
     token, x_token = get_token_and_x_token(NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD)
-
-    scan_id = nessus_add_target(
-        NESSUS_URL,
-        token,
-        x_token,
-        NESSUS_SCAN_TARGET,
-        NESSUS_SCAN_TEMPLATE,
-        NESSUS_SCAN_NAME,
-    )
+    scan_id = get_scans(NESSUS_URL, NESSUS_SCAN_NAME, token, x_token)
+    # If NESSUS_SCAN_NAME is not found launch a new scan else relaunch the scan
     if not scan_id:
-        sys.exit(1)
-
+        scan_id = nessus_add_target(
+            NESSUS_URL,
+            token,
+            x_token,
+            NESSUS_SCAN_TARGET,
+            NESSUS_SCAN_TEMPLATE,
+            NESSUS_SCAN_NAME,
+        )
+        if not scan_id:
+            sys.exit(1)
     status = nessus_scan_run(NESSUS_URL, scan_id, token, x_token, NESSUS_USERNAME, NESSUS_PASSWORD)
     if status != "error":
         token, x_token = get_token_and_x_token(NESSUS_URL, NESSUS_USERNAME, NESSUS_PASSWORD)
