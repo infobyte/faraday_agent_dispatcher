@@ -104,7 +104,7 @@ def main():
                 "cve": [cve['value'] for cve in vulnerability_data['identifiers']
                         if cve['type'] == 'CVE'],
                 "refs": [reference['url'] for reference in vulnerability_data['references']],
-                "status": security_event['state']
+                "status": 'open' if security_event['state'] == 'open' else 'closed'
             }
             host_data['vulnerabilities'].append(vulnerability)
             # print("#" * 10)
