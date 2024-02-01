@@ -57,18 +57,19 @@ def main():
     response = requests.get(dependabot_url, headers=dependabot_auth)
     if response.status_code == http.HTTPStatus.OK:
         security_events = response.json()
+        host_data = {
+            "ip": None,
+            "description": "",
+            "hostnames": [],
+            "vulnerabilities": [],
+            "tags": []
+        }
         for security_event in security_events:
             # print("#"*10)
             # pprint(security_event)
             # print("#"*10)
             # continue
-            host_data = {
-                "ip": security_event['dependency']['manifest_path'],
-                "description": "",
-                "hostnames": [],
-                "vulnerabilities": [],
-                "tags": []
-            }
+            host_data['ip'] = security_event['dependency']['manifest_path']
             vulnerability_data = security_event['security_advisory']
 
             extended_description = ""
@@ -106,6 +107,7 @@ def main():
                 "tags": []
             }
             host_data['vulnerabilities'].append(vulnerability)
+            break
         # print("#" * 10)
         # pprint(host_data)
         # print("#"*10)
