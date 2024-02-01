@@ -110,7 +110,18 @@ def main():
             # print("#" * 10)
             # pprint(host_data)
             # print("#"*10)
-        print(json.dumps(host_data))
+        data = {'hosts': [host_data],
+                "command": {
+                    "tool": "dependabot",
+                    "command": "dependabot",
+                    "params": "",
+                    "user": "agent",
+                    "hostname": "",
+                    "start_date": "2022-08-11T18:35:16.645160",
+                    "duration": 16334,
+                    "import_source": "report"}
+                }
+        print(json.dumps(data))
 
 
 if __name__ == '__main__':
