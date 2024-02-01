@@ -72,27 +72,22 @@ def main():
             vulnerability_data = security_event['security_advisory']
 
             extended_description = ""
-            if 'vulnerabilities' in vulnerability_data:
-                # if len(vulnerability_data['vulnerabilities']) > 1:
-                #     print("mayooooooor")
-                #     pprint(security_event)
-                #     break
-                # else:
-                #     continue
-                # TODO: Sacar de security_vulnerability
-                security_vulnerability = vulnerability_data.get('security_vulnerability')
-                if security_vulnerability:
-                    first_patched_version = security_vulnerability.get('first_patched_version', 'N/A')
-                    first_patched_version_identifier = first_patched_version.get('identifier')
-                    package = security_vulnerability.get('package', None)
-                    ecosystem = package.get('ecosystem', 'N/A')
-                    name = package.get('name', 'N/A')
-                    vulnerable_version_range = security_vulnerability.get('vulnerable_version_range', 'N/A')
-                    extended_description = f"```\n" \
-                                           f"Package: {name} ({ecosystem})\n" \
-                                           f"Affected versions: {vulnerable_version_range} \n" \
-                                           f"Patched version: {first_patched_version_identifier}\n" \
-                                           f"```"
+            if security_event['state'] != 'open':
+                logger.warning(f"Vulnerability {vulnerability_data['number']} already closed...")
+                continue
+            security_vulnerability = vulnerability_data.get('security_vulnerability')
+            if security_vulnerability:
+                first_patched_version = security_vulnerability.get('first_patched_version', 'N/A')
+                first_patched_version_identifier = first_patched_version.get('identifier')
+                package = security_vulnerability.get('package', None)
+                ecosystem = package.get('ecosystem', 'N/A')
+                name = package.get('name', 'N/A')
+                vulnerable_version_range = security_vulnerability.get('vulnerable_version_range', 'N/A')
+                extended_description = f"```\n" \
+                                       f"Package: {name} ({ecosystem})\n" \
+                                       f"Affected versions: {vulnerable_version_range} \n" \
+                                       f"Patched version: {first_patched_version_identifier}\n" \
+                                       f"```"
             vulnerability = {
                 "name": f"{vulnerability_data['summary']}",
                 "desc": f"{extended_description}\n{vulnerability_data['description']}\n",
@@ -111,9 +106,9 @@ def main():
                 "tags": []
             }
             host_data['vulnerabilities'].append(vulnerability)
-            # print("#" * 10)
-            # pprint(host_data)
-            # print("#"*10)
+        # print("#" * 10)
+        # pprint(host_data)
+        # print("#"*10)
         data = {'hosts': [host_data],
                 "command": {
                     "tool": "dependabot",
