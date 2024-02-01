@@ -66,7 +66,8 @@ def main():
                 "ip": security_event['dependency']['manifest_path'],
                 "description": "",
                 "hostnames": [],
-                "vulnerabilities": []
+                "vulnerabilities": [],
+                "tags": []
             }
             vulnerability_data = security_event['security_advisory']
 
@@ -104,7 +105,8 @@ def main():
                 "cve": [cve['value'] for cve in vulnerability_data['identifiers']
                         if cve['type'] == 'CVE'],
                 "refs": [{'name': reference['url'], 'type': 'other'} for reference in vulnerability_data['references']],
-                "status": 'open' if security_event['state'] == 'open' else 'closed'
+                "status": 'open' if security_event['state'] == 'open' else 'closed',
+                "tags": []
             }
             host_data['vulnerabilities'].append(vulnerability)
             # print("#" * 10)
