@@ -103,7 +103,7 @@ def main():
                 "cwe": [cwe['cwe_id'] for cwe in vulnerability_data['cwes']],
                 "cve": [cve['value'] for cve in vulnerability_data['identifiers']
                         if cve['type'] == 'CVE'],
-                "refs": [reference['url'] for reference in vulnerability_data['references']],
+                "refs": [{'name': reference['url'], 'type': 'other'} for reference in vulnerability_data['references']],
                 "status": 'open' if security_event['state'] == 'open' else 'closed'
             }
             host_data['vulnerabilities'].append(vulnerability)
