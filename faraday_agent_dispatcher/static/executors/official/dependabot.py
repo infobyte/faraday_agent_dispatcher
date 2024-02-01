@@ -1,4 +1,5 @@
 import http
+import json
 from pprint import pprint
 
 import requests
@@ -101,9 +102,11 @@ def main():
                 "status": security_event['state']
             }
             host_data['vulnerabilities'].append(vulnerability)
-            print("#" * 10)
-            pprint(host_data)
-            print("#"*10)
+            # print("#" * 10)
+            # pprint(host_data)
+            # print("#"*10)
+        print(json.dumps(host_data))
+
 
 if __name__ == '__main__':
     main()
