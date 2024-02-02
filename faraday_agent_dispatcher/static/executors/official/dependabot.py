@@ -66,12 +66,12 @@ def main():
                 if security_event['dependency']['manifest_path'] == ip:
                     vulnerability_data = security_event['security_advisory']
 
-                    extended_description = ""
                     if security_event['state'] != 'open':
                         logger.warning(f"Vulnerability {security_event['number']} already closed...")
                         continue
-                    security_vulnerability = vulnerability_data.get('security_vulnerability')
+                    security_vulnerability = security_event.get('security_vulnerability')
 
+                    extended_description = ''
                     if security_vulnerability:
                         first_patched_version = security_vulnerability.get('first_patched_version', 'N/A')
                         first_patched_version_identifier = first_patched_version.get('identifier')
@@ -80,11 +80,11 @@ def main():
                         name = package.get('name', 'N/A')
                         vulnerable_version_range = security_vulnerability.get('vulnerable_version_range', 'N/A')
                         extended_description = f"```\n" \
+                                               f"URL: {repo_url}/security/dependabot/{security_event['number']}\n" \
                                                f"Package: {name} ({ecosystem})\n" \
                                                f"Affected versions: {vulnerable_version_range} \n" \
                                                f"Patched version: {first_patched_version_identifier}\n" \
                                                f"```"
-
                     vulnerability = {
                         "name": f"{vulnerability_data['summary']}",
                         "desc": f"{extended_description}\n{vulnerability_data['description']}\n",
