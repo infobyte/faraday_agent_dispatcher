@@ -51,6 +51,7 @@ def main():
     # TODO: should validate config?
     dependabot_url = f"https://api.github.com/repos/{DEPENDABOT_OWNER}/{DEPENDABOT_REPO}/dependabot/alerts"
     dependabot_auth = {'Authorization': f"Bearer {DEPENDABOT_TOKEN}"}
+    repo_url = f"https://github.com/{DEPENDABOT_OWNER}/{DEPENDABOT_REPO}"
 
     response = requests.get(dependabot_url, headers=dependabot_auth)
 
@@ -103,12 +104,12 @@ def main():
                         "tags": []
                     }
                     host_vulns.append(vulnerability)
-                    break
+                    # break
 
             hosts.append(
                 {
                     "ip": ip,
-                    "description": "",
+                    "description": f"Dependabot recommendations on file {ip}<br><br>Repository: {repo_url}",
                     "hostnames": [],
                     "vulnerabilities": host_vulns,
                     "tags": []
