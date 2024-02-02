@@ -79,8 +79,8 @@ def main():
                         ecosystem = package.get('ecosystem', 'N/A')
                         name = package.get('name', 'N/A')
                         vulnerable_version_range = security_vulnerability.get('vulnerable_version_range', 'N/A')
-                        extended_description = f"```\n" \
-                                               f"URL: {repo_url}/security/dependabot/{security_event['number']}\n" \
+                        extended_description = f"URL: [{repo_url}/security/dependabot/{security_event['number']}]()\n" \
+                                               f"```\n" \
                                                f"Package: {name} ({ecosystem})\n" \
                                                f"Affected versions: {vulnerable_version_range} \n" \
                                                f"Patched version: {first_patched_version_identifier}\n" \
