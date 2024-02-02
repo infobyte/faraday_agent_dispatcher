@@ -10,10 +10,8 @@ logger = logging.getLogger(__name__)
 
 def main():
     DEPENDABOT_OWNER = os.getenv("EXECUTOR_CONFIG_DEPENDABOT_OWNER")
-    DEPENDABOT_REPO = os.getenv("EXECUTOR_CONFIG_DEPENDABOT_REPO")
+    DEPENDABOT_REPOSITORY = os.getenv("EXECUTOR_CONFIG_DEPENDABOT_REPOSITORY")
     DEPENDABOT_TOKEN = os.getenv("DEPENDABOT_TOKEN")
-
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
 
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", [])
     if vuln_tag:
@@ -23,9 +21,9 @@ def main():
         host_tag = host_tag.split(",")
 
     # TODO: should validate config?
-    dependabot_url = f"https://api.github.com/repos/{DEPENDABOT_OWNER}/{DEPENDABOT_REPO}/dependabot/alerts"
+    dependabot_url = f"https://api.github.com/repos/{DEPENDABOT_OWNER}/{DEPENDABOT_REPOSITORY}/dependabot/alerts"
     dependabot_auth = {'Authorization': f"Bearer {DEPENDABOT_TOKEN}"}
-    repo_url = f"https://github.com/{DEPENDABOT_OWNER}/{DEPENDABOT_REPO}"
+    repo_url = f"https://github.com/{DEPENDABOT_OWNER}/{DEPENDABOT_REPOSITORY}"
 
     CVSS_3_PREFIX = 'CVSS:3'
 
@@ -44,10 +42,6 @@ def main():
 
                     if security_event['state'] != 'open':
                         logger.warning(f"Vulnerability {security_event['number']} already closed...")
-                        continue
-                    if ignore_info and vulnerability_data['severity']:
-                        logger.info(f"Vulnerability {security_event['number']} "
-                                    f"has informational severity, ignoring ...")
                         continue
 
                     security_vulnerability = security_event.get('security_vulnerability')
