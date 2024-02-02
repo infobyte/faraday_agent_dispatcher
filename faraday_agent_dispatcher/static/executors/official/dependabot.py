@@ -1,6 +1,5 @@
 import http
 import json
-from pprint import pprint
 
 import requests
 import os
@@ -8,40 +7,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-host_data = {
-    "ip": "192.168.0.{}",
-    "description": "test",
-    "hostnames": ["test.com", "test2.org"],
-}
-
-service_data = {
-    "name": "http",
-    "port": 80,
-    "protocol": "tcp",
-}
-
-vuln_data = {
-    "name": "sql injection",
-    "desc": "test",
-    "severity": "high",
-    "type": "Vulnerability",
-    "impact": {
-        "accountability": True,
-        "availability": False,
-    },
-    "refs": ["CVE-1234"],
-}
-
-vuln_web_data = {
-    "name": "Web vuln",
-    "severity": "low",
-    "type": "VulnerabilityWeb",
-    "method": "POST",
-    "website": "https://example.com",
-    "path": "/search",
-    "parameter_name": "q",
-    "status_code": 200,
-}
 
 def main():
     DEPENDABOT_OWNER = os.getenv("EXECUTOR_CONFIG_DEPENDABOT_OWNER")
@@ -52,6 +17,8 @@ def main():
     dependabot_url = f"https://api.github.com/repos/{DEPENDABOT_OWNER}/{DEPENDABOT_REPO}/dependabot/alerts"
     dependabot_auth = {'Authorization': f"Bearer {DEPENDABOT_TOKEN}"}
     repo_url = f"https://github.com/{DEPENDABOT_OWNER}/{DEPENDABOT_REPO}"
+
+    CVSS_3_PREFIX = 'CVSS:3'
 
     response = requests.get(dependabot_url, headers=dependabot_auth)
 
@@ -79,7 +46,7 @@ def main():
                         ecosystem = package.get('ecosystem', 'N/A')
                         name = package.get('name', 'N/A')
                         vulnerable_version_range = security_vulnerability.get('vulnerable_version_range', 'N/A')
-                        extended_description = f"URL: [{repo_url}/security/dependabot/{security_event['number']}]()\n" \
+                        extended_description = f"URL: [{security_event['html_url']}]()\n" \
                                                f"```\n" \
                                                f"Package: {name} ({ecosystem})\n" \
                                                f"Affected versions: {vulnerable_version_range} \n" \
@@ -94,7 +61,6 @@ def main():
                             "accountability": False,
                             "availability": False,
                         },
-                        "cvss": {'cvss3': vulnerability_data['cvss']['vector_string']},
                         "cwe": [cwe['cwe_id'] for cwe in vulnerability_data['cwes']],
                         "cve": [cve['value'] for cve in vulnerability_data['identifiers']
                                 if cve['type'] == 'CVE'],
@@ -103,31 +69,32 @@ def main():
                         "status": 'open' if security_event['state'] == 'open' else 'closed',
                         "tags": []
                     }
+
+                    cvss_vector_string = vulnerability_data['cvss']['vector_string']
+
+                    if cvss_vector_string:
+                        if cvss_vector_string.startswith(CVSS_3_PREFIX):
+                            vulnerability.update({
+                                'cvss3': {'vector_string': cvss_vector_string}
+                            })
+                        else:
+                            vulnerability.update({
+                                'cvss2': {'vector_string': cvss_vector_string.strip('CVSS:')[-1]}
+                            })
+
                     host_vulns.append(vulnerability)
-                    # break
 
             hosts.append(
                 {
                     "ip": ip,
-                    "description": f"Dependabot recommendations on file {ip}<br><br>Repository: {repo_url}",
+                    "description": f"Dependabot recommendations on file {ip}\n\nRepository: {repo_url}",
                     "hostnames": [],
                     "vulnerabilities": host_vulns,
                     "tags": []
                 }
             )
 
-        data = {'hosts': hosts,
-                "command": {
-                    "tool": "dependabot",
-                    "command": "dependabot",
-                    "params": "",
-                    "user": "agent",
-                    "hostname": "",
-                    "start_date": "2022-08-11T18:35:16.645160",
-                    "duration": 16334,
-                    "import_source": "report"}
-                }
-        # pprint(data)
+        data = {'hosts': hosts}
         print(json.dumps(data))
 
 
