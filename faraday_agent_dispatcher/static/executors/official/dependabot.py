@@ -93,7 +93,7 @@ def main():
 
             hosts.append(
                 {
-                    "ip": ip,
+                    "ip": f"{DEPENDABOT_OWNER}/{DEPENDABOT_REPOSITORY}/{ip}",
                     "description": f"Dependabot recommendations on file {ip}\n\nRepository: {repo_url}",
                     "hostnames": [],
                     "vulnerabilities": host_vulns,
