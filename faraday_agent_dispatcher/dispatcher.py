@@ -537,7 +537,7 @@ class Dispatcher:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=env,
-            limit=executor.max_size
+            limit=executor.max_size,
             # If the config is not set, use async.io default
         )
         return process
