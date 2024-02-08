@@ -1,3 +1,7 @@
+3.2.0 [Feb 8th, 2024]:
+---
+ * [ADD] Add dependabot agent. #206
+
 3.0.1 [Dec 22th, 2023]:
 ---
  * [FIX] Fix on_diconnect method and limit python-socketio to 5.8.0 #199
