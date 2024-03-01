@@ -4,7 +4,6 @@ import re
 import sys
 import json
 import requests
-from pprint import pprint
 
 DEFAULT_SEVERITY_LEVEL = "high"  # default severity level assigned by the script
 
@@ -82,8 +81,7 @@ def make_report(json_response, git_env):
                 )
 
     data = {"hosts": faraday_hosts}
-    #print(json.dumps(data))
-    pprint(data)
+    print(json.dumps(data))
 
 def main():
     params_github_token = os.getenv("EXECUTOR_CONFIG_GITHUB_REPOSITORY")
