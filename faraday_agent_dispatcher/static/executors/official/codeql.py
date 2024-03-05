@@ -10,9 +10,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-CVE_PATTERN = r'.*(CVE-\d{4}-\d{4,7}).*'
-CWE_PATTERN = r'.*(cwe-\d+)'
-REFS_PATTERN = r'.*?\((https://.*?)\).*'
+CVE_PATTERN = r".*(CVE-\d{4}-\d{4,7}).*"
+CWE_PATTERN = r".*(cwe-\d+)"
+REFS_PATTERN = r".*?\((https://.*?)\).*"
 
 token = os.getenv("GITHUB_TOKEN")
 owner = os.getenv("GITHUB_OWNER")
@@ -34,26 +34,30 @@ class SecurityEvent:
 
 def get_custom_description(vulnerability_data):
     custom_description = f'{vulnerability_data["rule"]["full_description"]}'
-    most_recent_instance_data = vulnerability_data['most_recent_instance']
+    most_recent_instance_data = vulnerability_data["most_recent_instance"]
 
-    if 'location' in most_recent_instance_data:
+    if "location" in most_recent_instance_data:
         location_data = most_recent_instance_data["location"]
         if location_data:
             commit_sha = None
             path = None
             github_link = ""
-            if 'commit_sha' in most_recent_instance_data:
-                commit_sha = most_recent_instance_data['commit_sha']
-            if 'path' in most_recent_instance_data['location']:
-                path = most_recent_instance_data['location']['path']
+            if "commit_sha" in most_recent_instance_data:
+                commit_sha = most_recent_instance_data["commit_sha"]
+            if "path" in most_recent_instance_data["location"]:
+                path = most_recent_instance_data["location"]["path"]
             if commit_sha and path:
-                github_link = f"[View it on Github](https://github.com/{owner}/{repository}/blob/{commit_sha}/{path}" \
-                              f"#L{location_data['start_line']}-{location_data['end_line']})"
+                github_link = (
+                    f"[View it on Github](https://github.com/{owner}/{repository}/blob/{commit_sha}/{path}"
+                    f"#L{location_data['start_line']}-{location_data['end_line']})"
+                )
 
-            custom_description = f'{custom_description}\n\n' \
-                                 f'Column: {location_data["start_column"]} - {location_data["end_column"]}\n' \
-                                 f'Line: {location_data["start_line"]} - {location_data["end_line"]}\n\n' \
-                                 f'{github_link}'
+            custom_description = (
+                f"{custom_description}\n\n"
+                f'Column: {location_data["start_column"]} - {location_data["end_column"]}\n'
+                f'Line: {location_data["start_line"]} - {location_data["end_line"]}\n\n'
+                f"{github_link}"
+            )
     return custom_description
 
 
@@ -62,12 +66,15 @@ def get_security_event_obj(event_id):
     auth = {"Authorization": f"Bearer {token}"}
     response = requests.get(url, headers=auth)
     if response.status_code != http.HTTPStatus.OK:
-        print(f"Response from server {response.status_code} / repo {repository} / owner {owner}", file=sys.stderr)
+        print(
+            f"Response from server {response.status_code} / repo {repository} / owner {owner}",
+            file=sys.stderr,
+        )
         return None
     security_event_obj = None
     event = response.json()
     if event:
-        name = event['rule']['description']
+        name = event["rule"]["description"]
         description = get_custom_description(event)
         tags = get_tags(event)
         cwe = get_cwe(event)
@@ -86,11 +93,11 @@ def get_security_event_obj(event_id):
             description=description,
             tags=tags,
             cwe=cwe,
-            severity=event['rule']['security_severity_level'],
-            data=event['most_recent_instance']['message']['text'],
+            severity=event["rule"]["security_severity_level"],
+            data=event["most_recent_instance"]["message"]["text"],
             refs=refs,
             cve=cve,
-            resolution=resolution
+            resolution=resolution,
         )
 
     return security_event_obj
@@ -98,8 +105,8 @@ def get_security_event_obj(event_id):
 
 def get_cwe(alert):
     cwe_set = set()
-    for cwe in alert['rule']['tags']:
-        if 'cwe-' in cwe:
+    for cwe in alert["rule"]["tags"]:
+        if "cwe-" in cwe:
             try:
                 parsed_cwe = re.search(CWE_PATTERN, cwe)[1]
                 cwe_set.add(parsed_cwe)
@@ -111,29 +118,29 @@ def get_cwe(alert):
 
 def get_tags(alert):
     tags = set()
-    for tag in alert['rule']['tags']:
-        if 'cwe-' in tag:
+    for tag in alert["rule"]["tags"]:
+        if "cwe-" in tag:
             continue
         else:
             tags.add(tag)
-    if alert["most_recent_instance"]['category'].startswith("/language"):
-        tags.add(alert["most_recent_instance"]['category'].split(":")[1])
+    if alert["most_recent_instance"]["category"].startswith("/language"):
+        tags.add(alert["most_recent_instance"]["category"].split(":")[1])
     return list(tags)
 
 
 def get_resolution(alert):
     try:
-        resolution, _ = alert['rule']['help'].split('## References')
+        resolution, _ = alert["rule"]["help"].split("## References")
     except ValueError:
-        resolution = alert['rule']['help']
+        resolution = alert["rule"]["help"]
     return resolution
 
 
 def parse_resolution(alert):
     try:
-        resolution, unparsed_data = alert['rule']['help'].split('## References')
+        resolution, unparsed_data = alert["rule"]["help"].split("## References")
     except ValueError:
-        resolution = alert['rule']['help']
+        resolution = alert["rule"]["help"]
         unparsed_data = ""
     return resolution, unparsed_data
 
@@ -143,7 +150,7 @@ def parse_references(unparsed_data):
     for ref in re.findall(REFS_PATTERN, unparsed_data):
         if "cwe.mitre" in ref:
             continue
-        refs.append({'type': 'other', 'name': ref})
+        refs.append({"type": "other", "name": ref})
     return refs
 
 
@@ -159,26 +166,35 @@ def get_security_events():
     data = {"state": "open"}
     response = requests.get(url, headers=auth, data=data)
     if response.status_code != http.HTTPStatus.OK:
-        print(f"Could not get {owner} alerts "
-              f"from {repository} repository. "
-              f"Response code was {response.status_code}", file=sys.stderr)
+        print(
+            f"Could not get {owner} alerts "
+            f"from {repository} repository. "
+            f"Response code was {response.status_code}",
+            file=sys.stderr,
+        )
         return []
     return response.json()
 
 
 def get_assets_to_create(vulnerability_tags: list, asset_tags: list) -> list:
     security_events = get_security_events()
-    assets = list({security_event["most_recent_instance"]["location"]['path']
-                   for security_event in security_events})
+    assets = list(
+        {
+            security_event["most_recent_instance"]["location"]["path"]
+            for security_event in security_events
+        }
+    )
     assets_to_create = []
 
     for asset in assets:
         asset_vulnerabilities = []
         for security_event in security_events:
-            if security_event["most_recent_instance"]["location"]['path'] == asset:
-                security_event_obj = get_security_event_obj(security_event['number'])
+            if security_event["most_recent_instance"]["location"]["path"] == asset:
+                security_event_obj = get_security_event_obj(security_event["number"])
                 if not security_event_obj:
-                    print(f"Could not get details of event with id {security_event['number']}")
+                    print(
+                        f"Could not get details of event with id {security_event['number']}"
+                    )
                     continue
                 vulnerability = {
                     "name": f"{security_event_obj.name}",
@@ -190,7 +206,7 @@ def get_assets_to_create(vulnerability_tags: list, asset_tags: list) -> list:
                     "cve": security_event_obj.cve,
                     "refs": security_event_obj.refs,
                     "tags": vulnerability_tags + list(security_event_obj.tags),
-                    "resolution": security_event_obj.resolution
+                    "resolution": security_event_obj.resolution,
                 }
                 asset_vulnerabilities.append(vulnerability)
         assets_to_create.append(
