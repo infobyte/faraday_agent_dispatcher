@@ -178,12 +178,7 @@ def get_security_events():
 
 def get_assets_to_create(vulnerability_tags: list, asset_tags: list) -> list:
     security_events = get_security_events()
-    assets = list(
-        {
-            security_event["most_recent_instance"]["location"]["path"]
-            for security_event in security_events
-        }
-    )
+    assets = list({security_event["most_recent_instance"]["location"]["path"] for security_event in security_events})
     assets_to_create = []
 
     for asset in assets:
@@ -192,9 +187,7 @@ def get_assets_to_create(vulnerability_tags: list, asset_tags: list) -> list:
             if security_event["most_recent_instance"]["location"]["path"] == asset:
                 security_event_obj = get_security_event_obj(security_event["number"])
                 if not security_event_obj:
-                    print(
-                        f"Could not get details of event with id {security_event['number']}"
-                    )
+                    print(f"Could not get details of event with id {security_event['number']}")
                     continue
                 vulnerability = {
                     "name": f"{security_event_obj.name}",
