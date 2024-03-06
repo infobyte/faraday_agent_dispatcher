@@ -7,4 +7,4 @@ server:
   ssl: False
   ssl_ignore: False
   ssl_cert: ''
-  websocket_port: 9000
+  websocket_port: 5985
