@@ -19,6 +19,7 @@ import os
 import ssl
 import json
 
+import aiohttp
 import socketio
 import asyncio
 from datetime import datetime
@@ -63,7 +64,6 @@ from faraday_agent_parameters_types.utils import type_validate
 
 logger = logging.get_logger()
 logging.setup_logging()
-sio = socketio.AsyncClient(engineio_logger=False, logger=False)
 
 
 class Dispatcher:
@@ -95,6 +95,7 @@ class Dispatcher:
             for executor_name, executor_data in config.instance[Sections.AGENT].get("executors", {}).items()
         }
         self.ws_ssl_enabled = self.api_ssl_enabled = config.instance[Sections.SERVER].get("ssl", False)
+        self.sio = socketio.AsyncClient()
         ssl_cert_path = config.instance[Sections.SERVER].get("ssl_cert", None)
         ssl_ignore = config.instance[Sections.SERVER].get("ssl_ignore", False)
         if not Path(ssl_cert_path).exists():
@@ -104,6 +105,9 @@ class Dispatcher:
                 ssl_cert_context = ssl.create_default_context(cafile=ssl_cert_path)
                 self.api_kwargs = {"ssl": ssl_cert_context}
                 self.ws_kwargs = {"ssl": ssl_cert_context}
+                connector = aiohttp.TCPConnector(ssl=ssl_cert_context)
+                http_session = aiohttp.ClientSession(connector=connector)
+                self.sio = socketio.AsyncClient(http_session=http_session)
             else:
                 if ssl_ignore or "HTTPS_PROXY" in os.environ:
                     ignore_ssl_context = ssl.create_default_context()
@@ -111,6 +115,9 @@ class Dispatcher:
                     ignore_ssl_context.verify_mode = ssl.CERT_NONE
                     self.api_kwargs = {"ssl": ignore_ssl_context}
                     self.ws_kwargs = {"ssl": ignore_ssl_context}
+                    connector = aiohttp.TCPConnector(ssl=ignore_ssl_context)
+                    http_session = aiohttp.ClientSession(connector=connector)
+                    self.sio = socketio.AsyncClient(http_session=http_session)
                 else:
                     self.api_kwargs: Dict[str, object] = {}
                     self.ws_kwargs: Dict[str, object] = {}
