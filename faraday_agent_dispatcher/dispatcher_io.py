@@ -101,6 +101,7 @@ class Dispatcher:
         if not Path(ssl_cert_path).exists():
             raise ValueError(f"SSL cert does not exist in path {ssl_cert_path}")
         if self.api_ssl_enabled:
+            logger.info("api_ssl is enabled")
             if ssl_cert_path:
                 ssl_cert_context = ssl.create_default_context(cafile=ssl_cert_path)
                 self.api_kwargs = {"ssl": ssl_cert_context}
@@ -110,6 +111,9 @@ class Dispatcher:
                 self.sio = socketio.AsyncClient(http_session=http_session)
             else:
                 if ssl_ignore or "HTTPS_PROXY" in os.environ:
+                    logger.info(f"ssl_ignore config is {ssl_ignore}")
+                    if "HTTPS_PROXY" in os.environ:
+                        logger.info("HTTPS_PROXY variable found in environment")
                     ignore_ssl_context = ssl.create_default_context()
                     ignore_ssl_context.check_hostname = False
                     ignore_ssl_context.verify_mode = ssl.CERT_NONE
