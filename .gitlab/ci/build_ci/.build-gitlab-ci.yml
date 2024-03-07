@@ -18,16 +18,16 @@
 #    - !reference [.devel-branch-manual, rules]
 #    - when: never
 #
-#docker-build-main:
-#  extends: .docker-build-base
-#  variables:
-#    IMAGE_TAG: "faraday-agent-dispatcher"
-#    BASE_IMAGE_TAG: "base"
-#  rules:
-#    - !reference [.dev-staging-master-manual, rules]
-#    - !reference [.daily-control, rules]
-#    - when: never
-#
+docker-build-main:
+  extends: .docker-build-base
+  variables:
+    IMAGE_TAG: "latest"
+    BASE_IMAGE_TAG: "base-tag"
+  rules:
+    - !reference [.dev-staging-master-manual, rules]
+    - !reference [.daily-control, rules]
+    - when: never
+
 #docker-build-tag:
 #  extends: .docker-build-base
 #  variables:

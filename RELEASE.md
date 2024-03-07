@@ -1,3 +1,15 @@
+3.2.0 [Feb 8th, 2024]:
+---
+ * [ADD] Add dependabot agent. #206
+
+3.0.1 [Dec 22th, 2023]:
+---
+ * [FIX] Fix on_diconnect method and limit python-socketio to 5.8.0 #199
+
+3.0.0 [Dec 13th, 2023]:
+---
+ * [MOD] Now faraday-dispatcher works with socketio. #195
+
 2.6.3 [Aug 24th, 2023]:
 ---
  * [FIX] Check the code response for burp executor #194
