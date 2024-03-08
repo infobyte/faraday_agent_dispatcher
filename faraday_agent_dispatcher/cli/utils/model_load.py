@@ -20,7 +20,7 @@ def append_keys(agent_dict, section):
         "type": click.IntRange(min=1, max=65535),
     }
     agent_dict[section]["websocket_port"] = {
-        "default_value": lambda _ssl: "443" if _ssl else "9000",
+        "default_value": lambda _ssl: "443" if _ssl else "5985",
         "type": click.IntRange(min=1, max=65535),
     }
     return agent_dict
@@ -55,7 +55,7 @@ def url_setting(url):
                 url_info["websocket_port"] = url_host.port
             else:
                 url_info["api_port"] = 5985
-                url_info["websocket_port"] = 9000
+                url_info["websocket_port"] = 5985
             url_info["check_ssl"] = False
         elif url_host.scheme == "https":
             if url_host.port:

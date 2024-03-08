@@ -26,7 +26,7 @@ import asyncio
 from aiohttp import ClientSession
 
 from faraday_agent_dispatcher.cli.wizard import Wizard, DEFAULT_PAGE_SIZE
-from faraday_agent_dispatcher.dispatcher_io import Dispatcher, sio, DispatcherNamespace
+from faraday_agent_dispatcher.dispatcher_io import Dispatcher, DispatcherNamespace
 from faraday_agent_dispatcher import config, __version__
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 import faraday_agent_dispatcher.logger as logging
@@ -73,14 +73,15 @@ async def main(config_file, logger, token):
         await dispatcher.register(token)
         namespace = DispatcherNamespace(namespace="/dispatcher")
         namespace.dispatcher = dispatcher
-        sio.register_namespace(namespace)
+        dispatcher.sio.register_namespace(namespace)
         schema = "http"
         if dispatcher.api_ssl_enabled:
             schema = "https"
         uri = f"{schema}://{namespace.dispatcher.host}:{namespace.dispatcher.websocket_port}"
         logger.info(f"Trying to connect to: {uri}")
-        await sio.connect(uri)
-        await sio.wait()
+
+        await dispatcher.sio.connect(uri)
+        await dispatcher.sio.wait()
 
     return 0 if dispatcher.sigterm_received else 1
 
