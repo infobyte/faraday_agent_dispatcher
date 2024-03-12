@@ -35,6 +35,14 @@ Some executors are parametrized by:
   to not conflict with actual environment variables. It is configurable if they
   are mandatory or not.
 
+Also faraday server can send plugins arguments when you run an executer.
+These are:
+- AGENT_CONFIG_IGNORE_INFO: Bool, will ignore info level vulnerabilities.
+- AGENT_CONFIG_RESOLVE_HOSTNAME: Bool, will resolve the hostname if posible.
+- AGENT_CONFIG_VULN_TAG: List of strings, will add the tags to the vulns.
+- AGENT_CONFIG_SERVICE_TAG: List of strings, will add the tags to the services.
+- AGENT_CONFIG_HOSTNAME_TAG: List of strings, will add the tags to the hosts.
+
 !!! info
     All that configuration allows executor debugging being a lot more easier,
     not needing the Agent to be run, only with a shell command
@@ -88,7 +96,7 @@ Faraday has a vast REST API, and there are a few endpoints used by
  the agent, which are used for:
 
  * `/_api/v3/info`: Connectivity check.
- * `/_api/v3/agent_registration`: Registration of a new agent.
+ * `/_api/v3/agents`: [POST] Registration of a new agent.
  * `/_api/v3/agent_websocket_token`: Get a [websocket](#websockets) token.
  * `/_api/v3/ws/{workspace_name}/bulk_create`: Publish data to a specific
   workspace
@@ -100,7 +108,7 @@ Faraday has a vast REST API, and there are a few endpoints used by
 For commands, a bidirectional communication is expected between the Agent
  and the server.
 The server can only send a `RUN` command, specifying which
- executor to run, its parameters and to which workspace post the data. It
+ executor to run, its parameters, plugins arguments (ignore info, resolve_hostname) and to which workspaces post the data. It
  also has some metadata relevant to the faraday server to identify the
  execution.
 

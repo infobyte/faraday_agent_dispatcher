@@ -16,7 +16,7 @@ tools are a critical part of our product. However, we’ve realized that our
 To solve this problem, we have the **Faraday Agents**! You can use the [getting
 started guide](getting-started.md) to use one of our official executors, or code
  and use one custom executor. Otherwise, you can [use our docker
-image](misc/docker.md) with <s>all</s> **some** tools already built and ready to
+image](misc/docker.md) with some tools already built and ready to
  go!
 
 You can also check our [architecture](technical/arch.md) or

@@ -37,7 +37,6 @@ DEFAULT_PAGE_SIZE = 10
 
 
 class Wizard:
-
     MAX_BUFF_SIZE = 65536
     PAGE_SIZE = DEFAULT_PAGE_SIZE
     EXECUTOR_SECTIONS = [
@@ -84,7 +83,12 @@ class Wizard:
                         config.control_config()
                         end = True
                     else:
-                        if confirm_prompt(click.style("File configuration not saved. Are you sure?", fg="yellow")):
+                        if confirm_prompt(
+                            click.style(
+                                "File configuration not saved. Are you sure?",
+                                fg="yellow",
+                            )
+                        ):
                             click.echo(self.status_report(sections=config.instance.sections()))
                             end = True
                             ignore_changes = True
@@ -127,7 +131,10 @@ class Wizard:
             return
         for character in Wizard.SPECIAL_CHARACTER:
             if character in name:
-                click.secho(f"The executor cannot contain {character} in its name", fg="yellow")
+                click.secho(
+                    f"The executor cannot contain {character} in its name",
+                    fg="yellow",
+                )
                 return
         return name
 
@@ -147,8 +154,12 @@ class Wizard:
             for executor in os.listdir(executor_folder())
             if re.match("(.*_manifest.json|__pycache__)", executor) is None
         ]
-
-        executors_names = list(map(lambda x: re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", x).group(1), executors))
+        executors_names = list(
+            map(
+                lambda x: re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", x).group(1),
+                executors,
+            )
+        )
 
         async def control_base_repo(chosen_option: str) -> Optional[dict]:
             metadata = executor_metadata(chosen_option)
@@ -173,7 +184,7 @@ class Wizard:
     async def new_repo_executor(self, name):
         try:
             metadata = await self.get_base_repo()
-            Wizard.set_generic_data(name, repo_executor_name=metadata["repo_executor"])
+            Wizard.set_generic_data(name, metadata=metadata)
             process_repo_var_envs(name, metadata)
             set_repo_params(name, metadata)
             click.secho("New repository executor added", fg="green")
@@ -182,11 +193,13 @@ class Wizard:
             click.secho("New repository executor not added", fg="yellow")
 
     @staticmethod
-    def set_generic_data(name, cmd=None, repo_executor_name: str = None):
+    def set_generic_data(name, cmd=None, metadata: dict = {}):
         executor = config.instance[Sections.AGENT][Sections.EXECUTORS][name]
+        repo_executor_name = metadata.get("repo_executor")
         executor["max_size"] = Wizard.MAX_BUFF_SIZE
         if repo_executor_name:
             executor["repo_executor"] = repo_executor_name
+            executor["repo_name"] = metadata.get("name")
         else:
             executor["cmd"] = cmd
 
@@ -216,7 +229,10 @@ class Wizard:
             metadata = executor_metadata(repo_name)
             process_repo_var_envs(name, metadata)
         else:
-            cmd = click.prompt("Command to execute", default=self.executors_dict[section]["cmd"])
+            cmd = click.prompt(
+                "Command to execute",
+                default=self.executors_dict[section]["cmd"],
+            )
             self.executors_dict[section]["cmd"] = cmd
             process_var_envs(name)
             process_params(name)
@@ -233,15 +249,16 @@ class Wizard:
         min_sections = [Sections.SERVER, Sections.AGENT]
         check = all(item in sections for item in min_sections)
         if check:
-            if "workspaces" in sections[Sections.SERVER]:
-                msj = click.style("File configuration OK.", fg="green")
-            else:
-                msj = click.style("File configuration not complete. Missing workspaces.", fg="yellow")
+            msj = click.style("File configuration OK.", fg="green")
         else:
-            msj = click.style("File configuration not complete. Missing section.", fg="yellow")
+            msj = click.style(
+                "File configuration not complete. Missing section.",
+                fg="yellow",
+            )
         if Sections.TOKENS not in sections:
             msj += (
                 f"\n{Bcolors.WARNING}Token not found, "
-                f'remember to run "faraday-dispatcher run --token {{TOKEN}}"{Bcolors.ENDC}'
+                f'remember to run "faraday-dispatcher '
+                f'run --token {{TOKEN}}"{Bcolors.ENDC}'
             )
         return msj

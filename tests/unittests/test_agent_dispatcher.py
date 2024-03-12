@@ -91,7 +91,11 @@ def test_basic_built(tmp_custom_config, config_changes_dict):  # noqa F811
         Dispatcher(None, config_path)
 
 
-@pytest.mark.parametrize("register_options", generate_register_options(), ids=lambda elem: elem["id_str"])
+@pytest.mark.parametrize(
+    "register_options",
+    generate_register_options(),
+    ids=lambda elem: elem["id_str"],
+)
 @pytest.mark.asyncio
 async def test_start_and_register(
     register_options,
@@ -123,7 +127,6 @@ async def test_start_and_register(
         configuration[Sections.SERVER]["host"] = client.host
 
     configuration[Sections.SERVER]["api_port"] = str(client.port)
-    configuration[Sections.SERVER]["workspaces"] = test_config.workspaces
     if "ex1" not in configuration[Sections.AGENT][Sections.EXECUTORS]:
         configuration[Sections.AGENT][Sections.EXECUTORS]["ex1"] = {
             "max_size": "65536",
@@ -156,7 +159,8 @@ async def test_start_and_register(
             if register_options["bad_registration_token"] is None:
                 token = None
             elif register_options["bad_registration_token"] == "incorrect":
-                token = f"{((int(test_config.registration_token) + 1) % 1000000):06}"
+                incorrect_token = int(test_config.registration_token) + 1
+                token = f"{(incorrect_token % 1000000):06}"
             elif register_options["bad_registration_token"] == "bad format":
                 token = "qewqwe"
             else:  # == "bad"
@@ -167,13 +171,11 @@ async def test_start_and_register(
             await dispatcher.register(token)
 
     history = test_logger_handler.history
-
     logs_ok, failed_logs = await check_logs(history, register_options["logs"])
 
     if "optional_logs" in register_options and not logs_ok:
         logs_ok, new_failed_logs = await check_logs(history, register_options["optional_logs"])
         failed_logs = {"logs": failed_logs, "optional_logs": new_failed_logs}
-
     assert logs_ok, failed_logs
 
 
@@ -204,7 +206,11 @@ async def check_logs(history, logs):
 
 
 # TODO: FROM HERE NOT CHECKED YET
-@pytest.mark.parametrize("executor_options", generate_executor_options(), ids=lambda elem: elem["id_str"])
+@pytest.mark.parametrize(
+    "executor_options",
+    generate_executor_options(),
+    ids=lambda elem: elem["id_str"],
+)
 @pytest.mark.asyncio
 async def test_run_once(
     test_config: FaradayTestConfig,  # noqa F811
@@ -223,7 +229,6 @@ async def test_run_once(
 
     configuration[Sections.SERVER]["api_port"] = str(test_config.client.port)
     configuration[Sections.SERVER]["websocket_port"] = str(test_config.client.port)
-    configuration[Sections.SERVER]["workspaces"] = workspaces
     if Sections.TOKENS not in configuration:
         configuration[Sections.TOKENS] = {}
     configuration[Sections.TOKENS]["agent"] = test_config.agent_token
@@ -268,9 +273,9 @@ async def test_run_once(
 
         if "varenvs" in executor_options:
             for varenv in executor_options["varenvs"]:
-                configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_VARENVS][
-                    varenv
-                ] = executor_options["varenvs"][varenv]
+                configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_VARENVS][varenv] = (
+                    executor_options["varenvs"][varenv]
+                )
 
         max_size = str(64 * 1024) if "max_size" not in executor_options else executor_options["max_size"]
         configuration[Sections.AGENT][Sections.EXECUTORS][ex]["max_size"] = max_size
@@ -283,7 +288,11 @@ async def test_run_once(
                 ].items()
             },
         }
-        executor_metadata["args"]["out"] = {"mandatory": True, "type": "string", "base": "string"}
+        executor_metadata["args"]["out"] = {
+            "mandatory": True,
+            "type": "string",
+            "base": "string",
+        }
         test_config.executors.append(executor_metadata)
 
     tmp_default_config.save()
@@ -291,12 +300,11 @@ async def test_run_once(
     # Init and register it
     dispatcher = Dispatcher(test_config.client.session, tmp_default_config.config_file_path)
     selected_workspace = random.choice(workspaces)
-    print(selected_workspace)
 
     ws_responses = deepcopy(executor_options["ws_responses"])
     run_data = deepcopy(executor_options["data"])
-    if "workspace" in run_data:
-        run_data["workspace"] = run_data["workspace"].format(selected_workspace)
+    if "workspaces" in run_data:
+        run_data["workspaces"] = [run_data["workspaces"][0].format(selected_workspace)]
     test_config.ws_data = {"run_data": run_data, "ws_responses": ws_responses}
 
     await dispatcher.register(test_config.registration_token)

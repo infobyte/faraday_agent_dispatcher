@@ -46,7 +46,7 @@ def control_bool(field_name, value):
 
 def control_registration_token(field_name: str, value: str):
     if value is None:
-        raise ValueError("No connected before, provide a token. For more help see `faraday-dispatcher run --help`")
+        raise ValueError("No connected before, provide a token. For more " "help see `faraday-dispatcher run --help`")
     if not value.isnumeric():
         raise ValueError(f"{field_name} must be a number")
     control_token(field_name, 6, value)
@@ -91,6 +91,7 @@ class ParamsField(fields.Field):
 class ExecutorSchema(schema.Schema):
     max_size = fields.Integer(required=True)
     repo_executor = fields.String()
+    repo_name = fields.String()
     cmd = fields.String()
     varenvs = fields.Dict(required=True)
     params = ParamsField(required=True)

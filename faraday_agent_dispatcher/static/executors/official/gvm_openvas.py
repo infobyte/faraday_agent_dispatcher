@@ -11,6 +11,17 @@ from gvm.transforms import EtreeCheckCommandTransform
 
 
 def main():
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
+    if vuln_tag:
+        vuln_tag = vuln_tag.split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
+    if service_tag:
+        service_tag = service_tag.split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
+    if host_tag:
+        host_tag = host_tag.split(",")
     user = os.environ.get("GVM_USER")
     passw = os.environ.get("GVM_PASSW")
     userssh = os.environ.get("EXECUTOR_CONFIG_SSH_USER")
@@ -36,7 +47,10 @@ def main():
     scanner = "08b69003-5fc2-4037-a479-93b440211c73"
 
     if not user or not passw or not host or not port:
-        print("Data config ['User', 'Passw', 'Host', 'Port'] GVM_OpenVas not provided", file=sys.stderr)
+        print(
+            "Data config ['User', 'Passw', 'Host', 'Port']" " GVM_OpenVas not provided",
+            file=sys.stderr,
+        )
         sys.exit()
 
     if not scan_url:
@@ -45,7 +59,10 @@ def main():
 
     valid_connections = ("socket", "ssh", "tls")
     if connection_type not in valid_connections:
-        print("Not a valid connection_type, Choose between socket-ssh-tls", file=sys.stderr)
+        print(
+            "Not a valid connection_type, Choose between socket-ssh-tls",
+            file=sys.stderr,
+        )
         sys.exit()
 
     if connection_type == "socket":
@@ -66,13 +83,18 @@ def main():
         connection = SSHConnection(hostname=host, port=port, username=userssh, password=passwssh)
     elif connection_type == "tls":
         connection = TLSConnection(
-            hostname=host, port=port, certfile=tls_certfile, cafile=tls_cafile, keyfile=tls_keyfile, password=tls_passw
+            hostname=host,
+            port=port,
+            certfile=tls_certfile,
+            cafile=tls_cafile,
+            keyfile=tls_keyfile,
+            password=tls_passw,
         )
 
     # Create Target
     with Gmp(connection=connection, transform=transform) as gmp:
         gmp.authenticate(user, passw)
-        name = "Suspect Host {} {}".format(scan_url, str(datetime.datetime.now()))
+        name = f"Suspect Host {scan_url} {str(datetime.datetime.now())}"
 
         response = gmp.create_target(name=name, hosts=[scan_url], port_list_id=port_list)
 
@@ -81,8 +103,13 @@ def main():
     # Create Task
     with Gmp(connection=connection, transform=transform) as gmp:
         gmp.authenticate(user, passw)
-        name = "Scan Suspect Host {} {}".format(scan_url, str(datetime.datetime.now()))
-        response = gmp.create_task(name=name, config_id=scan_id, target_id=target_id, scanner_id=scanner)
+        name = f"Scan Suspect Host {scan_url} {str(datetime.datetime.now())}"
+        response = gmp.create_task(
+            name=name,
+            config_id=scan_id,
+            target_id=target_id,
+            scanner_id=scanner,
+        )
 
     task_id = response.get("id")
 
@@ -114,17 +141,33 @@ def main():
     # Get report
     with Gmp(connection=connection, transform=transform) as gmp:
         gmp.authenticate(user, passw)
-
-        report = gmp.get_report(
-            report_id=report_id,
-            report_format_id=xml_format,
-            filter="apply_overrides=0 levels=hml rows=-1 min_qod=70 first=1 sort-reverse=severity "
-            "notes=0 overrides=0",
-            details=True,
-        )
+        try:
+            report = gmp.get_report(
+                report_id=report_id,
+                report_format_id=xml_format,
+                filter="apply_overrides=0 levels=hml rows=-1 min_qod=70 "
+                "first=1 sort-reverse=severity "
+                "notes=0 overrides=0",
+                details=True,
+            )
+        except TypeError:
+            report = gmp.get_report(
+                report_id=report_id,
+                report_format_id=xml_format,
+                filter_string="apply_overrides=0 levels=hml rows=-1 min_qod=70 "
+                "first=1 sort-reverse=severity "
+                "notes=0 overrides=0",
+                details=True,
+            )
 
     # Parse report and send to Faraday
-    plugin = OpenvasPlugin()
+    plugin = OpenvasPlugin(
+        ignore_info=ignore_info,
+        hostname_resolution=hostname_resolution,
+        host_tag=host_tag,
+        service_tag=service_tag,
+        vuln_tag=vuln_tag,
+    )
     plugin.parseOutputString(ET.tostring(report[0], encoding="unicode"))
     print(plugin.get_json())
 

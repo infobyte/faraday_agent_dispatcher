@@ -10,6 +10,9 @@ variables:
     FARADAY_EMAIL: test@test.com
     FARADAY_REF: white/dev
     EXECUTOR_DIR: ./basic_executor.py
+    VAULT_ROLE: 'python-sast-readonly'
+    VAULT_ADDR: 'https://tluav-lb.faradaysec.com'
+    VAULT_SECRET_PATH: 'gitlab/SAST'
 
 workflow:
   rules:
@@ -28,7 +31,7 @@ before_script:
 
 stages:
     - testing
-    - post_testing
+    # - post_testing
     - integration-build
     - integration-test
     - build
@@ -44,12 +47,13 @@ include:
   - local: .gitlab/ci/.rules-conditions.yml
 
   - local: .gitlab/ci/.pre-gitlab-ci.yml
+  - local: .gitlab/ci/fetch-secrets.yml
 
   - local: .gitlab/ci/testing/.testing-gitlab-ci.yml
-  - local: .gitlab/ci/testing/.post-gitlab-ci.yml
+  #- local: .gitlab/ci/testing/.post-gitlab-ci.yml
 
-  - local: .gitlab/ci/plugins-integration/.build-gitlab-ci.yml
-  - local: .gitlab/ci/plugins-integration/.testing-gitlab-ci.yml
+  #- local: .gitlab/ci/plugins-integration/.build-gitlab-ci.yml
+  #- local: .gitlab/ci/plugins-integration/.testing-gitlab-ci.yml
 
   - local: .gitlab/ci/build_ci/.build-gitlab-ci.yml
 

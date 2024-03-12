@@ -2,7 +2,7 @@
   before_script:
     - pip install virtualenv
     - apt-get update
-    - apt-get install openssl
+    - apt-get install -y openssl
     - virtualenv faraday_venv
     - source faraday_venv/bin/activate
 

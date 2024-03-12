@@ -38,11 +38,14 @@ requirements = [
     "syslog_rfc5424_formatter",
     "requests",
     "itsdangerous",
-    "faraday-plugins>=1.4.1",
+    "faraday-plugins>=1.16.0",
     "python-owasp-zap-v2.4",
     "python-gvm",
-    "faraday_agent_parameters_types>=1.0.0",
+    "faraday_agent_parameters_types>=1.4.0",
     "pyyaml",
+    "psutil",
+    "pytenable",
+    "python-socketio==5.8.0",
 ]
 
 setup_requirements = ["pytest-runner", "click", "setuptools_scm"]
@@ -52,7 +55,7 @@ extra_req = {
     "test": [
         "pytest",
         "pytest-cov",
-        "pytest-asyncio",
+        "pytest-asyncio==0.18.3",
     ],
     "docs": [
         "mkdocs",
@@ -89,7 +92,6 @@ setup(
     keywords="faraday integration",
     name="faraday_agent_dispatcher",
     packages=find_packages(include=["faraday_agent_dispatcher", "faraday_agent_dispatcher.*"]),
-    use_scm_version=False,
     setup_requires=setup_requirements,
     url="https://github.com/infobyte/faraday_agent_dispatcher",
     version=version,

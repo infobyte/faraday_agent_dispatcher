@@ -14,6 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
+import time
 from datetime import datetime
 from json import JSONDecodeError
 
@@ -67,8 +68,8 @@ class StdOutLineProcessor(FileLineProcessor):
         self,
         process,
         session: ClientSession,
-        execution_id: int,
-        workspace: str,
+        execution_ids: list,
+        workspaces: list,
         api_ssl_enabled,
         api_kwargs,
         command_json: dict,
@@ -76,10 +77,10 @@ class StdOutLineProcessor(FileLineProcessor):
     ):
         super().__init__("stdout")
         self.process = process
-        self.execution_id = execution_id
+        self.execution_ids = execution_ids
         self.__session = session
         self.api_kwargs = api_kwargs
-        self.workspace = workspace
+        self.workspaces = workspaces
         self.api_ssl_enabled = api_ssl_enabled
         self.command_json = command_json
         self.start_date = start_date
@@ -89,13 +90,13 @@ class StdOutLineProcessor(FileLineProcessor):
         line = line.decode("utf-8")
         return line[:-1]
 
-    def post_url(self):
+    def post_url(self, ws):
         host = config["server"]["host"]
         port = config["server"]["api_port"]
         return api_url(
             host,
             port,
-            postfix="/_api/v3/ws/" f"{self.workspace}/bulk_create",
+            postfix="/_api/v3/ws/" f"{ws}/bulk_create",
             secure=self.api_ssl_enabled,
         )
 
@@ -104,11 +105,49 @@ class StdOutLineProcessor(FileLineProcessor):
             loaded_json = json.loads(line)
             print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
             headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
-            loaded_json["execution_id"] = self.execution_id
-            loaded_json["command"] = self.command_json
+            for workspace, execution_id in zip(self.workspaces, self.execution_ids):
+                loaded_json["execution_id"] = execution_id
+                loaded_json["command"] = self.command_json
+
+                res = await self.__session.post(
+                    self.post_url(workspace),
+                    json=loaded_json,
+                    headers=headers,
+                    raise_for_status=False,
+                    **self.api_kwargs,
+                )
+                if res.status == 201:
+                    logger.info("Data sent to bulk create")
+                else:
+                    logger.error(
+                        "Invalid data supplied by the executor to"
+                        " the bulk create "
+                        f"endpoint. Server responded: {res.status} "
+                        f"{await res.text()}"
+                    )
+                time.sleep(1)
+
+        except JSONDecodeError as e:
+            logger.error(f"JSON Parsing error: {e}")
+            print(f"{Bcolors.WARNING}JSON Parsing error: {e}{Bcolors.ENDC}")
+
+    def log(self, line):
+        logger.debug(f"Output line: {line}")
+
+    async def end_f(self):
+        headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
+        for workspace, execution_id in zip(self.workspaces, self.execution_ids):
+            loaded_json = {
+                "hosts": [],
+                "execution_id": execution_id,
+                "command": self.command_json,
+            }
+            loaded_json["command"]["duration"] = (
+                datetime.utcnow() - self.start_date
+            ).total_seconds() * 1000000  # microsecs
 
             res = await self.__session.post(
-                self.post_url(),
+                self.post_url(workspace),
                 json=loaded_json,
                 headers=headers,
                 raise_for_status=False,
@@ -122,36 +161,6 @@ class StdOutLineProcessor(FileLineProcessor):
                     f"endpoint. Server responded: {res.status} "
                     f"{await res.text()}"
                 )
-
-        except JSONDecodeError as e:
-            logger.error("JSON Parsing error: {}".format(e))
-            print(f"{Bcolors.WARNING}JSON Parsing error: {e}{Bcolors.ENDC}")
-
-    def log(self, line):
-        logger.debug(f"Output line: {line}")
-
-    async def end_f(self):
-        loaded_json = {"hosts": [], "execution_id": self.execution_id, "command": self.command_json}
-        headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
-        loaded_json["command"]["duration"] = (
-            datetime.utcnow() - self.start_date
-        ).total_seconds() * 1000000  # microsecs
-
-        res = await self.__session.post(
-            self.post_url(),
-            json=loaded_json,
-            headers=headers,
-            raise_for_status=False,
-            **self.api_kwargs,
-        )
-        if res.status == 201:
-            logger.info("Data sent to bulk create")
-        else:
-            logger.error(
-                "Invalid data supplied by the executor to the bulk create "
-                f"endpoint. Server responded: {res.status} "
-                f"{await res.text()}"
-            )
 
 
 class StdErrLineProcessor(FileLineProcessor):
