@@ -1,3 +1,86 @@
+3.3.0 [Mar 12th, 2024]:
+---
+ * [ADD] Add hotspots option to SonarQube. #197
+ * [ADD] New GitHub CodeQL agent. #208
+ * [ADD] Added new agent for GitHub Secrets Scanning. #209
+ * [MOD] Now Nessus executor tries to login again after a 401 response from the Nessus's server. #203
+ * [MOD] Change Dependabot agent to work with the new manifest of parameter types. #210
+ * [FIX] We were not verifying the configuration value `ignore_ssl` at the moment of `socketio` connection. #212
+
+3.2.0 [Feb 8th, 2024]:
+---
+ * [ADD] Add dependabot agent. #206
+
+3.0.1 [Dec 22th, 2023]:
+---
+ * [FIX] Fix on_diconnect method and limit python-socketio to 5.8.0 #199
+
+3.0.0 [Dec 13th, 2023]:
+---
+ * [MOD] Now faraday-dispatcher works with socketio. #195
+
+2.6.3 [Aug 24th, 2023]:
+---
+ * [FIX] Check the code response for burp executor #194
+
+2.6.2 [Aug 3rd, 2023]:
+---
+ * [MOD] Now you can download a existing report in tenableio #192
+
+2.6.1 [July 20th, 2023]:
+---
+ * [FIX] Now nuclei executor use -j flag instead of -json. #187
+
+2.6.0 [July 7th, 2023]:
+---
+ * [ADD] Add HCL Appscan executer #186
+
+2.5.1 [Jan 3rd, 2023]:
+---
+ * [DEL] Now nuclei doesn't check if the target is an ip
+ * [MOD] Add a fixes for bandit vuln:
+   - Replace assert return code with a if
+   - Remove default x_token in nessus executor
+
+2.5.0 [Nov 30th, 2022]:
+---
+ * [ADD] Add new Sonar Qube executor
+ * [ADD] Add tenableio executor
+ * [FIX] Make gvm executor compatible with new version of python-gvm
+ * [FIX] Now if a venv is int or float it will convert to string
+
+2.4.0 [Oct 26th. 2022]:
+---
+ * Add Qualys executor
+ * [MOD] Change pgrep for psutil in zap executor
+
+2.3.0 [Sep 5th, 2022]:
+---
+ * Now InsighVM's executer will executa a scan if a site_id is provided
+ * Add tags for plugins
+ * Add installation in docker file for nmap script: vulners
+ * Now the api-key from zap is a enviroment variable
+ * [FIX] Change AGENT_CONFIG_HOSTNAME_RESOLUTION por AGENT_CONFIG_RESOLVE_HOSTNAME
+ * Update docs
+
+2.2.0 [Jul 25th, 2022]:
+---
+ * Add timeout parameter to arachni's executor
+ * Add python2.7, w3af and its dependencies to docker image
+ * Add ignore_info and hostname_resolution options for most executors.
+ * Nessus now list in the logs the available templates and uses posixpath.join instead of concat strings.
+Nikto now uses only requieres TARGET_URL argument.
+ * Fix logs and change .format to fstrings
+ * Remove ws from dispatcher.yaml.
+ * Now faraday-dispatcher send the parameters of the executors when it
+connects to faraday server. Also it checks if there are new enviroment
+variables defined in the manifest file and warn the user.
+
+2.1.3 [Dec 13th, 2021]:
+---
+ * Add --api-token --random-user-agent to wpscan
+ * Move shodan executor to official and change logic to work with plugins
+
 2.1.2 [Oct 19th, 2021]:
 ---
  * ADD script to nmap logic

@@ -10,7 +10,6 @@ from tests.unittests.wizard_input import (
     VarEnvInput,
     RepoExecutorInput,
     RepoVarEnvInput,
-    WorkspaceInput,
 )
 
 DATA_FOLDER = Path(__file__).parent.parent.parent / "data"
@@ -24,19 +23,14 @@ def generate_inputs():
     return [
         {
             "id_str": "All default",
-            "dispatcher_input": DispatcherInput(
-                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
         },
         {
             "id_str": "All default with ssl false",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
@@ -49,7 +43,6 @@ def generate_inputs():
                 api_port="13123",
                 ws_port="1234",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -61,7 +54,6 @@ def generate_inputs():
                 host="127.0.0.1",
                 ssl="false",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -73,7 +65,6 @@ def generate_inputs():
                 host="127.0.0.1:8080",
                 ssl="false",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -85,7 +76,6 @@ def generate_inputs():
                 host="http://127.0.0.1:8080",
                 ssl="false",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -97,7 +87,6 @@ def generate_inputs():
                 host="127.0.0.1/faraday",
                 ssl="false",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -111,7 +100,6 @@ def generate_inputs():
                 api_port="13123",
                 ws_port="1234",
                 agent_name="agent",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "exit_code": 0,
             "expected_output": ["registration must be 25 character length"],
@@ -122,32 +110,63 @@ def generate_inputs():
             "id_str": "Basic Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
                     name="ex1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="cmd 2",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex3",
                     cmd="cmd 3",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
             ],
@@ -159,32 +178,63 @@ def generate_inputs():
             "id_str": "Basic Bad Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
                     name="ex1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="cmd 2",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex3",
                     cmd="cmd 3",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
@@ -192,10 +242,26 @@ def generate_inputs():
                     cmd="cmd 4",
                     name="ex4",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
             ],
@@ -207,32 +273,63 @@ def generate_inputs():
             "id_str": "Basic Mod Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
                     name="ex1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="cmd 2",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex3",
                     cmd="cmd 3",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
@@ -240,22 +337,44 @@ def generate_inputs():
                     error_name="QWE",
                     cmd="exit 1",
                     params=[
-                        ParamInput(name="mod_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param1", mandatory=False, type="string", adm_type=ADMType.MODIFY),
+                        ParamInput(
+                            name="mod_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.MODIFY,
+                        ),
                     ],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="",
-                    varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="mod_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
                     name="ex3",
                     new_name="eX3",
                     cmd="",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.MODIFY,
+                        )
+                    ],
                     adm_type=ADMType.MODIFY,
                 ),
             ],
@@ -267,39 +386,77 @@ def generate_inputs():
             "id_str": "Basic Del Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
                     name="ex1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="cmd 2",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex3",
                     cmd="cmd 3",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex1",
                     error_name="QWE",
                     cmd="exit 1",
-                    params=[ParamInput(name="add_param1", mandatory=False, type="string", adm_type=ADMType.DELETE)],
+                    params=[
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.DELETE,
+                        )
+                    ],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(name="ex2", cmd="", adm_type=ADMType.DELETE),
@@ -314,7 +471,11 @@ def generate_inputs():
                             value="",
                             adm_type=ADMType.MODIFY,
                         ),
-                        VarEnvInput(name="add_varenv1moded", value="", adm_type=ADMType.DELETE),
+                        VarEnvInput(
+                            name="add_varenv1moded",
+                            value="",
+                            adm_type=ADMType.DELETE,
+                        ),
                     ],
                     adm_type=ADMType.MODIFY,
                 ),
@@ -325,13 +486,11 @@ def generate_inputs():
         },
         {
             "id_str": "Basic Repo Executors input",
-            "dispatcher_input": DispatcherInput(
-                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "executors_input": [
                 RepoExecutorInput(
                     name="ex1",
-                    base="4",
+                    base="7",
                     varenvs=[
                         RepoVarEnvInput(name="NESSUS_USERNAME", value="asd"),
                         RepoVarEnvInput(name="NESSUS_PASSWORD", value="asdsad"),
@@ -355,42 +514,21 @@ def generate_inputs():
         },
         {
             "id_str": "Add multiple executors and delete one",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[
-                    WorkspaceInput(name="aworkspace1", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="aworkspace1", adm_type=ADMType.DELETE),
-                ],
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
         },
         {
             "id_str": "Add an executor and delete and add one",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.DELETE),
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                ],
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
         },
         {
             "id_str": "Delete an non-existent executor (Test modify do " "nothing)",
-            "dispatcher_input": DispatcherInput(
-                ssl="false",
-                workspaces=[
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="not_exist", adm_type=ADMType.DELETE),
-                    WorkspaceInput(name="not_exist", adm_type=ADMType.MODIFY),
-                ],
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "exit_code": 0,
             "after_executors": set(),
             "after_workspaces": {"aworkspace"},
@@ -399,10 +537,6 @@ def generate_inputs():
             "id_str": "Try add an existent executor",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[
-                    WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD),
-                    WorkspaceInput(name="second", adm_type=ADMType.ADD, error_name="aworkspace"),
-                ],
             ),
             "exit_code": 0,
             "after_executors": set(),
@@ -412,7 +546,6 @@ def generate_inputs():
             "id_str": "Basic Name with comma Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -420,8 +553,18 @@ def generate_inputs():
                     error_name="ex,1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
@@ -434,32 +577,63 @@ def generate_inputs():
             "id_str": "Basic Mod Name with comma Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
                     name="ex1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="cmd 2",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex3",
                     cmd="cmd 3",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
@@ -467,15 +641,31 @@ def generate_inputs():
                     error_name="QWE",
                     cmd="exit 1",
                     params=[
-                        ParamInput(name="mod_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param1", mandatory=False, type="string", adm_type=ADMType.MODIFY),
+                        ParamInput(
+                            name="mod_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.MODIFY,
+                        ),
                     ],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="",
-                    varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="mod_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
@@ -483,7 +673,13 @@ def generate_inputs():
                     new_error_name="eX,3",
                     new_name="eX3",
                     cmd="",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.MODIFY,
+                        )
+                    ],
                     adm_type=ADMType.MODIFY,
                 ),
             ],
@@ -495,7 +691,6 @@ def generate_inputs():
             "id_str": "Basic Name with backslash Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -503,8 +698,18 @@ def generate_inputs():
                     error_name="ex\\1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
@@ -517,32 +722,63 @@ def generate_inputs():
             "id_str": "Basic Mod Name with backslash Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
                     name="ex1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="cmd 2",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex3",
                     cmd="cmd 3",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
@@ -550,15 +786,31 @@ def generate_inputs():
                     error_name="QWE",
                     cmd="exit 1",
                     params=[
-                        ParamInput(name="mod_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param1", mandatory=False, type="string", adm_type=ADMType.MODIFY),
+                        ParamInput(
+                            name="mod_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.MODIFY,
+                        ),
                     ],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="",
-                    varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="mod_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
@@ -566,7 +818,13 @@ def generate_inputs():
                     new_error_name="eX\\3",
                     new_name="eX3",
                     cmd="",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.MODIFY,
+                        )
+                    ],
                     adm_type=ADMType.MODIFY,
                 ),
             ],
@@ -578,7 +836,6 @@ def generate_inputs():
             "id_str": "Basic Name with slash Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
@@ -586,8 +843,18 @@ def generate_inputs():
                     error_name="ex/1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
@@ -600,32 +867,63 @@ def generate_inputs():
             "id_str": "Basic Mod Name with slash Executors input",
             "dispatcher_input": DispatcherInput(
                 ssl="false",
-                workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
             ),
             "executors_input": [
                 ExecutorInput(
                     name="ex1",
                     cmd="cmd 1",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="cmd 2",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
                     name="ex3",
                     cmd="cmd 3",
                     params=[
-                        ParamInput(name="add_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param2", mandatory=False, type="string", adm_type=ADMType.ADD),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param2",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
                     ],
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.ADD,
                 ),
                 ExecutorInput(
@@ -633,15 +931,31 @@ def generate_inputs():
                     error_name="QWE",
                     cmd="exit 1",
                     params=[
-                        ParamInput(name="mod_param1", mandatory=True, type="string", adm_type=ADMType.ADD),
-                        ParamInput(name="add_param1", mandatory=False, type="string", adm_type=ADMType.MODIFY),
+                        ParamInput(
+                            name="mod_param1",
+                            mandatory=True,
+                            type="string",
+                            adm_type=ADMType.ADD,
+                        ),
+                        ParamInput(
+                            name="add_param1",
+                            mandatory=False,
+                            type="string",
+                            adm_type=ADMType.MODIFY,
+                        ),
                     ],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
                     name="ex2",
                     cmd="",
-                    varenvs=[VarEnvInput(name="mod_varenv1", value="AVarEnv", adm_type=ADMType.ADD)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="mod_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.ADD,
+                        )
+                    ],
                     adm_type=ADMType.MODIFY,
                 ),
                 ExecutorInput(
@@ -649,7 +963,13 @@ def generate_inputs():
                     new_error_name="eX/3",
                     new_name="eX3",
                     cmd="",
-                    varenvs=[VarEnvInput(name="add_varenv1", value="AVarEnv", adm_type=ADMType.MODIFY)],
+                    varenvs=[
+                        VarEnvInput(
+                            name="add_varenv1",
+                            value="AVarEnv",
+                            adm_type=ADMType.MODIFY,
+                        )
+                    ],
                     adm_type=ADMType.MODIFY,
                 ),
             ],
@@ -659,9 +979,7 @@ def generate_inputs():
         },
         {
             "id_str": "Force Quit Executor",
-            "dispatcher_input": DispatcherInput(
-                ssl="false", workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)]
-            ),
+            "dispatcher_input": DispatcherInput(ssl="false"),
             "executors_input": [
                 RepoExecutorInput(
                     name="ex1",

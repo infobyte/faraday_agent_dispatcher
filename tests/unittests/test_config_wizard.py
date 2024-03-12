@@ -16,11 +16,7 @@ from tests.unittests.config.wizard import (
     parse_inputs,
     old_version_path,
 )
-from tests.unittests.wizard_input import (
-    DispatcherInput,
-    WorkspaceInput,
-    ADMType,
-)
+from tests.unittests.wizard_input import DispatcherInput
 
 
 inputs = generate_inputs()
@@ -43,7 +39,6 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
             content = content_file.read()
 
     with runner.isolated_filesystem() as file_system:
-
         if content:
             path = Path(file_system) / "dispatcher.ini"
             with path.open(mode="w") as content_file:
@@ -75,16 +70,13 @@ def test_new_config(testing_inputs: Dict[(str, object)], ini_config):
                 assert expected_output in result.output
 
         expected_executors_set = set.union(ini_config["old_executors"], testing_inputs["after_executors"])
-        expected_workspaces_set = set.union(ini_config["old_workspaces"], testing_inputs["after_workspaces"])
 
         if path.suffix == ".ini":
             path = path.with_suffix(".yaml")
         config_mod.reset_config(path)
         executor_config_set = set(config_mod.instance[Sections.AGENT].get("executors"))
         assert executor_config_set == expected_executors_set
-        workspace_config_set = set(config_mod.instance[Sections.SERVER].get("workspaces"))
 
-        assert workspace_config_set == expected_workspaces_set
         assert f"Section: {Sections.TOKENS}" not in result.output
 
 
@@ -98,7 +90,6 @@ def test_with_agent_token(delete_token):
         content = content_file.read()
 
     with runner.isolated_filesystem() as file_system:
-
         path = Path(file_system) / "dispatcher.ini"
         with path.open(mode="w") as content_file:
             content_file.write(content)
@@ -107,7 +98,6 @@ def test_with_agent_token(delete_token):
         input_str = DispatcherInput(
             ssl="false",
             delete_agent_token=delete_token,
-            workspaces=[WorkspaceInput(name="aworkspace", adm_type=ADMType.ADD)],
         ).input_str()
         input_str = f"A\n{input_str}Q\n"
         escape_string = "\0\n" * 1000

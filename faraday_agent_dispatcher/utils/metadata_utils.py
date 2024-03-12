@@ -9,13 +9,24 @@ from faraday_agent_dispatcher import __version__ as current_version
 
 logger = logging.get_logger()
 
-MANDATORY_METADATA_KEYS = ["cmd", "check_cmds", "arguments", "environment_variables"]
-INFO_METADATA_KEYS = ["category", "name", "title", "website", "description", "image"]
+MANDATORY_METADATA_KEYS = [
+    "cmd",
+    "check_cmds",
+    "arguments",
+    "environment_variables",
+]
+INFO_METADATA_KEYS = [
+    "category",
+    "name",
+    "title",
+    "website",
+    "description",
+    "image",
+]
 
 
 # Path can be treated as str
 def executor_folder() -> Union[Path, str]:
-
     folder = Path(__file__).parent.parent / "static" / "executors"
     if "WIZARD_DEV" in os.environ:
         return folder / "dev"
@@ -45,7 +56,7 @@ async def check_commands(metadata: dict) -> bool:
             if len(stdout) > 0:
                 logger.debug(f"Dependency check {cmd} prints: {stdout.decode()}")
             if len(stderr) > 0:
-                logger.error(f"Dependency check {cmd} prints to error: {stderr.decode()}")
+                logger.error(f"Dependency check {cmd} prints to " f"error: {stderr.decode()}")
             if len(stdout) == 0 and len(stderr) == 0:
                 break
 
