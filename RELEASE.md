@@ -1,3 +1,12 @@
+3.3.0 [Mar 12th, 2024]:
+---
+ * [ADD] Add hotspots option to SonarQube. #197
+ * [ADD] New GitHub CodeQL agent. #208
+ * [ADD] Added new agent for GitHub Secrets Scanning. #209
+ * [MOD] Now Nessus executor tries to login again after a 401 response from the Nessus's server. #203
+ * [MOD] Change Dependabot agent to work with the new manifest of parameter types. #210
+ * [FIX] We were not verifying the configuration value `ignore_ssl` at the moment of `socketio` connection. #212
+
 3.2.0 [Feb 8th, 2024]:
 ---
  * [ADD] Add dependabot agent. #206

@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    DEPENDABOT_OWNER = os.getenv("EXECUTOR_CONFIG_DEPENDABOT_OWNER")
-    DEPENDABOT_REPOSITORY = os.getenv("EXECUTOR_CONFIG_DEPENDABOT_REPOSITORY")
-    DEPENDABOT_TOKEN = os.getenv("DEPENDABOT_TOKEN")
+    GITHUB_REPOSITORY = os.getenv("EXECUTOR_CONFIG_GITHUB_REPOSITORY")
+    GITHUB_OWNER = os.getenv("GITHUB_OWNER")
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", [])
     if vuln_tag:
@@ -21,13 +21,13 @@ def main():
         host_tag = host_tag.split(",")
 
     # TODO: should validate config?
-    dependabot_url = f"https://api.github.com/repos/{DEPENDABOT_OWNER}/{DEPENDABOT_REPOSITORY}/dependabot/alerts"
-    dependabot_auth = {"Authorization": f"Bearer {DEPENDABOT_TOKEN}"}
-    repo_url = f"https://github.com/{DEPENDABOT_OWNER}/{DEPENDABOT_REPOSITORY}"
+    dependabot_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPOSITORY}/dependabot/alerts"
+    github_auth = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
+    repo_url = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPOSITORY}"
 
     CVSS_3_PREFIX = "CVSS:3"
 
-    response = requests.get(dependabot_url, headers=dependabot_auth)
+    response = requests.get(dependabot_url, headers=github_auth)
 
     if response.status_code == http.HTTPStatus.OK:
         security_events = response.json()
@@ -93,7 +93,7 @@ def main():
 
             hosts.append(
                 {
-                    "ip": f"{DEPENDABOT_OWNER}/{DEPENDABOT_REPOSITORY}/{ip}",
+                    "ip": f"{GITHUB_OWNER}/{GITHUB_REPOSITORY}/{ip}",
                     "description": f"Dependabot recommendations on file {ip}\n\nRepository: {repo_url}",
                     "hostnames": [],
                     "vulnerabilities": host_vulns,
