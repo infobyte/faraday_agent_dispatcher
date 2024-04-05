@@ -48,6 +48,7 @@ def main():
 
     TENABLE_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_NAME", "faraday-scan")
     TENABLE_SCANNER_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCANNER_NAME")
+    TENABLE_POLICY_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_POLICY_ID")
     TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
     TENABLE_RELAUNCH_SCAN = os.getenv("EXECUTOR_CONFIG_RELAUNCH_SCAN", "False").lower() == "true"
     TENABLE_SCAN_TARGET = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_TARGET")
@@ -84,19 +85,16 @@ def main():
             target = TENABLE_SCAN_TARGET
         target_ip = resolve_hostname(target)
         log(f"The target ip is {target_ip}")
+        scan_kwargs = {
+            "name": TENABLE_SCAN_NAME,
+            "targets": [target_ip],
+            "template": TENABLE_SCAN_TEMPLATE,
+        }
+        if TENABLE_POLICY_ID:
+            scan_kwargs["policy_id"] = TENABLE_POLICY_ID
         if TENABLE_SCANNER_NAME:
-            scan = tio.scans.create(
-                name=TENABLE_SCAN_NAME,
-                targets=[target_ip],
-                template=TENABLE_SCAN_TEMPLATE,
-                scanner=TENABLE_SCANNER_NAME,
-            )
-        else:
-            scan = tio.scans.create(
-                name=TENABLE_SCAN_NAME,
-                targets=[target_ip],
-                template=TENABLE_SCAN_TEMPLATE,
-            )
+            scan_kwargs["scanner"] = TENABLE_SCANNER_NAME
+        scan = tio.scans.create(**scan_kwargs)
     tio.scans.launch(scan["id"])
     status = "pending"
     while status[-2:] != "ed":
