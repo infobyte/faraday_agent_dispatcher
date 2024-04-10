@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import zipfile as zp
 from urllib.parse import urlparse
 from tenable.sc import TenableSC
 from faraday_plugins.plugins.repo.nessus_sc.plugin import NessusScPlugin
@@ -10,6 +11,24 @@ from faraday_agent_dispatcher.utils.url_utils import resolve_hostname
 
 def log(msg):
     print(msg, file=sys.stderr)
+
+
+def search_scan_id(tio, TENABLE_SCAN_ID):
+    scans = tio.scan_instances.list()
+    scans_id = ""
+    for scan in scans["usable"]:
+        scans_id += f"{scan['id']} {scan['name']}\n"
+        if str(scan["id"]) == str(TENABLE_SCAN_ID):
+            log(
+                f"Scan found: {scan['name']}",
+            )
+            break
+    else:
+        log(
+            f"Scan id {TENABLE_SCAN_ID} not found, the current scans available are: {scans_id}",
+        )
+        exit(1)
+    return scan
 
 
 def main():
@@ -42,36 +61,37 @@ def main():
         log("TenableIo access_key and secret_key were not provided")
         exit(1)
 
-    if not TENABLE_SCAN_TARGETS:
-        log("Scan Target were not provided")
-        exit(1)
+    # if not TENABLE_SCAN_TARGETS:
+    #     log("Scan Target were not provided")
+    #     exit(1)
     if not TENABLE_URL:
         log("Tenable Url not provided")
         exit(1)
     targets = []
-    for target in TENABLE_SCAN_TARGETS.split(","):
-        parse_target = urlparse(target)
-        if parse_target.netloc:
-            targets.append(resolve_hostname(parse_target.netloc))
-        else:
-            targets.append(resolve_hostname(target))
+    if TENABLE_SCAN_TARGETS:
+        for target in TENABLE_SCAN_TARGETS.split(","):
+            parse_target = urlparse(target)
+            if parse_target.netloc:
+                targets.append(resolve_hostname(parse_target.netloc))
+            else:
+                targets.append(resolve_hostname(target))
     log(f"Targets ip {targets}")
     tsc = TenableSC(host=TENABLE_URL, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
     if TENABLE_SCAN_ID:
-        scans = tsc.scans.list()
-        scans_id = ""
-        for scan in scans:
-            scans_id += f"{scan['id']} {scan['name']}"
-            if scan["id"] == TENABLE_SCAN_ID:
-                log(
-                    f"Scan found: {scan['name']}",
+        scan = search_scan_id(tsc, TENABLE_SCAN_ID)
+        report = tsc.scan_instances.export_scan(scan["id"])
+        with zp.ZipFile(report.read(), "r") as zip_ref:
+            file_name = zip_ref.namelist()[0]
+            with zip_ref.open(file_name):
+                plugin = NessusScPlugin(
+                    ignore_info=ignore_info,
+                    hostname_resolution=hostname_resolution,
+                    host_tag=host_tag,
+                    service_tag=service_tag,
+                    vuln_tag=vuln_tag,
                 )
-                break
-        else:
-            log(
-                f"Scan id {TENABLE_SCAN_ID} not found, the current scans available are: {scans_id}",
-            )
-            exit(1)
+                plugin.parseOutputString(file_name)
+        return
     elif TENABLE_SCANNER_NAME:
         scan = tsc.scans.create(
             name=TENABLE_SCAN_NAME,
