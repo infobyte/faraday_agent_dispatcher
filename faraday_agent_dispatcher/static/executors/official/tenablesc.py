@@ -1,10 +1,10 @@
 import os
+import io
 import sys
-import time
 import zipfile as zp
 from urllib.parse import urlparse
 from tenable.sc import TenableSC
-from faraday_plugins.plugins.repo.nessus_sc.plugin import NessusScPlugin
+from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 from faraday_agent_dispatcher.utils.url_utils import resolve_hostname
 
 
@@ -37,13 +37,8 @@ def main():
     if host_tag:
         host_tag = host_tag.split(",")
 
-    TENABLE_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_NAME", "faraday-scan")
-    TENABLE_SCANNER_NAME = os.getenv("EXECUTOR_CONFIG_TENABLE_SCANNER_NAME")
     TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
     TENABLE_SCAN_TARGETS = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_TARGETS")
-    TENABLE_SCAN_REPO = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_REPO")
-    TENABLE_SCAN_TEMPLATE = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_TEMPLATE", "basic")
-    TENABLE_PULL_INTERVAL = os.getenv("TENABLE_PULL_INTERVAL", 30)
     TENABLE_ACCESS_KEY = os.getenv("TENABLE_ACCESS_KEY")
     TENABLE_SECRET_KEY = os.getenv("TENABLE_SECRET_KEY")
     TENABLE_URL = os.getenv("TENABLE_URL")
@@ -71,9 +66,8 @@ def main():
         scan = search_scan_id(tsc, TENABLE_SCAN_ID)
         report = tsc.scan_instances.export_scan(scan["id"])
         with zp.ZipFile(io.BytesIO(report.read()), "r") as zip_ref:
-            file_name = zip_ref.namelist()[0]
-            with zip_ref.open(file_name) as file:
-                plugin = NessusScPlugin(
+            with zip_ref.open(zip_ref.namelist()[0]) as file:
+                plugin = NessusPlugin(
                     ignore_info=ignore_info,
                     hostname_resolution=hostname_resolution,
                     host_tag=host_tag,
@@ -81,43 +75,7 @@ def main():
                     vuln_tag=vuln_tag,
                 )
                 plugin.parseOutputString(file.read())
-        return
-    elif TENABLE_SCANNER_NAME:
-        scan = tsc.scans.create(
-            name=TENABLE_SCAN_NAME,
-            repo=TENABLE_SCAN_REPO,
-            targets=targets,
-            template=TENABLE_SCAN_TEMPLATE,
-            scanner=TENABLE_SCANNER_NAME,
-        )
-    else:
-        scan = tsc.scans.create(
-            name=TENABLE_SCAN_NAME,
-            repo=TENABLE_SCAN_REPO,
-            targets=targets,
-            template=TENABLE_SCAN_TEMPLATE
-        )
-
-    tsc.scans.launch(scan["id"])
-    status = "pending"
-    while not status.endswith("ed"):
-        time.sleep(int(TENABLE_PULL_INTERVAL))
-        status = tsc.scans.status(scan["id"])
-
-    if status != "completed":
-        log(f"Scanner ended with status {status}")
-        exit(1)
-
-    report = tsc.scans.export(scan["id"])
-    plugin = NessusScPlugin(
-        ignore_info=ignore_info,
-        hostname_resolution=hostname_resolution,
-        host_tag=host_tag,
-        service_tag=service_tag,
-        vuln_tag=vuln_tag,
-    )
-    plugin.parseOutputString(report.read())
-    print(plugin.get_json())
+                print(plugin.get_json())
 
 
 if __name__ == "__main__":
