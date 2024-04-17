@@ -156,7 +156,7 @@ class Dispatcher:
         if not await self.check_connection():
             exit(1)
 
-        if self.agent_token is None:
+        if self.agent_token is None or registration_token is not None:
             try:
                 control_registration_token("token", registration_token)
             except ValueError as ex:
