@@ -1,3 +1,4 @@
+import json
 import os
 import io
 import sys
@@ -10,16 +11,34 @@ def log(msg):
     print(msg, file=sys.stderr)
 
 
-def search_scan_id(tio, TENABLE_SCAN_ID):
-    scans = tio.scan_instances.list()
-    scans_id = ""
-    for scan in scans["usable"]:
-        scans_id += f"{scan['id']} {scan['name']}\n"
-        if str(scan["id"]) == str(TENABLE_SCAN_ID):
-            log(f"Scan found: {scan['name']}")
-            return scan
-    log(f"Scan id {TENABLE_SCAN_ID} not found, the current scans available are: {scans_id}")
-    exit(1)
+def get_only_usable_ids(tio, scan_ids):
+    tenable_scans = tio.scan_instances.list()
+    usable_tenable_scans = [int(scan["id"]) for scan in tenable_scans["usable"]]
+    log(usable_tenable_scans)
+    return [id for id in scan_ids if id in usable_tenable_scans]
+
+
+def process_scan(
+    tsc, scan_id, ignore_info=False, hostname_resolution=False, host_tag=False, service_tag=False, vuln_tag=False
+):
+    log(f"Processing scan id {scan_id}")
+    try:
+        report = tsc.scan_instances.export_scan(scan_id)
+    except Exception as e:
+        log(e)
+        return {}
+    with zp.ZipFile(io.BytesIO(report.read()), "r") as zip_ref:
+        with zip_ref.open(zip_ref.namelist()[0]) as file:
+            plugin = NessusPlugin(
+                ignore_info=ignore_info,
+                hostname_resolution=hostname_resolution,
+                host_tag=host_tag,
+                service_tag=service_tag,
+                vuln_tag=vuln_tag,
+            )
+            plugin.parseOutputString(file.read())
+            return plugin.get_json()
+    return {}
 
 
 def main():
@@ -35,7 +54,7 @@ def main():
     if host_tag:
         host_tag = host_tag.split(",")
 
-    TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
+    tenable_scan_ids = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
     TENABLE_ACCESS_KEY = os.getenv("TENABLE_ACCESS_KEY")
     TENABLE_SECRET_KEY = os.getenv("TENABLE_SECRET_KEY")
     TENABLE_HOST = os.getenv("TENABLE_HOST")
@@ -48,26 +67,44 @@ def main():
         log("TenableSC Host not provided")
         exit(1)
 
-    if not TENABLE_SCAN_ID:
+    if not tenable_scan_ids:
         log("TenableSC Scan ID not provided")
         exit(1)
 
-    tsc = TenableSC(host=TENABLE_HOST, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
+    # it should be a list but the it is save as a str in the environment
+    try:
+        tenable_scan_ids_list = json.loads(tenable_scan_ids)
+    except Exception as e:
+        log(f"TenableSC Scan IDs could not be parsed {e}")
+        exit(1)
 
-    scan = search_scan_id(tsc, TENABLE_SCAN_ID)
-    report = tsc.scan_instances.export_scan(scan["id"])
-    with zp.ZipFile(io.BytesIO(report.read()), "r") as zip_ref:
-        with zip_ref.open(zip_ref.namelist()[0]) as file:
-            plugin = NessusPlugin(
-                ignore_info=ignore_info,
-                hostname_resolution=hostname_resolution,
-                host_tag=host_tag,
-                service_tag=service_tag,
-                vuln_tag=vuln_tag,
-            )
-            plugin.parseOutputString(file.read())
-            print(plugin.get_json())
+    tsc = TenableSC(host=TENABLE_HOST, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
+    usable_scan_ids = get_only_usable_ids(tsc, tenable_scan_ids_list)
+    log(usable_scan_ids)
+
+    responses = []
+    for scan_id in usable_scan_ids:
+        processed_scan = process_scan(
+            tsc,
+            scan_id,
+            ignore_info=ignore_info,
+            hostname_resolution=hostname_resolution,
+            host_tag=host_tag,
+            service_tag=service_tag,
+            vuln_tag=vuln_tag,
+        )
+        if processed_scan:
+            responses.append(processed_scan)
+    if responses:
+        final_response = json.loads(responses.pop(0))
+        for response in responses:
+            json_response = json.loads(response)
+            final_response["hosts"] += [host for host in json_response["hosts"]]
+        print(json.dumps(final_response), flush=True)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        log(f"Agent execution failed. {e}")
