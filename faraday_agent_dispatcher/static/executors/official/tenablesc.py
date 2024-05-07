@@ -11,11 +11,11 @@ def log(msg):
     print(msg, file=sys.stderr)
 
 
-def get_only_usable_ids(tio, scan_ids):
-    tenable_scans = tio.scan_instances.list()
+def get_only_usable_ids(tsc, scan_ids):
+    tenable_scans = tsc.scan_instances.list()
     usable_tenable_scans = [int(scan["id"]) for scan in tenable_scans["usable"]]
     log(usable_tenable_scans)
-    return [id for id in scan_ids if id in usable_tenable_scans]
+    return [_id for _id in scan_ids if _id in usable_tenable_scans]
 
 
 def process_scan(
@@ -80,7 +80,6 @@ def main():
 
     tsc = TenableSC(host=TENABLE_HOST, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
     usable_scan_ids = get_only_usable_ids(tsc, tenable_scan_ids_list)
-    log(usable_scan_ids)
 
     responses = []
     for scan_id in usable_scan_ids:
@@ -99,8 +98,9 @@ def main():
         final_response = json.loads(responses.pop(0))
         for response in responses:
             json_response = json.loads(response)
-            final_response["hosts"] += [host for host in json_response["hosts"]]
-        print(json.dumps(final_response), flush=True)
+            for host in json_response["hosts"]:
+                final_response["hosts"].append(host)
+        print(json.dumps(final_response))
 
 
 if __name__ == "__main__":
