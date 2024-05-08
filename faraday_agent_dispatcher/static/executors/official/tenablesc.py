@@ -14,7 +14,6 @@ def log(msg):
 def get_only_usable_ids(tsc, scan_ids):
     tenable_scans = tsc.scan_instances.list()
     usable_tenable_scans = [int(scan["id"]) for scan in tenable_scans["usable"]]
-    log(usable_tenable_scans)
     return [_id for _id in scan_ids if _id in usable_tenable_scans]
 
 
@@ -71,7 +70,7 @@ def main():
         log("TenableSC Scan ID not provided")
         exit(1)
 
-    # it should be a list but the it is save as a str in the environment
+    # it should be a list but it is save as a str in the environment
     try:
         tenable_scan_ids_list = json.loads(tenable_scan_ids)
     except Exception as e:
