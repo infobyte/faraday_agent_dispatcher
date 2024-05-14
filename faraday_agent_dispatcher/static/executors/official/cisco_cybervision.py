@@ -15,7 +15,7 @@ def log(msg, end="\n"):
     print(msg, file=sys.stderr, flush=True, end=end)
 
 
-def cybervision_report_composer(url, token, preset_list):
+def cybervision_report_composer(url, token, preset_list, asset_tags, vuln_tags):
     req_headers = {"accept": "application/json", "x-token-id": token}
     requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
     presets_queue = []
@@ -76,7 +76,7 @@ def cybervision_report_composer(url, token, preset_list):
                         "description": f"Device ID {vuln['device']['id']}",
                         "mac": "" if not vuln["device"]["mac"] else vuln["device"]["mac"],
                         "vulnerabilities": [],
-                        "tags": [pres_data[0]],
+                        "tags": [pres_data[0]] + asset_tags,
                     }
                 if not vuln["title"] in [x["name"] for x in hosts[vuln["device"]["label"]]["vulnerabilities"]]:
                     try:
@@ -98,6 +98,7 @@ def cybervision_report_composer(url, token, preset_list):
                             "run_date": datetime.datetime.strptime(
                                 vuln["publishTime"], "%Y-%m-%dT%H:%M:%SZ"
                             ).timestamp(),
+                            "tags": vuln_tags,
                         }
                     )
     data = {"hosts": [x[1] for x in hosts.items()]}
@@ -113,7 +114,20 @@ def main():
         log("Cyber Vision URL must be HTTPS")
         sys.exit(1)
 
-    cybervision_report_composer(params_cybervision_url, params_cybervision_token, params_cybervision_presets)
+    params_vulnerability_tags = os.getenv("AGENT_CONFIG_VULN_TAG") or []
+    if params_vulnerability_tags:
+        params_vulnerability_tags = params_vulnerability_tags.split(",")
+    params_asset_tags = os.getenv("AGENT_CONFIG_HOSTNAME_TAG") or []
+    if params_asset_tags:
+        params_asset_tags = params_asset_tags.split(",")
+
+    cybervision_report_composer(
+        params_cybervision_url,
+        params_cybervision_token,
+        params_cybervision_presets,
+        params_asset_tags,
+        params_vulnerability_tags,
+    )
 
 
 if __name__ == "__main__":
