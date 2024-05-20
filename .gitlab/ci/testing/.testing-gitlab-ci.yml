@@ -12,6 +12,7 @@
     - cd typing
     - if [ -z "$TYPING_BRANCH" ]; then export TYPING_BRANCH="master"; fi
     - echo $TYPING_BRANCH
+    - git fetch
     - git checkout $TYPING_BRANCH
     - pip install .
     - cd ..
