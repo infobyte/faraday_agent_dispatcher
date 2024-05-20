@@ -515,7 +515,11 @@ class Dispatcher:
         # Executor Variables
         if isinstance(args, dict):
             for k in args:
-                env[f"EXECUTOR_CONFIG_{k.upper()}"] = str(args[k])
+                # This should allow to correctly get lists from environment with json.loads
+                if isinstance(args[k], list):
+                    env[f"EXECUTOR_CONFIG_{k.upper()}"] = json.dumps(args[k])
+                else:
+                    env[f"EXECUTOR_CONFIG_{k.upper()}"] = str(args[k])
         else:
             logger.error("Args from data received has a not supported type")
             raise ValueError("Args from data received has a not supported type")

@@ -13,8 +13,9 @@ def log(msg):
 
 def get_only_usable_ids(tsc, scan_ids):
     tenable_scans = tsc.scan_instances.list()
-    usable_tenable_scans = [int(scan["id"]) for scan in tenable_scans["usable"]]
-    return [_id for _id in scan_ids if _id in usable_tenable_scans]
+    usable_tenable_scans = [str(scan["id"]) for scan in tenable_scans["usable"]]
+    log(usable_tenable_scans)
+    return [_id for _id in scan_ids if str(_id) in usable_tenable_scans]
 
 
 def process_scan(
@@ -79,6 +80,8 @@ def main():
 
     tsc = TenableSC(host=TENABLE_HOST, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
     usable_scan_ids = get_only_usable_ids(tsc, tenable_scan_ids_list)
+
+    log(usable_scan_ids)
 
     responses = []
     for scan_id in usable_scan_ids:
