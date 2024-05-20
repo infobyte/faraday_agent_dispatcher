@@ -11,7 +11,7 @@
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/cloud/faraday_agent_parameters_types.git typing
     - cd typing
     - if [ -z "$TYPING_BRANCH" ]; then export TYPING_BRANCH="master"; fi
-    - echo $TYPING_BRANCH
+    - echo "Using faraday_agent_parameters_type branch -> $TYPING_BRANCH"
     - git fetch
     - git checkout $TYPING_BRANCH
     - pip install .
