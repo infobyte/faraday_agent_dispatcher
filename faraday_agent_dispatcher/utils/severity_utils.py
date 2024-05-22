@@ -1,6 +1,3 @@
-"""Severity Utils"""
-
-
 def severity_from_score(score: float, max_score: float):
     """
     Returns severity string from score range.
@@ -10,8 +7,6 @@ def severity_from_score(score: float, max_score: float):
     >> [max_score] - could be 10 or 100 (or whatever, calc is proportional)
 
     << [severity]  - severity as string "info", "low", "medium", "high" or "critical"
-
-    Author: Dante Acosta
     """
     if 0 <= score < max_score * 0.1:
         return "info"
