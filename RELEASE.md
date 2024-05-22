@@ -1,3 +1,7 @@
+3.4.1 [May 22th, 2024]:
+---
+ * [MOD] Plugins & Agent parameters types requirements updated. #220
+
 3.4.0 [May 22th, 2024]:
 ---
  * [ADD] Introducing the new Tenable SC agent, now available for integration. This initial version focuses on supporting scan imports. #216
