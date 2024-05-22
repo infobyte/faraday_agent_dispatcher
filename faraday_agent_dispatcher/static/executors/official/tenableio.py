@@ -7,7 +7,6 @@ import json
 from tenable.io import TenableIO
 from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
-# from faraday_agent_dispatcher.utils.url_utils import resolve_hostname
 
 HTTP_REGEX = re.compile("^(http|https)://")
 TEMPLATE_NAMES = [
