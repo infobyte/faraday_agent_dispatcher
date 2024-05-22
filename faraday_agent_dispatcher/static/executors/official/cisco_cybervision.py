@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import os
-import re
 import sys
 import json
 import datetime
@@ -108,7 +107,11 @@ def cybervision_report_composer(url, token, preset_list, asset_tags, vuln_tags):
 def main():
     params_cybervision_token = os.getenv("CYBERVISION_TOKEN")
     params_cybervision_url = os.getenv("CYBERVISION_HTTPS_URL")
-    params_cybervision_presets = re.findall("'([^']*)'", os.getenv("EXECUTOR_CONFIG_CYBERVISION_PRESETS"))
+    params_cybervision_presets_env = os.getenv("EXECUTOR_CONFIG_CYBERVISION_PRESETS")
+
+    params_cybervision_presets = []
+    if params_cybervision_presets_env:
+        params_cybervision_presets = json.loads(params_cybervision_presets_env)
 
     if not params_cybervision_url.startswith("https://"):
         log("Cyber Vision URL must be HTTPS")
