@@ -13,6 +13,7 @@ variables:
     VAULT_ROLE: 'python-sast-readonly'
     VAULT_ADDR: 'https://tluav-lb.faradaysec.com'
     VAULT_SECRET_PATH: 'gitlab/SAST'
+    TYPING_BRANCH: 'dev'
 
 workflow:
   rules:
