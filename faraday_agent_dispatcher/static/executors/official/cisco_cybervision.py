@@ -3,12 +3,13 @@ import os
 import re
 import sys
 import json
+import time
 import datetime
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 from faraday_agent_dispatcher.utils.severity_utils import severity_from_score
 
-API_BASE = "/api/3.0/"
+API_BASE = "/api/3.0"
 
 
 def log(msg, end="\n"):
@@ -22,7 +23,7 @@ def cybervision_report_composer(url, token, preset_list, asset_tags, vuln_tags):
     presets_id = {}
 
     # STAGE 1 - get preset list
-    req_url = f"{url}{API_BASE}presets"
+    req_url = f"{url}{API_BASE}/presets"
     try:
         resp = requests.get(req_url, headers=req_headers, timeout=20, verify=False).json()
     except TimeoutError:
@@ -41,15 +42,46 @@ def cybervision_report_composer(url, token, preset_list, asset_tags, vuln_tags):
     presets_vuln_collection = {}
     step_c = 1
     step_s = 100
+
+    for _id in presets_queue:  # post to update to latest computed data
+        req_refresh_url = f"{url}{API_BASE}/presets/{_id}/refreshData"
+        try:
+            resp = requests.post(req_refresh_url, headers=req_headers, timeout=20, verify=False)
+        except TimeoutError:
+            log("Can't reach Cyber Vision: connection timed out")
+            sys.exit(1)
+
     for _id in presets_queue:
+        serv_c = 0
+        while True:  # wait until data is ready
+            req_test_url = f"{url}{API_BASE}/presets/{_id}/visualisations/vulnerability-list?page=1&size=5"
+            try:
+                resp = requests.get(req_test_url, headers=req_headers, timeout=20, verify=False)
+                if "Service unavailable" in resp.content.decode("UTF-8"):
+                    if serv_c == 0:
+                        log(f"Preset {_id} data is not ready, waiting...")
+                    serv_c += 1
+                else:
+                    log(f"Preset {_id} data is ready!")
+                    serv_c = 0
+                    break
+                if serv_c >= 60:
+                    break
+            except TimeoutError:
+                log("Can't reach Cyber Vision: connection timed out")
+                sys.exit(1)
+            time.sleep(1)
+
+        if serv_c >= 60:
+            log(f"Error: Preset {_id} took many time to refresh data")
+            continue
+
         step_c = 1
         presets_vuln_collection[_id] = []
-        while True:
-            req_url = f"{url}{API_BASE}presets/{_id}/visualisations/" f"vulnerability-list?page={step_c}&size={step_s}"
+        while True:  # paged data fetch
+            req_url = f"{url}{API_BASE}/presets/{_id}/visualisations/vulnerability-list?page={step_c}&size={step_s}"
             try:
                 resp = requests.get(req_url, headers=req_headers, timeout=20, verify=False)
-                if resp.content.decode("UTF-8") == "Service unavailable: data is not available yet":
-                    raise ValueError(resp.content.decode("UTF-8"))
                 resp = resp.json()
             except TimeoutError:
                 log("Can't reach Cyber Vision: connection timed out")
