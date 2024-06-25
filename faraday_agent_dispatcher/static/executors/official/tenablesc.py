@@ -3,6 +3,7 @@ import os
 import io
 import sys
 import zipfile as zp
+
 from tenable.sc import TenableSC
 from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
@@ -13,8 +14,11 @@ def log(msg):
 
 def get_only_usable_ids(tsc, scan_ids):
     tenable_scans = tsc.scan_instances.list()
-    usable_tenable_scans = [str(scan["id"]) for scan in tenable_scans["usable"]]
+    usable_tenable_scans = [str(scan["id"]) for scan in tenable_scans["usable"] if scan["status"] == "Completed"]
+    log("*" * 10)
+    log("Listing available scans ...")
     log(usable_tenable_scans)
+    log("*" * 10)
     return [_id for _id in scan_ids if str(_id) in usable_tenable_scans]
 
 
@@ -81,7 +85,16 @@ def main():
     tsc = TenableSC(host=TENABLE_HOST, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
     usable_scan_ids = get_only_usable_ids(tsc, tenable_scan_ids_list)
 
-    log(usable_scan_ids)
+    if not usable_scan_ids:
+        log("*" * 10)
+        log("No Scan matched ...")
+        log("*" * 10)
+        exit(1)
+
+    log("*" * 10)
+    log("Scans matched ...")
+    log(f"{usable_scan_ids}")
+    log("*" * 10)
 
     responses = []
     for scan_id in usable_scan_ids:
