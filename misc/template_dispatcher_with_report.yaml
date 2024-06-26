@@ -1,0 +1,207 @@
+agent:
+  agent_name: docker_agent
+  executors:
+    nmap:
+      max_size: '65536'
+      params:
+        HOST_TIMEOUT:
+          base: integer
+          mandatory: false
+          type: integer
+        OPTION_PN:
+          base: boolean
+          mandatory: false
+          type: boolean
+        OPTION_SC:
+          base: boolean
+          mandatory: false
+          type: boolean
+        OPTION_SV:
+          base: boolean
+          mandatory: false
+          type: boolean
+        PORT_LIST:
+          base: string
+          mandatory: false
+          type: range
+        SCRIPT_TIMEOUT:
+          base: integer
+          mandatory: false
+          type: integer
+        TARGET:
+          base: string
+          mandatory: true
+          type: string
+        TOP_PORTS:
+          base: list
+          mandatory: false
+          type: list
+      repo_executor: nmap.py
+      varenvs: {}
+    arachni:
+      max_size: '65536'
+      params:
+        NAME_URL:
+          base: string
+          mandatory: true
+          type: url
+      repo_executor: arachni.py
+      varenvs:
+        arachni_path: /usr/local/src/arachni/bin
+    cme:
+      max_size: '65536'
+      params:
+        CRACKMAPEXEC_IP:
+          base: string
+          mandatory: true
+          type: ip
+        CRACKMAPEXEC_USER:
+          base: string
+          mandatory: false
+          type: string
+        CRACKMAPEXEC_PASS:
+          base: string
+          mandatory: false
+          type: string
+        CRACKMAPEXEC_LPORT:
+          base: integer
+          mandatory: false
+          type: integer
+        CRACKMAPEXEC_LHOST:
+          base: string
+          mandatory: false
+          type: string
+      repo_executor: crackmapexec.py
+      varenvs: {}
+    nixto2:
+      max_size: '65536'
+      params:
+        TARGET_URL:
+          base: string
+          mandatory: true
+          type: url
+        TARGET_PORT:
+          base: integer
+          mandatory: false
+          type: integer
+      repo_executor: nikto2.py
+      varenvs: {}
+    sublist3r:
+      max_size: '65536'
+      params:
+        DOMAIN:
+          base: string
+          mandatory: true
+          type: string
+      repo_executor: sublist3r.sh
+      varenvs: {}
+    zap:
+      max_size: '65536'
+      params:
+        TARGET_URL:
+          base: string
+          mandatory: true
+          type: url
+        API_KEY:
+          base: string
+          mandatory: true
+          type: string
+      repo_executor: zap.py
+      varenvs: {}
+    nuclei:
+      max_size: '65536'
+      params:
+        NUCLEI_TARGET:
+          base: string
+          mandatory: true
+          type: string
+        NUCLEI_EXCLUDE:
+          base: string
+          mandatory: false
+          type: string
+      repo_executor: nuclei.py
+      varenvs:
+        nuclei_templates: /usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates
+    wpscan:
+      max_size: '65536'
+      params:
+        WPSCAN_TARGET_URL:
+          base: string
+          mandatory: true
+          type: url
+      repo_executor: wpscan.py
+      varenvs: {}
+    gvm:
+      max_size: '65536'
+      params:
+        SCAN_TARGET:
+          base: string
+          mandatory: true
+          type: string
+        PORT_LIST_ID:
+          base: string
+          mandatory: false
+          type: string
+        SCAN_ID:
+          base: string
+          mandatory: false
+          type: string
+        CONNECTION_TYPE:
+          base: string
+          mandatory: true
+          type: string
+        SOCKET_PATH:
+          base: string
+          mandatory: false
+          type: string
+        SSH_USER:
+          base: string
+          mandatory: false
+          type: string
+        SSH_PASSW:
+          base: string
+          mandatory: false
+          type: string
+        TLS_CERTFILE_PATH:
+          base: string
+          mandatory: false
+          type: string
+        TLS_CAFILE_PATH:
+          base: string
+          mandatory: false
+          type: string
+        TLS_KEYFILE_PATH:
+          base: string
+          mandatory: false
+          type: string
+        TLS_PKEY_PASSW:
+          base: string
+          mandatory: false
+          type: string
+      repo_executor: gvm_openvas.py
+      varenvs:
+        gvm_user: admin
+        gvm_passw: admin
+        host: 127.0.0.1
+        port: 9392
+      reports:
+        max_size: '65536'
+        params:
+          REPORT_NAME:
+            base: string
+            mandatory: true
+            type: string
+          CONFIG_TOOL:
+            base: string
+            mandatory: false
+            type: string
+        repo_executor: report_processor.py
+        varenvs:
+          reports_path: /root/reports
+server:
+  api_port: '5985' # TODO be replaced with network configuration
+  host: localhost
+  ssl: 'False'
+  ssl_cert: ''
+  websocket_port: '9000'
+  workspaces: [] # TODO be filled with available workspaces
