@@ -21,6 +21,6 @@ def severity_from_score(score: float, max_score: float):
         return "medium"
     if max_score * 0.7 <= score < max_score * 0.9:
         return "high"
-    if max_score * 0.9 <= score < max_score:
+    if max_score * 0.9 <= score <= max_score:
         return "critical"
-    return ""
+    return "unclassified"
