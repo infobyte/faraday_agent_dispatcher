@@ -1,3 +1,7 @@
+3.4.2 [Jun 26th, 2024]:
+---
+ * [FIX] Implemented scan filtering by 'completed' status in Tenable SC Agent to prevent parsing errors. #223
+
 3.4.1 [May 22th, 2024]:
 ---
  * [MOD] Plugins & Agent parameters types requirements updated. #220
