@@ -21,27 +21,36 @@ def dt_ms_patch(date_str):
     return datetime.strptime(patch, "%Y-%m-%dT%H:%M:%S.%f")
 
 
+def severity_patch(severity):
+    if severity not in ["critical", "high", "medium", "low", "info", "unclassified"]:
+        return "unclassified"
+    return severity
+
+
 def description_maker(machine):
     ips = ""
     for ip in machine["ipAddresses"]:
-        if ip["type"] not in ["SoftwareLoopback", "Tunnel"]:
-            # converts '7CDB98C877F1' into '7C:DB:98:C8:77:F1' for better readability
-            mac = (
-                (":".join(ip["macAddress"][i : i + 2 :] for i in range(0, len(ip["macAddress"]), 2)))
-                if ip["macAddress"] is not None
-                else "N/A"
-            )
-            ips += f"  IP: {ip['ipAddress']}\n  MAC: {mac}\n  {'-'*(len(mac)+5)}\n"
+        if ip["type"] in ["SoftwareLoopback", "Tunnel"]:
+            continue
+        if len(ip["ipAddress"]) < 7 or ip["ipAddress"] in ["127.0.0.1"]:
+            continue
+        # converts '7CDB98C877F1' into '7C:DB:98:C8:77:F1' for better readability
+        mac = (
+            (":".join(ip["macAddress"][i : i + 2] for i in range(0, len(ip["macAddress"]), 2)))
+            if ip["macAddress"] is not None
+            else "N/A"
+        )
+        ips += f"  IP: {ip['ipAddress']}\n  MAC: {mac}\n\n"
 
     last_seen = dt_ms_patch(machine["lastSeen"]).strftime("%d/%m/%Y at %H:%M:%S UTC")
     first_seen = dt_ms_patch(machine["firstSeen"]).strftime("%d/%m/%Y at %H:%M:%S UTC")
 
-    desc = f"OS: {machine['osPlatform']} "
+    desc = f"## Operating System\n{machine['osPlatform']} "
     desc += f"{machine['osArchitecture'] if machine['osArchitecture'] is not None else ''} "
     desc += f"{machine['version'] if machine['version'] not in [None, 'Other'] else ''} "
     desc += f"{'(build ' + str(machine['osBuild']) + ')' if machine['osBuild'] not in [None, 'Other'] else ''}\n\n"
-    desc += f"Device Timestamps:\n  First Seen: {first_seen}\n  Last Seen: {last_seen}\n\n"
-    desc += f"Known IP's & associated MAC address:\n{ips}"
+    desc += f"## Device Timestamps\nFirst Seen: {first_seen}\n  Last Seen: {last_seen}\n\n"
+    desc += f"## Known IP's & associated MAC address\n{ips}"
     return desc
 
 
@@ -112,7 +121,7 @@ def generate_report(token, vuln_tags, host_tags, days_old):
                 {
                     "name": vuln["name"],
                     "desc": vuln["description"],
-                    "severity": vuln["severity"].lower(),
+                    "severity": severity_patch(vuln["severity"].lower()),
                     "external_id": vuln["id"],
                     "type": "Vulnerability",
                     "status": "open",
@@ -123,6 +132,7 @@ def generate_report(token, vuln_tags, host_tags, days_old):
                     "refs": [{"name": url, "type": "other"} for url in vuln["exploitUris"]],
                     "resolution": f"https://security.microsoft.com/vulnerabilities/vulnerability/{vuln['id']}"
                     + "/recommendation",
+                    "cwe": [],
                 }
             )
         host["vulnerabilities"] = vuln_list
@@ -131,10 +141,9 @@ def generate_report(token, vuln_tags, host_tags, days_old):
         log(
             f"Processing assets ... {len(hosts)} / {len(machines)} ({len(hosts)*100/len(machines):.2f}%)"
             + f" ETA: {((len(machines)-len(hosts))*(sum(avr_time)/len(avr_time)))/60:.2f} min",
-            "\r",
+            "\n",
         )
-    log()
-    print(json.dumps(hosts))
+    print(json.dumps({"hosts": hosts}))
 
 
 def main():
