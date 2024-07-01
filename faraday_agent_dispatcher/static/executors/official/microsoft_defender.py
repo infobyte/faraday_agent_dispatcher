@@ -100,13 +100,16 @@ def generate_report(token, vuln_tags, host_tags, days_old):
     log("Fetching machines...", "\r")
     machines = get_machines(token)
     log(f"Retrieved {len(machines)} machines")
-    log("Processing assets ...", "\r")
-    avr_time = []
+    log("Filtering assets ...")
+    matched_machines = []
     for machine in machines:
-        _start = time.time()
         # check if machine is younger than threshold, measured in days (1 day = 86400 secs)
-        if dt_ms_patch(machine["lastSeen"]).timestamp() < (datetime.now().timestamp() - (days_old * 86400)):
-            continue
+        if dt_ms_patch(machine["lastSeen"]).timestamp() >= (datetime.now().timestamp() - (days_old * 86400)):
+            matched_machines.append(machine)
+    log(f"{len(matched_machines)} machines matched time filter")
+    avr_time = []
+    for machine in matched_machines:
+        _start = time.time()
         host = {
             "ip": machine["id"],
             "os": machine["osPlatform"],
@@ -139,18 +142,17 @@ def generate_report(token, vuln_tags, host_tags, days_old):
         hosts.append(host)
         avr_time.append(time.time() - _start)
         log(
-            f"Processing assets ... {len(hosts)} / {len(machines)} ({len(hosts)*100/len(machines):.2f}%)"
-            + f" ETA: {((len(machines)-len(hosts))*(sum(avr_time)/len(avr_time)))/60:.2f} min",
-            "\n",
+            f"Processing assets: {len(hosts)} / {len(matched_machines)} ({len(hosts)*100/len(matched_machines):.2f}%)"
+            + f" ETA: {((len(matched_machines)-len(hosts))*(sum(avr_time)/len(avr_time)))/60:.2f} min"
         )
     print(json.dumps({"hosts": hosts}))
 
 
 def main():
-    params_tenant_id = "REMOVED"  # os.getenv("TENANT_ID")
-    params_client_id = "REMOVED"  # os.getenv("CLIENT_ID")
-    params_client_secret = "REMOVED"  # os.getenv("CLIENT_SECRET")
-    params_days_old = "1"  # os.getenv("EXECUTOR_CONFIG_DAYS_OLD")
+    params_tenant_id = os.getenv("TENANT_ID")
+    params_client_id = os.getenv("CLIENT_ID")
+    params_client_secret = os.getenv("CLIENT_SECRET")
+    params_days_old = os.getenv("EXECUTOR_CONFIG_DAYS_OLD")
     params_days_old = (
         int(params_days_old) if params_days_old.isnumeric() else log("DAYS_OLD Variable must be an integer") or exit()
     )
