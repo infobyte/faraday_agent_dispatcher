@@ -36,10 +36,13 @@ def description_maker(machine):
             continue
         # converts '7CDB98C877F1' into '7C:DB:98:C8:77:F1' for better readability
         mac = (
+            # fmt: off
             (":".join(ip["macAddress"][i:i+2] for i in range(0, len(ip["macAddress"]), 2)))
+            # fmt: on
             if ip["macAddress"] is not None
             else "N/A"
         )
+
         ips += f"  IP: {ip['ipAddress']}\n  MAC: {mac}\n\n"
 
     last_seen = dt_ms_patch(machine["lastSeen"]).strftime("%d/%m/%Y at %H:%M:%S UTC")
