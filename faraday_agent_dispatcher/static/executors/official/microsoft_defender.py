@@ -36,7 +36,7 @@ def description_maker(machine):
             continue
         # converts '7CDB98C877F1' into '7C:DB:98:C8:77:F1' for better readability
         mac = (
-            (":".join(ip["macAddress"][i : i + 2] for i in range(0, len(ip["macAddress"]), 2)))
+            (":".join(ip["macAddress"][i:i+2] for i in range(0, len(ip["macAddress"]), 2)))
             if ip["macAddress"] is not None
             else "N/A"
         )
