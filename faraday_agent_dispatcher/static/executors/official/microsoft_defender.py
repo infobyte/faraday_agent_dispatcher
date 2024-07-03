@@ -4,7 +4,14 @@ import sys
 import json
 import time
 from datetime import datetime
-import requests
+
+from requests import Session
+from requests_ratelimiter import LimiterAdapter
+
+session = Session()
+adapter = LimiterAdapter(per_minute=40)
+session.mount("http://", adapter)
+session.mount("https://", adapter)
 
 
 def log(msg="", end="\n"):
@@ -64,7 +71,7 @@ def token_gen(tenant_id, client_id, client_secret):
         "grant_type": "client_credentials",
         "resource": app_id_url,
     }
-    resp = requests.post(app_auth_url, data=r_body).json()
+    resp = session.post(app_auth_url, data=r_body).json()
     if "error" in resp.keys():
         log(f"Error at token generation: {resp['error']}")
         log(resp["error_description"])
@@ -76,7 +83,7 @@ def token_gen(tenant_id, client_id, client_secret):
 
 def get_machines(token):
     headers = {"Authorization": f"Bearer {token}"}
-    resp = requests.get("https://api.security.microsoft.com/api/machines", headers=headers).json()
+    resp = session.get("https://api.security.microsoft.com/api/machines", headers=headers).json()
     if "error" in resp.keys():
         log(f"Error at retrieving machines: {resp['error']['code']}")
         log(resp["error"]["message"])
@@ -86,7 +93,7 @@ def get_machines(token):
 
 def get_machine_vulns(token, machine_id):
     headers = {"Authorization": f"Bearer {token}"}
-    resp = requests.get(
+    resp = session.get(
         f"https://api.security.microsoft.com/api/machines/{machine_id}/vulnerabilities", headers=headers
     ).json()
     if "error" in resp.keys():
