@@ -8,6 +8,8 @@ from datetime import datetime
 from requests import Session
 from requests_ratelimiter import LimiterAdapter
 
+SECONDS_AFTER_TOO_MANY_REQUESTS = 30
+
 session = Session()
 adapter = LimiterAdapter(per_minute=40)
 session.mount("http://", adapter)
@@ -99,7 +101,18 @@ def get_machine_vulns(token, machine_id):
     if "error" in resp.keys():
         log(f"Error at retrieving machine vulns: {resp['error']['code']}")
         log(resp["error"]["message"])
-        exit(1)
+        # In case limiter is not suffice. We'll try a second time after SECONDS_AFTER_TOO_MANY_REQUESTS seconds.
+        if resp["error"]["code"] == "TooManyRequests":
+            log(f"Waiting for {SECONDS_AFTER_TOO_MANY_REQUESTS} seconds")
+            time.sleep(SECONDS_AFTER_TOO_MANY_REQUESTS)
+            resp = session.get(
+                f"https://api.security.microsoft.com/api/machines/{machine_id}/vulnerabilities", headers=headers
+            ).json()
+            if "error" in resp.keys():
+                log(f"Second error at retrieving machine vulns: {resp['error']['code']}. Exiting...")
+                exit(1)
+        else:
+            exit(1)
     return resp["value"]
 
 
