@@ -55,12 +55,6 @@ RUN rm -rf /var/lib/apt/lists/* && \
 RUN npm install -g retire@2.0.3
 RUN git clone https://github.com/andresriancho/w3af.git /usr/local/src/w3af
 
-# Installing CrackMapExec
-RUN pip3 install pipx
-RUN pipx ensurepath
-ENV PIPX_BIN_DIR=/usr/local/bin
-RUN pipx install crackmapexec
-
 # Getting arachni from GETTER
 COPY --from=GETTER /arachni/arachni-1.5.1-0.5.12/ /usr/local/src/arachni
 # Adding to env PATH
