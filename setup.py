@@ -46,6 +46,7 @@ requirements = [
     "psutil",
     "pytenable",
     "python-socketio==5.8.0",
+    "requests-ratelimiter",
 ]
 
 setup_requirements = ["pytest-runner", "click", "setuptools_scm"]
