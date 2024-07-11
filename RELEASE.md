@@ -1,3 +1,7 @@
+3.5.0 [Jul 11th, 2024]:
+---
+ * [ADD] Added agent for Microsoft Defender for Endpoint. #218
+
 3.4.2 [Jun 26th, 2024]:
 ---
  * [FIX] Implemented scan filtering by 'completed' status in Tenable SC Agent to prevent parsing errors. #223
