@@ -1,3 +1,7 @@
+3.5.1 [Jul 11th, 2024]:
+---
+ * [FIX] Fix git log. #9999
+
 3.5.0 [Jul 11th, 2024]:
 ---
  * [ADD] Added agent for Microsoft Defender for Endpoint. #218
