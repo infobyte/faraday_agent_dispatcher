@@ -20,4 +20,4 @@
 
 __author__ = """Faraday Development Team"""
 __email__ = "devel@infobytesec.com"
-__version__ = "3.3.0"
+__version__ = "3.5.0"

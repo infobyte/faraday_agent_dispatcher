@@ -1,3 +1,22 @@
+3.5.0 [Jul 11th, 2024]:
+---
+ * [ADD] Added agent for Microsoft Defender for Endpoint. #218
+
+3.4.2 [Jun 26th, 2024]:
+---
+ * [FIX] Implemented scan filtering by 'completed' status in Tenable SC Agent to prevent parsing errors. #223
+
+3.4.1 [May 22th, 2024]:
+---
+ * [MOD] Plugins & Agent parameters types requirements updated. #220
+
+3.4.0 [May 22th, 2024]:
+---
+ * [ADD] Introducing the new Tenable SC agent, now available for integration. This initial version focuses on supporting scan imports. #216
+ * [ADD] Added new agent for Cisco Cyber Vision. Also added severity calc utility. #217
+ * [FIX] Fix agent websocket token not changing on registration token update #200
+ * [FIX] Resolved the issue where users were unable to execute user-defined templates and pre-defined TenableIO templates. Additionally, fixed the functionality to retrieve completed scan results and relaunch previously created scans. #214
+
 3.3.0 [Mar 12th, 2024]:
 ---
  * [ADD] Add hotspots option to SonarQube. #197
