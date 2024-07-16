@@ -190,7 +190,10 @@ def main():
         service_tag=service_tag,
         vuln_tag=vuln_tag,
     )
-    plugin.parseOutputString(report.read())
+    result = plugin.parseOutputString(report.read())
+    if result == 1:
+        log("Scan completed but did not return any results")
+        exit(1)
     print(plugin.get_json())
 
 
