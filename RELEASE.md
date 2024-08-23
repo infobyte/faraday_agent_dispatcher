@@ -1,3 +1,7 @@
+3.5.2 [Aug 23rd, 2024]:
+---
+ * [ADD] Added check after parsing report on Tenable IO. #226
+
 3.5.1 [Jul 11th, 2024]:
 ---
  * [FIX] Fix git log. #9999
