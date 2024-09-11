@@ -36,7 +36,8 @@ def command_create(target_list):
     #                f'{os.environ.get("EXECUTOR_CONFIG_HOST_TIMEOUT")}')
 
     port_list = my_envs.get("EXECUTOR_CONFIG_PORT_LIST")
-    cmd += "" if not port_list else ["-p", f"{port_list}"]
+    port_list_string = ",".join(port_list) if port_list else None
+    cmd += "" if not port_list_string else ["-p", f"{port_list_string}"]
 
     top_ports = my_envs.get("EXECUTOR_CONFIG_TOP_PORTS")
     cmd += "" if not top_ports else ["--top-ports", f"{top_ports}"]
@@ -74,17 +75,10 @@ def main():
     host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
     if host_tag:
         host_tag = host_tag.split(",")
-    targets = os.environ.get("EXECUTOR_CONFIG_TARGET")
-    if not targets:
+    target_list = os.environ.get("EXECUTOR_CONFIG_TARGET")
+    if not target_list:
         print("Targets were not passed", file=sys.stderr)
         exit(1)
-
-    if " " in targets:
-        target_list = targets.split(" ")
-    elif "," in targets:
-        target_list = targets.split(",")
-    else:
-        target_list = [targets]
 
     urls = []
     for target in target_list:
