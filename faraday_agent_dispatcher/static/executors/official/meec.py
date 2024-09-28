@@ -14,17 +14,14 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from faraday_plugins.plugins.repo.faraday_json.plugin import FaradayJsonPlugin
 
-# Set up logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Suppress InsecureRequestWarning if verify=False is used
 warnings.simplefilter('ignore', InsecureRequestWarning)
 
-# Constants
 SEVERITY_MAPPING = {
     'Critical': 'critical',
     'Important': 'high',
@@ -33,8 +30,6 @@ SEVERITY_MAPPING = {
     'Info': 'info'
 }
 
-VALID_EASE_OF_RESOLUTION = {'trivial', 'simple', 'moderate', 'difficult', 'infeasible'}
-DEFAULT_EASE_OF_RESOLUTION = 'moderate'
 
 VALID_STATUSES = {'open', 'closed', 're-opened', 'risk-accepted', 'opened'}
 DEFAULT_STATUS = 'open'
@@ -58,7 +53,6 @@ class Vulnerability:
     cvss2: Dict[str, Any] = field(default_factory=dict)
     cvss3: Dict[str, Any] = field(default_factory=dict)
     confirmed: bool = False
-    ease_of_resolution: str = DEFAULT_EASE_OF_RESOLUTION
     tags: List[str] = field(default_factory=list)
     cwe: str = ''
 
@@ -162,10 +156,6 @@ def process_single_vulnerability(vuln: Dict[str, Any]) -> Vulnerability:
 
     description = build_description(vuln)
 
-    ease_of_resolution = vuln.get('easeofresolution', DEFAULT_EASE_OF_RESOLUTION).lower()
-    if ease_of_resolution not in VALID_EASE_OF_RESOLUTION:
-        ease_of_resolution = DEFAULT_EASE_OF_RESOLUTION
-
     status = vuln.get('status', DEFAULT_STATUS).lower()
     if status not in VALID_STATUSES:
         status = DEFAULT_STATUS
@@ -194,7 +184,6 @@ def process_single_vulnerability(vuln: Dict[str, Any]) -> Vulnerability:
         cvss2=cvss2,
         cvss3=cvss3,
         confirmed=vuln.get('confirmed', False),
-        ease_of_resolution=ease_of_resolution,
         tags=vuln.get('tags', []),
         cwe=vuln.get('cwe', '')
     )
