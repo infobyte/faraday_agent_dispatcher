@@ -6,7 +6,7 @@ import os
 import sys
 import warnings
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Iterator
 
 import requests
 from requests.exceptions import HTTPError, RequestException
@@ -29,7 +29,6 @@ SEVERITY_MAPPING = {
     'Low': 'low',
     'Info': 'info'
 }
-
 
 VALID_STATUSES = {'open', 'closed', 're-opened', 'risk-accepted', 'opened'}
 DEFAULT_STATUS = 'open'
@@ -65,38 +64,52 @@ class Host:
     vulnerabilities: List[Vulnerability] = field(default_factory=list)
 
 
-def fetch_vulnerabilities(session: requests.Session, url: str) -> List[Dict[str, Any]]:
+def fetch_all_vulnerabilities(
+        session: requests.Session,
+        url: str,
+        params: Optional[Dict[str, Any]] = None,
+        page_limit: int = 100
+) -> Iterator[Dict[str, Any]]:
     """
-    Fetch vulnerabilities from the given URL using the provided session.
+    Fetch all vulnerabilities from the API using pagination.
 
     Args:
         session (requests.Session): The requests session to use for the HTTP request.
         url (str): The URL to fetch vulnerabilities from.
+        params (Dict[str, Any], optional): Query parameters to filter vulnerabilities.
+        page_limit (int): Number of vulnerabilities per page.
 
-    Returns:
-        List[Dict[str, Any]]: A list of vulnerabilities.
-
-    Raises:
-        SystemExit: If any HTTP or connection errors occur.
+    Yields:
+        Iterator[Dict[str, Any]]: An iterator over vulnerabilities.
     """
-    try:
-        response = session.get(url)
-        response.raise_for_status()
-        data = response.json()
-        vulnerabilities = data.get('message_response', {}).get('vulnerabilities', [])
-        return vulnerabilities
-    except HTTPError as http_err:
-        logger.error(f"HTTP error occurred: {http_err}")
-        sys.exit(1)
-    except RequestException as req_err:
-        logger.error(f"Request error occurred: {req_err}")
-        sys.exit(1)
-    except ValueError as json_err:
-        logger.error(f"JSON decoding failed: {json_err}")
-        sys.exit(1)
-    except Exception as err:
-        logger.error(f"An unexpected error occurred: {err}")
-        sys.exit(1)
+    if params is None:
+        params = {}
+    params['pageLimit'] = page_limit
+    page = 1
+
+    while True:
+        params['page'] = page
+        try:
+            response = session.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            if 'message_response' not in data or 'vulnerabilities' not in data['message_response']:
+                logger.error(f"Unexpected response structure: {data}")
+                raise ValueError("Invalid response format")
+
+            vulnerabilities = data['message_response']['vulnerabilities']
+            for vulnerability in vulnerabilities:
+                yield vulnerability
+
+            metadata = data.get('metadata', {})
+            total_pages = metadata.get('totalPages', 1)
+            if page >= total_pages:
+                break
+            page += 1
+        except (HTTPError, RequestException, ValueError) as err:
+            logger.error(f"An error occurred while fetching vulnerabilities: {err}")
+            raise
 
 
 def parse_cvss_score(score_raw: Optional[str]) -> Dict[str, Any]:
@@ -209,12 +222,15 @@ def host_to_dict(host: Host) -> Dict[str, Any]:
     }
 
 
-def process_vulnerabilities(vulnerabilities: List[Dict[str, Any]], meec_ip: str) -> Dict[str, Any]:
+def process_vulnerabilities(
+        vulnerabilities_iterator: Iterator[Dict[str, Any]],
+        meec_ip: str
+) -> Dict[str, Any]:
     """
-    Process a list of vulnerabilities and structure them for Faraday integration.
+    Process vulnerabilities from an iterator and structure them for Faraday integration.
 
     Args:
-        vulnerabilities (List[Dict[str, Any]]): The list of vulnerabilities.
+        vulnerabilities_iterator (Iterator[Dict[str, Any]]): An iterator over vulnerabilities.
         meec_ip (str): The IP address of the ManageEngine Endpoint Central server.
 
     Returns:
@@ -222,7 +238,7 @@ def process_vulnerabilities(vulnerabilities: List[Dict[str, Any]], meec_ip: str)
     """
     host = Host(ip=meec_ip)
 
-    for vuln in vulnerabilities:
+    for vuln in vulnerabilities_iterator:
         vulnerability = process_single_vulnerability(vuln)
         host.vulnerabilities.append(vulnerability)
 
@@ -239,26 +255,46 @@ def main():
     """
     meec_ip = os.environ.get("EXECUTOR_CONFIG_MEEC_IP")
     meec_apikey = os.environ.get("EXECUTOR_CONFIG_MEEC_APIKEY")
+    verify_ssl_env = os.environ.get("EXECUTOR_CONFIG_VERIFY_SSL", "True").lower()
 
     if not meec_ip or not meec_apikey:
         logger.error("Environment variables EXECUTOR_CONFIG_MEEC_IP and EXECUTOR_CONFIG_MEEC_APIKEY must be set.")
         sys.exit(1)
 
-    url = f"https://{meec_ip}:8383/dcapi/threats/vulnerabilities"
+    if verify_ssl_env in ["true", "t", "yes", "y", "1"]:
+        verify_ssl = True
+    elif verify_ssl_env in ["false", "f", "no", "n", "0"]:
+        verify_ssl = False
+    else:
+        logger.warning(f"Invalid value for EXECUTOR_CONFIG_VERIFY_SSL: '{verify_ssl_env}'. Defaulting to True.")
+        verify_ssl = True
+
+    # Ensure the URL includes the endpoint path
+    url = f"{meec_ip}/dcapi/threats/vulnerabilities"
 
     with requests.Session() as session:
-        session.verify = False  # Not recommended; adjust as needed
+        session.verify = verify_ssl
         session.headers.update({"Authorization": meec_apikey})
 
-        logger.info(f"Fetching vulnerabilities from {url}")
-        vulnerabilities = fetch_vulnerabilities(session, url)
+        logger.info(f"Fetching vulnerabilities from {url} with SSL verification set to {verify_ssl}")
+        try:
+            vulnerabilities_iterator = fetch_all_vulnerabilities(session, url)
+        except requests.exceptions.SSLError as ssl_error:
+            logger.error(f"SSL error occurred: {ssl_error}")
+            sys.exit(1)
+        except Exception as e:
+            logger.error(f"An error occurred while fetching vulnerabilities: {e}")
+            sys.exit(1)
 
-    if not vulnerabilities:
+        # Process vulnerabilities as they are fetched
+        faraday_data = process_vulnerabilities(vulnerabilities_iterator, meec_ip)
+
+    if not faraday_data['hosts'][0]['vulnerabilities']:
         logger.info("No vulnerabilities found.")
         sys.exit(0)
 
-    logger.info(f"Processing {len(vulnerabilities)} vulnerabilities.")
-    faraday_data = process_vulnerabilities(vulnerabilities, meec_ip)
+    total_vulnerabilities = len(faraday_data['hosts'][0]['vulnerabilities'])
+    logger.info(f"Processed {total_vulnerabilities} vulnerabilities.")
 
     try:
         faraday_json = json.dumps(faraday_data)
