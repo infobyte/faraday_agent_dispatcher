@@ -14,24 +14,21 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from faraday_plugins.plugins.repo.faraday_json.plugin import FaradayJsonPlugin
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-warnings.simplefilter('ignore', InsecureRequestWarning)
+warnings.simplefilter("ignore", InsecureRequestWarning)
 
 SEVERITY_MAPPING = {
-    'Critical': 'critical',
-    'Important': 'high',
-    'Moderate': 'medium',
-    'Low': 'low',
-    'Info': 'info'
+    "Critical": "critical",
+    "Important": "high",
+    "Moderate": "medium",
+    "Low": "low",
+    "Info": "info",
 }
 
-VALID_STATUSES = {'open', 'closed', 're-opened', 'risk-accepted', 'opened'}
-DEFAULT_STATUS = 'open'
+VALID_STATUSES = {"open", "closed", "re-opened", "risk-accepted", "opened"}
+DEFAULT_STATUS = "open"
 
 
 @dataclass
@@ -41,9 +38,9 @@ class Vulnerability:
     severity: str
     refs: List[str]
     external_id: str
-    type: str = 'Vulnerability'
-    resolution: str = 'No resolution provided'
-    data: str = ''
+    type: str = "Vulnerability"
+    resolution: str = "No resolution provided"
+    data: str = ""
     custom_fields: Dict[str, Any] = field(default_factory=dict)
     status: str = DEFAULT_STATUS
     impact: Dict[str, Any] = field(default_factory=dict)
@@ -53,22 +50,22 @@ class Vulnerability:
     cvss3: Dict[str, Any] = field(default_factory=dict)
     confirmed: bool = False
     tags: List[str] = field(default_factory=list)
-    cwe: str = ''
+    cwe: str = ""
 
 
 @dataclass
 class Host:
     ip: str
-    name: str = 'ManageEngineEndpointCentral'
+    name: str = "ManageEngineEndpointCentral"
     services: List[Any] = field(default_factory=list)
     vulnerabilities: List[Vulnerability] = field(default_factory=list)
 
 
 def fetch_all_vulnerabilities(
-        session: requests.Session,
-        url: str,
-        params: Optional[Dict[str, Any]] = None,
-        page_limit: int = 100
+    session: requests.Session,
+    url: str,
+    params: Optional[Dict[str, Any]] = None,
+    page_limit: int = 100,
 ) -> Iterator[Dict[str, Any]]:
     """
     Fetch all vulnerabilities from the API using pagination.
@@ -84,26 +81,26 @@ def fetch_all_vulnerabilities(
     """
     if params is None:
         params = {}
-    params['pageLimit'] = page_limit
+    params["pageLimit"] = page_limit
     page = 1
 
     while True:
-        params['page'] = page
+        params["page"] = page
         try:
             response = session.get(url, params=params)
             response.raise_for_status()
             data = response.json()
 
-            if 'message_response' not in data or 'vulnerabilities' not in data['message_response']:
+            if "message_response" not in data or "vulnerabilities" not in data["message_response"]:
                 logger.error(f"Unexpected response structure: {data}")
                 raise ValueError("Invalid response format")
 
-            vulnerabilities = data['message_response']['vulnerabilities']
+            vulnerabilities = data["message_response"]["vulnerabilities"]
             for vulnerability in vulnerabilities:
                 yield vulnerability
 
-            metadata = data.get('metadata', {})
-            total_pages = metadata.get('totalPages', 1)
+            metadata = data.get("metadata", {})
+            total_pages = metadata.get("totalPages", 1)
             if page >= total_pages:
                 break
             page += 1
@@ -123,7 +120,7 @@ def parse_cvss_score(score_raw: Optional[str]) -> Dict[str, Any]:
         Dict[str, Any]: A dictionary with the base_score.
     """
     try:
-        return {'base_score': float(score_raw)}
+        return {"base_score": float(score_raw)}
     except (TypeError, ValueError) as e:
         logger.warning(f"Invalid CVSS score '{score_raw}': {e}")
         return {}
@@ -140,15 +137,15 @@ def build_description(vuln: Dict[str, Any]) -> str:
         str: The formatted description string.
     """
     description_fields = [
-        ('Published Time', vuln.get('publishedtime', 'N/A')),
-        ('Updated Time', vuln.get('updatedtime', 'N/A')),
-        ('Exploit Status', vuln.get('exploit_status', 'Unknown')),
-        ('Solution', vuln.get('solution', 'No solution available')),
-        ('Reboot Required', vuln.get('reboot_required', 'Unknown')),
-        ('Patch Availability', vuln.get('patch_availability', 'Unknown')),
-        ('OS Platform', vuln.get('os_platform', 'Unknown'))
+        ("Published Time", vuln.get("publishedtime", "N/A")),
+        ("Updated Time", vuln.get("updatedtime", "N/A")),
+        ("Exploit Status", vuln.get("exploit_status", "Unknown")),
+        ("Solution", vuln.get("solution", "No solution available")),
+        ("Reboot Required", vuln.get("reboot_required", "Unknown")),
+        ("Patch Availability", vuln.get("patch_availability", "Unknown")),
+        ("OS Platform", vuln.get("os_platform", "Unknown")),
     ]
-    return '\n'.join(f"{key}: {value}" for key, value in description_fields)
+    return "\n".join(f"{key}: {value}" for key, value in description_fields)
 
 
 def process_single_vulnerability(vuln: Dict[str, Any]) -> Vulnerability:
@@ -161,44 +158,44 @@ def process_single_vulnerability(vuln: Dict[str, Any]) -> Vulnerability:
     Returns:
         Vulnerability: The processed vulnerability object.
     """
-    severity = vuln.get('severity', 'Moderate')
-    vuln_severity = SEVERITY_MAPPING.get(severity, 'medium')
+    severity = vuln.get("severity", "Moderate")
+    vuln_severity = SEVERITY_MAPPING.get(severity, "medium")
 
-    cve_ids = vuln.get('cveids', '')
-    refs = [cve.strip() for cve in cve_ids.split(',') if cve.strip()]
+    cve_ids = vuln.get("cveids", "")
+    refs = [cve.strip() for cve in cve_ids.split(",") if cve.strip()]
 
     description = build_description(vuln)
 
-    status = vuln.get('status', DEFAULT_STATUS).lower()
+    status = vuln.get("status", DEFAULT_STATUS).lower()
     if status not in VALID_STATUSES:
         status = DEFAULT_STATUS
 
-    impact = vuln.get('impact') if isinstance(vuln.get('impact'), dict) else {}
+    impact = vuln.get("impact") if isinstance(vuln.get("impact"), dict) else {}
 
-    policy_violations = vuln.get('policyviolations') or []
+    policy_violations = vuln.get("policyviolations") or []
     if not isinstance(policy_violations, list):
         policy_violations = []
 
-    cvss2 = parse_cvss_score(vuln.get('cvss_2_score'))
-    cvss3 = parse_cvss_score(vuln.get('cvss_3_score'))
+    cvss2 = parse_cvss_score(vuln.get("cvss_2_score"))
+    cvss3 = parse_cvss_score(vuln.get("cvss_3_score"))
 
     vulnerability = Vulnerability(
-        name=vuln.get('vulnerabilityname', 'No Name'),
+        name=vuln.get("vulnerabilityname", "No Name"),
         desc=description,
         severity=vuln_severity,
         refs=refs,
-        external_id=vuln.get('external_id', vuln.get('vulnerabilityid', '')),
-        resolution=vuln.get('solution', 'No resolution provided'),
-        custom_fields=vuln.get('custom_fields', {}),
+        external_id=vuln.get("external_id", vuln.get("vulnerabilityid", "")),
+        resolution=vuln.get("solution", "No resolution provided"),
+        custom_fields=vuln.get("custom_fields", {}),
         status=status,
         impact=impact,
         policyviolations=policy_violations,
         cve=refs,
         cvss2=cvss2,
         cvss3=cvss3,
-        confirmed=vuln.get('confirmed', False),
-        tags=vuln.get('tags', []),
-        cwe=vuln.get('cwe', '')
+        confirmed=vuln.get("confirmed", False),
+        tags=vuln.get("tags", []),
+        cwe=vuln.get("cwe", ""),
     )
 
     return vulnerability
@@ -215,17 +212,14 @@ def host_to_dict(host: Host) -> Dict[str, Any]:
         Dict[str, Any]: The dictionary representation.
     """
     return {
-        'ip': host.ip,
-        'name': host.name,
-        'services': host.services,
-        'vulnerabilities': [vuln.__dict__ for vuln in host.vulnerabilities]
+        "ip": host.ip,
+        "name": host.name,
+        "services": host.services,
+        "vulnerabilities": [vuln.__dict__ for vuln in host.vulnerabilities],
     }
 
 
-def process_vulnerabilities(
-        vulnerabilities_iterator: Iterator[Dict[str, Any]],
-        meec_ip: str
-) -> Dict[str, Any]:
+def process_vulnerabilities(vulnerabilities_iterator: Iterator[Dict[str, Any]], meec_ip: str) -> Dict[str, Any]:
     """
     Process vulnerabilities from an iterator and structure them for Faraday integration.
 
@@ -243,8 +237,8 @@ def process_vulnerabilities(
         host.vulnerabilities.append(vulnerability)
 
     faraday_data = {
-        'hosts': [host_to_dict(host)],
-        'command': f"Fetched from ManageEngineEndpointCentral at {meec_ip}"
+        "hosts": [host_to_dict(host)],
+        "command": f"Fetched from ManageEngineEndpointCentral at {meec_ip}",
     }
     return faraday_data
 
@@ -289,11 +283,11 @@ def main():
         # Process vulnerabilities as they are fetched
         faraday_data = process_vulnerabilities(vulnerabilities_iterator, meec_ip)
 
-    if not faraday_data['hosts'][0]['vulnerabilities']:
+    if not faraday_data["hosts"][0]["vulnerabilities"]:
         logger.info("No vulnerabilities found.")
         sys.exit(0)
 
-    total_vulnerabilities = len(faraday_data['hosts'][0]['vulnerabilities'])
+    total_vulnerabilities = len(faraday_data["hosts"][0]["vulnerabilities"])
     logger.info(f"Processed {total_vulnerabilities} vulnerabilities.")
 
     try:
