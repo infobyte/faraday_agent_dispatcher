@@ -167,10 +167,9 @@ def main():
         sys.exit()
     # handling multiple targets, can be provided with:
     # "https://example.com, https://test.com"
-    targets = TARGET_URL.replace(" ", "").split(",")
     scope = []
     targets_urls = []
-    for target in targets:
+    for target in TARGET_URL:
         if target_re.match(target):
             scope.append({"rule": target, "type": "SimpleScopeDef"})
             targets_urls.append(target)
