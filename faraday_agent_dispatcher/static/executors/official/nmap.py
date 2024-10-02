@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import json
 import os
 import subprocess
 from urllib.parse import urlparse
@@ -36,7 +36,7 @@ def command_create(target_list):
     #                f'{os.environ.get("EXECUTOR_CONFIG_HOST_TIMEOUT")}')
 
     port_list = my_envs.get("EXECUTOR_CONFIG_PORT_LIST")
-    port_list_string = ",".join(port_list) if port_list else None
+    port_list_string = ",".join(json.loads(port_list))
     cmd += "" if not port_list_string else ["-p", f"{port_list_string}"]
 
     top_ports = my_envs.get("EXECUTOR_CONFIG_TOP_PORTS")
@@ -76,6 +76,7 @@ def main():
     if host_tag:
         host_tag = host_tag.split(",")
     target_list = os.environ.get("EXECUTOR_CONFIG_TARGET")
+    target_list = json.loads(target_list)
     if not target_list:
         print("Targets were not passed", file=sys.stderr)
         exit(1)
