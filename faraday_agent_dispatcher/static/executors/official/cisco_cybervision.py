@@ -114,30 +114,30 @@ def cybervision_report_composer(url, token, preset_list, asset_tags, vuln_tags):
             for vuln in vuln_pack:
                 if not vuln["device"]["label"] in hosts:
                     hosts[vuln["device"]["label"]] = {
-                        "ip": vuln["device"]["label"],
-                        "description": f"Device ID {vuln['device']['id']}",
+                        "ip": vuln["device"]["label"] if vuln["device"]["label"] else "N/A",
+                        "description": f"Device ID {vuln['device']['id'] if vuln['device']['id'] else 'N/A'}",
                         "mac": "" if not vuln["device"]["mac"] else vuln["device"]["mac"],
                         "vulnerabilities": [],
                         "tags": [pres_data[0]] + asset_tags,
                     }
                 if not vuln["title"] in [x["name"] for x in hosts[vuln["device"]["label"]]["vulnerabilities"]]:
                     try:
-                        vuln["cvss"] = float(vuln["cvss"])
+                        vuln["cvss"] = float(vuln["cvss"]) if vuln["cvss"] else -1.0
                     except ValueError:
                         vuln["cvss"] = -1.0
                     hosts[vuln["device"]["label"]]["vulnerabilities"].append(
                         {
-                            "name": vuln["title"],
-                            "desc": vuln["summary"],
+                            "name": vuln["title"] if vuln["title"] else "N/A",
+                            "desc": vuln["summary"] if vuln["summary"] else "N/A",
                             "severity": severity_from_score(vuln["cvss"], 10.0),
                             "refs": [{"name": ref["link"], "type": "other"} for ref in vuln["links"]],
-                            "external_id": vuln["id"],
+                            "external_id": vuln["id"] if vuln["id"] else "N/A",
                             "type": "Vulnerability",
-                            "resolution": vuln["solution"],
-                            "data": vuln["fullDescription"],
+                            "resolution": vuln["solution"] if vuln["solution"] else "N/A",
+                            "data": vuln["fullDescription"] if vuln["fullDescription"] else "N/A",
                             "status": "open",
                             "cve": [x["cve"] for i, x in enumerate(vuln_pack) if x["title"] == vuln["title"]],
-                            "run_date": parse_date(vuln["publishTime"]),
+                            "run_date": parse_date(vuln["publishTime"]) if vuln["publishTime"] else "N/A",
                             "tags": vuln_tags,
                             "cwe": [],
                         }
