@@ -87,8 +87,8 @@ class StdOutLineProcessor(FileLineProcessor):
 
     async def next_line(self):
         line = await self.process.stdout.readline()
-        line = line.decode("utf-8")
-        return line[:-1]
+        line = line.decode("utf-8").strip()
+        return line
 
     def post_url(self, ws):
         host = config["server"]["host"]
@@ -96,15 +96,20 @@ class StdOutLineProcessor(FileLineProcessor):
         return api_url(
             host,
             port,
-            postfix="/_api/v3/ws/" f"{ws}/bulk_create",
+            postfix=f"/_api/v3/ws/{ws}/bulk_create",
             secure=self.api_ssl_enabled,
         )
 
     async def processing(self, line):
         try:
+            if not line:
+                logger.warning("Received an empty line, skipping...")
+                return
+
             loaded_json = json.loads(line)
-            print(f"{Bcolors.OKBLUE}{line}{Bcolors.ENDC}")
+            logger.debug(f"Parsed JSON: {loaded_json}")
             headers = [("authorization", f"agent {config['tokens'].get('agent')}")]
+
             for workspace, execution_id in zip(self.workspaces, self.execution_ids):
                 loaded_json["execution_id"] = execution_id
                 loaded_json["command"] = self.command_json
@@ -120,16 +125,20 @@ class StdOutLineProcessor(FileLineProcessor):
                     logger.info("Data sent to bulk create")
                 else:
                     logger.error(
-                        "Invalid data supplied by the executor to"
-                        " the bulk create "
-                        f"endpoint. Server responded: {res.status} "
-                        f"{await res.text()}"
+                        "Invalid data supplied to bulk create endpoint. "
+                        f"Status: {res.status}, Response: {await res.text()}"
                     )
-                time.sleep(1)
 
         except JSONDecodeError as e:
-            logger.error(f"JSON Parsing error: {e}")
+            logger.error(
+                f"JSON Parsing error at line: {line}. Error: {e}"
+            )
             print(f"{Bcolors.WARNING}JSON Parsing error: {e}{Bcolors.ENDC}")
+        except Exception as e:
+            logger.error(
+                f"Unexpected error while processing line: {line}. Error: {e}"
+            )
+            print(f"{Bcolors.FAIL}Unexpected error: {e}{Bcolors.ENDC}")
 
     def log(self, line):
         logger.debug(f"Output line: {line}")
@@ -144,23 +153,25 @@ class StdOutLineProcessor(FileLineProcessor):
             }
             loaded_json["command"]["duration"] = (
                 datetime.utcnow() - self.start_date
-            ).total_seconds() * 1000000  # microsecs
+            ).total_seconds() * 1_000_000  # microseconds
 
-            res = await self.__session.post(
-                self.post_url(workspace),
-                json=loaded_json,
-                headers=headers,
-                raise_for_status=False,
-                **self.api_kwargs,
-            )
-            if res.status == 201:
-                logger.info("Data sent to bulk create")
-            else:
-                logger.error(
-                    "Invalid data supplied by the executor to the bulk create "
-                    f"endpoint. Server responded: {res.status} "
-                    f"{await res.text()}"
+            try:
+                res = await self.__session.post(
+                    self.post_url(workspace),
+                    json=loaded_json,
+                    headers=headers,
+                    raise_for_status=False,
+                    **self.api_kwargs,
                 )
+                if res.status == 201:
+                    logger.info("Final data sent to bulk create")
+                else:
+                    logger.error(
+                        "Invalid data supplied to the bulk create endpoint. "
+                        f"Status: {res.status}, Response: {await res.text()}"
+                    )
+            except Exception as e:
+                logger.error(f"Error while sending final data: {e}")
 
 
 class StdErrLineProcessor(FileLineProcessor):
@@ -170,8 +181,8 @@ class StdErrLineProcessor(FileLineProcessor):
 
     async def next_line(self):
         line = await self.process.stderr.readline()
-        line = line.decode("utf-8")
-        return line[:-1]
+        line = line.decode("utf-8").strip()
+        return line
 
     async def processing(self, line):
         print(f"{Bcolors.FAIL}{line}{Bcolors.ENDC}")
