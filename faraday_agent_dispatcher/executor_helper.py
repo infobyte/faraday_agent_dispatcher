@@ -130,14 +130,10 @@ class StdOutLineProcessor(FileLineProcessor):
                     )
 
         except JSONDecodeError as e:
-            logger.error(
-                f"JSON Parsing error at line: {line}. Error: {e}"
-            )
+            logger.error(f"JSON Parsing error at line: {line}. Error: {e}")
             print(f"{Bcolors.WARNING}JSON Parsing error: {e}{Bcolors.ENDC}")
         except Exception as e:
-            logger.error(
-                f"Unexpected error while processing line: {line}. Error: {e}"
-            )
+            logger.error(f"Unexpected error while processing line: {line}. Error: {e}")
             print(f"{Bcolors.FAIL}Unexpected error: {e}{Bcolors.ENDC}")
 
     def log(self, line):
