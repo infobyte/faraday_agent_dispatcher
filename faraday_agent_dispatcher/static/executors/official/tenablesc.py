@@ -12,18 +12,20 @@ def log(msg):
     print(msg, file=sys.stderr)
 
 
-def get_only_usable_ids(tsc, scan_ids):
+def get_only_usable_ids(tsc, scan_ids, fetch_all_scans=False):
     tenable_scans = tsc.scan_instances.list()
     usable_tenable_scans = [str(scan["id"]) for scan in tenable_scans["usable"] if scan["status"] == "Completed"]
     log("*" * 10)
     log("Listing available scans ...")
     log(usable_tenable_scans)
     log("*" * 10)
+    if fetch_all_scans:
+        return usable_tenable_scans
     return [_id for _id in scan_ids if str(_id) in usable_tenable_scans]
 
 
 def process_scan(
-    tsc, scan_id, ignore_info=False, hostname_resolution=False, host_tag=False, service_tag=False, vuln_tag=False
+    tsc, scan_id, ignore_info=False, hostname_resolution=False, host_tag=None, service_tag=None, vuln_tag=None
 ):
     log(f"Processing scan id {scan_id}")
     try:
@@ -42,7 +44,6 @@ def process_scan(
             )
             plugin.parseOutputString(file.read())
             return plugin.get_json()
-    return {}
 
 
 def main():
@@ -59,6 +60,7 @@ def main():
         host_tag = host_tag.split(",")
 
     tenable_scan_ids = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
+    tenable_fetch_all_scans = True if os.getenv("EXECUTOR_CONFIG_TENABLE_FETCH_ALL_SCANS", False) == "True" else False
     TENABLE_ACCESS_KEY = os.getenv("TENABLE_ACCESS_KEY")
     TENABLE_SECRET_KEY = os.getenv("TENABLE_SECRET_KEY")
     TENABLE_HOST = os.getenv("TENABLE_HOST")
@@ -83,7 +85,7 @@ def main():
         exit(1)
 
     tsc = TenableSC(host=TENABLE_HOST, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
-    usable_scan_ids = get_only_usable_ids(tsc, tenable_scan_ids_list)
+    usable_scan_ids = get_only_usable_ids(tsc, tenable_scan_ids_list, fetch_all_scans=tenable_fetch_all_scans)
 
     if not usable_scan_ids:
         log("*" * 10)
