@@ -37,10 +37,10 @@ def cybervision_report_composer(
     presets_queue = []
     presets_id = {}
 
-    log(presets_containing)
-    log(preset_list)
-    log(only_my_presets)
-    log(only_preset_refresh)
+    log(f"My Presets: {only_my_presets}")
+    log(f"Presets list: {preset_list}")
+    log(f"Refresh Presets: {only_preset_refresh}")
+    log(f"Presets Containing: {presets_containing}")
 
     # STAGE 1 - get preset list
     req_url = f"{url}{API_BASE}/presets"
@@ -67,7 +67,6 @@ def cybervision_report_composer(
                 if not category_label:
                     log(f"No category found for preset {preset_label}")
                     continue
-                log(category_label)
                 if category_label == MY_PRESET_LABEL:
                     if presets_containing:
                         if presets_containing in preset_label:
@@ -169,7 +168,6 @@ def cybervision_report_composer(
 
                     try:
                         cvss_base_score = float(vuln.get("CVSS", -1.0))
-                        log(cvss_base_score)
                     except ValueError:
                         cvss_base_score = -1.0
 
@@ -203,11 +201,6 @@ def main():
     fetch_presets_containing = os.getenv("EXECUTOR_CONFIG_PRESETS_CONTAINING", None)
     fetch_my_presets = bool(os.getenv("EXECUTOR_CONFIG_MY_PRESETS", False))
     only_refresh_presets = bool(os.getenv("EXECUTOR_CONFIG_REFRESH_PRESETS", False))
-
-    log(fetch_specific_presets)
-    log(fetch_my_presets)
-    log(only_refresh_presets)
-    log(fetch_presets_containing)
 
     params_fetch_specific_presets_list = []
     if fetch_specific_presets:
