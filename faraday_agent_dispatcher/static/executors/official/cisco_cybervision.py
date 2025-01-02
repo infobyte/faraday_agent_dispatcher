@@ -22,8 +22,16 @@ def parse_date(date_str):
         return ""
 
 
-def cybervision_report_composer(url, token, preset_list, asset_tags, vuln_tags, presets_containing=None, only_my_presets=True, only_preset_refresh=False):
-    _started_at = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%s")
+def cybervision_report_composer(
+    url,
+    token,
+    preset_list,
+    asset_tags,
+    vuln_tags,
+    presets_containing=None,
+    only_my_presets=True,
+    only_preset_refresh=False,
+):
     req_headers = {"accept": "application/json", "x-token-id": token}
     requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
     presets_queue = []
@@ -48,8 +56,8 @@ def cybervision_report_composer(url, token, preset_list, asset_tags, vuln_tags, 
     if not preset_list:
         log("No specific presets selected.")
         for preset in resp:
-            preset_label = preset.get('label')
-            preset_id = preset.get('id')
+            preset_label = preset.get("label")
+            preset_id = preset.get("id")
             if only_my_presets:
                 category = preset.get("category")
                 if not category:
@@ -82,8 +90,8 @@ def cybervision_report_composer(url, token, preset_list, asset_tags, vuln_tags, 
         log("Presets list selected")
         for req_preset in preset_list:
             for preset in resp:
-                preset_label = preset.get('label')
-                preset_id = preset.get('id')
+                preset_label = preset.get("label")
+                preset_id = preset.get("id")
                 if preset_label == req_preset:
                     presets_id[preset_label] = preset_id
                     presets_queue.append(preset_id)
@@ -224,7 +232,7 @@ def main():
         params_vulnerability_tags,
         only_my_presets=fetch_my_presets,
         presets_containing=fetch_presets_containing,
-        only_preset_refresh=only_refresh_presets
+        only_preset_refresh=only_refresh_presets,
     )
 
 
