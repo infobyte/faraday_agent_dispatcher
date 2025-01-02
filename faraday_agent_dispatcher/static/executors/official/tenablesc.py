@@ -59,8 +59,8 @@ def main():
     if host_tag:
         host_tag = host_tag.split(",")
 
-    tenable_scan_ids = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID")
-    tenable_fetch_all_scans = True if os.getenv("EXECUTOR_CONFIG_TENABLE_FETCH_ALL_SCANS", False) == "True" else False
+    tenable_scan_ids = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID", "[]")
+    tenable_fetch_all_completed_scans = bool(os.getenv("EXECUTOR_CONFIG_COMPLETED_SCANS", False))
     TENABLE_ACCESS_KEY = os.getenv("TENABLE_ACCESS_KEY")
     TENABLE_SECRET_KEY = os.getenv("TENABLE_SECRET_KEY")
     TENABLE_HOST = os.getenv("TENABLE_HOST")
@@ -73,11 +73,10 @@ def main():
         log("TenableSC Host not provided")
         exit(1)
 
-    if not tenable_scan_ids:
+    if not tenable_fetch_all_completed_scans and not tenable_scan_ids:
         log("TenableSC Scan ID not provided")
         exit(1)
 
-    # it should be a list but it is save as a str in the environment
     try:
         tenable_scan_ids_list = json.loads(tenable_scan_ids)
     except Exception as e:
@@ -85,7 +84,9 @@ def main():
         exit(1)
 
     tsc = TenableSC(host=TENABLE_HOST, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
-    usable_scan_ids = get_only_usable_ids(tsc, tenable_scan_ids_list, fetch_all_scans=tenable_fetch_all_scans)
+    usable_scan_ids = get_only_usable_ids(
+        tsc, tenable_scan_ids_list, fetch_all_scans=tenable_fetch_all_completed_scans
+    )
 
     if not usable_scan_ids:
         log("*" * 10)
