@@ -1,3 +1,9 @@
+3.6.0 [Jan 6th, 2025]:
+---
+ * [MOD] Introduced an option to retrieve all completed scans from Tenable SC. #242
+ * [FIX] Fixed connection issues. #238
+ * [FIX] Added more options to the Cisco Cyber Vision executor. #243
+
 3.5.3 [Oct 24th, 2024]:
 ---
  * [MOD] Changed type of TARGETS and PORT_LIST to list in Nmap agent. #231
