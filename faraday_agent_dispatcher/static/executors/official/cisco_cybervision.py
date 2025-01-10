@@ -22,6 +22,20 @@ def parse_date(date_str):
         return ""
 
 
+def match_preset(to_match: str, preset_label: str) -> bool:
+    _add = False
+    if to_match:
+        _add = False
+        if to_match.endswith("$") and len(to_match) > 1:
+            if preset_label.endswith(to_match[:-1]):
+                log(f"Preset {preset_label} ends with {to_match[:-1]}")
+                _add = True
+        elif to_match in preset_label:
+            log(f"Preset {preset_label} contains {to_match}")
+            _add = True
+    return _add
+
+
 def cybervision_report_composer(
     url,
     token,
@@ -69,8 +83,7 @@ def cybervision_report_composer(
                     continue
                 if category_label == MY_PRESET_LABEL:
                     if presets_containing:
-                        if presets_containing in preset_label:
-                            log(f"Preset {preset_label} contains {presets_containing}")
+                        if match_preset(presets_containing, preset_label):
                             presets_id[preset_label] = preset_id
                             presets_queue.append(preset_id)
                     else:
@@ -78,8 +91,7 @@ def cybervision_report_composer(
                         presets_queue.append(preset_id)
             else:
                 if presets_containing:
-                    if presets_containing in preset_label:
-                        log(f"Preset {preset_label} contains {presets_containing}")
+                    if match_preset(presets_containing, preset_label):
                         presets_id[preset_label] = preset_id
                         presets_queue.append(preset_id)
                 else:
