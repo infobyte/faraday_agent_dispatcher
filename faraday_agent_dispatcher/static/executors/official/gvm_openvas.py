@@ -67,7 +67,7 @@ def main():
 
     if connection_type == "socket":
         # Default Socket according to official docs
-        socket = "/var/run/gvmd.sock" if not socket else socket
+        socket = "/var/run/gvmd/gvmd.sock" if not socket else socket
     elif connection_type == "ssh":
         if not userssh or not passwssh:
             print("SSH username or password not provided", file=sys.stderr)
