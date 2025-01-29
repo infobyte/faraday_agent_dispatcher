@@ -217,22 +217,24 @@ class Dispatcher:
         if not self.websocket_token:
             return
         manifests = get_manifests()
-        connected_data = json.dumps({
-            "action": "JOIN_AGENT",
-            "token": self.dispatcher.websocket_token,
-            "executors": [
-                {
-                    "executor_name": executor.name,
-                    "args": executor.params,
-                    "category": (
-                        [manifests[executor.repo_name]["category"]]  # Force list
-                        if not isinstance(manifests[executor.repo_name]["category"], list)
-                        else manifests[executor.repo_name]["category"]  # Keep as-is
-                    ),
-                }
-                for executor in self.dispatcher.executors.values()
-            ],
-        })
+        connected_data = json.dumps(
+            {
+                "action": "JOIN_AGENT",
+                "token": self.dispatcher.websocket_token,
+                "executors": [
+                    {
+                        "executor_name": executor.name,
+                        "args": executor.params,
+                        "category": (
+                            [manifests[executor.repo_name]["category"]]  # Force list
+                            if not isinstance(manifests[executor.repo_name]["category"], list)
+                            else manifests[executor.repo_name]["category"]  # Keep as-is
+                        ),
+                    }
+                    for executor in self.dispatcher.executors.values()
+                ],
+            }
+        )
 
         async with websockets.connect(
             websocket_url(
