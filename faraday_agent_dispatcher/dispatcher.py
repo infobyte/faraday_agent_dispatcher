@@ -220,7 +220,7 @@ class Dispatcher:
         connected_data = json.dumps(
             {
                 "action": "JOIN_AGENT",
-                "token": self.dispatcher.websocket_token,
+                "token": self.websocket_token,
                 "executors": [
                     {
                         "executor_name": executor.name,
