@@ -60,7 +60,7 @@ from faraday_agent_dispatcher.utils.metadata_utils import (
 )
 from faraday_agent_dispatcher.cli.utils.model_load import set_repo_params
 from faraday_agent_dispatcher.executor import Executor
-from faraday_agent_parameters_types.utils import type_validate
+from faraday_agent_parameters_types.utils import type_validate, get_manifests
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -637,11 +637,24 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
         super().__init__(namespace=namespace)
 
     async def on_connect(self):
+        manifests = get_manifests()
         connected_data = {
             "action": "JOIN_AGENT",
             "token": self.dispatcher.websocket_token,
             "executors": [
-                {"executor_name": executor.name, "args": executor.params}
+                {
+                    "executor_name": executor.name,
+                    "args": executor.params,
+                    "category": (
+                        (
+                            [manifests[executor.repo_name]["category"]]  # Force list
+                            if not isinstance(manifests[executor.repo_name]["category"], list)
+                            else manifests[executor.repo_name]["category"]  # Keep as-is
+                        )
+                        if executor.repo_name is not None
+                        else []
+                    ),
+                }
                 for executor in self.dispatcher.executors.values()
             ],
         }
