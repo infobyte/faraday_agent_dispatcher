@@ -226,6 +226,7 @@ class Dispatcher:
                 ],
             }
         )
+
         async with websockets.connect(
             websocket_url(
                 self.host,
