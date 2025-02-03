@@ -58,7 +58,7 @@ from faraday_agent_dispatcher.utils.metadata_utils import (
 )
 from faraday_agent_dispatcher.cli.utils.model_load import set_repo_params
 from faraday_agent_dispatcher.executor import Executor
-from faraday_agent_parameters_types.utils import type_validate, get_manifests
+from faraday_agent_parameters_types.utils import type_validate
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -227,13 +227,13 @@ class Dispatcher:
             }
         )
         async with websockets.connect(
-                websocket_url(
-                    self.host,
-                    self.websocket_port,
-                    postfix="/websockets",
-                    secure=self.ws_ssl_enabled,
-                ),
-                **self.ws_kwargs,
+            websocket_url(
+                self.host,
+                self.websocket_port,
+                postfix="/websockets",
+                secure=self.ws_ssl_enabled,
+            ),
+            **self.ws_kwargs,
         ) as websocket:
             await websocket.send(connected_data)
 

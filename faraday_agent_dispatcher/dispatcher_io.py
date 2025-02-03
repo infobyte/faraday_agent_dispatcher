@@ -240,13 +240,13 @@ class Dispatcher:
             }
         )
         async with websockets.connect(
-                websocket_url(
-                    self.host,
-                    self.websocket_port,
-                    postfix="/websockets",
-                    secure=self.ws_ssl_enabled,
-                ),
-                **self.ws_kwargs,
+            websocket_url(
+                self.host,
+                self.websocket_port,
+                postfix="/websockets",
+                secure=self.ws_ssl_enabled,
+            ),
+            **self.ws_kwargs,
         ) as websocket:
             await websocket.send(connected_data)
 
