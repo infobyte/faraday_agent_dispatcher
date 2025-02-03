@@ -242,7 +242,9 @@ class Dispatcher:
                             [manifests[executor.repo_name]["category"]]  # Force list
                             if not isinstance(manifests[executor.repo_name]["category"], list)
                             else manifests[executor.repo_name]["category"]  # Keep as-is
-                        ),
+                        )
+                        if executor.repo_name is not None
+                        else [],
                     }
                     for executor in self.executors.values()
                 ],
@@ -658,7 +660,9 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         [manifests[executor.repo_name]["category"]]  # Force list
                         if not isinstance(manifests[executor.repo_name]["category"], list)
                         else manifests[executor.repo_name]["category"]  # Keep as-is
-                    ),
+                    )
+                    if executor.repo_name is not None
+                    else [],
                 }
                 for executor in self.dispatcher.executors.values()
             ],
