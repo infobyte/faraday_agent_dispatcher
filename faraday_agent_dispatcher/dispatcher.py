@@ -231,7 +231,7 @@ class Dispatcher:
                             else manifests[executor.repo_name]["category"]  # Keep as-is
                         ),
                     }
-                    for executor in self.dispatcher.executors.values()
+                    for executor in self.executors.values()
                 ],
             }
         )
