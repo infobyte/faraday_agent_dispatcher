@@ -654,7 +654,7 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         if executor.repo_name is not None
                         else []
                     ),
-                    "tool": executor.repo_name if executor.repo_name is not None else ""
+                    "tool": executor.repo_name if executor.repo_name is not None else "",
                 }
                 for executor in self.dispatcher.executors.values()
             ],
