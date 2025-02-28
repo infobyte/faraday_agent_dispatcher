@@ -133,7 +133,7 @@ def process_agent():
             "description": {
                 "default_value": lambda _: "",
                 "type": click.STRING,
-            }
+            },
         },
     }
 
