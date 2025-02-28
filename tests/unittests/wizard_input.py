@@ -254,7 +254,7 @@ class DispatcherInput:
 
         if self.delete_agent_token is not None:
             input_str = f"{input_str}{'Y' if self.delete_agent_token else 'N'}\n"
-        input_str = f"{input_str}{self.agent}\n"
+        input_str = f"{input_str}{self.agent}\n{self.description}\n"
         return input_str
 
 
