@@ -87,7 +87,6 @@ class Dispatcher:
             config.instance[Sections.TOKENS].get("agent") if Sections.TOKENS in config.instance else None
         )
         self.agent_name = config.instance[Sections.AGENT]["agent_name"]
-        self.description = config.instance[Sections.AGENT].get("description", "")
         self.session = session
         self.websocket = None
         self.websocket_token = None
@@ -173,10 +172,12 @@ class Dispatcher:
             )
             logger.info(f"token_registration_url: {token_registration_url}")
             try:
-                print(self.description)
                 token_response = await self.session.post(
                     token_registration_url,
-                    json={"token": registration_token, "name": self.agent_name, "description": self.description},
+                    json={"token": registration_token,
+                          "name": self.agent_name,
+                          "description": config.instance[Sections.AGENT].get("description", "")
+                          },
                     **self.api_kwargs,
                 )
                 token = await token_response.json()
