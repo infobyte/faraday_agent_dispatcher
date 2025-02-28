@@ -176,11 +176,7 @@ class Dispatcher:
                 print(self.description)
                 token_response = await self.session.post(
                     token_registration_url,
-                    json={
-                        "token": registration_token,
-                        "name": self.agent_name,
-                        "description": self.description
-                    },
+                    json={"token": registration_token, "name": self.agent_name, "description": self.description},
                     **self.api_kwargs,
                 )
                 token = await token_response.json()
