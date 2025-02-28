@@ -164,7 +164,7 @@ class Dispatcher:
                     json={
                         "token": registration_token,
                         "name": self.agent_name,
-                        "description": config.instance[Sections.AGENT].get("description", "")
+                        "description": config.instance[Sections.AGENT].get("description", ""),
                     },
                     **self.api_kwargs,
                 )
