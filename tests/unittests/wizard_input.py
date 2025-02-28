@@ -218,6 +218,7 @@ class DispatcherInput:
         ssl=None,
         ssl_ignore=None,
         agent_name=None,
+        description=None,
         delete_agent_token: bool = None,
         empty=False,
     ):
@@ -233,6 +234,7 @@ class DispatcherInput:
             "ws_port": ws_port or "1234",
         }
         self.agent = agent_name or ""
+        self.description = description or "description"
         self.delete_agent_token = delete_agent_token
         self.empty = empty
 
