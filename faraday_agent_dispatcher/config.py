@@ -331,6 +331,7 @@ __control_dict = {
     },
     Sections.AGENT: {
         "agent_name": control_str(),
+        "description": control_str(nullable=True),
         "executors": control_executors,
     },
 }
@@ -344,7 +345,7 @@ def control_config():
                     continue
                 raise ValueError(f"{section} section missing in config file")
             else:
-                if option not in instance[section] and section != Sections.TOKENS:
+                if option not in instance[section] and section != Sections.TOKENS and option != "description":
                     raise ValueError(f"{option} option missing in {section} section of " f"the config file")
             value = instance[section][option] if option in instance[section] else None
             __control_dict[section][option](option, value)
