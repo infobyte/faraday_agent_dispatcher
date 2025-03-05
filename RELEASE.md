@@ -1,10 +1,20 @@
+3.6.0 [Jan 6th, 2025]:
+---
+ * [MOD] Introduced an option to retrieve all completed scans from Tenable SC. #242
+ * [FIX] Fixed connection issues. #238
+ * [FIX] Added more options to the Cisco Cyber Vision executor. #243
+
+3.5.3 [Oct 24th, 2024]:
+---
+ * [MOD] Changed type of TARGETS and PORT_LIST to list in Nmap agent. #231
+
 3.5.2 [Aug 23rd, 2024]:
 ---
  * [ADD] Added check after parsing report on Tenable IO. #226
 
 3.5.1 [Jul 11th, 2024]:
 ---
- * [FIX] Fix git log. #9999
+ * [FIX] Fixed git log. #9999
 
 3.5.0 [Jul 11th, 2024]:
 ---
@@ -14,33 +24,33 @@
 ---
  * [FIX] Implemented scan filtering by 'completed' status in Tenable SC Agent to prevent parsing errors. #223
 
-3.4.1 [May 22th, 2024]:
+3.4.1 [May 22nd, 2024]:
 ---
  * [MOD] Plugins & Agent parameters types requirements updated. #220
 
-3.4.0 [May 22th, 2024]:
+3.4.0 [May 22nd, 2024]:
 ---
  * [ADD] Introducing the new Tenable SC agent, now available for integration. This initial version focuses on supporting scan imports. #216
  * [ADD] Added new agent for Cisco Cyber Vision. Also added severity calc utility. #217
- * [FIX] Fix agent websocket token not changing on registration token update #200
+ * [FIX] Fixed agent websocket token not changing on registration token update #200
  * [FIX] Resolved the issue where users were unable to execute user-defined templates and pre-defined TenableIO templates. Additionally, fixed the functionality to retrieve completed scan results and relaunch previously created scans. #214
 
 3.3.0 [Mar 12th, 2024]:
 ---
- * [ADD] Add hotspots option to SonarQube. #197
+ * [ADD] Added hotspots option to SonarQube. #197
  * [ADD] New GitHub CodeQL agent. #208
  * [ADD] Added new agent for GitHub Secrets Scanning. #209
- * [MOD] Now Nessus executor tries to login again after a 401 response from the Nessus's server. #203
+ * [MOD] Now Nessus executor tries to log in again after a 401 response from the Nessus's server. #203
  * [MOD] Change Dependabot agent to work with the new manifest of parameter types. #210
  * [FIX] We were not verifying the configuration value `ignore_ssl` at the moment of `socketio` connection. #212
 
 3.2.0 [Feb 8th, 2024]:
 ---
- * [ADD] Add dependabot agent. #206
+ * [ADD] Added dependabot agent. #206
 
-3.0.1 [Dec 22th, 2023]:
+3.0.1 [Dec 22nd, 2023]:
 ---
- * [FIX] Fix on_diconnect method and limit python-socketio to 5.8.0 #199
+ * [FIX] Fixed on_disconnect method and limit python-socketio to 5.8.0 #199
 
 3.0.0 [Dec 13th, 2023]:
 ---
@@ -48,11 +58,11 @@
 
 2.6.3 [Aug 24th, 2023]:
 ---
- * [FIX] Check the code response for burp executor #194
+ * [FIX] Check the code response for burp executor. #194
 
 2.6.2 [Aug 3rd, 2023]:
 ---
- * [MOD] Now you can download a existing report in tenableio #192
+ * [MOD] Now you can download a existing report in TenableIO. #192
 
 2.6.1 [July 20th, 2023]:
 ---
@@ -60,13 +70,13 @@
 
 2.6.0 [July 7th, 2023]:
 ---
- * [ADD] Add HCL Appscan executer #186
+ * [ADD] Added HCL AppScan executor. #186
 
 2.5.1 [Jan 3rd, 2023]:
 ---
  * [DEL] Now nuclei doesn't check if the target is an ip
  * [MOD] Add a fixes for bandit vuln:
-   - Replace assert return code with a if
+   - Replace assert return code with an if
    - Remove default x_token in nessus executor
 
 2.5.0 [Nov 30th, 2022]:

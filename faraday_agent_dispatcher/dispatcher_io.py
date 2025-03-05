@@ -568,7 +568,7 @@ class Dispatcher:
         server_url = api_url(
             self.host,
             self.api_port,
-            postfix="/_api/v3/info",
+            postfix="/_api/config",
             secure=self.api_ssl_enabled,
         )
         logger.debug(f"Validating server connection with {server_url}")
