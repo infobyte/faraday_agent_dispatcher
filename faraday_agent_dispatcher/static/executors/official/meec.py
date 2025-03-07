@@ -1,23 +1,24 @@
 #!/usr/bin/env python
 
 import json
-import logging
 import os
 import sys
 import warnings
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Iterator
-
+from datetime import datetime
 import requests
 from requests.exceptions import HTTPError, RequestException
 from urllib3.exceptions import InsecureRequestWarning
 
 from faraday_plugins.plugins.repo.faraday_json.plugin import FaradayJsonPlugin
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
-
 warnings.simplefilter("ignore", InsecureRequestWarning)
+
+
+def log(msg, end="\n"):
+    print(msg, file=sys.stderr, flush=True, end=end)
+
 
 SEVERITY_MAPPING = {
     "Critical": "critical",
@@ -43,6 +44,7 @@ class Vulnerability:
     cve: List[str] = field(default_factory=list)
     cvss2: Dict[str, Any] = field(default_factory=dict)
     cvss3: Dict[str, Any] = field(default_factory=dict)
+    tags: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -52,13 +54,14 @@ class Host:
     hostnames: List[str] = field(default_factory=list)
     services: List[Any] = field(default_factory=list)
     vulnerabilities: List[Vulnerability] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
 
 
 def fetch_all_system_reports(
-    session: requests.Session,
-    url: str,
-    params: Optional[Dict[str, Any]] = None,
-    page_limit: int = 100,
+        session: requests.Session,
+        url: str,
+        params: Optional[Dict[str, Any]] = None,
+        page_limit: int = 100,
 ) -> Iterator[Dict[str, Any]]:
     """
     Fetch all system reports from the API using pagination.
@@ -80,17 +83,17 @@ def fetch_all_system_reports(
     while True:
         params["page"] = page
         try:
-            logger.info(f"Fetching page {page} with page limit {page_limit}")
+            log(f"Fetching page {page} with page limit {page_limit}")
             response = session.get(url, params=params)
             response.raise_for_status()
             data = response.json()
 
             if "message_response" not in data or "systemreport" not in data["message_response"]:
-                logger.error(f"Unexpected response structure: {data}")
+                log(f"Unexpected response structure: {data}")
                 raise ValueError("Invalid response format")
 
             systems = data["message_response"]["systemreport"]
-            logger.info(f"Fetched {len(systems)} systems from page {page}")
+            log(f"Fetched {len(systems)} systems from page {page}")
 
             for system in systems:
                 yield system
@@ -98,11 +101,11 @@ def fetch_all_system_reports(
             metadata = data.get("metadata", {})
             total_pages = metadata.get("totalPages", 1)
             if page >= total_pages:
-                logger.info("All pages fetched.")
+                log("All pages fetched.")
                 break
             page += 1
         except (HTTPError, RequestException, ValueError) as err:
-            logger.error(f"An error occurred while fetching system reports: {err}")
+            log(f"An error occurred while fetching system reports: {err}")
             raise
 
 
@@ -119,7 +122,7 @@ def parse_cvss_score(score_raw: Optional[str]) -> Dict[str, Any]:
     try:
         return {"base_score": float(score_raw)}
     except (TypeError, ValueError) as e:
-        logger.warning(f"Invalid CVSS score '{score_raw}': {e}")
+        log(f"Invalid CVSS score '{score_raw}': {e}")
         return {}
 
 
@@ -175,7 +178,17 @@ def process_single_vulnerability(vuln: Dict[str, Any]) -> Vulnerability:
         resolution=vuln.get("patch", "No resolution provided"),
         status=status,
         cve=cve_ids_list,
+        tags=["endpoint-central", "vulnerability-management", "meec"]
     )
+
+    # Parse and add CVSS scores if available
+    cvss2_raw = vuln.get("cvss2", None)
+    if cvss2_raw:
+        vulnerability.cvss2 = parse_cvss_score(cvss2_raw)
+
+    cvss3_raw = vuln.get("cvss3", None)
+    if cvss3_raw:
+        vulnerability.cvss3 = parse_cvss_score(cvss3_raw)
 
     return vulnerability
 
@@ -190,13 +203,26 @@ def process_single_system(system: Dict[str, Any]) -> Host:
     Returns:
         Host: The processed host object.
     """
-    resource_name = system.get("resource_name", "Unknown")
+    resource_name = system.get("resource_name", "Unknown").lower()
     ip_address = system.get("ip_address", "")
-    fqdn_name = system.get("fqdn_name", "")
+    fqdn_name = system.get("fqdn_name", "").lower()
 
-    host = Host(ip=resource_name, name=resource_name)
-    hostnames = [ip.strip() for ip in ip_address.split(",") if ip.strip()] + [fqdn_name]
+    # Convert name to lowercase as per AssetsDB pattern
+    host = Host(
+        ip=fqdn_name,
+        name=fqdn_name,
+        tags=["endpoint-central", "meec", "managed-endpoint"]
+    )
+
+    hostnames = [ip.strip() for ip in ip_address.split(",") if ip.strip()] + [resource_name]
+    if fqdn_name:
+        hostnames.append(fqdn_name)
     host.hostnames = hostnames
+
+    # Add additional system information to tags if available
+    system_os = system.get("os_name")
+    if system_os:
+        host.tags.append(f"os:{system_os.lower()}")
 
     vulnerabilities = system.get("vulnerabilities", [])
     for vuln in vulnerabilities:
@@ -222,6 +248,7 @@ def host_to_dict(host: Host) -> Dict[str, Any]:
         "hostnames": host.hostnames,
         "services": host.services,
         "vulnerabilities": [vuln.__dict__ for vuln in host.vulnerabilities],
+        "tags": host.tags
     }
 
 
@@ -241,9 +268,10 @@ def process_system_reports(systems_iterator: Iterator[Dict[str, Any]]) -> Dict[s
         host = process_single_system(system)
         hosts.append(host_to_dict(host))
 
+    # Include the tool name in the command output
     faraday_data = {
         "hosts": hosts,
-        "command": "Fetched from ManageEngine Endpoint Central",
+        "command": "ManageEngine Endpoint Central",
     }
     return faraday_data
 
@@ -252,12 +280,12 @@ def main():
     """
     Main function to fetch vulnerabilities from ManageEngine Endpoint Central and process them.
     """
-    meec_ip = os.environ.get("EXECUTOR_CONFIG_MEEC_IP")
-    meec_apikey = os.environ.get("EXECUTOR_CONFIG_MEEC_APIKEY")
+    meec_ip = os.environ.get("MEEC_IP")
+    meec_apikey = os.environ.get("MEEC_APIKEY")
     verify_ssl_env = os.environ.get("EXECUTOR_CONFIG_VERIFY_SSL", "True").lower()
 
     if not meec_ip or not meec_apikey:
-        logger.error("Environment variables EXECUTOR_CONFIG_MEEC_IP and EXECUTOR_CONFIG_MEEC_APIKEY must be set.")
+        log("Environment variables MEEC_IP and MEEC_APIKEY must be set.")
         sys.exit(1)
 
     if verify_ssl_env in ["true", "t", "yes", "y", "1"]:
@@ -265,7 +293,7 @@ def main():
     elif verify_ssl_env in ["false", "f", "no", "n", "0"]:
         verify_ssl = False
     else:
-        logger.warning(f"Invalid value for EXECUTOR_CONFIG_VERIFY_SSL: '{verify_ssl_env}'. Defaulting to True.")
+        log(f"Invalid value for EXECUTOR_CONFIG_VERIFY_SSL: '{verify_ssl_env}'. Defaulting to True.")
         verify_ssl = True
 
     # Ensure the URL includes the endpoint path
@@ -275,33 +303,33 @@ def main():
         session.verify = verify_ssl
         session.headers.update({"Authorization": meec_apikey})
 
-        logger.info(f"Fetching vulnerabilities from {url} with SSL verification set to {verify_ssl}")
+        log(f"Fetching vulnerabilities from {url} with SSL verification set to {verify_ssl}")
         try:
             systems_iterator = fetch_all_system_reports(session, url)
             # Process systems as they are fetched
             faraday_data = process_system_reports(systems_iterator)
         except requests.exceptions.SSLError as ssl_error:
-            logger.error(f"SSL error occurred: {ssl_error}")
+            log(f"SSL error occurred: {ssl_error}")
             sys.exit(1)
         except Exception as e:
-            logger.error(f"An error occurred while fetching system reports: {e}")
+            log(f"An error occurred while fetching system reports: {e}")
             sys.exit(1)
 
     total_vulnerabilities = sum(len(host["vulnerabilities"]) for host in faraday_data["hosts"])
     if total_vulnerabilities == 0:
-        logger.info("No vulnerabilities found.")
+        log("No vulnerabilities found.")
         sys.exit(0)
 
-    logger.info(f"Processed {total_vulnerabilities} vulnerabilities.")
+    log(f"Processed {total_vulnerabilities} vulnerabilities.")
 
     try:
         faraday_json = json.dumps(faraday_data)
         plugin = FaradayJsonPlugin()
         plugin.parseOutputString(faraday_json)
         output_json = plugin.get_json()
-        print(output_json)
+        print(output_json)  # Print to stdout, not stderr
     except Exception as e:
-        logger.error(f"Error processing data with FaradayJsonPlugin: {e}")
+        log(f"Error processing data with FaradayJsonPlugin: {e}")
         sys.exit(1)
 
 
