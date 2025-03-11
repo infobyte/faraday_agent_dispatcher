@@ -791,6 +791,19 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                 return
             logger.info(f"Running {executor.name} executor")
 
+            await self.emit(
+                json.dumps(
+                    {
+                        "action": "RUN_STATUS",
+                        "execution_ids": self.dispatcher.execution_ids,
+                        "executor_name": executor.name,
+                        "running": True,
+                        "successful": None,  # Not determined yet
+                        "message": f"Executor {executor.name} from {self.dispatcher.agent_name} started running",
+                    }
+                )
+            )
+
             plugin_args = data.get("plugin_args", {})
             process = await self.dispatcher.create_process(executor, passed_params, plugin_args)
             start_date = datetime.utcnow()
