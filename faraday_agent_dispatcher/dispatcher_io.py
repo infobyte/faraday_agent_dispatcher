@@ -331,8 +331,8 @@ class Dispatcher:
                                 "executor_name": data_dict["executor"],
                                 "running": False,
                                 "message": "The selected executor "
-                                f"{data_dict['executor']} not exists in "
-                                f"{self.agent_name} agent",
+                                           f"{data_dict['executor']} not exists in "
+                                           f"{self.agent_name} agent",
                             }
                         )
                     )
@@ -360,8 +360,8 @@ class Dispatcher:
                                 "executor_name": executor.name,
                                 "running": False,
                                 "message": "Unexpected argument(s) passed to "
-                                f"{executor.name} executor from "
-                                f"{self.agent_name} agent",
+                                           f"{executor.name} executor from "
+                                           f"{self.agent_name} agent",
                             }
                         )
                     )
@@ -382,9 +382,9 @@ class Dispatcher:
                                 "executor_name": executor.name,
                                 "running": False,
                                 "message": f"Mandatory argument(s) "
-                                f"not passed to "
-                                f"{executor.name} executor from "
-                                f"{self.agent_name} agent",
+                                           f"not passed to "
+                                           f"{executor.name} executor from "
+                                           f"{self.agent_name} agent",
                             }
                         )
                     )
@@ -478,9 +478,9 @@ class Dispatcher:
                                     "executor_name": executor.name,
                                     "successful": True,
                                     "message": f"Executor "
-                                    f"{executor.name} from "
-                                    f"{self.agent_name} finished "
-                                    "successfully",
+                                               f"{executor.name} from "
+                                               f"{self.agent_name} finished "
+                                               "successfully",
                                 }
                             )
                         )
@@ -684,16 +684,17 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
             return
         if data["executor"] not in self.dispatcher.executors:
             logger.error("The selected executor not exists")
-            await self.websocket.send(
+            await self.emit(
                 json.dumps(
                     {
                         "action": "RUN_STATUS",
                         "execution_ids": self.dispatcher.execution_ids,
                         "executor_name": data["executor"],
+                        "successful": False,
                         "running": False,
-                        "message": "The selected executor "
-                        f"{data['executor']} not exists in "
-                        f"{self.dispatcher.agent_name} agent",
+                        "message": "Error: The selected executor "
+                                   f"{data['executor']} not exists in "
+                                   f"{self.dispatcher.agent_name} agent",
                     }
                 )
             )
@@ -720,9 +721,10 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "execution_ids": self.dispatcher.execution_ids,
                         "executor_name": executor.name,
                         "running": False,
-                        "message": "Unexpected argument(s) passed to "
-                        f"{executor.name} executor from "
-                        f"{self.dispatcher.agent_name} agent",
+                        "successful": False,
+                        "message": "Error: Unexpected argument(s) passed to "
+                                   f"{executor.name} executor from "
+                                   f"{self.dispatcher.agent_name} agent",
                     }
                 )
             )
@@ -742,10 +744,11 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "execution_ids": self.dispatcher.execution_ids,
                         "executor_name": executor.name,
                         "running": False,
-                        "message": f"Mandatory argument(s) "
-                        f"not passed to "
-                        f"{executor.name} executor from "
-                        f"{self.dispatcher.agent_name} agent",
+                        "successful": False,
+                        "message": f"Error: Mandatory argument(s) "
+                                   f"not passed to "
+                                   f"{executor.name} executor from "
+                                   f"{self.dispatcher.agent_name} agent",
                     }
                 )
             )
@@ -767,17 +770,18 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
             for param in errors:
                 error_msg += f"\n{param} = {passed_params[param]} " f"did not validate correctly: {errors[param]}"
             logger.error(error_msg)
-            await self.dispatcher.websocket.send(
-                json.dumps(
-                    {
-                        "action": "RUN_STATUS",
-                        "execution_ids": self.dispatcher.execution_ids,
-                        "executor_name": executor.name,
-                        "running": False,
-                        "message": error_msg,
-                    }
-                )
-            )
+            await self.emit("run_status",
+                            json.dumps(
+                                {
+                                    "action": "RUN_STATUS",
+                                    "execution_ids": self.dispatcher.execution_ids,
+                                    "executor_name": executor.name,
+                                    "running": False,
+                                    "successful": False,
+                                    "message": error_msg,
+                                }
+                            )
+                            )
             return
 
         if mandatory_full and all_accepted:
@@ -821,11 +825,12 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "action": "RUN_STATUS",
                         "execution_ids": self.dispatcher.execution_ids,
                         "executor_name": executor.name,
+                        "running": False,
                         "successful": True,
                         "message": f"Executor "
-                        f"{executor.name} from "
-                        f"{self.dispatcher.agent_name} finished "
-                        "successfully",
+                                   f"{executor.name} from "
+                                   f"{self.dispatcher.agent_name} finished "
+                                   "successfully",
                     }
                 )
                 await self.emit("run_status", status_message)
