@@ -790,9 +790,7 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                 # The function logs why cant run
                 return
             logger.info(f"Running {executor.name} executor")
-
-            await self.emit(
-                json.dumps(
+            status_message = json.dumps(
                     {
                         "action": "RUN_STATUS",
                         "execution_ids": self.dispatcher.execution_ids,
@@ -802,7 +800,8 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "message": f"Executor {executor.name} from {self.dispatcher.agent_name} started running",
                     }
                 )
-            )
+
+            await self.emit("run_status", status_message)
 
             plugin_args = data.get("plugin_args", {})
             process = await self.dispatcher.create_process(executor, passed_params, plugin_args)
