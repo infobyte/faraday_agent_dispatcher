@@ -791,15 +791,15 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                 return
             logger.info(f"Running {executor.name} executor")
             status_message = json.dumps(
-                    {
-                        "action": "RUN_STATUS",
-                        "execution_ids": self.dispatcher.execution_ids,
-                        "executor_name": executor.name,
-                        "running": True,
-                        "successful": None,  # Not determined yet
-                        "message": f"Executor {executor.name} from {self.dispatcher.agent_name} started running",
-                    }
-                )
+                {
+                    "action": "RUN_STATUS",
+                    "execution_ids": self.dispatcher.execution_ids,
+                    "executor_name": executor.name,
+                    "running": True,
+                    "successful": None,  # Not determined yet
+                    "message": f"Executor {executor.name} from {self.dispatcher.agent_name} started running",
+                }
+            )
 
             await self.emit("run_status", status_message)
 
