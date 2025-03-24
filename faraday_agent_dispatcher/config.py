@@ -345,7 +345,7 @@ def control_config():
                     continue
                 raise ValueError(f"{section} section missing in config file")
             else:
-                if option not in instance[section] and section != Sections.TOKENS and option != "description":
+                if option not in instance[section] and section != Sections.TOKENS:
                     raise ValueError(f"{option} option missing in {section} section of " f"the config file")
             value = instance[section][option] if option in instance[section] else None
             __control_dict[section][option](option, value)
