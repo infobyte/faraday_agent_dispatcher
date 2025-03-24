@@ -341,7 +341,7 @@ def control_config():
     for section in __control_dict:
         for option in __control_dict[section]:
             if option == 'description':
-                continue #  description is optional
+                continue  # description is optional
             if section not in instance:
                 if section == Sections.TOKENS:
                     continue
