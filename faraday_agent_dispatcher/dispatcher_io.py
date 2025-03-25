@@ -649,9 +649,9 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                     "args": executor.params,
                     "category": (
                         (
-                            [manifests[executor.repo_name]["category"]]  # Force list
-                            if not isinstance(manifests[executor.repo_name]["category"], list)
-                            else manifests[executor.repo_name]["category"]  # Keep as-is
+                            [manifests.get(executor.repo_name, {}).get("category")]
+                            if not isinstance(manifests.get(executor.repo_name, {}).get("category", []), list)
+                            else manifests.get(executor.repo_name, {}).get("category", [])
                         )
                         if executor.repo_name is not None
                         else []
