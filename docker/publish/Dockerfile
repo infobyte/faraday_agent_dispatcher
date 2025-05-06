@@ -9,6 +9,6 @@ COPY ./README.md /usr/local/src/faraday_agent_dispatcher/README.md
 COPY ./RELEASE.md /usr/local/src/faraday_agent_dispatcher/RELEASE.md
 COPY ./MANIFEST.in /usr/local/src/faraday_agent_dispatcher/MANIFEST.in
 
-RUN pip3 install .
+RUN pip3 install . --break-system-packages
 
 ENTRYPOINT ["faraday-dispatcher", "run"]
