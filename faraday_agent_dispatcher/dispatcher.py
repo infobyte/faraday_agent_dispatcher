@@ -85,6 +85,7 @@ class Dispatcher:
             config.instance[Sections.TOKENS].get("agent") if Sections.TOKENS in config.instance else None
         )
         self.agent_name = config.instance[Sections.AGENT]["agent_name"]
+        self.description = config.instance[Sections.AGENT].get("description", "")
         self.session = session
         self.websocket = None
         self.websocket_token = None
@@ -164,6 +165,7 @@ class Dispatcher:
                     json={
                         "token": registration_token,
                         "name": self.agent_name,
+                        "description": self.description,
                     },
                     **self.api_kwargs,
                 )
