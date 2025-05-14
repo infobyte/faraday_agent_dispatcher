@@ -25,7 +25,15 @@ def get_only_usable_ids(tsc, scan_ids, fetch_all_scans=False):
 
 
 def process_scan(
-    tsc, scan_id, ignore_info=False, hostname_resolution=False, host_tag=None, service_tag=None, vuln_tag=None
+    tsc,
+    scan_id,
+    ignore_info=False,
+    hostname_resolution=False,
+    host_tag=None,
+    service_tag=None,
+    vuln_tag=None,
+    min_severity=None,
+    max_severity=None,
 ):
     log(f"Processing scan id {scan_id}")
     try:
@@ -41,6 +49,8 @@ def process_scan(
                 host_tag=host_tag,
                 service_tag=service_tag,
                 vuln_tag=vuln_tag,
+                min_severity=min_severity,
+                max_severity=max_severity,
             )
             plugin.parseOutputString(file.read())
             return plugin.get_json()
@@ -58,6 +68,8 @@ def main():
     host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
     if host_tag:
         host_tag = host_tag.split(",")
+    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
+    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
 
     tenable_scan_ids = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID", "[]")
     tenable_fetch_all_completed_scans = bool(os.getenv("EXECUTOR_CONFIG_COMPLETED_SCANS", False))
@@ -109,6 +121,8 @@ def main():
             host_tag=host_tag,
             service_tag=service_tag,
             vuln_tag=vuln_tag,
+            min_severity=min_severity,
+            max_severity=max_severity,
         )
         if processed_scan:
             responses.append(processed_scan)

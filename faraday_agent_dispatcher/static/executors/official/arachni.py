@@ -24,6 +24,8 @@ def flush_messages(process):
 def main():
     my_envs = os.environ
     ignore_info = my_envs.get("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    min_severity = my_envs.get("AGENT_CONFIG_MIN_SEVERITY", None)
+    max_severity = my_envs.get("AGENT_CONFIG_MAX_SEVERITY", None)
     hostname_resolution = my_envs.get("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     vuln_tag = my_envs.get("AGENT_CONFIG_VULN_TAG", None)
     if vuln_tag:
@@ -88,6 +90,8 @@ def main():
         host_tag=host_tag,
         service_tag=service_tag,
         vuln_tag=vuln_tag,
+        min_severity=min_severity,
+        max_severity=max_severity,
     )
     with open(name_xml.name, "r") as f:
         plugin.parseOutputString(f.read())
