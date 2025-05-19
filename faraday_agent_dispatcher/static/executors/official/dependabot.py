@@ -27,7 +27,7 @@ def main():
 
     CVSS_3_PREFIX = "CVSS:3"
 
-    response = requests.get(dependabot_url, headers=github_auth)
+    response = requests.get(dependabot_url, headers=github_auth, timeout=60)
 
     if response.status_code == http.HTTPStatus.OK:
         security_events = response.json()
