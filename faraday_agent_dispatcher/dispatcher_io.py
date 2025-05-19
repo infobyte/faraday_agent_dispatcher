@@ -477,7 +477,8 @@ class Dispatcher:
                                     "executor_name": executor.name,
                                     "running": False,
                                     "successful": False,
-                                    "message": f"Executor {executor.name} from {self.agent_name} failed: process returncode is None",
+                                    "message": f"Executor {executor.name} from {self.agent_name} failed: "
+                                               f"process returncode is None",
                                 }
                             )
                         )
@@ -853,7 +854,8 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "executor_name": executor.name,
                         "running": False,
                         "successful": False,
-                        "message": f"Executor {executor.name} from {self.dispatcher.agent_name} failed: process returncode is None",
+                        "message": f"Executor {executor.name} from {self.dispatcher.agent_name} failed: "
+                                   f"process returncode is None",
                     }
                 )
                 await self.emit("run_status", status_message)
