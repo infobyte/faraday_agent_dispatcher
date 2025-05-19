@@ -129,7 +129,11 @@ def process_agent():
             "agent_name": {
                 "default_value": lambda _: "agent",
                 "type": click.STRING,
-            }
+            },
+            "description": {
+                "default_value": lambda _: "",
+                "type": click.STRING,
+            },
         },
     }
 

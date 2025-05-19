@@ -1,3 +1,7 @@
+3.7.0 [May 19th, 2025]:
+---
+ * [ADD] Added agent execution status messages, categories for executors and `description` field for agents. #247
+
 3.6.0 [Jan 6th, 2025]:
 ---
  * [MOD] Introduced an option to retrieve all completed scans from Tenable SC. #242
