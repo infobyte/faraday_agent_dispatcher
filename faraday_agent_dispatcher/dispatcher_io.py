@@ -467,7 +467,21 @@ class Dispatcher:
                     )
                     await asyncio.gather(*tasks)
                     await process.communicate()
-                    assert process.returncode is not None
+                    if process.returncode is None:
+                        logger.error(f"Executor {executor.name} finished but returncode is None")
+                        await self.websocket.send(
+                            json.dumps(
+                                {
+                                    "action": "RUN_STATUS",
+                                    "execution_ids": self.execution_ids,
+                                    "executor_name": executor.name,
+                                    "running": False,
+                                    "successful": False,
+                                    "message": f"Executor {executor.name} from {self.agent_name} failed: process returncode is None",
+                                }
+                            )
+                        )
+                        return
                     if process.returncode == 0:
                         logger.info(f"Executor {executor.name} finished successfully")
                         await self.websocket.send(
@@ -830,7 +844,20 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
             ]
             await asyncio.gather(*tasks)
             await process.communicate()
-            assert process.returncode is not None
+            if process.returncode is None:
+                logger.error(f"Executor {executor.name} finished but returncode is None")
+                status_message = json.dumps(
+                    {
+                        "action": "RUN_STATUS",
+                        "execution_ids": self.dispatcher.execution_ids,
+                        "executor_name": executor.name,
+                        "running": False,
+                        "successful": False,
+                        "message": f"Executor {executor.name} from {self.dispatcher.agent_name} failed: process returncode is None",
+                    }
+                )
+                await self.emit("run_status", status_message)
+                return
             if process.returncode == 0:
                 logger.info(f"Executor {executor.name} finished successfully")
                 status_message = json.dumps(
