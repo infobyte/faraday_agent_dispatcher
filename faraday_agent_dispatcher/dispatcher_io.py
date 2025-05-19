@@ -60,7 +60,7 @@ from faraday_agent_dispatcher.utils.metadata_utils import (
 )
 from faraday_agent_dispatcher.cli.utils.model_load import set_repo_params
 from faraday_agent_dispatcher.executor import Executor
-from faraday_agent_parameters_types.utils import type_validate
+from faraday_agent_parameters_types.utils import type_validate, get_manifests
 
 logger = logging.get_logger()
 logging.setup_logging()
@@ -87,6 +87,7 @@ class Dispatcher:
             config.instance[Sections.TOKENS].get("agent") if Sections.TOKENS in config.instance else None
         )
         self.agent_name = config.instance[Sections.AGENT]["agent_name"]
+        self.description = config.instance[Sections.AGENT].get("description", "")
         self.session = session
         self.websocket = None
         self.websocket_token = None
@@ -177,6 +178,7 @@ class Dispatcher:
                     json={
                         "token": registration_token,
                         "name": self.agent_name,
+                        "description": self.description,
                     },
                     **self.api_kwargs,
                 )
@@ -568,7 +570,7 @@ class Dispatcher:
         server_url = api_url(
             self.host,
             self.api_port,
-            postfix="/_api/v3/info",
+            postfix="/_api/config",
             secure=self.api_ssl_enabled,
         )
         logger.debug(f"Validating server connection with {server_url}")
@@ -637,11 +639,25 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
         super().__init__(namespace=namespace)
 
     async def on_connect(self):
+        manifests = get_manifests()
         connected_data = {
             "action": "JOIN_AGENT",
             "token": self.dispatcher.websocket_token,
             "executors": [
-                {"executor_name": executor.name, "args": executor.params}
+                {
+                    "executor_name": executor.name,
+                    "args": executor.params,
+                    "category": (
+                        (
+                            [manifests.get(executor.repo_name, {}).get("category")]
+                            if not isinstance(manifests.get(executor.repo_name, {}).get("category", []), list)
+                            else manifests.get(executor.repo_name, {}).get("category", [])
+                        )
+                        if executor.repo_name is not None
+                        else []
+                    ),
+                    "tool": executor.repo_name if executor.repo_name is not None else "",
+                }
                 for executor in self.dispatcher.executors.values()
             ],
         }
@@ -668,14 +684,15 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
             return
         if data["executor"] not in self.dispatcher.executors:
             logger.error("The selected executor not exists")
-            await self.websocket.send(
+            await self.emit(
                 json.dumps(
                     {
                         "action": "RUN_STATUS",
                         "execution_ids": self.dispatcher.execution_ids,
                         "executor_name": data["executor"],
+                        "successful": False,
                         "running": False,
-                        "message": "The selected executor "
+                        "message": "Error: The selected executor "
                         f"{data['executor']} not exists in "
                         f"{self.dispatcher.agent_name} agent",
                     }
@@ -704,7 +721,8 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "execution_ids": self.dispatcher.execution_ids,
                         "executor_name": executor.name,
                         "running": False,
-                        "message": "Unexpected argument(s) passed to "
+                        "successful": False,
+                        "message": "Error: Unexpected argument(s) passed to "
                         f"{executor.name} executor from "
                         f"{self.dispatcher.agent_name} agent",
                     }
@@ -726,7 +744,8 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "execution_ids": self.dispatcher.execution_ids,
                         "executor_name": executor.name,
                         "running": False,
-                        "message": f"Mandatory argument(s) "
+                        "successful": False,
+                        "message": f"Error: Mandatory argument(s) "
                         f"not passed to "
                         f"{executor.name} executor from "
                         f"{self.dispatcher.agent_name} agent",
@@ -751,16 +770,18 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
             for param in errors:
                 error_msg += f"\n{param} = {passed_params[param]} " f"did not validate correctly: {errors[param]}"
             logger.error(error_msg)
-            await self.dispatcher.websocket.send(
+            await self.emit(
+                "run_status",
                 json.dumps(
                     {
                         "action": "RUN_STATUS",
                         "execution_ids": self.dispatcher.execution_ids,
                         "executor_name": executor.name,
                         "running": False,
+                        "successful": False,
                         "message": error_msg,
                     }
-                )
+                ),
             )
             return
 
@@ -769,6 +790,18 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                 # The function logs why cant run
                 return
             logger.info(f"Running {executor.name} executor")
+            status_message = json.dumps(
+                {
+                    "action": "RUN_STATUS",
+                    "execution_ids": self.dispatcher.execution_ids,
+                    "executor_name": executor.name,
+                    "running": True,
+                    "successful": None,  # Not determined yet
+                    "message": f"Executor {executor.name} from {self.dispatcher.agent_name} started running",
+                }
+            )
+
+            await self.emit("run_status", status_message)
 
             plugin_args = data.get("plugin_args", {})
             process = await self.dispatcher.create_process(executor, passed_params, plugin_args)
@@ -805,6 +838,7 @@ class DispatcherNamespace(socketio.AsyncClientNamespace):
                         "action": "RUN_STATUS",
                         "execution_ids": self.dispatcher.execution_ids,
                         "executor_name": executor.name,
+                        "running": False,
                         "successful": True,
                         "message": f"Executor "
                         f"{executor.name} from "
