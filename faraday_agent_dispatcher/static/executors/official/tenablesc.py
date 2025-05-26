@@ -27,9 +27,7 @@ def get_only_usable_ids(tsc: TenableSC, scan_ids: List[str], fetch_all_scans: bo
     manageable_scans = scan_data.get("manageable", [])
     all_scans = usable_scans + manageable_scans
 
-    completed_scan_ids = {
-        str(scan["id"]) for scan in all_scans if scan.get("status") == "Completed"
-    }
+    completed_scan_ids = {str(scan["id"]) for scan in all_scans if scan.get("status") == "Completed"}
 
     if fetch_all_scans:
         return list(completed_scan_ids)
