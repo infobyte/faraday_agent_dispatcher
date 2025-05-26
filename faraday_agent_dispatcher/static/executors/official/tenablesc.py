@@ -3,36 +3,61 @@ import os
 import io
 import sys
 import zipfile as zp
+from typing import List, Optional
 
 from tenable.sc import TenableSC
 from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
 
-def log(msg):
+def log(msg: str) -> None:
+    """Prints a log message to stderr."""
     print(msg, file=sys.stderr)
 
 
-def get_only_usable_ids(tsc, scan_ids, fetch_all_scans=False):
-    tenable_scans = tsc.scan_instances.list()
-    usable_tenable_scans = [str(scan["id"]) for scan in tenable_scans["usable"] if scan["status"] == "Completed"]
-    log("*" * 10)
-    log("Listing available scans ...")
-    log(usable_tenable_scans)
-    log("*" * 10)
+def get_only_usable_ids(tsc: TenableSC, scan_ids: List[str], fetch_all_scans: bool = False) -> List[str]:
+    """
+    Return a list of completed scan IDs based on accessibility.
+
+    If fetch_all_scans is True, the function returns all scans with status 'Completed'
+    from both 'usable' and 'manageable' categories. If False, it returns only those
+    matching the input scan_ids and are also completed.
+    """
+    scan_data = tsc.scan_instances.list()
+    usable_scans = scan_data.get("usable", [])
+    manageable_scans = scan_data.get("manageable", [])
+    all_scans = usable_scans + manageable_scans
+
+    completed_scan_ids = {
+        str(scan["id"]) for scan in all_scans if scan.get("status") == "Completed"
+    }
+
     if fetch_all_scans:
-        return usable_tenable_scans
-    return [_id for _id in scan_ids if str(_id) in usable_tenable_scans]
+        return list(completed_scan_ids)
+
+    return [scan_id for scan_id in scan_ids if str(scan_id) in completed_scan_ids]
 
 
 def process_scan(
-    tsc, scan_id, ignore_info=False, hostname_resolution=False, host_tag=None, service_tag=None, vuln_tag=None
-):
-    log(f"Processing scan id {scan_id}")
+    tsc: TenableSC,
+    scan_id: str,
+    ignore_info: bool = False,
+    hostname_resolution: bool = False,
+    host_tag: Optional[List[str]] = None,
+    service_tag: Optional[List[str]] = None,
+    vuln_tag: Optional[List[str]] = None,
+) -> dict:
+    """
+    Downloads and parses a scan report by its ID using the Nessus plugin.
+
+    Returns the parsed scan report as a dictionary.
+    """
+    log(f"Processing scan ID {scan_id}")
     try:
         report = tsc.scan_instances.export_scan(scan_id)
-    except Exception as e:
-        log(e)
+    except Exception as error:
+        log(f"Failed to export scan ID {scan_id}: {error}")
         return {}
+
     with zp.ZipFile(io.BytesIO(report.read()), "r") as zip_ref:
         with zip_ref.open(zip_ref.namelist()[0]) as file:
             plugin = NessusPlugin(
@@ -46,62 +71,57 @@ def process_scan(
             return plugin.get_json()
 
 
-def main():
+def load_environment_list(var_name: str) -> Optional[List[str]]:
+    """Loads a comma-separated list from environment variable, or returns None."""
+    value = os.getenv(var_name)
+    return value.split(",") if value else None
+
+
+def main() -> None:
+    """Main execution logic for loading and processing TenableSC scans."""
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    vuln_tag = load_environment_list("AGENT_CONFIG_VULN_TAG")
+    service_tag = load_environment_list("AGENT_CONFIG_SERVICE_TAG")
+    host_tag = load_environment_list("AGENT_CONFIG_HOSTNAME_TAG")
 
-    tenable_scan_ids = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID", "[]")
-    tenable_fetch_all_completed_scans = bool(os.getenv("EXECUTOR_CONFIG_COMPLETED_SCANS", False))
-    TENABLE_ACCESS_KEY = os.getenv("TENABLE_ACCESS_KEY")
-    TENABLE_SECRET_KEY = os.getenv("TENABLE_SECRET_KEY")
-    TENABLE_HOST = os.getenv("TENABLE_HOST")
+    scan_ids_str = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID", "[]")
+    fetch_all = os.getenv("EXECUTOR_CONFIG_COMPLETED_SCANS", "False").lower() == "true"
+    access_key = os.getenv("TENABLE_ACCESS_KEY")
+    secret_key = os.getenv("TENABLE_SECRET_KEY")
+    host = os.getenv("TENABLE_HOST")
 
-    if not (TENABLE_ACCESS_KEY and TENABLE_SECRET_KEY):
-        log("TenableSC access_key and secret_key were not provided")
-        exit(1)
+    if not access_key or not secret_key:
+        log("TenableSC credentials not provided")
+        sys.exit(1)
 
-    if not TENABLE_HOST:
-        log("TenableSC Host not provided")
-        exit(1)
-
-    if not tenable_fetch_all_completed_scans and not tenable_scan_ids:
-        log("TenableSC Scan ID not provided")
-        exit(1)
+    if not host:
+        log("TenableSC host not provided")
+        sys.exit(1)
 
     try:
-        tenable_scan_ids_list = json.loads(tenable_scan_ids)
-    except Exception as e:
-        log(f"TenableSC Scan IDs could not be parsed {e}")
-        exit(1)
+        scan_ids = json.loads(scan_ids_str)
+    except Exception as error:
+        log(f"Failed to parse scan IDs: {error}")
+        sys.exit(1)
 
-    tsc = TenableSC(host=TENABLE_HOST, access_key=TENABLE_ACCESS_KEY, secret_key=TENABLE_SECRET_KEY)
-    usable_scan_ids = get_only_usable_ids(
-        tsc, tenable_scan_ids_list, fetch_all_scans=tenable_fetch_all_completed_scans
-    )
+    if not fetch_all and not scan_ids:
+        log("No scan IDs provided and fetch_all is False")
+        sys.exit(1)
+
+    tsc = TenableSC(host=host, access_key=access_key, secret_key=secret_key)
+    usable_scan_ids = get_only_usable_ids(tsc, scan_ids, fetch_all_scans=fetch_all)
 
     if not usable_scan_ids:
-        log("*" * 10)
-        log("No Scan matched ...")
-        log("*" * 10)
-        exit(1)
+        log("No usable scan IDs found")
+        sys.exit(1)
 
-    log("*" * 10)
-    log("Scans matched ...")
-    log(f"{usable_scan_ids}")
-    log("*" * 10)
+    log("Processing scan IDs:")
+    log(str(usable_scan_ids))
 
-    responses = []
+    results = []
     for scan_id in usable_scan_ids:
-        processed_scan = process_scan(
+        result = process_scan(
             tsc,
             scan_id,
             ignore_info=ignore_info,
@@ -110,19 +130,19 @@ def main():
             service_tag=service_tag,
             vuln_tag=vuln_tag,
         )
-        if processed_scan:
-            responses.append(processed_scan)
-    if responses:
-        final_response = json.loads(responses.pop(0))
-        for response in responses:
-            json_response = json.loads(response)
-            for host in json_response["hosts"]:
-                final_response["hosts"].append(host)
-        print(json.dumps(final_response))
+        if result:
+            results.append(result)
+
+    if results:
+        combined = json.loads(results.pop(0))
+        for r in results:
+            data = json.loads(r)
+            combined["hosts"].extend(data.get("hosts", []))
+        print(json.dumps(combined))
 
 
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
-        log(f"Agent execution failed. {e}")
+    except Exception as error:
+        log(f"Agent execution failed: {error}")
