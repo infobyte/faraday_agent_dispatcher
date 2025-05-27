@@ -88,10 +88,7 @@ def fetch_all_system_reports(
             response.raise_for_status()
             data = response.json()
 
-            if (
-                "message_response" not in data
-                or "systemreport" not in data["message_response"]
-            ):
+            if "message_response" not in data or "systemreport" not in data["message_response"]:
                 log(f"Unexpected response structure: {data}")
                 raise ValueError("Invalid response format")
 
@@ -217,9 +214,7 @@ def process_single_system(system: Dict[str, Any]) -> Host:
         tags=["endpoint-central", "meec", "managed-endpoint"],
     )
 
-    hostnames = [ip.strip() for ip in ip_address.split(",") if ip.strip()] + [
-        resource_name
-    ]
+    hostnames = [ip.strip() for ip in ip_address.split(",") if ip.strip()] + [resource_name]
     if fqdn_name:
         hostnames.append(fqdn_name)
     host.hostnames = hostnames
@@ -300,9 +295,7 @@ def main():
     elif verify_ssl_env in ["false", "f", "no", "n", "0"]:
         verify_ssl = False
     else:
-        log(
-            f"Invalid value for EXECUTOR_CONFIG_VERIFY_SSL: '{verify_ssl_env}'. Defaulting to True."
-        )
+        log(f"Invalid value for EXECUTOR_CONFIG_VERIFY_SSL: '{verify_ssl_env}'. Defaulting to True.")
         verify_ssl = True
 
     # Ensure the URL includes the endpoint path
@@ -312,9 +305,7 @@ def main():
         session.verify = verify_ssl
         session.headers.update({"Authorization": meec_apikey})
 
-        log(
-            f"Fetching vulnerabilities from {url} with SSL verification set to {verify_ssl}"
-        )
+        log(f"Fetching vulnerabilities from {url} with SSL verification set to {verify_ssl}")
         try:
             systems_iterator = fetch_all_system_reports(session, url)
             # Process systems as they are fetched
@@ -326,9 +317,7 @@ def main():
             log(f"An error occurred while fetching system reports: {e}")
             sys.exit(1)
 
-    total_vulnerabilities = sum(
-        len(host["vulnerabilities"]) for host in faraday_data["hosts"]
-    )
+    total_vulnerabilities = sum(len(host["vulnerabilities"]) for host in faraday_data["hosts"])
     if total_vulnerabilities == 0:
         log("No vulnerabilities found.")
         sys.exit(0)
