@@ -6,7 +6,6 @@ import sys
 import warnings
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Iterator
-from datetime import datetime
 import requests
 from requests.exceptions import HTTPError, RequestException
 from urllib3.exceptions import InsecureRequestWarning
