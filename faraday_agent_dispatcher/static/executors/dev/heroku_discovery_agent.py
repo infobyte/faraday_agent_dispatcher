@@ -35,7 +35,8 @@ import sys
 # to be replaced with urllib.parse. Each segment of the connstring is matched
 # by /([^:\/?#\s]+)/
 MATCH_CONNSTRING = re.compile(
-    r"^(?:([^:\/?#\s]+):\/{2})?(?:([^@\/?#\s]+)@)?([^\/?#\s]+)?:" r"(\d{2,5})(?:\/([^?#\s]*))?(?:[?]([^@#\s]+))?\S*$"
+    r"^(?:([^:\/?#\s]+):\/{2})?(?:([^@\/?#\s]+)@)?([^\/?#\s]+)?:"
+    r"(\d{2,5})(?:\/([^?#\s]*))?(?:[?]([^@#\s]+))?\S*$"
 )
 
 SERVICE_DATA = {
@@ -58,7 +59,9 @@ def main():
     """heroku cli user must be logged to run this agent"""
 
     try:
-        subprocess.run(["heroku", "auth:whoami"], stdout=subprocess.DEVNULL, check=True)  # nosec
+        subprocess.run(
+            ["heroku", "auth:whoami"], stdout=subprocess.DEVNULL, check=True
+        )  # nosec
     except CalledProcessError:
         sys.exit(1)
 
