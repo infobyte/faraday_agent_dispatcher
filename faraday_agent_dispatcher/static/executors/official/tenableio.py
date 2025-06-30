@@ -7,6 +7,15 @@ import json
 from tenable.io import TenableIO
 from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
+# Import the centralized agent configuration utility
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+try:
+    from utils.agent_configuration import get_common_parameters
+
+    USE_COMMON_PARAMS = True
+except ImportError:
+    USE_COMMON_PARAMS = False
+
 
 HTTP_REGEX = re.compile("^(http|https)://")
 TEMPLATE_NAMES = [
@@ -107,19 +116,25 @@ def parse_targets(tenable_scan_targets):
 
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    # Get centralized agent configuration if available, otherwise use manual parsing
+    if USE_COMMON_PARAMS:
+        agent_config = get_common_parameters()
+    else:
+        # Manual parsing for backwards compatibility
+        ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+        min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
+        max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
+        hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+        vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
+        if vuln_tag:
+            vuln_tag = vuln_tag.split(",")
+        service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
+        if service_tag:
+            service_tag = service_tag.split(",")
+        host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
+        if host_tag:
+            host_tag = host_tag.split(",")
+
     TENABLE_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_SCAN_NAME", "faraday-scan")
     TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_SCAN_ID")
     TENABLE_RELAUNCH_SCAN = os.getenv("EXECUTOR_CONFIG_RELAUNCH_SCAN", "False").lower() == "true"
@@ -138,15 +153,21 @@ def main():
     if TENABLE_SCAN_ID and not TENABLE_RELAUNCH_SCAN:
         scan = search_scan_id(tio, TENABLE_SCAN_ID)
         report = tio.scans.export(scan["id"])
-        plugin = NessusPlugin(
-            ignore_info=ignore_info,
-            min_severity=min_severity,
-            max_severity=max_severity,
-            hostname_resolution=hostname_resolution,
-            host_tag=host_tag,
-            service_tag=service_tag,
-            vuln_tag=vuln_tag,
-        )
+
+        if USE_COMMON_PARAMS:
+            plugin = NessusPlugin(**agent_config.to_plugin_kwargs())
+        else:
+
+            plugin = NessusPlugin(
+                ignore_info=ignore_info,
+                min_severity=min_severity,
+                max_severity=max_severity,
+                hostname_resolution=hostname_resolution,
+                host_tag=host_tag,
+                service_tag=service_tag,
+                vuln_tag=vuln_tag,
+            )
+
         plugin.parseOutputString(report.read())
         print(plugin.get_json())
         return
@@ -187,15 +208,19 @@ def main():
     report = tio.scans.export(
         scan["id"]
     )  # Valid report is assumed. If report isn't valid, executor will crash but dispatcher won't.
-    plugin = NessusPlugin(
-        ignore_info=ignore_info,
-        min_severity=min_severity,
-        max_severity=max_severity,
-        hostname_resolution=hostname_resolution,
-        host_tag=host_tag,
-        service_tag=service_tag,
-        vuln_tag=vuln_tag,
-    )
+    if USE_COMMON_PARAMS:
+        plugin = NessusPlugin(**agent_config.to_plugin_kwargs())
+    else:
+
+        plugin = NessusPlugin(
+            ignore_info=ignore_info,
+            min_severity=min_severity,
+            max_severity=max_severity,
+            hostname_resolution=hostname_resolution,
+            host_tag=host_tag,
+            service_tag=service_tag,
+            vuln_tag=vuln_tag,
+        )
     result = plugin.parseOutputString(report.read())
     if result == 1:
         log("Scan completed but did not return any results")

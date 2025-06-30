@@ -9,6 +9,15 @@ import datetime
 import re
 from faraday_plugins.plugins.repo.nexpose_full.plugin import NexposeFullPlugin
 
+# Import the centralized agent configuration utility
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+try:
+    from utils.agent_configuration import get_common_parameters
+
+    USE_COMMON_PARAMS = True
+except ImportError:
+    USE_COMMON_PARAMS = False
+
 
 def log(message):
     print(
@@ -22,19 +31,24 @@ def main():
     # the environment variables are checked.
     # ['INSIGHTVM_HOST', 'INSIGHTVM_USR', 'INSIGHTVM_PASSWD', 'EXECUTOR_CONFIG_SITE_ID'
     # or 'EXECUTOR_CONFIG_EXECUTIVE_REPORT_ID']
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    # Get centralized agent configuration if available, otherwise use manual parsing
+    if USE_COMMON_PARAMS:
+        agent_config = get_common_parameters()
+    else:
+        # Manual parsing for backwards compatibility
+        ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+        min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
+        max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
+        hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+        vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
+        if vuln_tag:
+            vuln_tag = vuln_tag.split(",")
+        service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
+        if service_tag:
+            service_tag = service_tag.split(",")
+        host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
+        if host_tag:
+            host_tag = host_tag.split(",")
     INSIGHTVM_HOST = os.getenv("INSIGHTVM_HOST")
     INSIGHTVM_USR = os.getenv("INSIGHTVM_USR")
     INSIGHTVM_PASSWD = os.getenv("INSIGHTVM_PASSWD")
@@ -72,15 +86,20 @@ def main():
     else:
         log("site_id or executive_id is required")
         sys.exit(1)
-    plugin = NexposeFullPlugin(
-        ignore_info=ignore_info,
-        min_severity=min_severity,
-        max_severity=max_severity,
-        hostname_resolution=hostname_resolution,
-        host_tag=host_tag,
-        service_tag=service_tag,
-        vuln_tag=vuln_tag,
-    )
+
+    if USE_COMMON_PARAMS:
+        plugin = NexposeFullPlugin(**agent_config.to_plugin_kwargs())
+    else:
+        plugin = NexposeFullPlugin(
+            ignore_info=ignore_info,
+            min_severity=min_severity,
+            max_severity=max_severity,
+            hostname_resolution=hostname_resolution,
+            host_tag=host_tag,
+            service_tag=service_tag,
+            vuln_tag=vuln_tag,
+        )
+
     plugin.parseOutputString(report_response_text)
     print(plugin.get_json())
 
