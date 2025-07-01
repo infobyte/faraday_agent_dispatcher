@@ -7,14 +7,7 @@ import zipfile as zp
 from tenable.sc import TenableSC
 from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
-# Import the centralized agent configuration utility
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-try:
-    from utils.agent_configuration import get_common_parameters
-
-    USE_COMMON_PARAMS = True
-except ImportError:
-    USE_COMMON_PARAMS = False
+from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
 
 def log(msg):
@@ -66,24 +59,7 @@ def process_scan(
 
 
 def main():
-    # Get centralized agent configuration if available, otherwise use manual parsing
-    if USE_COMMON_PARAMS:
-        agent_config = get_common_parameters()
-    else:
-        # Manual parsing for backwards compatibility
-        ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-        hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-        vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-        if vuln_tag:
-            vuln_tag = vuln_tag.split(",")
-        service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-        if service_tag:
-            service_tag = service_tag.split(",")
-        host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-        if host_tag:
-            host_tag = host_tag.split(",")
-        min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-        max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
+    agent_config = get_common_parameters()
 
     tenable_scan_ids = os.getenv("EXECUTOR_CONFIG_TENABLE_SCAN_ID", "[]")
     tenable_fetch_all_completed_scans = bool(os.getenv("EXECUTOR_CONFIG_COMPLETED_SCANS", False))
@@ -127,20 +103,7 @@ def main():
 
     responses = []
     for scan_id in usable_scan_ids:
-        if USE_COMMON_PARAMS:
-            processed_scan = process_scan(tsc, scan_id, **agent_config.to_plugin_kwargs())
-        else:
-            processed_scan = process_scan(
-                tsc,
-                scan_id,
-                ignore_info=ignore_info,
-                hostname_resolution=hostname_resolution,
-                host_tag=host_tag,
-                service_tag=service_tag,
-                vuln_tag=vuln_tag,
-                min_severity=min_severity,
-                max_severity=max_severity,
-            )
+        processed_scan = process_scan(tsc, scan_id, **agent_config.to_plugin_kwargs())
         if processed_scan:
             responses.append(processed_scan)
     if responses:

@@ -6,15 +6,7 @@ import datetime
 from posixpath import join as urljoin
 
 from faraday_plugins.plugins.repo.appscan.plugin import AppScanPlugin
-
-# Import the centralized agent configuration utility
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-try:
-    from utils.agent_configuration import get_common_parameters
-
-    USE_COMMON_PARAMS = True
-except ImportError:
-    USE_COMMON_PARAMS = False
+from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
 TIME_BETWEEN_TRIES = 5
 BASE_URL = "https://cloud.appscan.com"
@@ -217,24 +209,7 @@ def get_api_token(key_id, key_secret):
 
 
 def main():
-    # Get centralized agent configuration if available, otherwise use manual parsing
-    if USE_COMMON_PARAMS:
-        agent_config = get_common_parameters()
-    else:
-        # Manual parsing for backwards compatibility
-        ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-        min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-        max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
-        hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-        vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-        if vuln_tag:
-            vuln_tag = vuln_tag.split(",")
-        service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-        if service_tag:
-            service_tag = service_tag.split(",")
-        host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-        if host_tag:
-            host_tag = host_tag.split(",")
+    agent_config = get_common_parameters()
     HCL_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_HCL_SCAN_NAME", get_report_name())
     HCL_SCAN_TYPE = os.getenv("EXECUTOR_CONFIG_HCL_SCAN_TYPE", "").upper()
     HCL_SCAN_ID = os.getenv("EXECUTOR_CONFIG_HCL_SCAN_ID")
@@ -265,20 +240,7 @@ def main():
         wait_for_report(report_id, token, HCL_KEY_ID, HCL_KEY_SECRET)
         report_file = get_report(report_id, HCL_KEY_ID, HCL_KEY_SECRET)
 
-        if USE_COMMON_PARAMS:
-            plugin = AppScanPlugin(**agent_config.to_plugin_kwargs())
-
-        else:
-            plugin = AppScanPlugin(
-                ignore_info=ignore_info,
-                min_severity=min_severity,
-                max_severity=max_severity,
-                hostname_resolution=hostname_resolution,
-                host_tag=host_tag,
-                service_tag=service_tag,
-                vuln_tag=vuln_tag,
-            )
-
+        plugin = AppScanPlugin(**agent_config.to_plugin_kwargs())
         plugin.parseOutputString(report_file)
         print(plugin.get_json())
     else:

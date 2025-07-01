@@ -7,14 +7,7 @@ import subprocess
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.arachni.plugin import ArachniPlugin
 
-# Import the centralized agent configuration utility
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-try:
-    from utils.agent_configuration import get_common_parameters
-
-    USE_COMMON_PARAMS = True
-except ImportError:
-    USE_COMMON_PARAMS = False
+from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
 
 def remove_multiple_new_line(text: str):
@@ -31,25 +24,7 @@ def flush_messages(process):
 
 
 def main():
-    # Get centralized agent configuration if available, otherwise use manual parsing
-    if USE_COMMON_PARAMS:
-        agent_config = get_common_parameters()
-    else:
-        # Manual parsing for backwards compatibility
-        ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-        min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-        max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
-        hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-        vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-        if vuln_tag:
-            vuln_tag = vuln_tag.split(",")
-        service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-        if service_tag:
-            service_tag = service_tag.split(",")
-        host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-        if host_tag:
-            host_tag = host_tag.split(",")
-
+    agent_config = get_common_parameters()
     my_envs = os.environ
     # If the script is run outside the dispatcher
     # the environment variables
@@ -102,18 +77,7 @@ def main():
     arachni_reporter_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     flush_messages(arachni_reporter_process)
 
-    if USE_COMMON_PARAMS:
-        plugin = ArachniPlugin(**agent_config.to_plugin_kwargs())
-    else:
-        plugin = ArachniPlugin(
-            ignore_info=ignore_info,
-            hostname_resolution=hostname_resolution,
-            host_tag=host_tag,
-            service_tag=service_tag,
-            vuln_tag=vuln_tag,
-            min_severity=min_severity,
-            max_severity=max_severity,
-        )
+    plugin = ArachniPlugin(**agent_config.to_plugin_kwargs())
     with open(name_xml.name, "r", encoding="utf-8") as f:
         plugin.parseOutputString(f.read())
         print(plugin.get_json())
