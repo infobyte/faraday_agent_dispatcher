@@ -41,9 +41,6 @@ def main():
 
     if "ARACHNI_PATH" in my_envs:
         path_arachni = os.environ.get("ARACHNI_PATH")
-        if path_arachni is None:
-            print("Environment variable ARACHNI_PATH no set", file=sys.stderr)
-            sys.exit()
     else:
         print("Environment variable ARACHNI_PATH no set", file=sys.stderr)
         sys.exit()
