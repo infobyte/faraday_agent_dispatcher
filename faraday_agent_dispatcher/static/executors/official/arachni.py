@@ -59,7 +59,7 @@ def main():
         ]
     else:
         cmd = ["./arachni", url_analyze, "--report-save-path", file_afr.name]
-    arachni_command = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    arachni_command = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     flush_messages(arachni_command)
 
     name_xml = tempfile.NamedTemporaryFile(mode="w", suffix=".xml")
@@ -71,7 +71,7 @@ def main():
         f"xml:outfile={name_xml.name}",
     ]
 
-    arachni_reporter_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    arachni_reporter_process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     flush_messages(arachni_reporter_process)
 
     plugin = ArachniPlugin(**agent_config.to_plugin_kwargs())
