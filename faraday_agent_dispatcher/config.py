@@ -331,6 +331,7 @@ __control_dict = {
     },
     Sections.AGENT: {
         "agent_name": control_str(),
+        "description": control_str(nullable=True),
         "executors": control_executors,
     },
 }
@@ -339,6 +340,8 @@ __control_dict = {
 def control_config():
     for section in __control_dict:
         for option in __control_dict[section]:
+            if option == "description":
+                continue  # description is optional
             if section not in instance:
                 if section == Sections.TOKENS:
                     continue

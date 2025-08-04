@@ -53,7 +53,7 @@ include:
   - local: .gitlab/ci/testing/.testing-gitlab-ci.yml
   #- local: .gitlab/ci/testing/.post-gitlab-ci.yml
 
-  #- local: .gitlab/ci/plugins-integration/.build-gitlab-ci.yml
+  - local: .gitlab/ci/plugins-integration/.build-gitlab-ci.yml
   #- local: .gitlab/ci/plugins-integration/.testing-gitlab-ci.yml
 
   - local: .gitlab/ci/build_ci/.build-gitlab-ci.yml

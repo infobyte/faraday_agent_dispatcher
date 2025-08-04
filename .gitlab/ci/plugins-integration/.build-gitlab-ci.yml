@@ -32,5 +32,6 @@ docker-integration-build-tag:
   variables:
     IMAGE_TAG: "base-tag"
   rules:
+    - allow_failure: true
     - !reference [.on-release, rules]
     - when: never
