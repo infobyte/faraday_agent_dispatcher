@@ -64,7 +64,7 @@ def get_custom_description(vulnerability_data):
 def get_security_event_obj(event_id):
     url = f"https://api.github.com/repos/{owner}/{repository}/code-scanning/alerts/{event_id}"
     auth = {"Authorization": f"Bearer {token}"}
-    response = requests.get(url, headers=auth)
+    response = requests.get(url, headers=auth, timeout=60)
     if response.status_code != http.HTTPStatus.OK:
         print(
             f"Response from server {response.status_code} / repo {repository} / owner {owner}",
@@ -164,7 +164,7 @@ def get_security_events():
     url = f"https://api.github.com/repos/{owner}/{repository}/code-scanning/alerts"
     auth = {"Authorization": f"Bearer {token}"}
     data = {"state": "open"}
-    response = requests.get(url, headers=auth, data=data)
+    response = requests.get(url, headers=auth, data=data, timeout=60)
     if response.status_code != http.HTTPStatus.OK:
         print(
             f"Could not get {owner} alerts "

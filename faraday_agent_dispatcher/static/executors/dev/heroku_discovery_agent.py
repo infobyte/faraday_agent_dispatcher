@@ -14,13 +14,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-    heroku discovery faraday agent
-    ~~~~~~~~~
+heroku discovery faraday agent
+~~~~~~~~~
 
-    Simple agent to load host and service data from heroku to faraday.
+Simple agent to load host and service data from heroku to faraday.
 
-    This requires having the "heroku" command in your machine, and
-    being logged in with your account.
+This requires having the "heroku" command in your machine, and
+being logged in with your account.
 
 """
 
