@@ -7,6 +7,7 @@ import time
 import datetime
 import socket
 import re
+import json
 import xml.etree.cElementTree as ET
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.burp.plugin import BurpPlugin
@@ -165,9 +166,8 @@ def main():
     if check_api.status_code != 200:
         log(f"API gets no response. Status code: {check_api.status_code}")
         sys.exit()
-    # handling multiple targets, can be provided with:
-    # "https://example.com, https://test.com"
-    targets = TARGET_URL.split(",")
+
+    targets = json.loads(TARGET_URL)
     scope = []
     targets_urls = []
     for target in targets:
