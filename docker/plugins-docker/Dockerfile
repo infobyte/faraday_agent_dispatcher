@@ -65,7 +65,7 @@ ENV ARACHNI_PATH=/usr/local/src/arachni/bin
 # Installing dependencies for Sublist3r
 COPY --from=GETTER /Sublist3r/requirements.txt /usr/local/src/Sublist3r/requirements.txt
 WORKDIR /usr/local/src/Sublist3r
-RUN pip3 --no-cache install -r requirements.txt
+RUN pip3 --no-cache install --break-system-packages -r requirements.txt
 # Getting Sublist3r from GETTER
 COPY --from=GETTER /Sublist3r /usr/local/src/Sublist3r
 # Adding to env PATH
