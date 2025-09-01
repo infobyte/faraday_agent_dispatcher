@@ -27,6 +27,8 @@ def log(message):
 
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
+    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
     if vuln_tag:
@@ -70,6 +72,8 @@ def main():
 
     plugin = QualysguardPlugin(
         ignore_info=ignore_info,
+        min_severity=min_severity,
+        max_severity=max_severity,
         hostname_resolution=hostname_resolution,
         host_tag=host_tag,
         service_tag=service_tag,

@@ -1,3 +1,7 @@
+3.8.0 [September 1st, 2025]:
+---
+ * [ADD] Support for --min-severity and --max-severity. #248
+
 3.7.0 [May 19th, 2025]:
 ---
  * [ADD] Added agent execution status messages, categories for executors and `description` field for agents. #247
