@@ -36,6 +36,7 @@ class Executor:
             self.cmd = metadata["cmd"].format(EXECUTOR_FILE_PATH=repo_path)
         else:
             self.cmd = config.get("cmd")
+            self.repo_name = None
 
         self.max_size = int(config.get("max_size", 64 * 1024))
         self.params = dict(config[Sections.EXECUTOR_PARAMS]) if Sections.EXECUTOR_PARAMS in config else {}

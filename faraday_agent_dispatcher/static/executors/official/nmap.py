@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import json
 import os
 import subprocess
 from urllib.parse import urlparse
@@ -36,7 +36,8 @@ def command_create(target_list):
     #                f'{os.environ.get("EXECUTOR_CONFIG_HOST_TIMEOUT")}')
 
     port_list = my_envs.get("EXECUTOR_CONFIG_PORT_LIST")
-    cmd += "" if not port_list else ["-p", f"{port_list}"]
+    port_list_string = ",".join(json.loads(port_list)) if port_list else None
+    cmd += "" if not port_list_string else ["-p", f"{port_list_string}"]
 
     top_ports = my_envs.get("EXECUTOR_CONFIG_TOP_PORTS")
     cmd += "" if not top_ports else ["--top-ports", f"{top_ports}"]
@@ -64,6 +65,8 @@ def command_create(target_list):
 
 def main():
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
+    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
     if vuln_tag:
@@ -74,17 +77,11 @@ def main():
     host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
     if host_tag:
         host_tag = host_tag.split(",")
-    targets = os.environ.get("EXECUTOR_CONFIG_TARGET")
-    if not targets:
+    target_list = os.environ.get("EXECUTOR_CONFIG_TARGET")
+    target_list = json.loads(target_list)
+    if not target_list:
         print("Targets were not passed", file=sys.stderr)
         exit(1)
-
-    if " " in targets:
-        target_list = targets.split(" ")
-    elif "," in targets:
-        target_list = targets.split(",")
-    else:
-        target_list = [targets]
 
     urls = []
     for target in target_list:
@@ -98,6 +95,8 @@ def main():
     results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     nmap = NmapPlugin(
         ignore_info=ignore_info,
+        min_severity=min_severity,
+        max_severity=max_severity,
         hostname_resolution=hostname_resolution,
         host_tag=host_tag,
         service_tag=service_tag,

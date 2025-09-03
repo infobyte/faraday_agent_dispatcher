@@ -273,9 +273,9 @@ async def test_run_once(
 
         if "varenvs" in executor_options:
             for varenv in executor_options["varenvs"]:
-                configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_VARENVS][
-                    varenv
-                ] = executor_options["varenvs"][varenv]
+                configuration[Sections.AGENT][Sections.EXECUTORS][ex][Sections.EXECUTOR_VARENVS][varenv] = (
+                    executor_options["varenvs"][varenv]
+                )
 
         max_size = str(64 * 1024) if "max_size" not in executor_options else executor_options["max_size"]
         configuration[Sections.AGENT][Sections.EXECUTORS][ex]["max_size"] = max_size

@@ -154,7 +154,6 @@ class Wizard:
             for executor in os.listdir(executor_folder())
             if re.match("(.*_manifest.json|__pycache__)", executor) is None
         ]
-
         executors_names = list(
             map(
                 lambda x: re.search(r"(^[a-zA-Z0-9_-]+)(?:\..*)*$", x).group(1),

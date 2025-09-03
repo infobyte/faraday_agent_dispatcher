@@ -1,16 +1,16 @@
-
-integration_faraday:
-    stage: post_testing
-    variables:
-        DISPATCHER_REF: staging
-    trigger:
-        project: faradaysec/devops
-        strategy: depend
-    rules:
-        - !reference [ .on-release, rules ]
-        - if: '$CI_COMMIT_REF_NAME =~ /^(staging|master)$/'
-          variables:
-            DISPATCHER_REF: $CI_COMMIT_REF_NAME
-          when: on_success
-        - if: $INTEGRATION
-          when: on_success
+#
+#integration_faraday:
+#    stage: post_testing
+#    variables:
+#        DISPATCHER_REF: staging
+#    trigger:
+#        project: faradaysec/devops
+#        strategy: depend
+#    rules:
+#        - !reference [ .on-release, rules ]
+#        - if: '$CI_COMMIT_REF_NAME =~ /^(staging|master)$/'
+#          variables:
+#            DISPATCHER_REF: $CI_COMMIT_REF_NAME
+#          when: on_success
+#        - if: $INTEGRATION
+#          when: on_success

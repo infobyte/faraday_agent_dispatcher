@@ -44,6 +44,7 @@ agent_ok_status_keys_set = {
     "status",
     "update_date",
     "executors",
+    "last_run",
 }
 
 agent_ok_status_dict = {

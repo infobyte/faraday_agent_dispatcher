@@ -9,11 +9,57 @@ TYPE_VULNS = "VULNERABILITY"
 PAGE_SIZE = 500
 
 
+def get_hotspost_info(session, sonar_qube_url, hotspots_ids):
+    hotspots_data = []
+    for hotspot_id in hotspots_ids:
+        params = {"hotspot": hotspot_id}
+        try:
+            response = session.get(f"{sonar_qube_url}/api/hotspots/show", params=params)
+            hotspots_data.append(response.json())
+        except Exception:
+            print(
+                f"There was an error finding hotspots. Hotspot Key {hotspot_id}; "
+                f"Status Code {response.status_code} - {response.content}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+    return hotspots_data
+
+
+def get_hotspots_ids(session, sonar_qube_url, component_key):
+    has_more_hotspots = True
+    hotspots_ids = []
+    params = {"p": 0, "ps": PAGE_SIZE, "sinceLeakPeriod": False, "status": "TO_REVIEW", "projectKey": component_key}
+
+    while has_more_hotspots:
+        params["p"] += 1
+        try:
+            response = session.get(url=f"{sonar_qube_url}/api/hotspots/search", params=params)
+            response_json = response.json()
+        except Exception:
+            print(
+                f"There was an error finding issues. Component Key {component_key}; "
+                f"Status Code {response.status_code} - {response.content}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        hotspots = response_json.get("hotspots", [])
+        for hotspot in hotspots:
+            hotspots_ids.append(hotspot.get("key", ""))
+        total_items = response_json.get("paging", {}).get("total", 0)
+
+        has_more_hotspots = params["p"] * PAGE_SIZE < total_items
+    return hotspots_ids
+
+
 def main():
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_TOKEN', 'EXECUTOR_CONFIG_URL', 'EXECUTOR_CONFIG_PROJECT']
     ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
+    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
     hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
     vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
     if vuln_tag:
@@ -29,6 +75,7 @@ def main():
         sonar_qube_url = os.environ["SONAR_URL"]
         token = os.environ["EXECUTOR_CONFIG_TOKEN"]
         component_key = os.environ.get("EXECUTOR_CONFIG_COMPONENT_KEY", None)
+        get_hotspot = os.environ.get("EXECUTOR_CONFIG_GET_HOTSPOT", "false").lower() == "true"
     except KeyError:
         print("Environment variable not found", file=sys.stderr)
         sys.exit()
@@ -71,8 +118,14 @@ def main():
         has_more_vulns = page * PAGE_SIZE < total_items
 
     response_json["issues"] = vulnerabilities
+    if get_hotspot:
+        hotspots_ids = get_hotspots_ids(session, sonar_qube_url, component_key)
+        if hotspots_ids:
+            response_json["hotspots"] = get_hotspost_info(session, sonar_qube_url, hotspots_ids)
     sonar = SonarQubeAPIPlugin(
         ignore_info=ignore_info,
+        min_severity=min_severity,
+        max_severity=max_severity,
         hostname_resolution=hostname_resolution,
         host_tag=host_tag,
         service_tag=service_tag,

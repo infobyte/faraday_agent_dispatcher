@@ -2,7 +2,7 @@
   before_script:
     - pip install virtualenv
     - apt-get update
-    - apt-get install openssl
+    - apt-get install -y openssl
     - virtualenv faraday_venv
     - source faraday_venv/bin/activate
 
@@ -11,7 +11,8 @@
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/cloud/faraday_agent_parameters_types.git typing
     - cd typing
     - if [ -z "$TYPING_BRANCH" ]; then export TYPING_BRANCH="master"; fi
-    - echo $TYPING_BRANCH
+    - echo "Using faraday_agent_parameters_type branch -> $TYPING_BRANCH"
+    - git fetch
     - git checkout $TYPING_BRANCH
     - pip install .
     - cd ..
@@ -60,10 +61,6 @@
     - if: '$TEST_ALPHA'
       when: on_success
 
-unit_test 3.7:
-    extends: .latest_unit_test_base
-    image: python:3.7
-
 unit_test 3.8:
     extends: .latest_unit_test_base
     image: python:3.8
@@ -76,10 +73,6 @@ unit_test 3.10:
     extends: .latest_unit_test_base
     image: python:3.10-rc
     allow_failure: true
-
-.alpha_unit_test 3.7:
-    extends: .alpha_unit_test_base
-    image: python:3.7
 
 .alpha_unit_test 3.8:
     extends: .alpha_unit_test_base

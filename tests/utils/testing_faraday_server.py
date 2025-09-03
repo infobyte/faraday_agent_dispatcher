@@ -58,7 +58,7 @@ class FaradayTestConfig:
 
     async def aiohttp_faraday_client(self):
         app = web.Application()
-        app.router.add_get(self.wrap_route("/_api/v3/info"), get_info(self))
+        app.router.add_get(self.wrap_route("/_api/config"), get_info(self))
         app.router.add_post(
             self.wrap_route("/_api/v3/agents"),
             get_agent_registration(self),
