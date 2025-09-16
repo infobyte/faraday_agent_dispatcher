@@ -44,11 +44,6 @@ RUN rm -rf /var/lib/apt/lists/* && \
     apt-get purge --auto-remove --yes && \
     apt-get clean
 
-## Installing CrackMapExec
-#RUN pip3 install pipx
-#RUN pipx ensurepath
-#ENV PIPX_BIN_DIR=/usr/local/bin
-
 # Adding to env PATH for arachni
 ENV PATH=${PATH}:/usr/local/src/arachni/bin
 ENV OPENSSL_CONF=/etc/ssl/
@@ -75,12 +70,7 @@ RUN useradd -m -s /bin/bash faraday && echo 'faraday:faraday' | chpasswd && user
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-#USER faraday
-#
-## Adding to env PATH for arachni
-#ENV PATH=${PATH}:/usr/local/src/arachni/bin
-#ENV OPENSSL_CONF=/etc/ssl/
-#ENV ARACHNI_PATH=/usr/local/src/arachni/bin
+USER faraday
 
 # Set the home directory ownership to the new user
 RUN mkdir -p /home/faraday/.faraday/logs
