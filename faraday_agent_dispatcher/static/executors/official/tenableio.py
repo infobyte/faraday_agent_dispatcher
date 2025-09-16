@@ -7,6 +7,8 @@ import json
 from tenable.io import TenableIO
 from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
+from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+
 
 HTTP_REGEX = re.compile("^(http|https)://")
 TEMPLATE_NAMES = [
@@ -107,19 +109,8 @@ def parse_targets(tenable_scan_targets):
 
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    agent_config = get_common_parameters()
+
     TENABLE_SCAN_NAME = os.getenv("EXECUTOR_CONFIG_SCAN_NAME", "faraday-scan")
     TENABLE_SCAN_ID = os.getenv("EXECUTOR_CONFIG_SCAN_ID")
     TENABLE_RELAUNCH_SCAN = os.getenv("EXECUTOR_CONFIG_RELAUNCH_SCAN", "False").lower() == "true"
@@ -138,15 +129,8 @@ def main():
     if TENABLE_SCAN_ID and not TENABLE_RELAUNCH_SCAN:
         scan = search_scan_id(tio, TENABLE_SCAN_ID)
         report = tio.scans.export(scan["id"])
-        plugin = NessusPlugin(
-            ignore_info=ignore_info,
-            min_severity=min_severity,
-            max_severity=max_severity,
-            hostname_resolution=hostname_resolution,
-            host_tag=host_tag,
-            service_tag=service_tag,
-            vuln_tag=vuln_tag,
-        )
+
+        plugin = NessusPlugin(**agent_config.to_plugin_kwargs())
         plugin.parseOutputString(report.read())
         print(plugin.get_json())
         return
@@ -187,15 +171,7 @@ def main():
     report = tio.scans.export(
         scan["id"]
     )  # Valid report is assumed. If report isn't valid, executor will crash but dispatcher won't.
-    plugin = NessusPlugin(
-        ignore_info=ignore_info,
-        min_severity=min_severity,
-        max_severity=max_severity,
-        hostname_resolution=hostname_resolution,
-        host_tag=host_tag,
-        service_tag=service_tag,
-        vuln_tag=vuln_tag,
-    )
+    plugin = NessusPlugin(**agent_config.to_plugin_kwargs())
     result = plugin.parseOutputString(report.read())
     if result == 1:
         log("Scan completed but did not return any results")

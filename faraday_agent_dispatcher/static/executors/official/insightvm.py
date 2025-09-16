@@ -9,6 +9,8 @@ import datetime
 import re
 from faraday_plugins.plugins.repo.nexpose_full.plugin import NexposeFullPlugin
 
+from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+
 
 def log(message):
     print(
@@ -22,19 +24,7 @@ def main():
     # the environment variables are checked.
     # ['INSIGHTVM_HOST', 'INSIGHTVM_USR', 'INSIGHTVM_PASSWD', 'EXECUTOR_CONFIG_SITE_ID'
     # or 'EXECUTOR_CONFIG_EXECUTIVE_REPORT_ID']
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    agent_config = get_common_parameters()
     INSIGHTVM_HOST = os.getenv("INSIGHTVM_HOST")
     INSIGHTVM_USR = os.getenv("INSIGHTVM_USR")
     INSIGHTVM_PASSWD = os.getenv("INSIGHTVM_PASSWD")
@@ -72,15 +62,8 @@ def main():
     else:
         log("site_id or executive_id is required")
         sys.exit(1)
-    plugin = NexposeFullPlugin(
-        ignore_info=ignore_info,
-        min_severity=min_severity,
-        max_severity=max_severity,
-        hostname_resolution=hostname_resolution,
-        host_tag=host_tag,
-        service_tag=service_tag,
-        vuln_tag=vuln_tag,
-    )
+
+    plugin = NexposeFullPlugin(**agent_config.to_plugin_kwargs())
     plugin.parseOutputString(report_response_text)
     print(plugin.get_json())
 

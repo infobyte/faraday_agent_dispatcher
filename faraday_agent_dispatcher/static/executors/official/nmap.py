@@ -8,6 +8,8 @@ import sys
 """You need to clone and install faraday plugins"""
 from faraday_plugins.plugins.repo.nmap.plugin import NmapPlugin
 
+from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+
 
 def command_create(target_list):
     my_envs = os.environ
@@ -64,19 +66,8 @@ def command_create(target_list):
 
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    agent_config = get_common_parameters()
+
     target_list = os.environ.get("EXECUTOR_CONFIG_TARGET")
     target_list = json.loads(target_list)
     if not target_list:
@@ -93,15 +84,8 @@ def main():
 
     cmd = command_create(target_list=urls)
     results = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    nmap = NmapPlugin(
-        ignore_info=ignore_info,
-        min_severity=min_severity,
-        max_severity=max_severity,
-        hostname_resolution=hostname_resolution,
-        host_tag=host_tag,
-        service_tag=service_tag,
-        vuln_tag=vuln_tag,
-    )
+
+    nmap = NmapPlugin(**agent_config.to_plugin_kwargs())
     nmap.parseOutputString(results.stdout.encode())
     print(nmap.get_json())
 
