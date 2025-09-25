@@ -1,20 +1,14 @@
-FROM kalilinux/kali-rolling as FINAL
+#### Golang tools builder ####
+FROM golang:latest AS go-tools
+WORKDIR /app
+RUN go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 
-# Updating repos
-RUN apt-get update -y
+#### main tools ####
+FROM kalilinux/kali-rolling AS final
 
-# Installing packages
-RUN apt-get install --yes --no-install-recommends \
+RUN apt-get update -y && apt-get install --yes --no-install-recommends \
         build-essential git \
-        # Python
         python3 python3-pip python3-venv python3-setuptools \
-        # Dependencies for w3af
-        libxml2 \
-        libxslt-dev \
-        libssl-dev \
-        npm \
-        # Go
-        golang \
         # Installing Nikto
         nikto \
         # Installing Nmap
@@ -61,14 +55,14 @@ RUN wpscan --update
 # Add nmap script vulners
 RUN curl https://raw.githubusercontent.com/vulnersCom/nmap-vulners/master/vulners.nse --output  /usr/share/nmap/scripts/vulners.nse
 
-# Installing Nuclei
-RUN cd /usr/local/src && git clone https://github.com/projectdiscovery/nuclei.git
-RUN cd /usr/local/src/nuclei/cmd/nuclei/ &&  go build && mv nuclei /usr/local/bin/ && nuclei -version
-RUN cd /usr/local/src/nuclei/cmd/nuclei/ && git clone https://github.com/projectdiscovery/nuclei-templates.git
+# Go related tools
+COPY --from=go-tools /go/bin/nuclei /usr/local/bin/.
 
+# Create faraday user
 RUN useradd -m -s /bin/bash faraday && echo 'faraday:faraday' | chpasswd && usermod -aG sudo faraday
 
-RUN ln -s /usr/bin/python3 /usr/bin/python
+# Symbolic link for dispatcher venv python
+RUN ln -s /usr/bin/python3 /usr/local/bin/python
 
 USER faraday
 
@@ -77,4 +71,3 @@ RUN mkdir -p /home/faraday/.faraday/logs
 
 # Setting default folder and bash for entrypoint
 WORKDIR /home/
-# ENTRYPOINT [ "/bin/bash" , "-l", "-c"]

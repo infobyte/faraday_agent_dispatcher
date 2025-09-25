@@ -186,9 +186,9 @@ agent:
         port: 9392
 
 server:
-  api_port: '5985' # TODO be replaced with network configuration
+  api_port: 5985
   host: localhost
-  ssl: 'False'
+  ssl: false
   ssl_cert: ''
-  websocket_port: '9000'
-  workspaces: [] # TODO be filled with available workspaces
+  ssl_ignore: true
+  websocket_port: 5985
