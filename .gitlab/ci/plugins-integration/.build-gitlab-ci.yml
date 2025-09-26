@@ -1,6 +1,9 @@
 .docker-integration-build-base:
   stage: integration-build
   script:
+    - echo "$CI_COMMIT_TAG"
+    - echo "$IMAGE_TAG"
+    - echo "$CI_COMMIT_REF_NAME"
     - cd docker/plugins-docker
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker build --tag $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG .
