@@ -10,7 +10,8 @@ COPY . .
 RUN pip install .
 
 #### Final image ####
-FROM faraday_agent_dispatcher:tools
+ARG TAG=tools
+FROM faraday_agent_dispatcher:$TAG
 COPY --from=dispatcher-build /opt/dispatcher_venv /opt/dispatcher_venv
 
 ENV PATH="/opt/dispatcher_venv/bin:$PATH"

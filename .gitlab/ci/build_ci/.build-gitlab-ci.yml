@@ -9,15 +9,15 @@
   rules:
     - when: never
 
-#docker-build-branch:
-#  extends: .docker-build-base
-#  variables:
-#    IMAGE_TAG: "$CI_COMMIT_BRANCH"
-#    BASE_IMAGE_TAG: "plugins-testing-$CI_COMMIT_BRANCH"
-#  rules:
-#    - !reference [.devel-branch-manual, rules]
-#    - when: never
-#
+docker-build-branch:
+  extends: .docker-build-base
+  variables:
+    IMAGE_TAG: "$CI_COMMIT_BRANCH"
+    BASE_IMAGE_TAG: "plugins-testing-$CI_COMMIT_BRANCH"
+  rules:
+    - !reference [.devel-branch-manual, rules]
+    - when: never
+
 docker-build-main:
   extends: .docker-build-base
   variables:
@@ -28,11 +28,11 @@ docker-build-main:
     - !reference [.daily-control, rules]
     - when: never
 
-#docker-build-tag:
-#  extends: .docker-build-base
-#  variables:
-#    IMAGE_TAG: "latest"
-#    BASE_IMAGE_TAG: "base-tag"
-#  rules:
-#    - !reference [.on-release, rules]
-#    - when: never
+docker-build-tag:
+  extends: .docker-build-base
+  variables:
+    IMAGE_TAG: "latest"
+    BASE_IMAGE_TAG: "base-tag"
+  rules:
+    - !reference [.on-release, rules]
+    - when: never
