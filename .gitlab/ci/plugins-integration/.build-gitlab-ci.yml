@@ -34,5 +34,4 @@ docker-integration-build-tag:
     IMAGE_TAG: "base-tag"
   rules:
     - allow_failure: true
-    - if: $CI_COMMIT_TAG
-      when: never
+    - when: never
