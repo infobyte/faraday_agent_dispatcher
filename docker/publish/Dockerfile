@@ -1,5 +1,4 @@
-ARG TAG="tools"
-ARG BASE_IMAGE_TAG="tools"
+ARG TAG=""
 ARG REGISTRY="registry.gitlab.com/faradaysec/cloud"
 
 #### Dispatcher builder ####
