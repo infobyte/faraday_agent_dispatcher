@@ -12,7 +12,8 @@ RUN pip install .
 #### Final image ####
 ARG TAG=tools
 ARG REGISTRY=registry.gitlab.com/faradaysec/cloud
-FROM ${REGISTRY}/faraday_agent_dispatcher:$TAG
+#FROM ${REGISTRY}/faraday_agent_dispatcher:$TAG
+FROM registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:tools-dev
 COPY --from=dispatcher-build /opt/dispatcher_venv /opt/dispatcher_venv
 
 ENV PATH="/opt/dispatcher_venv/bin:$PATH"
