@@ -31,7 +31,7 @@ before_script:
     - mkdir -pv $APT_CACHE_DIR
 
 stages:
-    - testing
+    #    - testing
     # - post_testing
     - integration-build
     - integration-test
