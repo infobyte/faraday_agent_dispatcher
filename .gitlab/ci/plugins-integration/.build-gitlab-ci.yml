@@ -1,7 +1,7 @@
 .docker-integration-build-base:
   stage: integration-build
   script:
-    - echo "Building plugins-docker image with tag $IMAGE_TAG"
+    - echo "Building plugins-docker image with tag $IMAGE_TAG - ci tag $CI_COMMIT_TAG"
     - cd docker/plugins-docker
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker build --tag $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG .
@@ -35,5 +35,4 @@ docker-integration-build-tag:
   rules:
     - allow_failure: true
     - if: '$CI_COMMIT_TAG'
-#    - !reference [.on-release, rules]
-#    - when: never
+    - when: never
