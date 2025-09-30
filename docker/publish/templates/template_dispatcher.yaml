@@ -184,7 +184,6 @@ agent:
         gvm_passw: admin
         host: 127.0.0.1
         port: 9392
-
 server:
   api_port: 5985
   host: localhost

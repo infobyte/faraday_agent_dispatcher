@@ -58,18 +58,5 @@ RUN curl https://raw.githubusercontent.com/vulnersCom/nmap-vulners/master/vulner
 # Go related tools
 COPY --from=go-tools /go/bin/nuclei /usr/local/bin/.
 
-## Create faraday user
-#RUN useradd -m -s /bin/bash faraday && echo 'faraday:faraday' | chpasswd && usermod -aG sudo faraday
-#
 # Symbolic link for dispatcher venv python
 RUN ln -s /usr/bin/python3 /usr/local/bin/python
-#
-#USER faraday
-#
-## Set the home directory ownership to the new user
-#RUN mkdir -p /home/faraday/.faraday/logs
-#
-## Setting default folder and bash for entrypoint
-#WORKDIR /home/
-#
-#USER root
