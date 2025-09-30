@@ -28,14 +28,6 @@ docker-integration-build-main:
     - !reference [.daily-control, rules]
     - when: never
 
-#docker-integration-build-tag:
-#  extends: .docker-integration-build-base
-#  variables:
-#    IMAGE_TAG: "base-tag"
-#  rules:
-#    - allow_failure: true
-#    - when: never
-
 docker-integration-build-tag:
   extends: .docker-integration-build-base
   variables:
