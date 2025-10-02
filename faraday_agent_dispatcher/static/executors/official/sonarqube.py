@@ -4,8 +4,6 @@ import sys
 import requests
 from faraday_plugins.plugins.repo.sonarqubeapi.plugin import SonarQubeAPIPlugin
 
-from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
-
 # ATTENTION: We only want to find vulnerabilities. Code smell and bugs doesn't matters for us.
 TYPE_VULNS = "VULNERABILITY"
 PAGE_SIZE = 500
@@ -17,11 +15,19 @@ def get_hotspost_info(session, sonar_qube_url, hotspots_ids):
         params = {"hotspot": hotspot_id}
         try:
             response = session.get(f"{sonar_qube_url}/api/hotspots/show", params=params)
+            if response.status_code != 200:
+                print(
+                    f"There was an error finding hotspots. Hotspot Key {hotspot_id}; "
+                    f"Status Code {response.status_code} - {response.content}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
             hotspots_data.append(response.json())
-        except Exception:
+
+        except Exception as e:
             print(
-                f"There was an error finding hotspots. Hotspot Key {hotspot_id}; "
-                f"Status Code {response.status_code} - {response.content}",
+                f"There was an exception finding hotspots. Hotspot Key {hotspot_id}; "
+                f"Error: {str(e)}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -37,11 +43,18 @@ def get_hotspots_ids(session, sonar_qube_url, component_key):
         params["p"] += 1
         try:
             response = session.get(url=f"{sonar_qube_url}/api/hotspots/search", params=params)
+            if response.status_code != 200:
+                print(
+                    f"There was an error finding issues. Component Key {component_key}; "
+                    f"Status Code {response.status_code} - {response.content}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
             response_json = response.json()
-        except Exception:
+        except Exception as e:
             print(
-                f"There was an error finding issues. Component Key {component_key}; "
-                f"Status Code {response.status_code} - {response.content}",
+                f"There was an exception finding issues. Component Key {component_key}; "
+                f"Error: {str(e)}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -59,7 +72,17 @@ def main():
     # If the script is run outside the dispatcher the environment variables
     # are checked.
     # ['EXECUTOR_CONFIG_TOKEN', 'EXECUTOR_CONFIG_URL', 'EXECUTOR_CONFIG_PROJECT']
-    agent_config = get_common_parameters()
+    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
+    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
+    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
+    if vuln_tag:
+        vuln_tag = vuln_tag.split(",")
+    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
+    if service_tag:
+        service_tag = service_tag.split(",")
+    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
+    if host_tag:
+        host_tag = host_tag.split(",")
 
     try:
         sonar_qube_url = os.environ["SONAR_URL"]
@@ -92,11 +115,18 @@ def main():
                 url=f"{sonar_qube_url}/api/issues/search",
                 params=params,
             )
+            if response.status_code != 200:
+                print(
+                    f"There was an error finding issues. Component Key {component_key}; "
+                    f"Status Code {response.status_code} - {response.content}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
             response_json = response.json()
-        except Exception:
+        except Exception as e:
             print(
-                f"There was an error finding issues. Component Key {component_key}; "
-                f"Status Code {response.status_code} - {response.content}",
+                f"There was an exception finding issues. Component Key {component_key}; "
+                f"Error: {str(e)}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -112,8 +142,13 @@ def main():
         hotspots_ids = get_hotspots_ids(session, sonar_qube_url, component_key)
         if hotspots_ids:
             response_json["hotspots"] = get_hotspost_info(session, sonar_qube_url, hotspots_ids)
-
-    sonar = SonarQubeAPIPlugin(**agent_config.to_plugin_kwargs())
+    sonar = SonarQubeAPIPlugin(
+        ignore_info=ignore_info,
+        hostname_resolution=hostname_resolution,
+        host_tag=host_tag,
+        service_tag=service_tag,
+        vuln_tag=vuln_tag,
+    )
     sonar.parseOutputString(json.dumps(response_json))
     print(sonar.get_json())
 
