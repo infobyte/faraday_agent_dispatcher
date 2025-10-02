@@ -26,8 +26,7 @@ def get_hotspost_info(session, sonar_qube_url, hotspots_ids):
 
         except Exception as e:
             print(
-                f"There was an exception finding hotspots. Hotspot Key {hotspot_id}; "
-                f"Error: {str(e)}",
+                f"There was an exception finding hotspots. Hotspot Key {hotspot_id}; " f"Error: {str(e)}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -53,8 +52,7 @@ def get_hotspots_ids(session, sonar_qube_url, component_key):
             response_json = response.json()
         except Exception as e:
             print(
-                f"There was an exception finding issues. Component Key {component_key}; "
-                f"Error: {str(e)}",
+                f"There was an exception finding issues. Component Key {component_key}; " f"Error: {str(e)}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -125,8 +123,7 @@ def main():
             response_json = response.json()
         except Exception as e:
             print(
-                f"There was an exception finding issues. Component Key {component_key}; "
-                f"Error: {str(e)}",
+                f"There was an exception finding issues. Component Key {component_key}; " f"Error: {str(e)}",
                 file=sys.stderr,
             )
             sys.exit(1)
