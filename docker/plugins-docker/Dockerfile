@@ -46,6 +46,7 @@ ENV ARACHNI_PATH=/usr/local/src/arachni/bin
 RUN mkdir /usr/local/src/arachni
 RUN curl -L https://github.com/Arachni/arachni/releases/download/v1.6.1.3/arachni-1.6.1.3-0.6.1.1-linux-x86_64.tar.gz --output arachni.tar.gz
 RUN tar -xvzf arachni.tar.gz -C /usr/local/src/arachni --strip-components 1
+RUN rm -f arachni.tar.gz
 
 # Installing wpscan
 RUN gem install nokogiri
