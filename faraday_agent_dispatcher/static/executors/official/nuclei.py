@@ -6,21 +6,12 @@ from pathlib import Path
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.nuclei.plugin import NucleiPlugin
 
+from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+
 
 def main():
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+    agent_config = get_common_parameters()
+
     # separate the target list with comma
     NUCLEI_TARGET = os.getenv("EXECUTOR_CONFIG_NUCLEI_TARGET")
     # separate the exclude list with comma
@@ -83,15 +74,7 @@ def main():
                 file=sys.stderr,
             )
 
-        plugin = NucleiPlugin(
-            ignore_info=ignore_info,
-            min_severity=min_severity,
-            max_severity=max_severity,
-            hostname_resolution=hostname_resolution,
-            host_tag=host_tag,
-            service_tag=service_tag,
-            vuln_tag=vuln_tag,
-        )
+        plugin = NucleiPlugin(**agent_config.to_plugin_kwargs())
         plugin.parseOutputString(nuclei_process.stdout.decode("utf-8"))
         print(plugin.get_json())
 

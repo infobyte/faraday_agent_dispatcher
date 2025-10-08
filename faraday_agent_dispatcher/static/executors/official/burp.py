@@ -7,9 +7,12 @@ import time
 import datetime
 import socket
 import re
+import json
 import xml.etree.cElementTree as ET
 from urllib.parse import urlparse
 from faraday_plugins.plugins.repo.burp.plugin import BurpPlugin
+
+from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
 
 def log(message):
@@ -119,19 +122,9 @@ def main():
     # If the script is run outside the dispatcher
     # the environment variables are checked.
     # ['TARGET_URL', 'NAMED_CONFIGURATION']
-    ignore_info = os.getenv("AGENT_CONFIG_IGNORE_INFO", "False").lower() == "true"
-    min_severity = os.getenv("AGENT_CONFIG_MIN_SEVERITY", None)
-    max_severity = os.getenv("AGENT_CONFIG_MAX_SEVERITY", None)
-    hostname_resolution = os.getenv("AGENT_CONFIG_RESOLVE_HOSTNAME", "True").lower() == "true"
-    vuln_tag = os.getenv("AGENT_CONFIG_VULN_TAG", None)
-    if vuln_tag:
-        vuln_tag = vuln_tag.split(",")
-    service_tag = os.getenv("AGENT_CONFIG_SERVICE_TAG", None)
-    if service_tag:
-        service_tag = service_tag.split(",")
-    host_tag = os.getenv("AGENT_CONFIG_HOSTNAME_TAG", None)
-    if host_tag:
-        host_tag = host_tag.split(",")
+
+    agent_config = get_common_parameters()
+
     BURP_HOST = os.getenv("BURP_HOST")
     BURP_API_KEY = os.getenv("BURP_API_KEY")
     TARGET_URL = os.getenv("EXECUTOR_CONFIG_TARGET_URL")
@@ -167,9 +160,8 @@ def main():
     if check_api.status_code != 200:
         log(f"API gets no response. Status code: {check_api.status_code}")
         sys.exit()
-    # handling multiple targets, can be provided with:
-    # "https://example.com, https://test.com"
-    targets = TARGET_URL.replace(" ", "").split(",")
+
+    targets = json.loads(TARGET_URL)
     scope = []
     targets_urls = []
     for target in targets:
@@ -217,15 +209,9 @@ def main():
                 else:
                     log("Scan finished OK")
                     generate_xml(issues, tmp_file, json_issue_definitions)
-                    plugin = BurpPlugin(
-                        ignore_info=ignore_info,
-                        min_severity=min_severity,
-                        max_severity=max_severity,
-                        hostname_resolution=hostname_resolution,
-                        host_tag=host_tag,
-                        service_tag=service_tag,
-                        vuln_tag=vuln_tag,
-                    )
+
+                    plugin = BurpPlugin(**agent_config.to_plugin_kwargs())
+
                     tmp_file.seek(0)
                     plugin.parseOutputString(tmp_file.read())
                     print(plugin.get_json())

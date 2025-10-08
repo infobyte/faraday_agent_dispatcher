@@ -1,6 +1,7 @@
 .docker-build-base:
   stage: build
   script:
+    - echo "Building image with tag $IMAGE_TAG and base image $BASE_IMAGE_TAG"
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker build -f docker/publish/Dockerfile --tag $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG --build-arg TAG=$BASE_IMAGE_TAG .
     - docker push $CI_REGISTRY/faradaysec/cloud/faraday_agent_dispatcher:$IMAGE_TAG
@@ -9,15 +10,15 @@
   rules:
     - when: never
 
-#docker-build-branch:
-#  extends: .docker-build-base
-#  variables:
-#    IMAGE_TAG: "$CI_COMMIT_BRANCH"
-#    BASE_IMAGE_TAG: "plugins-testing-$CI_COMMIT_BRANCH"
-#  rules:
-#    - !reference [.devel-branch-manual, rules]
-#    - when: never
-#
+docker-build-branch:
+  extends: .docker-build-base
+  variables:
+    IMAGE_TAG: "$CI_COMMIT_BRANCH"
+    BASE_IMAGE_TAG: "plugins-testing-$CI_COMMIT_BRANCH"
+  rules:
+    - !reference [.devel-branch-manual, rules]
+    - when: never
+
 docker-build-main:
   extends: .docker-build-base
   variables:
@@ -28,11 +29,11 @@ docker-build-main:
     - !reference [.daily-control, rules]
     - when: never
 
-#docker-build-tag:
-#  extends: .docker-build-base
-#  variables:
-#    IMAGE_TAG: "latest"
-#    BASE_IMAGE_TAG: "base-tag"
-#  rules:
-#    - !reference [.on-release, rules]
-#    - when: never
+docker-build-tag:
+  extends: .docker-build-base
+  variables:
+    IMAGE_TAG: "latest"
+    BASE_IMAGE_TAG: "base-tag"
+  rules:
+    - !reference [.on-release, rules]
+    - when: never
