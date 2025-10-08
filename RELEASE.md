@@ -1,3 +1,9 @@
+3.9.0 [October 8th, 2025]:
+---
+ * [MOD] Several tools used by Faraday agents have been upgraded to improve performance, compatibility, and security. #190
+ * [MOD][BREAKING] Changed parameter type of burp agent, TARGET_URL to list. #229
+ * [MOD] Refactor executor parameters to prevent code duplication. #249
+
 3.8.0 [September 1st, 2025]:
 ---
  * [ADD] Support for --min-severity and --max-severity. #248
