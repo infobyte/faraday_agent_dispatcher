@@ -1,14 +1,20 @@
-ARG TAG=faraday-agent-dispatcher
-FROM registry.gitlab.com/faradaysec/cloud/faraday_agent_dispatcher:tools
+ARG TAG=""
+ARG REGISTRY="registry.gitlab.com/faradaysec/cloud"
 
+#### Dispatcher builder ####
+FROM python:3.13.7-slim AS dispatcher-build
+ENV PYTHONUNBUFFERED=1
 
-WORKDIR /usr/local/src/faraday_agent_dispatcher
-COPY ./faraday_agent_dispatcher/ /usr/local/src/faraday_agent_dispatcher/faraday_agent_dispatcher
-COPY ./setup.py /usr/local/src/faraday_agent_dispatcher/setup.py
-COPY ./README.md /usr/local/src/faraday_agent_dispatcher/README.md
-COPY ./RELEASE.md /usr/local/src/faraday_agent_dispatcher/RELEASE.md
-COPY ./MANIFEST.in /usr/local/src/faraday_agent_dispatcher/MANIFEST.in
+WORKDIR /app/
 
-RUN pip3 install .
+RUN python -m venv /opt/dispatcher_venv
+ENV PATH="/opt/dispatcher_venv/bin:$PATH"
+COPY . .
+RUN pip install .
 
+#### Final image ####
+FROM ${REGISTRY}/faraday_agent_dispatcher:$TAG
+COPY --from=dispatcher-build /opt/dispatcher_venv /opt/dispatcher_venv
+
+ENV PATH="/opt/dispatcher_venv/bin:$PATH"
 ENTRYPOINT ["faraday-dispatcher", "run"]

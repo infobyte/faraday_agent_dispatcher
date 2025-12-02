@@ -2,7 +2,7 @@ agent:
   agent_name: docker_agent
   executors:
     nmap:
-      max_size: '65536'
+      max_size: '9965536'
       params:
         HOST_TIMEOUT:
           base: integer
@@ -39,7 +39,7 @@ agent:
       repo_executor: nmap.py
       varenvs: {}
     arachni:
-      max_size: '65536'
+      max_size: '9965536'
       params:
         NAME_URL:
           base: string
@@ -47,9 +47,9 @@ agent:
           type: url
       repo_executor: arachni.py
       varenvs:
-        arachni_path: /usr/local/src/arachni/bin
+        ARACHNI_PATH: /usr/local/src/arachni/bin
     cme:
-      max_size: '65536'
+      max_size: '9965536'
       params:
         CRACKMAPEXEC_IP:
           base: string
@@ -74,7 +74,7 @@ agent:
       repo_executor: crackmapexec.py
       varenvs: {}
     nixto2:
-      max_size: '65536'
+      max_size: '9965536'
       params:
         TARGET_URL:
           base: string
@@ -87,7 +87,7 @@ agent:
       repo_executor: nikto2.py
       varenvs: {}
     sublist3r:
-      max_size: '65536'
+      max_size: '9965536'
       params:
         DOMAIN:
           base: string
@@ -96,20 +96,18 @@ agent:
       repo_executor: sublist3r.sh
       varenvs: {}
     zap:
-      max_size: '65536'
+      max_size: 9965536
       params:
         TARGET_URL:
           base: string
           mandatory: true
           type: url
-        API_KEY:
-          base: string
-          mandatory: true
-          type: string
+      repo_name: zap
       repo_executor: zap.py
-      varenvs: {}
+      varenvs:
+        ZAP_API_KEY: 
     nuclei:
-      max_size: '65536'
+      max_size: '9965536'
       params:
         NUCLEI_TARGET:
           base: string
@@ -121,9 +119,9 @@ agent:
           type: string
       repo_executor: nuclei.py
       varenvs:
-        nuclei_templates: /usr/local/src/nuclei/v2/cmd/nuclei/nuclei-templates
+        NUCLEI_TEMPLATES: /root/nuclei-templates
     wpscan:
-      max_size: '65536'
+      max_size: '9965536'
       params:
         WPSCAN_TARGET_URL:
           base: string
@@ -132,7 +130,7 @@ agent:
       repo_executor: wpscan.py
       varenvs: {}
     gvm:
-      max_size: '65536'
+      max_size: '9965536'
       params:
         SCAN_TARGET:
           base: string
@@ -180,15 +178,14 @@ agent:
           type: string
       repo_executor: gvm_openvas.py
       varenvs:
-        gvm_user: admin
-        gvm_passw: admin
-        host: 127.0.0.1
-        port: 9392
-
+        GVM_USER: admin
+        GVM_PASSW: admin
+        HOST: 127.0.0.1
+        PORT: 9392
 server:
-  api_port: '5985' # TODO be replaced with network configuration
+  api_port: 5985
   host: localhost
-  ssl: 'False'
+  ssl: false
   ssl_cert: ''
-  websocket_port: '9000'
-  workspaces: [] # TODO be filled with available workspaces
+  ssl_ignore: true
+  websocket_port: 5985
