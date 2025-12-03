@@ -163,17 +163,25 @@ def parse_cve(unparsed_data):
 def get_security_events():
     url = f"https://api.github.com/repos/{owner}/{repository}/code-scanning/alerts"
     auth = {"Authorization": f"Bearer {token}"}
-    data = {"state": "open"}
-    response = requests.get(url, headers=auth, data=data, timeout=60)
-    if response.status_code != http.HTTPStatus.OK:
-        print(
-            f"Could not get {owner} alerts "
-            f"from {repository} repository. "
-            f"Response code was {response.status_code}",
-            file=sys.stderr,
-        )
-        return []
-    return response.json()
+    security_events = []
+    page = 1
+    while True:
+        params = {"page": page, "per_page": 100, "state": "open"}
+        response = requests.get(url, headers=auth, params=params, timeout=60)
+        if response.status_code != http.HTTPStatus.OK:
+            print(
+                f"Could not get {owner} alerts "
+                f"from {repository} repository. "
+                f"Response code was {response.status_code}",
+                file=sys.stderr,
+            )
+            break
+        page_events = response.json()
+        if not page_events:
+            break
+        security_events.extend(page_events)
+        page += 1
+    return security_events
 
 
 def get_assets_to_create(vulnerability_tags: list, asset_tags: list) -> list:
