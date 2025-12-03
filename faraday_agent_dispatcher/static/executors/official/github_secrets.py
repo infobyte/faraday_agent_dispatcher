@@ -64,17 +64,26 @@ def main():
     }
     req_link = f"https://api.github.com/repos/{params_github_owner}/" f"{params_github_repo}/secret-scanning/alerts"
 
-    try:
-        req = requests.get(req_link, headers=req_header, timeout=10)
-    except requests.exceptions.RequestException as e:
-        print(f"ERROR: Network Error: {e}", file=sys.stderr)
-        return
+    alerts = []
+    page = 1
 
-    if req.status_code != 200:
-        print(f"ERROR: Network status code {req.status_code}", file=sys.stderr)
-        return
+    while True:
+        params = {"page": page, "per_page": 100}
+        try:
+            req = requests.get(req_link, headers=req_header, params=params, timeout=10)
+        except requests.exceptions.RequestException as e:
+            print(f"ERROR: Network Error: {e}", file=sys.stderr)
+            return
+        if req.status_code != 200:
+            print(f"ERROR: Network status code {req.status_code}", file=sys.stderr)
+            return
+        page_alerts = req.json()
+        if not page_alerts:
+            break
+        alerts.extend(page_alerts)
+        page += 1
 
-    make_report(req.json(), params_github_owner, params_github_repo, params_vuln_tags, params_host_tags)
+    make_report(alerts, params_github_owner, params_github_repo, params_vuln_tags, params_host_tags)
 
 
 if __name__ == "__main__":
