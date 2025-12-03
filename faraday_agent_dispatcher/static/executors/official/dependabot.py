@@ -1,4 +1,3 @@
-import http
 import json
 import sys
 
@@ -7,6 +6,7 @@ import os
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hostname_tags):
     security_events = json_response
@@ -53,8 +53,7 @@ def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hos
                     "cwe": [cwe["cwe_id"] for cwe in vulnerability_data["cwes"]],
                     "cve": [cve["value"] for cve in vulnerability_data["identifiers"] if cve["type"] == "CVE"],
                     "refs": [
-                        {"name": reference["url"], "type": "other"}
-                        for reference in vulnerability_data["references"]
+                        {"name": reference["url"], "type": "other"} for reference in vulnerability_data["references"]
                     ],
                     "status": "open" if security_event["state"] == "open" else "closed",
                     "tags": extra_vuln_tags + ["dependabot"],
@@ -69,11 +68,12 @@ def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hos
                         vulnerability.update({"cvss2": {"vector_string": cvss_vector_string.strip("CVSS:")[-1]}})
 
                 host_vulns.append(vulnerability)
-
+        repo_url = f"https://github.com/{repo_owner}/{repo_name}"
         hosts.append(
             {
                 "ip": f"{repo_owner}/{repo_name}/{ip}",
-                "description": f"Dependabot recommendations on file {ip}\n\nRepository: https://github.com/{repo_owner}/{repo_name}",
+                "description":
+                    f"Dependabot recommendations on file {ip}\n\nRepository: {repo_url}",
                 "hostnames": [],
                 "vulnerabilities": host_vulns,
                 "tags": extra_hostname_tags + ["dependabot"],
@@ -82,6 +82,7 @@ def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hos
 
     data = {"hosts": hosts}
     print(json.dumps(data))
+
 
 def main():
     GITHUB_REPOSITORY = os.getenv("EXECUTOR_CONFIG_GITHUB_REPOSITORY")
@@ -98,7 +99,6 @@ def main():
     # TODO: should validate config?
     dependabot_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPOSITORY}/dependabot/alerts"
     github_auth = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
-    repo_url = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPOSITORY}"
 
     security_events = []
     page = 1
@@ -120,6 +120,7 @@ def main():
         page += 1
 
     make_report(security_events, GITHUB_OWNER, GITHUB_REPOSITORY, vuln_tag, host_tag)
+
 
 if __name__ == "__main__":
     main()
