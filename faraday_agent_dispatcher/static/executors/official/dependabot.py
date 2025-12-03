@@ -72,8 +72,7 @@ def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hos
         hosts.append(
             {
                 "ip": f"{repo_owner}/{repo_name}/{ip}",
-                "description":
-                    f"Dependabot recommendations on file {ip}\n\nRepository: {repo_url}",
+                "description": f"Dependabot recommendations on file {ip}\n\nRepository: {repo_url}",
                 "hostnames": [],
                 "vulnerabilities": host_vulns,
                 "tags": extra_hostname_tags + ["dependabot"],
