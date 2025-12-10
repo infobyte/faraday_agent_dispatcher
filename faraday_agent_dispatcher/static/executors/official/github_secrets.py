@@ -20,9 +20,10 @@ def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hos
         if detection.get("state", "open") != "open":
             continue
 
-        custom_desc = \
-            f"Secret found: **{detection.get('secret', 'N/A')}**\n\n"\
+        custom_desc = (
+            f"Secret found: **{detection.get('secret', 'N/A')}**\n\n"
             f"[View more on Github]({detection.get('html_url', 'N/A')})"
+        )
 
         vulnerability = {
             "name": f"{detection.get('secret_type_display_name', 'N/A')}",

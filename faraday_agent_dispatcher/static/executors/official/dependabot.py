@@ -31,7 +31,9 @@ def main():
 
     if response.status_code == http.HTTPStatus.OK:
         security_events = response.json()
-        hosts_ips = list({security_event.get("dependency", {}).get("manifest_path", "N/A") for security_event in security_events})
+        hosts_ips = list(
+            {security_event.get("dependency", {}).get("manifest_path", "N/A") for security_event in security_events}
+        )
         hosts = []
 
         for ip in hosts_ips:
@@ -72,8 +74,11 @@ def main():
                             "availability": False,
                         },
                         "cwe": [cwe.get("cwe_id", "N/A") for cwe in vulnerability_data.get("cwes", [])],
-                        "cve": [cve.get("value", "N/A") for cve in vulnerability_data.get("identifiers", [])
-                                if cve.get("type", "") == "CVE"],
+                        "cve": [
+                            cve.get("value", "N/A")
+                            for cve in vulnerability_data.get("identifiers", [])
+                            if cve.get("type", "") == "CVE"
+                        ],
                         "refs": [
                             {"name": reference.get("url", "N/A"), "type": "other"}
                             for reference in vulnerability_data.get("references", [])

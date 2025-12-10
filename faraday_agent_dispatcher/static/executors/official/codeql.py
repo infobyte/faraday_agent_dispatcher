@@ -123,7 +123,7 @@ def get_tags(alert):
             continue
         else:
             tags.add(tag)
-    if alert.get("most_recent_instance",{}).get("category", "N/A").startswith("/language"):
+    if alert.get("most_recent_instance", {}).get("category", "N/A").startswith("/language"):
         tags.add(alert["most_recent_instance"]["category"].split(":")[1])
     return list(tags)
 
@@ -178,8 +178,12 @@ def get_security_events():
 
 def get_assets_to_create(vulnerability_tags: list, asset_tags: list) -> list:
     security_events = get_security_events()
-    assets = list({security_event.get("most_recent_instance", {}).get("location", {}).get("path", "N/A")
-                   for security_event in security_events})
+    assets = list(
+        {
+            security_event.get("most_recent_instance", {}).get("location", {}).get("path", "N/A")
+            for security_event in security_events
+        }
+    )
     assets_to_create = []
 
     for asset in assets:
