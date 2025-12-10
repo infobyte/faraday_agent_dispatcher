@@ -1,6 +1,6 @@
 import http
 import json
-
+import sys
 import requests
 import os
 import logging
@@ -27,7 +27,11 @@ def main():
 
     CVSS_3_PREFIX = "CVSS:3"
 
-    response = requests.get(dependabot_url, headers=github_auth, timeout=60)
+    try:
+        response = requests.get(dependabot_url, headers=github_auth, timeout=60)
+    except requests.exceptions.RequestException as e:
+        print(f"ERROR: Network Error: {e}", file=sys.stderr)
+        return
 
     if response.status_code == http.HTTPStatus.OK:
         security_events = response.json()
