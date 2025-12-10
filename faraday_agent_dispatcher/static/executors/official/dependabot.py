@@ -57,7 +57,8 @@ def main():
                         name = package.get("name", "N/A")
                         vulnerable_version_range = security_vulnerability.get("vulnerable_version_range", "N/A")
                         extended_description = (
-                            f"URL: [{security_event.get('html_url', 'N/A')}]({security_event.get('html_url', 'N/A')})\n"
+                            f"URL: [{security_event.get('html_url', 'N/A')}]"
+                            f"({security_event.get('html_url', 'N/A')})\n"
                             f"```\n"
                             f"Package: {name} ({ecosystem})\n"
                             f"Affected versions: {vulnerable_version_range} \n"
