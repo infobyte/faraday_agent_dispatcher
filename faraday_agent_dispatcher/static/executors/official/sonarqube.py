@@ -6,8 +6,8 @@ from faraday_plugins.plugins.repo.sonarqubeapi.plugin import SonarQubeAPIPlugin
 
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
-# ATTENTION: We only want to find vulnerabilities. Code smell and bugs doesn't matters for us.
-TYPE_VULNS = "VULNERABILITY"
+# ATTENTION: We only want to find security-related issues, maintainability and reliability don't matter for us
+ISSUE_IMPACT = "SECURITY"
 PAGE_SIZE = 500
 
 
@@ -87,6 +87,7 @@ def main():
 
     # ATTENTION: SonarQube API requires an empty password when auth method is via token
     session.auth = (token, "")
+    print(token, file=sys.stderr)
 
     # Issues api config
     page = 1
@@ -96,7 +97,7 @@ def main():
     response_json = {}
 
     while has_more_vulns:
-        params = {"types": TYPE_VULNS, "p": page, "ps": PAGE_SIZE}
+        params = {"impactSoftwareQualities": ISSUE_IMPACT, "p": page, "ps": PAGE_SIZE}
         if component_key:
             params["componentKeys"] = component_key
         try:
