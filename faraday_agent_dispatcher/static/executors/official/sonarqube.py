@@ -11,9 +11,6 @@ ISSUE_IMPACT = "SECURITY"
 PAGE_SIZE = 500
 
 
-import sys
-import requests
-
 def get_hotspots_info(session, sonar_qube_url, hotspot_ids):
     hotspots_data = []
     for hotspot_id in hotspot_ids:
@@ -24,8 +21,10 @@ def get_hotspots_info(session, sonar_qube_url, hotspot_ids):
             print(f"Network error fetching hotspot {hotspot_id}: {e}", file=sys.stderr)
             continue
         if response.status_code != 200:
-            print(f"SonarQube returned an error for hotspot {hotspot_id}: "
-                  f"{response.status_code} - {response.text}", file=sys.stderr)
+            print(
+                f"SonarQube returned an error for hotspot {hotspot_id}: " f"{response.status_code} - {response.text}",
+                file=sys.stderr,
+            )
             continue
         try:
             data = response.json()
@@ -34,7 +33,6 @@ def get_hotspots_info(session, sonar_qube_url, hotspot_ids):
             continue
         hotspots_data.append(data)
     return hotspots_data
-
 
 
 def get_hotspots_ids(session, sonar_qube_url, component_key):
@@ -49,8 +47,11 @@ def get_hotspots_ids(session, sonar_qube_url, component_key):
             print(f"Network error fetching component key {component_key}: {e}", file=sys.stderr)
             return hotspots_ids
         if response.status_code != 200:
-            print(f"SonarQube returned an error for component key {component_key}: "
-                  f"{response.status_code} - {response.text}", file=sys.stderr)
+            print(
+                f"SonarQube returned an error for component key {component_key}: "
+                f"{response.status_code} - {response.text}",
+                file=sys.stderr,
+            )
             return hotspots_ids
         try:
             response_json = response.json()
@@ -106,14 +107,19 @@ def main():
             print(f"Network error fetching issues. Component key {component_key}: {e}", file=sys.stderr)
             break
         if response.status_code != 200:
-            print(f"SonarQube returned an error for issue search. Component key {component_key}: "
-                  f"{response.status_code} - {response.text}", file=sys.stderr)
+            print(
+                f"SonarQube returned an error for issue search. Component key {component_key}: "
+                f"{response.status_code} - {response.text}",
+                file=sys.stderr,
+            )
             break
         try:
             response_json = response.json()
         except ValueError:
-            print(f"Invalid JSON in response for issue search. "
-                  f"Component key {component_key}: {response.text}", file=sys.stderr)
+            print(
+                f"Invalid JSON in response for issue search. " f"Component key {component_key}: {response.text}",
+                file=sys.stderr,
+            )
             continue
 
         issues = response_json.get("issues", [])
