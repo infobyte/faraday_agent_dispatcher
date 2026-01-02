@@ -1,5 +1,6 @@
 import json
 import sys
+import re
 
 import requests
 import os
@@ -10,31 +11,34 @@ logger = logging.getLogger(__name__)
 
 def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hostname_tags):
     security_events = json_response
-    hosts_ips = list({security_event["dependency"]["manifest_path"] for security_event in security_events})
+    hosts_ips = list(
+        {(security_event.get("dependency", {}) or {}).get("manifest_path", "") for security_event in security_events}
+    )
     hosts = []
 
     for ip in hosts_ips:
         host_vulns = []
         for security_event in security_events:
-            if security_event["dependency"]["manifest_path"] == ip:
-                vulnerability_data = security_event["security_advisory"]
+            if (security_event.get("dependency", {}) or {}).get("manifest_path", "") == ip:
+                vulnerability_data = security_event.get("security_advisory", {}) or {}
 
-                if security_event["state"] != "open":
+                if security_event.get("state", "open") != "open":
                     logger.warning(f"Vulnerability {security_event['number']} already closed...")
                     continue
 
-                security_vulnerability = security_event.get("security_vulnerability")
+                security_vulnerability = security_event.get("security_vulnerability", None)
 
                 extended_description = ""
                 if security_vulnerability:
-                    first_patched_version = security_vulnerability.get("first_patched_version", "N/A")
-                    first_patched_version_identifier = first_patched_version.get("identifier")
-                    package = security_vulnerability.get("package", None)
+                    first_patched_version = security_vulnerability.get("first_patched_version", {}) or {}
+                    first_patched_version_identifier = first_patched_version.get("identifier", "N/A")
+                    package = security_vulnerability.get("package", {}) or {}
                     ecosystem = package.get("ecosystem", "N/A")
                     name = package.get("name", "N/A")
                     vulnerable_version_range = security_vulnerability.get("vulnerable_version_range", "N/A")
+                    html_url = security_event.get("html_url", "N/A")
                     extended_description = (
-                        f"URL: [{security_event['html_url']}]({security_event['html_url']})\n"
+                        f"URL: [{html_url}]({html_url})\n"
                         f"```\n"
                         f"Package: {name} ({ecosystem})\n"
                         f"Affected versions: {vulnerable_version_range} \n"
@@ -42,24 +46,29 @@ def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hos
                         f"```"
                     )
                 vulnerability = {
-                    "name": f"{vulnerability_data['summary']}",
-                    "desc": f"{extended_description}\n{vulnerability_data['description']}\n",
+                    "name": f"{vulnerability_data.get('summary', 'N/A')}",
+                    "desc": f"{extended_description}\n{vulnerability_data.get('description', '')}\n",
                     "severity": f"{vulnerability_data['severity']}",
                     "type": "Vulnerability",
                     "impact": {
                         "accountability": False,
                         "availability": False,
                     },
-                    "cwe": [cwe["cwe_id"] for cwe in vulnerability_data["cwes"]],
-                    "cve": [cve["value"] for cve in vulnerability_data["identifiers"] if cve["type"] == "CVE"],
-                    "refs": [
-                        {"name": reference["url"], "type": "other"} for reference in vulnerability_data["references"]
+                    "cwe": [cwe.get("cwe_id", "N/A") for cwe in (vulnerability_data.get("cwes", {}) or {})],
+                    "cve": [
+                        cve.get("value", "N/A")
+                        for cve in (vulnerability_data.get("identifiers", {}) or {})
+                        if cve.get("type", "") == "CVE"
                     ],
-                    "status": "open" if security_event["state"] == "open" else "closed",
-                    "tags": extra_vuln_tags + ["dependabot"],
+                    "refs": [
+                        {"name": reference.get("url", "N/A"), "type": "other"}
+                        for reference in (vulnerability_data.get("references", {}) or {})
+                    ],
+                    "status": "open" if security_event.get("state", "open") == "open" else "closed",
+                    "tags": [extra_vuln_tags] + ["dependabot"],
                 }
 
-                cvss_vector_string = vulnerability_data["cvss"]["vector_string"]
+                cvss_vector_string = (vulnerability_data.get("cvss", {}) or {}).get("vector_string", None)
 
                 if cvss_vector_string:
                     if cvss_vector_string.startswith("CVSS:3"):
@@ -75,12 +84,20 @@ def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hos
                 "description": f"Dependabot recommendations on file {ip}\n\nRepository: {repo_url}",
                 "hostnames": [],
                 "vulnerabilities": host_vulns,
-                "tags": extra_hostname_tags + ["dependabot"],
+                "tags": [extra_hostname_tags] + ["dependabot"],
             }
         )
 
     data = {"hosts": hosts}
     print(json.dumps(data))
+
+
+def process_header_links(headers):
+    header_links = {}
+    links = re.findall(r'<(\S*)>; rel="(\w*)"', headers.get("Link", ""))
+    for link in links:
+        header_links[link[1]] = link[0]
+    return header_links
 
 
 def main():
@@ -96,16 +113,16 @@ def main():
         host_tag = host_tag.split(",")
 
     # TODO: should validate config?
-    dependabot_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPOSITORY}/dependabot/alerts"
+    begin_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPOSITORY}/dependabot/alerts"
+    fetch_url = begin_url
     github_auth = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
 
     security_events = []
-    page = 1
 
     while True:
-        params = {"page": page, "per_page": 100}
+        params = {"per_page": 100}
         try:
-            req = requests.get(dependabot_url, params=params, headers=github_auth, timeout=60)
+            req = requests.get(fetch_url, params=params, headers=github_auth, timeout=60)
         except requests.exceptions.RequestException as e:
             print(f"ERROR: Network Error: {e}", file=sys.stderr)
             return
@@ -113,10 +130,11 @@ def main():
             print(f"ERROR: Network status code {req.status_code}", file=sys.stderr)
             return
         page_events = req.json()
-        if not page_events:
-            break
         security_events.extend(page_events)
-        page += 1
+        links = process_header_links(req.headers)
+        if "next" not in links:
+            break
+        fetch_url = links["next"]
 
     make_report(security_events, GITHUB_OWNER, GITHUB_REPOSITORY, vuln_tag, host_tag)
 
