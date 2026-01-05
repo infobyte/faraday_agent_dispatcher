@@ -33,8 +33,8 @@ class SecurityEvent:
 
 
 def get_custom_description(vulnerability_data):
-    custom_description = f'{vulnerability_data["rule"]["full_description"]}'
-    most_recent_instance_data = vulnerability_data["most_recent_instance"]
+    custom_description = f'{vulnerability_data.get("rule", {}).get("full_description", "N/A")}'
+    most_recent_instance_data = vulnerability_data.get("most_recent_instance", {})
 
     if "location" in most_recent_instance_data:
         location_data = most_recent_instance_data["location"]
@@ -49,13 +49,13 @@ def get_custom_description(vulnerability_data):
             if commit_sha and path:
                 github_link = (
                     f"[View it on Github](https://github.com/{owner}/{repository}/blob/{commit_sha}/{path}"
-                    f"#L{location_data['start_line']}-{location_data['end_line']})"
+                    f"#L{location_data.get('start_line', 'N/A')}-{location_data.get('end_line', 'N/A')})"
                 )
 
             custom_description = (
                 f"{custom_description}\n\n"
-                f'Column: {location_data["start_column"]} - {location_data["end_column"]}\n'
-                f'Line: {location_data["start_line"]} - {location_data["end_line"]}\n\n'
+                f'Column: {location_data.get("start_column", "N/A")} - {location_data.get("end_column", "N/A")}\n'
+                f'Line: {location_data.get("start_line", "N/A")} - {location_data.get("end_line", "N/A")}\n\n'
                 f"{github_link}"
             )
     return custom_description
@@ -64,7 +64,11 @@ def get_custom_description(vulnerability_data):
 def get_security_event_obj(event_id):
     url = f"https://api.github.com/repos/{owner}/{repository}/code-scanning/alerts/{event_id}"
     auth = {"Authorization": f"Bearer {token}"}
-    response = requests.get(url, headers=auth, timeout=60)
+    try:
+        response = requests.get(url, headers=auth, timeout=60)
+    except requests.exceptions.RequestException as e:
+        print(f"ERROR: Network Error: {e}", file=sys.stderr)
+        return
     if response.status_code != http.HTTPStatus.OK:
         print(
             f"Response from server {response.status_code} / repo {repository} / owner {owner}",
@@ -74,7 +78,7 @@ def get_security_event_obj(event_id):
     security_event_obj = None
     event = response.json()
     if event:
-        name = event["rule"]["description"]
+        name = event.get("rule", {}).get("description", "N/A")
         description = get_custom_description(event)
         tags = get_tags(event)
         cwe = get_cwe(event)
@@ -93,8 +97,8 @@ def get_security_event_obj(event_id):
             description=description,
             tags=tags,
             cwe=cwe,
-            severity=event["rule"]["security_severity_level"],
-            data=event["most_recent_instance"]["message"]["text"],
+            severity=event.get("rule", {}).get("security_severity_level", "unclassified"),
+            data=event.get("most_recent_instance", {}).get("message", {}).get("text", "N/A"),
             refs=refs,
             cve=cve,
             resolution=resolution,
@@ -105,7 +109,7 @@ def get_security_event_obj(event_id):
 
 def get_cwe(alert):
     cwe_set = set()
-    for cwe in alert["rule"]["tags"]:
+    for cwe in alert.get("rule", {}).get("tags", []):
         if "cwe-" in cwe:
             try:
                 parsed_cwe = re.search(CWE_PATTERN, cwe)[1]
@@ -118,29 +122,29 @@ def get_cwe(alert):
 
 def get_tags(alert):
     tags = set()
-    for tag in alert["rule"]["tags"]:
+    for tag in alert.get("rule", {}).get("tags", []):
         if "cwe-" in tag:
             continue
         else:
             tags.add(tag)
-    if alert["most_recent_instance"]["category"].startswith("/language"):
+    if alert.get("most_recent_instance", {}).get("category", "N/A").startswith("/language"):
         tags.add(alert["most_recent_instance"]["category"].split(":")[1])
     return list(tags)
 
 
 def get_resolution(alert):
     try:
-        resolution, _ = alert["rule"]["help"].split("## References")
+        resolution, _ = alert.get("rule", {}).get("help", "N/A").split("## References")
     except ValueError:
-        resolution = alert["rule"]["help"]
+        resolution = alert.get("rule", {}).get("help", "N/A")
     return resolution
 
 
 def parse_resolution(alert):
     try:
-        resolution, unparsed_data = alert["rule"]["help"].split("## References")
+        resolution, unparsed_data = alert.get("rule", {}).get("help", "N/A").split("## References")
     except ValueError:
-        resolution = alert["rule"]["help"]
+        resolution = alert.get("rule", {}).get("help", "N/A")
         unparsed_data = ""
     return resolution, unparsed_data
 
@@ -186,14 +190,19 @@ def get_security_events():
 
 def get_assets_to_create(vulnerability_tags: list, asset_tags: list) -> list:
     security_events = get_security_events()
-    assets = list({security_event["most_recent_instance"]["location"]["path"] for security_event in security_events})
+    assets = list(
+        {
+            security_event.get("most_recent_instance", {}).get("location", {}).get("path", "N/A")
+            for security_event in security_events
+        }
+    )
     assets_to_create = []
 
     for asset in assets:
         asset_vulnerabilities = []
         for security_event in security_events:
-            if security_event["most_recent_instance"]["location"]["path"] == asset:
-                security_event_obj = get_security_event_obj(security_event["number"])
+            if security_event.get("most_recent_instance", {}).get("location", {}).get("path", "N/A") == asset:
+                security_event_obj = get_security_event_obj(security_event.get("number", None))
                 if not security_event_obj:
                     print(f"Could not get details of event with id {security_event['number']}")
                     continue

@@ -1,7 +1,6 @@
 import json
 import sys
 import re
-
 import requests
 import os
 import logging
@@ -23,7 +22,7 @@ def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hos
                 vulnerability_data = security_event.get("security_advisory", {}) or {}
 
                 if security_event.get("state", "open") != "open":
-                    logger.warning(f"Vulnerability {security_event['number']} already closed...")
+                    logger.warning(f"Vulnerability {security_event.get('number', 'N/A')} already closed...")
                     continue
 
                 security_vulnerability = security_event.get("security_vulnerability", None)
