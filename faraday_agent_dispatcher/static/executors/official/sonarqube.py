@@ -6,45 +6,58 @@ from faraday_plugins.plugins.repo.sonarqubeapi.plugin import SonarQubeAPIPlugin
 
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
-# ATTENTION: We only want to find vulnerabilities. Code smell and bugs doesn't matters for us.
-TYPE_VULNS = "VULNERABILITY"
+# ATTENTION: We only want to find security-related issues, maintainability and reliability don't matter for us
+ISSUE_IMPACT = "SECURITY"
 PAGE_SIZE = 500
 
 
-def get_hotspost_info(session, sonar_qube_url, hotspots_ids):
+def get_hotspots_info(session, sonar_qube_url, hotspot_ids):
     hotspots_data = []
-    for hotspot_id in hotspots_ids:
+    for hotspot_id in hotspot_ids:
         params = {"hotspot": hotspot_id}
         try:
-            response = session.get(f"{sonar_qube_url}/api/hotspots/show", params=params)
-            hotspots_data.append(response.json())
-        except Exception:
+            response = session.get(f"{sonar_qube_url}/api/hotspots/show", params=params, timeout=30)
+        except requests.RequestException as e:
+            print(f"Network error fetching hotspot {hotspot_id}: {e}", file=sys.stderr)
+            continue
+        if response.status_code != 200:
             print(
-                f"There was an error finding hotspots. Hotspot Key {hotspot_id}; "
-                f"Status Code {response.status_code} - {response.content}",
+                f"SonarQube returned an error for hotspot {hotspot_id}: " f"{response.status_code} - {response.text}",
                 file=sys.stderr,
             )
-            sys.exit(1)
+            continue
+        try:
+            data = response.json()
+        except ValueError:
+            print(f"Invalid JSON in response for hotspot {hotspot_id}: {response.text}", file=sys.stderr)
+            continue
+        hotspots_data.append(data)
     return hotspots_data
 
 
 def get_hotspots_ids(session, sonar_qube_url, component_key):
     has_more_hotspots = True
     hotspots_ids = []
-    params = {"p": 0, "ps": PAGE_SIZE, "sinceLeakPeriod": False, "status": "TO_REVIEW", "projectKey": component_key}
+    params = {"p": 1, "ps": PAGE_SIZE, "sinceLeakPeriod": False, "status": "TO_REVIEW", "projectKey": component_key}
 
     while has_more_hotspots:
-        params["p"] += 1
         try:
-            response = session.get(url=f"{sonar_qube_url}/api/hotspots/search", params=params)
-            response_json = response.json()
-        except Exception:
+            response = session.get(url=f"{sonar_qube_url}/api/hotspots/search", params=params, timeout=30)
+        except requests.RequestException as e:
+            print(f"Network error fetching component key {component_key}: {e}", file=sys.stderr)
+            return hotspots_ids
+        if response.status_code != 200:
             print(
-                f"There was an error finding issues. Component Key {component_key}; "
-                f"Status Code {response.status_code} - {response.content}",
+                f"SonarQube returned an error for component key {component_key}: "
+                f"{response.status_code} - {response.text}",
                 file=sys.stderr,
             )
-            sys.exit(1)
+            return hotspots_ids
+        try:
+            response_json = response.json()
+        except ValueError:
+            print(f"Invalid JSON in response for component key {component_key}: {response.text}", file=sys.stderr)
+            return hotspots_ids
 
         hotspots = response_json.get("hotspots", [])
         for hotspot in hotspots:
@@ -52,6 +65,7 @@ def get_hotspots_ids(session, sonar_qube_url, component_key):
         total_items = response_json.get("paging", {}).get("total", 0)
 
         has_more_hotspots = params["p"] * PAGE_SIZE < total_items
+        params["p"] += 1
     return hotspots_ids
 
 
@@ -74,44 +88,52 @@ def main():
 
     # ATTENTION: SonarQube API requires an empty password when auth method is via token
     session.auth = (token, "")
+    print(token, file=sys.stderr)
 
     # Issues api config
-    page = 0
+    page = 1
     has_more_vulns = True
 
     vulnerabilities = []
+    response_json = {}
 
     while has_more_vulns:
-        page += 1
-
-        params = {"types": TYPE_VULNS, "p": page, "ps": PAGE_SIZE}
+        params = {"impactSoftwareQualities": ISSUE_IMPACT, "p": page, "ps": PAGE_SIZE}
         if component_key:
             params["componentKeys"] = component_key
         try:
-            response = session.get(
-                url=f"{sonar_qube_url}/api/issues/search",
-                params=params,
-            )
-            response_json = response.json()
-        except Exception:
+            response = session.get(url=f"{sonar_qube_url}/api/issues/search", params=params, timeout=30)
+        except requests.RequestException as e:
+            print(f"Network error fetching issues. Component key {component_key}: {e}", file=sys.stderr)
+            break
+        if response.status_code != 200:
             print(
-                f"There was an error finding issues. Component Key {component_key}; "
-                f"Status Code {response.status_code} - {response.content}",
+                f"SonarQube returned an error for issue search. Component key {component_key}: "
+                f"{response.status_code} - {response.text}",
                 file=sys.stderr,
             )
-            sys.exit(1)
+            break
+        try:
+            response_json = response.json()
+        except ValueError:
+            print(
+                f"Invalid JSON in response for issue search. " f"Component key {component_key}: {response.text}",
+                file=sys.stderr,
+            )
+            continue
 
-        issues = response_json.get("issues")
+        issues = response_json.get("issues", [])
         vulnerabilities.extend(issues)
-        total_items = response_json.get("paging").get("total")
+        total_items = response_json.get("paging", {}).get("total", 0)
 
         has_more_vulns = page * PAGE_SIZE < total_items
+        page += 1
 
     response_json["issues"] = vulnerabilities
     if get_hotspot:
         hotspots_ids = get_hotspots_ids(session, sonar_qube_url, component_key)
         if hotspots_ids:
-            response_json["hotspots"] = get_hotspost_info(session, sonar_qube_url, hotspots_ids)
+            response_json["hotspots"] = get_hotspots_info(session, sonar_qube_url, hotspots_ids)
 
     sonar = SonarQubeAPIPlugin(**agent_config.to_plugin_kwargs())
     sonar.parseOutputString(json.dumps(response_json))
