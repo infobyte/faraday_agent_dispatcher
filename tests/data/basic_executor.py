@@ -17,7 +17,6 @@ import os
 import sys
 import json
 
-
 host_data = {
     "ip": "192.168.0.1",
     "description": "test",

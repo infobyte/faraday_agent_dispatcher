@@ -24,7 +24,6 @@ being logged in with your account.
 
 """
 
-
 import json
 import re
 import socket
