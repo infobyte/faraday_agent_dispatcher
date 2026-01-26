@@ -1,3 +1,11 @@
+3.9.1 [Jan 26th, 2026]:
+---
+ * [MOD] Extended max_size default value. #251
+ * [FIX] Improved error handling to only exit on non-200 HTTP status codes instead of all exceptions. #258
+ * [FIX] Changed default GVMD executor socket location. #259
+ * [FIX] Fixed pagination for GitHub Secret Detection, Dependabot & CodeQL. #260
+ * [MOD] Improved dict key accessing for GH Secrets, CodeQL and Dependabot. #261
+
 3.9.0 [October 8th, 2025]:
 ---
  * [MOD] Several tools used by Faraday agents have been upgraded to improve performance, compatibility, and security. #190
