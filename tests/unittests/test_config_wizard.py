@@ -18,7 +18,6 @@ from tests.unittests.config.wizard import (
 )
 from tests.unittests.wizard_input import DispatcherInput
 
-
 inputs = generate_inputs()
 no_ssl_ini_configs = generate_no_ssl_ini_configs()
 ssl_ini_configs = generate_ssl_ini_configs()

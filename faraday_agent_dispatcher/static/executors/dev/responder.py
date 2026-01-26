@@ -3,7 +3,6 @@ import re
 import json
 import subprocess
 
-
 host_data = {"ip": "{}", "description": "{}", "hostnames": []}
 
 service_data = {"name": "smb", "port": 445, "protocol": "tcp", "version": "{}"}

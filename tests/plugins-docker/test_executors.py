@@ -5,7 +5,6 @@ import subprocess
 
 import pytest
 
-
 # Executors not tested:
 # * burp: it's an API
 # * crackmapexec: it's for insecure AD, unavailable at CI test timing

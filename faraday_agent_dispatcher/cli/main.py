@@ -16,6 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """Console script for faraday_agent_dispatcher."""
+
 import os
 import signal
 import sys
@@ -31,7 +32,6 @@ from faraday_agent_dispatcher import config, __version__
 from faraday_agent_dispatcher.utils.text_utils import Bcolors
 import faraday_agent_dispatcher.logger as logging
 from pathlib import Path
-
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 

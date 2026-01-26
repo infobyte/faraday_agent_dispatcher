@@ -122,7 +122,7 @@ def verify_token(test_config, request):
         return web.HTTPUnauthorized()
     header = request.headers[test_config.app_config["SECURITY_TOKEN_AUTHENTICATION_HEADER"]]
     try:
-        (auth_type, token) = header.split(None, 1)
+        auth_type, token = header.split(None, 1)
     except ValueError:
         return web.HTTPUnauthorized()
     auth_type = auth_type.lower()

@@ -18,7 +18,6 @@ import time
 import random
 import json
 
-
 host_data = {
     "ip": "192.168.0.{}",
     "description": "test",

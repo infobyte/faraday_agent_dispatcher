@@ -9,7 +9,6 @@ from faraday_plugins.plugins.repo.nessus.plugin import NessusPlugin
 
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
-
 HTTP_REGEX = re.compile("^(http|https)://")
 TEMPLATE_NAMES = [
     "asv",
