@@ -61,3 +61,17 @@ include:
 
   - local: .gitlab/ci/publish/.pypi-gitlab-ci.yml
   - local: .gitlab/ci/publish/.publish-dockerhub-gitlab-ci.yml
+
+# ---------------------------------------------------------------------------
+# Trigger documentation update on new release
+# ---------------------------------------------------------------------------
+trigger_doc_update:
+  stage: publish
+  trigger:
+    project: faradaysec/faraday-docu-auto
+    branch: main
+    strategy: depend
+  variables:
+    REPO: faraday_agent_dispatcher_gitlab
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^[0-9]+\.[0-9]+/
