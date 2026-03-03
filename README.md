@@ -1,163 +1,171 @@
-Faraday Agents Dispatcher helps user develop integrations with
-[Faraday][faraday] written in any language. <!-- For more information, check [this
-blogpost][blogpost] or continue reading. -->
+# Faraday Agent Dispatcher
 
-[faraday]: https://github.com/infobyte/faraday/
-[plugins]: https://github.com/infobyte/faraday_plugins
-[blogpost]: https://medium.com/faraday
+[![PyPI version](https://img.shields.io/pypi/v/faraday-agent-dispatcher.svg)](https://pypi.org/project/faraday-agent-dispatcher/)
+[![License](https://img.shields.io/github/license/infobyte/faraday_agent_dispatcher.svg)](https://github.com/infobyte/faraday_agent_dispatcher/blob/master/LICENSE)
 
-# Installation
+Faraday Agent Dispatcher helps you develop and run integrations with [Faraday](https://github.com/infobyte/faraday/) written in any language. It acts as a bridge between your security scanning tools and the Faraday platform, automatically collecting scan results and importing them into your workspace.
 
-Just run `pip3 install faraday_agent_dispatcher` and you should see the
-`faraday-dispatcher` command in your system.
+**Current version: 3.9.1**
 
-To setup a development environment (this is, to change code of the dispatcher
-itself, not to write your own integrations), you should clone this repo and run
-`pip install -e .`.
+## Features
 
-# Running Faraday Agent Dispatcher for first time
+- **27 official executors** — ready-to-use integrations for popular security tools (Nmap, Nessus, Nuclei, Burp Suite, and more)
+- **Custom executor support** — write your own executors in any language (Python, Bash, or anything that prints JSON to stdout)
+- **Interactive configuration wizard** — guided setup for server connection, agent registration, and executor configuration
+- **YAML configuration** — human-readable config format (INI format supported as legacy)
+- **Docker support** — pre-built Docker image with common security tools installed
+- **Multiple dispatcher instances** — run separate configurations for different sets of executors
+- **WebSocket communication** — real-time bidirectional communication with Faraday Server via Socket.IO
+- **Async architecture** — concurrent executor management with asyncio
 
-1. Generate a configuration file running `faraday-dispatcher
-config-wizard`.
+## Installation
 
-2. Run the agent with `faraday-dispatcher run` command. The config file
-that it creates will be located in `~/.faraday/config/dispatcher.ini`
-if you do not pass a custom path.
+### pip (recommended)
 
-You should complete the agent configuration with your registration
-token, located at http://localhost:5985/#/admin/agents. Check that the
-server section has the correct information about your Faraday
-Server instance. Then, complete the agent section with the desired name
-of your agent. Finally, [add the executors](#configuring-a-executor)
+```bash
+pip3 install faraday_agent_dispatcher
+```
 
-# Executors
+### From source (development)
 
-## Creating your own executors
+```bash
+git clone https://github.com/infobyte/faraday_agent_dispatcher.git
+cd faraday_agent_dispatcher
+pip install -e .
+```
 
-An executor is a script that prints out **single-line** JSON data to
-stdout. Remember that if you print any other data to stdout, the
-dispatcher will trigger an error. If you want to print debugging or
-logging information you should use stderr for that.
+### Docker
 
-Every line written to stdout by the executor will be decoded by the
-dispatcher and sent to Faraday using the Bulk Create endpoint.
-Therefore, the JSON you print must have the schema that the endpoint
-requires (this schema is detailed [below](#bulk-create-json-format)).
-Otherwise, the dispatcher will complain because you supplied invalid
-data to it.
+```bash
+docker pull faradaysec/faraday_agent_dispatcher:latest
+```
 
-If you want to debug your executor, the simplest way to do it is by
-running it directly instead of running with the Dispatcher. Since the executor
-just prints JSON data to stdout, you will be able to see all
-information it wants to send to Faraday, but without actually sending
-it.
+See the [Docker documentation](https://docs.agents.faradaysec.com/misc/docker/) for detailed container setup.
 
-## Configuring a executor
+## Quick Start
 
-After writing your executor, you have to add it with the
-`faraday-dispatcher config-wizard` within the executor section, adding
-its name, command to execute and the max size of the JSON to send to
-Faraday Server. Additionally, you can configure the Environment
-variables and Arguments in their proper section.
+### 1. Run the Configuration Wizard
 
-## Running a executor
+```bash
+faraday-dispatcher config-wizard
+```
 
-To run an executor use the `faraday-dispatcher config-wizard` command,
-and play it from the Faraday Server. The executor will use the
-environment variables set and ask for the arguments.
+The wizard will guide you through:
+- Faraday Server connection (host, port, SSL)
+- Agent registration token (found at `http://<faraday-server>:5985/#/admin/agents`)
+- Executor selection and configuration
 
-# Bulk Create JSON format
+### 2. Start the Dispatcher
 
-The data published to [faraday][faraday] must correspond to the
-`bulk_create` endpoint of the [Faraday's REST API][API]
+```bash
+faraday-dispatcher run
+```
 
-# Running multiple dispatchers
+The default configuration file is saved to `~/.faraday/config/dispatcher.yaml`. To use a custom path:
 
-If you want to have more than one dispatcher, each one runninng its own
-executors, the preferred of doing this is to create different
-configuration files for each one (for example,
-`~/.faraday/config/dispatcher-1.ini` and
-`~/.faraday/config/dispatcher-2.ini`). Then, you can run two different
-Dispatcher instances with `faraday-dispatcher --config-file
-PATH_TO_A_CONFIG_FILE`.
+```bash
+faraday-dispatcher run --config-file /path/to/config.yaml
+```
 
-# Executors
+### 3. Run an Executor
 
-Inside the [executors][executors] directory you can find the already
-created executors.
+Once the dispatcher is connected, trigger executors from:
+- **Faraday Web UI** — navigate to your workspace, select the agent, and click "Run"
+- **Faraday API** — `POST /v3/ws/<workspace>/agents/<agent_id>/run/`
 
-## Official
+## Official Executors
 
-The [official executors][official_executors] are the collection of ready-to-go
-executors (with minimum configuration with the wizard). They have a manifest
-JSON file, which gives details about the uses of the executor and helps with
-the configuration of them.
+| Category | Executors |
+|----------|-----------|
+| Network Scanning | [Nmap](https://nmap.org), [Sublist3r](https://github.com/aboul3la/Sublist3r), [Shodan](https://www.shodan.io/) |
+| Vulnerability Scanning | [Nessus](https://www.nessus.org), [Tenable.io](https://www.tenable.com/), [Tenable.sc](https://www.tenable.com/), [OpenVAS/GVM](https://www.openvas.org/), [OpenVAS Legacy](https://www.openvas.org/), [InsightVM](https://www.rapid7.com/products/insightvm/), [Qualys](https://www.qualys.com/), [Nuclei](https://github.com/projectdiscovery/nuclei) |
+| Web Application | [Burp Suite](https://www.portswigger.net/burp), [Arachni](https://www.arachni-scanner.com/), [ZAP](https://www.zaproxy.org/), [W3af](http://w3af.org/), [WPScan](https://wpscan.org/), [WPScan Legacy](https://wpscan.org/), [Nikto](https://cirt.net/Nikto2), [HCL AppScan](https://cloud.appscan.com) |
+| Code Analysis | [SonarQube](https://www.sonarqube.org/), [CodeQL](https://codeql.github.com/), [Dependabot](https://github.com/dependabot), [GitHub Secret Scanning](https://docs.github.com/en/code-security/secret-scanning) |
+| Enterprise | [CrackMapExec](https://github.com/byt3bl33d3r/CrackMapExec), [Cisco CyberVision](https://www.cisco.com/c/en/us/products/security/cyber-vision/index.html), [Microsoft Defender](https://www.microsoft.com/en-us/security/business/endpoint-security/microsoft-defender-endpoint) |
+| Utilities | Report Processor (import local reports with [Faraday Plugins](https://github.com/infobyte/faraday_plugins)) |
 
-The current official executors are:
+## Custom Executors
 
-* [Arachni][arachni]
-* [Burp][burp]
-* [CrackMapExec][crackmap]
-* [Nessus][nessus]
-* [Nikto][nikto]
-* [Nmap][nmap]
-* [Nuclei][nuclei]
-* [Openvas][openvas]
-* Report processor: Consumes a local report where the dispatcher is with the [faraday plugins][plugins]
-* [QualysGuard] [qualys]
-* [Sonar Qube API][sonarqubeapi]
-* [Sublist3r][sublist3r]
-* [W3af][w3af]
-* [Wpscan][wpscan]
-* [Zap][zap]
+An executor is a script that prints **single-line JSON** data to stdout in the [Faraday bulk_create format](https://api.faradaysec.com/). Use stderr for logging and debugging output.
 
-## Development
+### Minimal Python Example
 
-The [development executors][dev_executors] are the collection of executors we
-do **not** fully maintain, we have examples of use, conceptual, and in
-development executors. The most important of them are:
+```python
+#!/usr/bin/env python3
+import json, sys
 
-* `basic_example.py`: The Hello World of Faraday executors. It will
-  create a host with an associeted vulnerability to it
-* `heroku_discovery_agent.py`: Load host and service information from
-  your Heroku account
-* `prowlerSample.py`: Run the [**prowler**][prowler] command and send
-  its output to Faraday
-* `brainfuck.sh`: A proof-of-concept to demonstrate you can create
-  an executor in any programming language, including [Brainfuck][brainfuck]!
+print("Starting scan...", file=sys.stderr)
+data = {
+    "hosts": [{
+        "ip": "192.168.1.1",
+        "description": "Test host",
+        "vulnerabilities": [{
+            "name": "Example Vuln",
+            "desc": "Found by custom executor",
+            "severity": "medium",
+            "type": "Vulnerability",
+        }]
+    }]
+}
+print(json.dumps(data))
+```
 
-[executors]: https://github.com/infobyte/faraday_agent_dispatcher/tree/master/faraday_agent_dispatcher/static/executors
-[official_executors]: https://github.com/infobyte/faraday_agent_dispatcher/tree/master/faraday_agent_dispatcher/static/executors/official
-[dev_executors]: https://github.com/infobyte/faraday_agent_dispatcher/tree/master/faraday_agent_dispatcher/static/executors/dev
-[brainfuck]: https://en.wikipedia.org/wiki/Brainfuck
-[prowler]: https://github.com/toniblyx/prowler
-[nessus]: https://www.nessus.org
-[nikto]: https://cirt.net/Nikto2
-[nmap]: https://nmap.org
-[nuclei]: https://github.com/projectdiscovery/nuclei
-[qualys]: https://www.qualys.com/
-[sonarqubeapi]: https://www.sonarqube.org/
-[sublist3r]: https://github.com/aboul3la/Sublist3r
-[w3af]: http://w3af.org/
-[wpscan]: https://wpscan.org/
-[arachni]: https://www.arachni-scanner.com/
-[openvas]: https://www.openvas.org/
-[zap]: https://www.zaproxy.org/
-[burp]: https://www.portswigger.net/burp
-[crackmap]: https://github.com/byt3bl33d3r/CrackMapExec
+### Configuring a Custom Executor
 
-# Roadmap
+Add your executor with the `faraday-dispatcher config-wizard` or directly in the YAML configuration:
 
-We are currently working on new executors, apart from improving the
-experience using the agents.
+```yaml
+executors:
+  my_scanner:
+    cmd: python3 /path/to/my_executor.py
+    max_size: 65536
+    varenvs:
+      API_KEY: your-api-key
+    params:
+      TARGET:
+        type: string
+        mandatory: true
+```
 
-We would like to give some agents read access to their workspace,
-so they can benefit of the existing data in order to find more valuable
-information.
+See the [custom executor guide](https://docs.agents.faradaysec.com/examples/new-custom-executor/) for detailed instructions.
 
-# Documentation
+## Running Multiple Dispatchers
 
-For more info you can check our [documentation][doc]
+To run multiple dispatcher instances, each with its own executors, create separate configuration files:
 
-[doc]: https://docs.agents.faradaysec.com
-[API]: https://api.faradaysec.com/
+```bash
+faraday-dispatcher run --config-file ~/.faraday/config/dispatcher-1.yaml
+faraday-dispatcher run --config-file ~/.faraday/config/dispatcher-2.yaml
+```
+
+## Requirements
+
+- Python 3.8+
+- [Faraday](https://github.com/infobyte/faraday/) Server (v4.0+)
+- [faraday-plugins](https://github.com/infobyte/faraday_plugins) (>=1.26.0)
+- [faraday-agent-parameters-types](https://pypi.org/project/faraday-agent-parameters-types/) (>=1.9.0)
+
+## Documentation
+
+Full documentation is available at **[docs.agents.faradaysec.com](https://docs.agents.faradaysec.com)**.
+
+- [Getting Started](https://docs.agents.faradaysec.com/getting-started/)
+- [Architecture](https://docs.agents.faradaysec.com/technical/arch/)
+- [Executor Development](https://docs.agents.faradaysec.com/technical/agents/)
+- [Docker Deployment](https://docs.agents.faradaysec.com/misc/docker/)
+- [Executor Guides](https://docs.agents.faradaysec.com/misc/) (AppScan, Qualys, SonarQube, Tenable.io)
+
+## API Reference
+
+The Faraday REST API is documented at **[api.faradaysec.com](https://api.faradaysec.com/)**.
+
+## Links
+
+- [Faraday Platform](https://github.com/infobyte/faraday/)
+- [Faraday Plugins](https://github.com/infobyte/faraday_plugins)
+- [Faraday CLI](https://github.com/infobyte/faraday-cli)
+- [PyPI Package](https://pypi.org/project/faraday-agent-dispatcher/)
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 — see the [LICENSE](LICENSE) file for details.

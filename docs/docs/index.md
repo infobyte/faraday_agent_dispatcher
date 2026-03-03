@@ -1,26 +1,87 @@
-# Easier integrations with Faraday Agents
-Integrating systems is an elusive but mandatory job in any software product's
-life. Developers have to deal with languages they don't know, undocumented APIs
-or new paradigms. This leads to the fact that many product teams decide not to
-open the possibility to integrate to them.
+# Faraday Agent Dispatcher
 
-In [Faraday][faraday]’s case, we are aware that integrations with other security
-tools are a critical part of our product. However, we’ve realized that our
- [Plugin system][plugins] wasn't as easy as we expected to develop some
- integrations: it required some level of interactivity (either running a
- command from the console or importing a report), so it was hard to use on a
- periodic basis. It also forced integration developers to use our Python API,
- even when the tool to integrate with wasn't programmed in Python, making it
- harder for the developer.
+**Version:** 3.9.1 | **Python:** 3.10+ | **Faraday Server:** 5.x
 
-To solve this problem, we have the **Faraday Agents**! You can use the [getting
-started guide](getting-started.md) to use one of our official executors, or code
- and use one custom executor. Otherwise, you can [use our docker
-image](misc/docker.md) with some tools already built and ready to
- go!
+The Faraday Agent Dispatcher connects your security tools to [Faraday](https://github.com/infobyte/faraday) for automated, non-interactive vulnerability scanning. It eliminates the need to manually run tools and import reports — instead, agents run as persistent background processes that execute on demand and stream results directly into your workspace.
 
-You can also check our [architecture](technical/arch.md) or
- [technical](technical/agents.md) section, to understand how the agents works.
+---
 
-[faraday]: https://github.com/infobyte/faraday
-[plugins]: https://github.com/infobyte/faraday_plugins
+## How It Works
+
+1. The dispatcher connects to the Faraday server via Socket.IO
+2. It advertises its configured **executors** (security tool wrappers)
+3. You trigger scans from the Faraday UI, the scheduler, or the API
+4. The dispatcher launches the requested executor as a subprocess
+5. Results are sent to the Faraday `bulk_create` endpoint automatically
+
+Each agent can host **multiple executors**. An executor is a script (any language) that wraps a specific tool and outputs Faraday-compatible JSON to stdout.
+
+---
+
+## Official Executors
+
+The dispatcher ships with **27 built-in executors** covering popular security tools:
+
+| Category | Executors |
+|----------|-----------|
+| **Network scanning** | Nmap, Shodan |
+| **Vulnerability scanning** | Nessus, Qualys, Tenable.io, Tenable.sc, InsightVM, OpenVAS (GVM), OpenVAS (legacy) |
+| **Web application** | Burp Suite, ZAP, Arachni, Nikto, W3AF, WPScan, Nuclei |
+| **Code analysis** | SonarQube, CodeQL, Dependabot |
+| **Enterprise** | IBM AppScan, Cisco CyberVision, Microsoft Defender |
+| **Utilities** | CrackMapExec, Sublist3r, Report Processor |
+
+You can also write **custom executors** in any programming language.
+
+---
+
+## Quick Start
+
+```shell
+# Install
+pip install faraday_agent_dispatcher
+
+# Configure
+faraday-dispatcher config-wizard
+
+# Register and run (first time — get a token from Faraday admin panel)
+faraday-dispatcher run --token=YOUR_TOKEN
+
+# Subsequent runs (token is stored in config)
+faraday-dispatcher run
+```
+
+For full instructions, see the [Getting Started Guide](getting-started.md).
+
+---
+
+## Documentation
+
+| Page | Description |
+|------|-------------|
+| [Getting Started](getting-started.md) | Installation, configuration, registration, and first run |
+| [Architecture](technical/arch.md) | Component diagram and communication protocol |
+| [Agents & Executors](technical/agents.md) | Executor model, environment variables, parameters, and custom development |
+| [Docker Deployment](misc/docker.md) | Docker image, docker-compose, and pre-installed tools |
+| [Custom Executor Example](examples/new-custom-executor.md) | Step-by-step guide to writing your own executor |
+
+---
+
+## Docker
+
+A pre-built Docker image is available with common security tools already installed:
+
+```shell
+docker pull faradaysec/faraday_agent_dispatcher
+```
+
+See the [Docker guide](misc/docker.md) for details.
+
+---
+
+## Links
+
+- [Faraday Server](https://github.com/infobyte/faraday)
+- [Faraday Plugins](https://github.com/infobyte/faraday_plugins)
+- [Report an Issue](https://github.com/infobyte/faraday_agent_dispatcher/issues)
+- [Faraday Documentation](https://docs.faradaysec.com)
