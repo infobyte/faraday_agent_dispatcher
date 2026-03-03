@@ -1,154 +1,312 @@
-# Agents
+# Agents & Executors
 
-Using [Faraday][faraday] to upload reports from tools is great. But when
- automatizing a scan, it is not expected to write scripts mixing its Python API
- configuration with the scan code. Moreover, if the scan code is in other
- language and/or another host, there will be code mangling the http connection.
+**Dispatcher version:** 3.9.1 | **Faraday Server:** 5.x
 
-On runtime, the Faraday Agent will be in charge of the connection, and be focus
- on the code automatizing the scan.
+The Faraday Agent Dispatcher automates security tool execution by running **executors** — scripts that wrap specific tools and output results in Faraday-compatible JSON. This page covers the executor model, environment variable system, parameter types, and how to develop custom executors.
+
+---
 
 ## Executors
 
 ![Architecture executors](../images/arch_executors.png)
 
-The important code which the Agent can run resides in the Executors, it can
- be in any language, and interact with any other resources. The only expected
- behaviour is as it were part of a shell pipeline, meaning that its output
- is expected to by:
+An executor is a standalone script that:
 
- * stdout: Only relevant data sent to Faraday, it must be in json format,
- expected to be received by the [Faraday API][API]
- * stderr: All kind of info not relevant to Faraday, such as information
-  and errors.
+1. Reads configuration from **environment variables**
+2. Runs a security tool or data collection process
+3. Outputs Faraday-compatible JSON to **stdout** (one JSON document per line)
+4. Outputs logging/diagnostic info to **stderr**
+5. Exits with code 0 on success, non-zero on failure
+
+Executors can be written in **any language** and interact with any external service. The dispatcher manages their lifecycle as subprocesses.
 
 !!! warning "End of file"
-    Both **stdout** and **stderr** are assumed closed by receiving double `\n`.
+    Both **stdout** and **stderr** streams are assumed closed when the executor process exits.
 
-Some executors are parametrized by:
+---
 
- * Environment variables: These contains fixed or private configuration,
- such as API Tokens, directory or file path, etc.
- * Arguments: These parameters comes from Faraday, and can differ between
-  executions, such as IP range, a feature flag, etc. All parameters
-  goes by environment variables, prefixed as `EXECUTOR_CONFIG_{PARAM_NAME}`
-  to not conflict with actual environment variables. It is configurable if they
-  are mandatory or not.
+## Environment Variable System
 
-Also faraday server can send plugins arguments when you run an executer.
-These are:
-- AGENT_CONFIG_IGNORE_INFO: Bool, will ignore info level vulnerabilities.
-- AGENT_CONFIG_RESOLVE_HOSTNAME: Bool, will resolve the hostname if posible.
-- AGENT_CONFIG_VULN_TAG: List of strings, will add the tags to the vulns.
-- AGENT_CONFIG_SERVICE_TAG: List of strings, will add the tags to the services.
-- AGENT_CONFIG_HOSTNAME_TAG: List of strings, will add the tags to the hosts.
+When the dispatcher spawns an executor subprocess, it injects configuration through environment variables from three sources:
 
-!!! info
-    All that configuration allows executor debugging being a lot more easier,
-    not needing the Agent to be run, only with a shell command
+### Variable prefixes
+
+| Source | Prefix | Set By | Example |
+|--------|--------|--------|---------|
+| Runtime arguments | `EXECUTOR_CONFIG_` | Faraday server (from UI/API/scheduler) | `EXECUTOR_CONFIG_TARGET=192.168.1.0/24` |
+| Plugin arguments | `AGENT_CONFIG_` | Faraday server (shared filters/tags) | `AGENT_CONFIG_IGNORE_INFO=True` |
+| Persistent credentials | *(no prefix)* | Config file `varenvs` section | `NESSUS_USERNAME=admin` |
+
+The executor reads these from its environment — for example, `os.environ["EXECUTOR_CONFIG_TARGET"]` in Python or `$EXECUTOR_CONFIG_TARGET` in Bash.
+
+**List parameters** passed as `EXECUTOR_CONFIG_*` are JSON-encoded:
+```
+EXECUTOR_CONFIG_TARGETS=["10.0.0.1","10.0.0.2"]
+```
+
+**List parameters** passed as `AGENT_CONFIG_*` are comma-separated:
+```
+AGENT_CONFIG_VULN_TAG=web,critical
+```
+
+### Common agent parameters (plugin arguments)
+
+These parameters are sent by the Faraday server and are available to all executors:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `AGENT_CONFIG_IGNORE_INFO` | Boolean | Skip informational-severity vulnerabilities |
+| `AGENT_CONFIG_RESOLVE_HOSTNAME` | Boolean | Resolve hostnames to IP addresses |
+| `AGENT_CONFIG_MIN_SEVERITY` | String | Minimum severity filter |
+| `AGENT_CONFIG_MAX_SEVERITY` | String | Maximum severity filter |
+| `AGENT_CONFIG_VULN_TAG` | CSV list | Tags to apply to vulnerabilities |
+| `AGENT_CONFIG_SERVICE_TAG` | CSV list | Tags to apply to services |
+| `AGENT_CONFIG_HOSTNAME_TAG` | CSV list | Tags to apply to hosts |
+
+!!! info "Debugging executors"
+    The environment variable system makes executor debugging straightforward — you can run an executor directly without the dispatcher by setting the expected variables:
     ```sh
-    $ ./my_executor # This assume, as within the agent, that the enviroment is ready
+    export EXECUTOR_CONFIG_TARGET="192.168.1.1"
+    ./my_executor.py
     ```
 
-### Official executors
-The Faraday agent is shipped with some pre-configured executors. While
- configuring the agent with the [configuration wizard][wizard], it will already
- know with are the environment variables and arguments. It will ask for the
- variables values and will be ready to go. These executors are in
- `faraday_agent_dispatcher/static/executors/official`, and all their
- configuration is in its own manifest JSON file.
+---
 
-### Custom executors
-When requiring a custom executor, its possible to configuring them with the
- [configuration wizard][wizard], and it will ask for which are the environment
- variables and their value as for the parameters, and whether they are
- mandatory or not.
+## Parameter Type System
 
-## Dispatcher
+The `faraday_agent_parameters_types` package (v1.9.1) provides **10 validated types** for executor parameters. The dispatcher validates parameters against their declared types **before** spawning the executor — invalid parameters result in a `RUN_STATUS` error sent back to the server.
 
-![Architecture dispatcher](../images/arch_dispatcher.png)
+| Type | Validation | Example Use |
+|------|-----------|-------------|
+| `string` | Any non-empty string | `target_host` |
+| `integer` | Whole number | `port` |
+| `float` | Decimal number | `timeout` |
+| `boolean` | `true` / `false` | `verbose` |
+| `list` | JSON array of strings | `targets` |
+| `ip` | Valid IPv4/IPv6 address | `scan_target` |
+| `url` | Valid URL format | `api_endpoint` |
+| `password` | Masked string (hidden in UI) | `secret_key` |
+| `domains` | Comma-separated domain names | `target_domains` |
+| `range` | IP range (CIDR or dash notation) | `network_range` |
 
-The agent dispatcher is a middleware, between the executors, and the Faraday
- server. It will handle the multiple processes and communication with them,
- and with the server.
+---
 
-### Communication with Faraday
+## Official Executors
 
-When communicating with Faraday there are some things to be aware of:
+The dispatcher ships with **27 pre-configured executors** in `faraday_agent_dispatcher/static/executors/official/`. Each has a manifest JSON file (in `faraday_agent_parameters_types`) that defines its configuration:
 
- * The agent initiates the communication, no matter if it is registering
-  itself as a new agent or just connecting in an restart process.
- * The server has a collection of Agents to run executors, and has the
-  ability to say when to run them. A never ending executor, **always**
-  receive the first start command from the server.
- * For now, the agent only post data to the server, when any executor says
-  it has new data.
+```json
+{
+  "cmd": "python {EXECUTOR_FILE_PATH}",
+  "repo_executor": "nmap.py",
+  "environment_variables": ["NMAP_EXTRA_ARGS"],
+  "arguments": {
+    "target": {
+      "mandatory": true,
+      "type": "ip",
+      "base": "string"
+    }
+  },
+  "check_cmds": ["nmap --version"],
+  "category": ["Network & Vulnerability Scanners"]
+}
+```
 
-That being said, it is clearly separated between two different type of
- connection between Agent and server:
+| Manifest field | Purpose |
+|----------------|---------|
+| `cmd` | Command template. `{EXECUTOR_FILE_PATH}` is replaced with the absolute path to the executor script |
+| `repo_executor` | Filename of the executor script in `static/executors/official/` |
+| `environment_variables` | List of credential env vars that must be set in `varenvs` |
+| `arguments` | Parameter definitions with type, mandatory flag, and base type |
+| `check_cmds` | Shell commands to verify tool dependencies before execution |
+| `category` | Tool category for UI grouping |
 
- * REST API: General data, such as registering a new agent and publishing
-  new data. Its always the agent interacting with the server.
- * Websockets: Commands data, its a separated protocol for agents management.
+When using the [configuration wizard](../getting-started.md), official executors are auto-detected — the wizard knows their environment variables and parameters, and will prompt for values.
 
-#### REST API
-Faraday has a vast REST API, and there are a few endpoints used by
- the agent, which are used for:
+---
 
- * `/_api/v3/info`: Connectivity check.
- * `/_api/v3/agents`: [POST] Registration of a new agent.
- * `/_api/v3/agent_websocket_token`: Get a [websocket](#websockets) token.
- * `/_api/v3/ws/{workspace_name}/bulk_create`: Publish data to a specific
-  workspace
+## Custom Executors
 
-!!! info "REST API Documentarion"
-    For more info about the API, use its own [documentation][API]
+You can create executors in any language. The dispatcher doesn't care about implementation details — only about the input/output contract.
 
-#### Websockets
-For commands, a bidirectional communication is expected between the Agent
- and the server.
-The server can only send a `RUN` command, specifying which
- executor to run, its parameters, plugins arguments (ignore info, resolve_hostname) and to which workspaces post the data. It
- also has some metadata relevant to the faraday server to identify the
- execution.
+### Minimal Python example
 
-The agent is able to notify the server with three actions:
+```python
+#!/usr/bin/env python3
+import os
+import json
+import sys
 
- * `JOIN_AGENT`: Notify the server it is ready to run, which executors are
-  available and their params.
- * `LEAVE_AGENT`: Notify of disconnection.
- * `RUN_STATUS`: After a `RUN` command, notify if something was wrong and
-  won't run, or if the executor run successfully or not.
+target = os.environ.get("EXECUTOR_CONFIG_TARGET", "")
+
+if not target:
+    print("No target specified", file=sys.stderr)
+    sys.exit(1)
+
+# Your tool logic here
+results = {
+    "hosts": [
+        {
+            "ip": target,
+            "description": "Scanned host",
+            "hostnames": [],
+            "services": [],
+            "vulnerabilities": []
+        }
+    ]
+}
+
+print(json.dumps(results))
+```
+
+### Minimal Bash example
+
+```bash
+#!/bin/bash
+TARGET="${EXECUTOR_CONFIG_TARGET}"
+
+if [ -z "$TARGET" ]; then
+    echo "No target specified" >&2
+    exit 1
+fi
+
+# Run your tool and convert output to Faraday JSON
+echo "{\"hosts\": [{\"ip\": \"${TARGET}\", \"services\": [], \"vulnerabilities\": []}]}"
+```
+
+### Registering a custom executor
+
+Add the executor to your `dispatcher.yaml` config file:
+
+```yaml
+agent:
+  executors:
+    my_tool:
+      cmd: /path/to/my_executor.py
+      max_size: 65536
+      varenvs:
+        API_KEY: "your-api-key"
+      params:
+        target:
+          mandatory: true
+          type: string
+          base: string
+        verbose:
+          mandatory: false
+          type: boolean
+          base: string
+```
+
+Or use the interactive wizard:
+
+```shell
+faraday-dispatcher config-wizard
+```
+
+The wizard will prompt for custom executor details: command path, environment variables and their values, parameters and whether they are mandatory.
+
+---
+
+## Result Submission (bulk_create)
+
+### Stdout format
+
+The executor's stdout must produce JSON matching the Faraday `bulk_create` schema. Each line should be a complete JSON document:
+
+```json
+{
+  "hosts": [
+    {
+      "ip": "192.168.1.1",
+      "description": "Target host",
+      "hostnames": ["server.example.com"],
+      "os": "Linux",
+      "services": [
+        {
+          "name": "http",
+          "port": 80,
+          "protocol": "tcp",
+          "status": "open",
+          "version": "Apache 2.4",
+          "vulnerabilities": [
+            {
+              "name": "Apache Version Disclosure",
+              "desc": "The server exposes its version number",
+              "severity": "low",
+              "refs": ["CVE-2024-XXXX"],
+              "tags": ["web", "disclosure"],
+              "data": "Additional technical details...",
+              "type": "Vulnerability"
+            }
+          ]
+        }
+      ],
+      "vulnerabilities": []
+    }
+  ]
+}
+```
+
+### Processing pipeline
+
+The `StdOutLineProcessor` handles each line of stdout:
+
+1. Parses the line as JSON
+2. Appends `execution_id` and `command` metadata
+3. POSTs to `/_api/v3/ws/{workspace}/bulk_create` for each target workspace
+4. Authentication: `Authorization: agent <agent_token>`
+5. Expected response: HTTP 201
+
+When the executor process exits, the dispatcher sends a final `bulk_create` with an empty hosts array and the execution duration (in microseconds):
+
+```json
+{
+  "hosts": [],
+  "execution_id": 42,
+  "command": {
+    "tool": "my-agent",
+    "command": "nmap_scan",
+    "user": "",
+    "hostname": "",
+    "params": "target=192.168.1.0/24",
+    "import_source": "agent",
+    "start_date": "2026-02-27T10:30:00",
+    "duration": 45000000
+  }
+}
+```
+
+### Stderr
+
+Stderr output is captured by the `StdErrLineProcessor` and logged to the dispatcher console. It does not affect data submission — use stderr for progress messages, debug info, and error reporting.
+
+---
+
+## Dispatcher Internals
 
 ### Communication with executors
-[As mentioned before](#executors), executors take parameters and environment
- variables as input methods, and standard files as stderr and stdout as
- output methods.
 
-### Why is the agent asynchronous?
-There are some reasons for that:
+The dispatcher communicates with executors through:
 
- 1. It is expected the dispatcher runs multiples executors at the same time,
- and isn't waiting to be finished while midway data is ready to be sent.
- 1. Moreover, the dispatcher is just a IO-bound middleware, waiting for
- news from the server or the executors.
- 1. Finally, the executors can be written in any language, that
- means they can be in the same process.
+- **Input:** Environment variables (set before subprocess creation)
+- **Output:** stdout for data (JSON), stderr for logs
+- **Lifecycle:** `asyncio.create_subprocess_shell` with concurrent stdout/stderr readers
 
-All these features can be accomplished by using Python [asyncio][asyncio]
- in the development of it. So, the dispatcher is a single-process with
- single-threading. Its living coroutines basically are:
+### Why async?
 
- * A waiting coroutine for web-sockets commands.
- * A launch executor coroutine.
- * The listen a stderr and stdout from executor coroutines.
+The dispatcher is single-process, single-threaded, and async for good reasons:
+
+1. It runs multiple executors concurrently — each executor gets its own stdout/stderr reader coroutines
+2. It is IO-bound, spending most time waiting for news from the server or executors
+3. Executors can be in any language, so they run as subprocesses (not in-process)
+
+All of this maps naturally to Python [asyncio][asyncio]:
+
+- A waiting coroutine for Socket.IO commands
+- A launch-executor coroutine per run command
+- Stdout and stderr reader coroutines per executor
 
 !!! warning
-    As its mentioned there are only 3 types of living coroutines, but are
-    multiple running. The main coroutine is always running or waiting, and 3
-    more coroutines are running for each executor.
+    While there are only 3 types of coroutines, multiple instances run simultaneously. The main coroutine is always running, plus 3 coroutines per active executor.
 
-[API]: https://api.faradaysec.com
-[faraday]: https://github.com/infobyte/faraday
-[wizard]: ../418.md
 [asyncio]: https://docs.python.org/3/library/asyncio.html
