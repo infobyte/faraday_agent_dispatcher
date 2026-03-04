@@ -2,8 +2,8 @@
 # faraday-agent-dispatcher — .gitlab-ci.yml
 # =============================================================================
 # CHANGES: Added faraday-devsecops include, security_scan stage,
-#          and security scan jobs with Vault integration.
-#          Same MANAOS_* pattern as faraday-cli (test vars conflict).
+#          and security scan jobs. Uses MANAOS_* overrides (test vars conflict).
+#          Uses group-level CI/CD variables for Faraday credentials.
 # =============================================================================
 
 variables:
@@ -75,45 +75,35 @@ include:
 # =============================================================================
 
 bandit:
-  extends:
-    - .bandit-scan
-    - .get-secrets
+  extends: .bandit-scan
   variables:
     FARADAY_URL: ${MANAOS_URL}
     FARADAY_USER: ${MANAOS_USER}
     FARADAY_PASSWORD: ${MANAOS_PASSWORD}
 
 semgrep:
-  extends:
-    - .semgrep-scan
-    - .get-secrets
+  extends: .semgrep-scan
   variables:
     FARADAY_URL: ${MANAOS_URL}
     FARADAY_USER: ${MANAOS_USER}
     FARADAY_PASSWORD: ${MANAOS_PASSWORD}
 
 trivy-deps:
-  extends:
-    - .trivy-fs-scan
-    - .get-secrets
+  extends: .trivy-fs-scan
   variables:
     FARADAY_URL: ${MANAOS_URL}
     FARADAY_USER: ${MANAOS_USER}
     FARADAY_PASSWORD: ${MANAOS_PASSWORD}
 
 gitleaks:
-  extends:
-    - .gitleaks-scan
-    - .get-secrets
+  extends: .gitleaks-scan
   variables:
     FARADAY_URL: ${MANAOS_URL}
     FARADAY_USER: ${MANAOS_USER}
     FARADAY_PASSWORD: ${MANAOS_PASSWORD}
 
 sonarcloud:
-  extends:
-    - .sonarcloud-scan
-    - .get-secrets
+  extends: .sonarcloud-scan
   variables:
     SONAR_ORGANIZATION: "faradaysec"
     SONAR_PROJECT_KEY: "faradaysec_faraday-agent-dispatcher"
