@@ -1,3 +1,11 @@
+# =============================================================================
+# faraday-agent-dispatcher — .gitlab-ci.yml
+# =============================================================================
+# CHANGES: Added faraday-devsecops include, security_scan stage,
+#          and security scan jobs with Vault integration.
+#          Same MANAOS_* pattern as faraday-cli (test vars conflict).
+# =============================================================================
+
 variables:
     TZ: "America/New_York"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -5,6 +13,7 @@ variables:
     POSTGRES_DB: custom_db
     POSTGRES_USER: custom_user
     POSTGRES_PASSWORD: custom_pass
+    # NOTE: These are TEST credentials for functional tests
     FARADAY_USER: custom_user
     FARADAY_PASSWORD: custom_pass
     FARADAY_EMAIL: test@test.com
@@ -35,6 +44,7 @@ stages:
     # - post_testing
     - integration-build
     - integration-test
+    - security_scan        # NEW
     - build
     - publish
     - deploy
@@ -43,21 +53,84 @@ services:
     - postgres:latest
 
 include:
+  # --- Existing includes ---
   - local: docs/.gitlab-ci.yml
-
   - local: .gitlab/ci/.get-secrets.yml
-
   - local: .gitlab/ci/.rules-conditions.yml
-
   - local: .gitlab/ci/.pre-gitlab-ci.yml
-
   - local: .gitlab/ci/testing/.testing-gitlab-ci.yml
   #- local: .gitlab/ci/testing/.post-gitlab-ci.yml
-
   - local: .gitlab/ci/plugins-integration/.build-gitlab-ci.yml
   #- local: .gitlab/ci/plugins-integration/.testing-gitlab-ci.yml
-
   - local: .gitlab/ci/build_ci/.build-gitlab-ci.yml
-
   - local: .gitlab/ci/publish/.pypi-gitlab-ci.yml
   - local: .gitlab/ci/publish/.publish-dockerhub-gitlab-ci.yml
+
+  # --- NEW: Faraday DevSecOps security scanning ---
+  - project: 'faradaysec/faraday-devsecops'
+    file: '/gitlab-ci/faraday-devsecops.yml'
+
+# =============================================================================
+# Security Scan Jobs
+# =============================================================================
+
+bandit:
+  extends:
+    - .bandit-scan
+    - .get-secrets
+  variables:
+    FARADAY_URL: ${MANAOS_URL}
+    FARADAY_USER: ${MANAOS_USER}
+    FARADAY_PASSWORD: ${MANAOS_PASSWORD}
+
+semgrep:
+  extends:
+    - .semgrep-scan
+    - .get-secrets
+  variables:
+    FARADAY_URL: ${MANAOS_URL}
+    FARADAY_USER: ${MANAOS_USER}
+    FARADAY_PASSWORD: ${MANAOS_PASSWORD}
+
+trivy-deps:
+  extends:
+    - .trivy-fs-scan
+    - .get-secrets
+  variables:
+    FARADAY_URL: ${MANAOS_URL}
+    FARADAY_USER: ${MANAOS_USER}
+    FARADAY_PASSWORD: ${MANAOS_PASSWORD}
+
+gitleaks:
+  extends:
+    - .gitleaks-scan
+    - .get-secrets
+  variables:
+    FARADAY_URL: ${MANAOS_URL}
+    FARADAY_USER: ${MANAOS_USER}
+    FARADAY_PASSWORD: ${MANAOS_PASSWORD}
+
+sonarcloud:
+  extends:
+    - .sonarcloud-scan
+    - .get-secrets
+  variables:
+    SONAR_ORGANIZATION: "faradaysec"
+    SONAR_PROJECT_KEY: "faradaysec_faraday-agent-dispatcher"
+    FARADAY_URL: ${MANAOS_URL}
+    FARADAY_USER: ${MANAOS_USER}
+    FARADAY_PASSWORD: ${MANAOS_PASSWORD}
+
+# ---------------------------------------------------------------------------
+# Trigger documentation update on new release
+# ---------------------------------------------------------------------------
+trigger_doc_update:
+  stage: publish
+  trigger:
+    project: faradaysec/faraday-docu-auto
+    branch: main
+    strategy: depend
+  variables:
+    REPO: faraday_agent_dispatcher_gitlab
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^[0-9]+\.[0-9]+/
