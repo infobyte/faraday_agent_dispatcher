@@ -1,5 +1,38 @@
 # Getting started
 
+## Requirements
+
+### Hardware requirements
+
+| Resource | Minimum | Recommended |
+|----------|---------|-------------|
+| CPU | 1 core | 2+ cores |
+| RAM | 512 MB | 1 GB |
+| Disk | 100 MB (base install) | 1 GB+ (with security tools) |
+
+!!! note
+    These are the requirements for the dispatcher itself. The actual resource usage
+    will depend on the executors you run (e.g., Nmap, Nessus, OpenVAS). Each security
+    tool has its own resource requirements that should be considered separately.
+
+!!! note
+    If you use the Docker image with all pre-installed security tools (based on Kali Linux),
+    you will need at least 2 GB of disk space.
+
+### Software requirements
+
+- **Python** >= 3.8 (3.8, 3.9, 3.10 officially tested)
+- **pip** (Python package manager)
+- **Faraday Server** running and accessible via network
+- **Connectivity** to the Faraday Server REST API and WebSocket ports
+
+### Supported operating systems
+
+- Linux (recommended)
+- macOS
+- Windows (with Python 3.8+)
+- Docker (Python 3.13-slim or Kali Linux based images available)
+
 ## Install
 
 === "pip"
