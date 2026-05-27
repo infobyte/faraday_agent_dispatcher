@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+"""Generate a Kubernetes manifest for a dispatcher with all official executors.
+
+The generated Secret contains the dispatcher token, so do not commit generated
+output with a real --agent-token value.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+from typing import Any
+
+import yaml
+from faraday_agent_dispatcher import __version__
+from faraday_agent_parameters_types.utils import get_manifests
+
+
+DEFAULT_EXECUTOR_ENVS = {
+    "arachni": {"ARACHNI_PATH": "/usr/local/src/arachni/bin"},
+    "nuclei": {"NUCLEI_TEMPLATES": "/root/nuclei-templates"},
+    "report_processor": {"REPORTS_PATH": "/root/reports"},
+}
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Generate a Vicarius dispatcher manifest with all official Faraday executors."
+    )
+    parser.add_argument("--agent-token", required=True, help="64-character token returned by POST /_api/v3/agents")
+    parser.add_argument("--namespace", default="client-vicarius")
+    parser.add_argument("--deployment", default="vicarius-agent-dispatcher")
+    parser.add_argument("--agent-name", default="vicariusAllToolsDispatcher")
+    parser.add_argument("--host", default="vicarius.apps.faradaysec.com")
+    parser.add_argument("--image", default="faradaysec/faraday_agent_dispatcher:3.9.1")
+    parser.add_argument("--node-group", default="corporate")
+    parser.add_argument("--output", help="Write generated YAML to this path instead of stdout")
+    parser.add_argument("--config-only", action="store_true", help="Only output dispatcher.yaml content")
+    return parser.parse_args()
+
+
+def build_executors() -> dict[str, dict[str, Any]]:
+    executors = {}
+    manifests = get_manifests(__version__)
+
+    for name in sorted(manifests):
+        manifest = manifests[name]
+        varenvs = {env_name: "" for env_name in manifest.get("environment_variables", [])}
+        varenvs.update(DEFAULT_EXECUTOR_ENVS.get(name, {}))
+
+        executors[name] = {
+            "max_size": 314572800,
+            "repo_executor": manifest["repo_executor"],
+            "repo_name": name,
+            "params": manifest.get("arguments", {}),
+            "varenvs": varenvs,
+        }
+
+    return executors
+
+
+def build_dispatcher_config(args: argparse.Namespace) -> dict[str, Any]:
+    return {
+        "agent": {
+            "agent_name": args.agent_name,
+            "description": "Demo dispatcher with all official Faraday executors for Vicarius partnership evaluation",
+            "executors": build_executors(),
+        },
+        "server": {
+            "host": args.host,
+            "ssl": True,
+            "ssl_ignore": False,
+            "ssl_cert": "",
+            "api_port": 443,
+            "websocket_port": 443,
+        },
+        "tokens": {"agent": args.agent_token},
+    }
+
+
+def labels() -> dict[str, str]:
+    return {
+        "app.kubernetes.io/name": "faraday-agent-dispatcher",
+        "app.kubernetes.io/instance": "vicarius",
+        "app.kubernetes.io/component": "agent-dispatcher",
+    }
+
+
+def build_k8s_manifest(args: argparse.Namespace) -> list[dict[str, Any]]:
+    dispatcher_config = build_dispatcher_config(args)
+    executor_count = len(dispatcher_config["agent"]["executors"])
+    object_labels = labels()
+
+    secret = {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+            "name": f"{args.deployment}-config",
+            "namespace": args.namespace,
+            "labels": object_labels,
+            "annotations": {
+                "faradaysec.com/executor-count": str(executor_count),
+                "faradaysec.com/dispatcher-version": __version__,
+            },
+        },
+        "type": "Opaque",
+        "stringData": {
+            "dispatcher.yaml": yaml.safe_dump(dispatcher_config, sort_keys=False),
+        },
+    }
+
+    deployment = {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "metadata": {
+            "name": args.deployment,
+            "namespace": args.namespace,
+            "labels": object_labels,
+        },
+        "spec": {
+            "replicas": 1,
+            "revisionHistoryLimit": 3,
+            "selector": {"matchLabels": object_labels},
+            "strategy": {"type": "RollingUpdate"},
+            "template": {
+                "metadata": {
+                    "labels": object_labels,
+                    "annotations": {
+                        "faradaysec.com/executor-count": str(executor_count),
+                        "faradaysec.com/config-source": "generated-from-faraday_agent_dispatcher-manifests",
+                    },
+                },
+                "spec": {
+                    "nodeSelector": {"node-group": args.node_group},
+                    "terminationGracePeriodSeconds": 30,
+                    "containers": [
+                        {
+                            "name": "dispatcher",
+                            "image": args.image,
+                            "imagePullPolicy": "IfNotPresent",
+                            "args": [
+                                "--config-file",
+                                "/root/.faraday/config/dispatcher.yaml",
+                                "--logdir",
+                                "/root/.faraday/logs",
+                                "--log-level",
+                                "info",
+                            ],
+                            "env": [
+                                {"name": "PYTHONUNBUFFERED", "value": "1"},
+                                {"name": "HOME", "value": "/root"},
+                            ],
+                            "resources": {
+                                "requests": {"cpu": "500m", "memory": "1Gi"},
+                                "limits": {"cpu": "2", "memory": "4Gi"},
+                            },
+                            "volumeMounts": [
+                                {
+                                    "name": "dispatcher-config",
+                                    "mountPath": "/root/.faraday/config/dispatcher.yaml",
+                                    "subPath": "dispatcher.yaml",
+                                    "readOnly": True,
+                                },
+                                {"name": "dispatcher-logs", "mountPath": "/root/.faraday/logs"},
+                                {"name": "dispatcher-reports", "mountPath": "/root/reports"},
+                            ],
+                        }
+                    ],
+                    "volumes": [
+                        {
+                            "name": "dispatcher-config",
+                            "secret": {"secretName": f"{args.deployment}-config"},
+                        },
+                        {"name": "dispatcher-logs", "emptyDir": {}},
+                        {"name": "dispatcher-reports", "emptyDir": {}},
+                    ],
+                },
+            },
+        },
+    }
+
+    return [secret, deployment]
+
+
+def render(args: argparse.Namespace) -> str:
+    if not (len(args.agent_token) == 64 and args.agent_token.isalnum()):
+        raise ValueError("--agent-token must be a 64-character alphanumeric Faraday agent token")
+
+    if args.config_only:
+        return yaml.safe_dump(build_dispatcher_config(args), sort_keys=False)
+
+    return yaml.safe_dump_all(build_k8s_manifest(args), sort_keys=False)
+
+
+def main() -> int:
+    args = parse_args()
+    try:
+        output = render(args)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    if args.output:
+        Path(args.output).write_text(output, encoding="utf-8")
+    else:
+        print(output, end="")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
