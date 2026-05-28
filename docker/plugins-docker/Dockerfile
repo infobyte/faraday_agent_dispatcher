@@ -6,6 +6,18 @@ RUN go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 #### main tools ####
 FROM kalilinux/kali-rolling AS final
 
+# openvas pulls systemd, whose postinst fails on sandboxed CI runners with
+# EUNATCH ("Protocol driver not attached") when it runs systemctl and
+# systemd-machine-id-setup. Divert systemctl to a no-op (the diversion survives
+# the systemd package unpack), block service auto-start via policy-rc.d, and
+# pre-seed a valid machine-id so dpkg can configure systemd during the install.
+RUN dpkg-divert --local --rename --add /usr/bin/systemctl \
+ && ln -sf /bin/true /usr/bin/systemctl \
+ && printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d \
+ && chmod 0755 /usr/sbin/policy-rc.d \
+ && tr -d '-' < /proc/sys/kernel/random/uuid > /etc/machine-id
+ENV SYSTEMD_OFFLINE=1
+
 RUN apt-get update -y && apt-get install --yes --no-install-recommends \
         build-essential git \
         python3 python3-pip python3-venv python3-setuptools \
