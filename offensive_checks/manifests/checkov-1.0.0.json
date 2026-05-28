@@ -1,0 +1,21 @@
+{
+    "arguments": {
+        "CHECKOV_TARGET": {"mandatory": true, "type": "string", "base": "string"},
+        "CHECKOV_FRAMEWORK": {"mandatory": false, "type": "string", "base": "string"},
+        "CHECKOV_SKIP_CHECK": {"mandatory": false, "type": "string", "base": "string"},
+        "CHECKOV_CHECK": {"mandatory": false, "type": "string", "base": "string"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "checkov --version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Source Code Analysis",
+    "name": "checkov",
+    "title": "Checkov",
+    "website": "https://www.checkov.io/",
+    "description": "Static analysis for IaC (Terraform, CloudFormation, Kubernetes, Helm, ARM, Dockerfile, secrets) -> SARIF output via faraday_plugins.sarif",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "checkov.py"
+}

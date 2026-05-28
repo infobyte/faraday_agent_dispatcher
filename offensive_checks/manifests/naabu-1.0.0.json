@@ -1,0 +1,23 @@
+{
+    "arguments": {
+        "NAABU_HOST": {"mandatory": false, "type": "string", "base": "string"},
+        "NAABU_HOST_LIST": {"mandatory": false, "type": "list", "base": "list"},
+        "NAABU_PORTS": {"mandatory": false, "type": "string", "base": "string"},
+        "NAABU_TOP_PORTS": {"mandatory": false, "type": "string", "base": "string"},
+        "NAABU_RATE": {"mandatory": false, "type": "integer", "base": "integer"},
+        "NAABU_THREADS": {"mandatory": false, "type": "integer", "base": "integer"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "naabu -version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network Tools",
+    "name": "naabu",
+    "title": "Naabu",
+    "website": "https://github.com/projectdiscovery/naabu",
+    "description": "Fast SYN/CONNECT port scanner",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "naabu.py"
+}

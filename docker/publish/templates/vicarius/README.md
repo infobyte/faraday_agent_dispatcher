@@ -109,7 +109,38 @@ Trying to connect to: https://vicarius.apps.faradaysec.com:443
 
 ## Registered Executors
 
-`appscan`, `arachni`, `burp`, `cisco_cybervision`, `codeql`, `crackmapexec`, `dependabot`, `github_secrets`, `gvm_openvas`, `insightvm`, `microsoft_defender`, `nessus`, `nikto2`, `nmap`, `nuclei`, `openvas_legacy`, `qualys`, `report_processor`, `shodan2`, `sonarqube`, `sublist3r`, `tenableio`, `tenablesc`, `w3af`, `wpscan`, `wpscan_legacy`, `zap`.
+**Official (27):** `appscan`, `arachni`, `burp`, `cisco_cybervision`, `codeql`, `crackmapexec`, `dependabot`, `github_secrets`, `gvm_openvas`, `insightvm`, `microsoft_defender`, `nessus`, `nikto2`, `nmap`, `nuclei`, `openvas_legacy`, `qualys`, `report_processor`, `shodan2`, `sonarqube`, `sublist3r`, `tenableio`, `tenablesc`, `w3af`, `wpscan`, `wpscan_legacy`, `zap`.
+
+**Offensive Checks (20):** `bandit`, `semgrep`, `shellcheck`, `snyk`, `gitleaks`, `trufflehog`, `checkov`, `prowler`, `tfsec`, `kics`, `trivy`, `grype`, `kubescape`, `kube-bench`, `subfinder`, `naabu`, `ffuf`, `crowdstrike`, `sentinelone`, `wazuh`.
+
+The offensive-check manifests are vendored into the image (`offensive_checks/manifests/`, copied into `faraday_agent_parameters_types/static/manifests/` at build time), their tool binaries are installed in the final image, and two `faraday_plugins` parser fixes (Trivy `Code: null`, CrowdStrike missing `severity`) are applied via `offensive_checks/patches/faraday_plugins_offensive_fixes.patch`. No package release is required.
+
+## Capability-Grouped Agents
+
+Instead of one all-tools agent, the offensive-check executors can be deployed as separate agents per capability group. Pass `--group` to the generator; each group produces its own Secret + Deployment (`vicarius-<group>-dispatcher`) and agent name:
+
+| `--group` | agent name | executors |
+|-----------|-----------|-----------|
+| `code-sast` | `code-sast-agent` | bandit, semgrep, shellcheck, snyk |
+| `secrets` | `secrets-agent` | gitleaks, trufflehog |
+| `iac-cloud` | `iac-cloud-agent` | checkov, prowler, tfsec, kics |
+| `container-k8s` | `container-k8s-agent` | trivy, grype, kubescape, kube-bench |
+| `discovery-osint` | `discovery-osint-agent` | subfinder, naabu |
+| `web-dast` | `web-dast-agent` | ffuf |
+| `endpoint-edr` | `endpoint-edr-agent` | crowdstrike, sentinelone, wazuh |
+
+Each group needs its own agent token (one `POST /_api/v3/agents` per group). Example:
+
+```bash
+for group in code-sast secrets iac-cloud container-k8s discovery-osint web-dast endpoint-edr; do
+  TOKEN=$(...mint a token as above, with AGENT_NAME=${group}-agent...)
+  ./.venv/bin/python docker/publish/templates/vicarius/generate_dispatcher_manifest.py \
+    --group "$group" --agent-token "$TOKEN" \
+    | AWS_PROFILE=faraday_prod kubectl --context faraday-prod apply -f -
+done
+```
+
+Omitting `--group` keeps the original behavior: a single `vicariusAllToolsDispatcher` with all 47 executors.
 
 ## Credential And Runtime Gaps
 

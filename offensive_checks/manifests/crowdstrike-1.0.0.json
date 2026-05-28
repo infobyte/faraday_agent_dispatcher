@@ -1,0 +1,18 @@
+{
+    "arguments": {
+        "CROWDSTRIKE_REPORT": {"mandatory": true, "type": "string", "base": "string"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "python3 -c 'from faraday_plugins.plugins.repo.crowdstrike.plugin import Crowdstrike'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "crowdstrike",
+    "title": "CrowdStrike Falcon",
+    "website": "https://www.crowdstrike.com/",
+    "description": "CrowdStrike Falcon detections importer (JSON export on disk; replace read_report() with falconpy for API-pull)",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "crowdstrike.py"
+}

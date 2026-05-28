@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "PROWLER_PROVIDER": {"mandatory": false, "type": "string", "base": "string"},
+        "PROWLER_CHECKS": {"mandatory": false, "type": "string", "base": "string"},
+        "PROWLER_SEVERITY": {"mandatory": false, "type": "string", "base": "string"},
+        "PROWLER_SERVICES": {"mandatory": false, "type": "string", "base": "string"},
+        "PROWLER_REGIONS": {"mandatory": false, "type": "string", "base": "string"}
+    },
+    "environment_variables": [
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_SESSION_TOKEN",
+        "AWS_DEFAULT_REGION",
+        "AZURE_TENANT_ID",
+        "AZURE_CLIENT_ID",
+        "AZURE_CLIENT_SECRET",
+        "GOOGLE_APPLICATION_CREDENTIALS"
+    ],
+    "check_cmds": [
+        "prowler --version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "prowler",
+    "title": "Prowler",
+    "website": "https://github.com/prowler-cloud/prowler",
+    "description": "Cloud Security Posture Management (CSPM) for AWS, Azure, GCP and Kubernetes",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "prowler.py"
+}

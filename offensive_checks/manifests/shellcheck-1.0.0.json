@@ -1,0 +1,20 @@
+{
+    "arguments": {
+        "SHELLCHECK_TARGET": {"mandatory": true, "type": "string", "base": "string"},
+        "SHELLCHECK_SEVERITY": {"mandatory": false, "type": "string", "base": "string"},
+        "SHELLCHECK_SHELL": {"mandatory": false, "type": "string", "base": "string"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "shellcheck --version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Source Code Analysis",
+    "name": "shellcheck",
+    "title": "ShellCheck",
+    "website": "https://www.shellcheck.net/",
+    "description": "Static analysis for shell scripts (bash, sh, dash, ksh)",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "shellcheck.py"
+}

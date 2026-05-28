@@ -1,0 +1,23 @@
+{
+    "arguments": {
+        "SENTINELONE_SINCE": {"mandatory": false, "type": "string", "base": "string"},
+        "SENTINELONE_VERIFY_SSL": {"mandatory": false, "type": "boolean", "base": "boolean"}
+    },
+    "environment_variables": [
+        "SENTINELONE_URL",
+        "SENTINELONE_TOKEN",
+        "SENTINELONE_ACCOUNT_ID"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "sentinelone",
+    "title": "SentinelOne",
+    "website": "https://www.sentinelone.com/",
+    "description": "Pulls threats from the SentinelOne management API (/web/api/v2.1/threats) and maps them to Faraday hosts/vulnerabilities",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "sentinelone.py"
+}

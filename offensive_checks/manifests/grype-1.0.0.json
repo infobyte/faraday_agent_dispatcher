@@ -1,0 +1,21 @@
+{
+    "arguments": {
+        "GRYPE_TARGET": {"mandatory": true, "type": "string", "base": "string"},
+        "GRYPE_FAIL_ON": {"mandatory": false, "type": "string", "base": "string"},
+        "GRYPE_ONLY_FIXED": {"mandatory": false, "type": "boolean", "base": "boolean"},
+        "GRYPE_SCOPE": {"mandatory": false, "type": "string", "base": "string"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "grype version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "grype",
+    "title": "Grype",
+    "website": "https://github.com/anchore/grype",
+    "description": "Vulnerability scanner for container images and filesystems",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "grype.py"
+}

@@ -1,0 +1,21 @@
+{
+    "arguments": {
+        "GITLEAKS_TARGET": {"mandatory": true, "type": "string", "base": "string"},
+        "GITLEAKS_MODE": {"mandatory": false, "type": "string", "base": "string"},
+        "GITLEAKS_CONFIG": {"mandatory": false, "type": "string", "base": "string"},
+        "GITLEAKS_REDACT": {"mandatory": false, "type": "boolean", "base": "boolean"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "gitleaks version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Source Code Analysis",
+    "name": "gitleaks",
+    "title": "Gitleaks",
+    "website": "https://github.com/gitleaks/gitleaks",
+    "description": "Secret detection in source code and git history",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "gitleaks.py"
+}

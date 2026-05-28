@@ -1,0 +1,20 @@
+{
+    "arguments": {
+        "KICS_TARGET": {"mandatory": true, "type": "string", "base": "string"},
+        "KICS_TYPE": {"mandatory": false, "type": "string", "base": "string"},
+        "KICS_EXCLUDE_SEVERITIES": {"mandatory": false, "type": "string", "base": "string"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "kics version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Source Code Analysis",
+    "name": "kics",
+    "title": "KICS",
+    "website": "https://kics.io/",
+    "description": "Keeping Infrastructure as Code Secure: Terraform, Kubernetes, Dockerfile, CloudFormation, Ansible, Helm. SARIF -> faraday_plugins.sarif",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "kics.py"
+}

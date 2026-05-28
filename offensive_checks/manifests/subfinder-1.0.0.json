@@ -1,0 +1,22 @@
+{
+    "arguments": {
+        "SUBFINDER_DOMAIN": {"mandatory": false, "type": "string", "base": "string"},
+        "SUBFINDER_DOMAIN_LIST": {"mandatory": false, "type": "list", "base": "list"},
+        "SUBFINDER_SOURCES": {"mandatory": false, "type": "string", "base": "string"},
+        "SUBFINDER_THREADS": {"mandatory": false, "type": "integer", "base": "integer"},
+        "SUBFINDER_RECURSIVE": {"mandatory": false, "type": "boolean", "base": "boolean"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "subfinder -version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network Tools",
+    "name": "subfinder",
+    "title": "Subfinder",
+    "website": "https://github.com/projectdiscovery/subfinder",
+    "description": "Passive subdomain enumeration from public sources",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "subfinder.py"
+}

@@ -1,0 +1,21 @@
+{
+    "arguments": {
+        "SEMGREP_TARGET": {"mandatory": true, "type": "string", "base": "string"},
+        "SEMGREP_CONFIG": {"mandatory": false, "type": "string", "base": "string"},
+        "SEMGREP_EXCLUDE": {"mandatory": false, "type": "list", "base": "list"},
+        "SEMGREP_TIMEOUT": {"mandatory": false, "type": "integer", "base": "integer"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "semgrep --version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Source Code Analysis",
+    "name": "semgrep",
+    "title": "Semgrep",
+    "website": "https://semgrep.dev/",
+    "description": "Static analysis (SAST) for many languages using rule packs",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "semgrep.py"
+}

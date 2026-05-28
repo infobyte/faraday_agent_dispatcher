@@ -1,0 +1,22 @@
+{
+    "arguments": {
+        "KUBESCAPE_SCAN_TARGET": {"mandatory": false, "type": "string", "base": "string"},
+        "KUBESCAPE_FRAMEWORK": {"mandatory": false, "type": "string", "base": "string"},
+        "KUBESCAPE_CONTROL_ID": {"mandatory": false, "type": "string", "base": "string"},
+        "KUBESCAPE_KUBECONFIG": {"mandatory": false, "type": "string", "base": "string"},
+        "KUBESCAPE_MANIFEST_PATH": {"mandatory": false, "type": "string", "base": "string"}
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "kubescape version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "kubescape",
+    "title": "Kubescape",
+    "website": "https://kubescape.io/",
+    "description": "Kubernetes posture & compliance scanner (NSA, MITRE, CIS, Soc2)",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "kubescape.py"
+}

@@ -24,6 +24,41 @@ DEFAULT_EXECUTOR_ENVS = {
 }
 
 
+# Offensive Checks capability groups. Each becomes its own agent/Deployment
+# when --group is passed. Names not listed here are part of the default
+# "all official tools" agent only.
+AGENT_GROUPS = {
+    "code-sast": {
+        "agent_name": "code-sast-agent",
+        "executors": ["bandit", "semgrep", "shellcheck", "snyk"],
+    },
+    "secrets": {
+        "agent_name": "secrets-agent",
+        "executors": ["gitleaks", "trufflehog"],
+    },
+    "iac-cloud": {
+        "agent_name": "iac-cloud-agent",
+        "executors": ["checkov", "prowler", "tfsec", "kics"],
+    },
+    "container-k8s": {
+        "agent_name": "container-k8s-agent",
+        "executors": ["trivy", "grype", "kubescape", "kube-bench"],
+    },
+    "discovery-osint": {
+        "agent_name": "discovery-osint-agent",
+        "executors": ["subfinder", "naabu"],
+    },
+    "web-dast": {
+        "agent_name": "web-dast-agent",
+        "executors": ["ffuf"],
+    },
+    "endpoint-edr": {
+        "agent_name": "endpoint-edr-agent",
+        "executors": ["crowdstrike", "sentinelone", "wazuh"],
+    },
+}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Generate a Vicarius dispatcher manifest with all official Faraday executors."
@@ -35,16 +70,34 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--host", default="vicarius.apps.faradaysec.com")
     parser.add_argument("--image", default="faradaysec/faraday_agent_dispatcher:3.9.1")
     parser.add_argument("--node-group", default="corporate")
+    parser.add_argument(
+        "--group",
+        choices=sorted(AGENT_GROUPS),
+        help="Restrict to a single capability group (its executors, agent name and deployment name). "
+        "Omit for the default all-official-tools agent.",
+    )
     parser.add_argument("--output", help="Write generated YAML to this path instead of stdout")
     parser.add_argument("--config-only", action="store_true", help="Only output dispatcher.yaml content")
     return parser.parse_args()
 
 
-def build_executors() -> dict[str, dict[str, Any]]:
+def build_executors(only: list[str] | None = None) -> dict[str, dict[str, Any]]:
     executors = {}
     manifests = get_manifests(__version__)
 
-    for name in sorted(manifests):
+    if only is not None:
+        missing = [name for name in only if name not in manifests]
+        if missing:
+            raise ValueError(
+                f"group references executors with no installed manifest: {missing}. "
+                "Ensure the offensive-check manifests are vendored into "
+                "faraday_agent_parameters_types/static/manifests/."
+            )
+        wanted = [name for name in sorted(manifests) if name in only]
+    else:
+        wanted = sorted(manifests)
+
+    for name in wanted:
         manifest = manifests[name]
         varenvs = {env_name: "" for env_name in manifest.get("environment_variables", [])}
         varenvs.update(DEFAULT_EXECUTOR_ENVS.get(name, {}))
@@ -60,12 +113,29 @@ def build_executors() -> dict[str, dict[str, Any]]:
     return executors
 
 
+def resolve_group(args: argparse.Namespace):
+    """Return (agent_name, deployment_name, executor_filter, description)."""
+    if args.group:
+        group = AGENT_GROUPS[args.group]
+        agent_name = group["agent_name"]
+        deployment = f"vicarius-{args.group}-dispatcher"
+        description = f"Offensive Checks {args.group} agent for Vicarius"
+        return agent_name, deployment, group["executors"], description
+    return (
+        args.agent_name,
+        args.deployment,
+        None,
+        "Demo dispatcher with all Faraday executors for Vicarius partnership evaluation",
+    )
+
+
 def build_dispatcher_config(args: argparse.Namespace) -> dict[str, Any]:
+    agent_name, _deployment, executor_filter, description = resolve_group(args)
     return {
         "agent": {
-            "agent_name": args.agent_name,
-            "description": "Demo dispatcher with all official Faraday executors for Vicarius partnership evaluation",
-            "executors": build_executors(),
+            "agent_name": agent_name,
+            "description": description,
+            "executors": build_executors(executor_filter),
         },
         "server": {
             "host": args.host,
@@ -79,24 +149,28 @@ def build_dispatcher_config(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
-def labels() -> dict[str, str]:
-    return {
+def labels(group: str | None = None) -> dict[str, str]:
+    base = {
         "app.kubernetes.io/name": "faraday-agent-dispatcher",
         "app.kubernetes.io/instance": "vicarius",
         "app.kubernetes.io/component": "agent-dispatcher",
     }
+    if group:
+        base["faradaysec.com/group"] = group
+    return base
 
 
 def build_k8s_manifest(args: argparse.Namespace) -> list[dict[str, Any]]:
     dispatcher_config = build_dispatcher_config(args)
     executor_count = len(dispatcher_config["agent"]["executors"])
-    object_labels = labels()
+    _agent_name, deployment_name, _filter, _desc = resolve_group(args)
+    object_labels = labels(args.group)
 
     secret = {
         "apiVersion": "v1",
         "kind": "Secret",
         "metadata": {
-            "name": f"{args.deployment}-config",
+            "name": f"{deployment_name}-config",
             "namespace": args.namespace,
             "labels": object_labels,
             "annotations": {
@@ -114,7 +188,7 @@ def build_k8s_manifest(args: argparse.Namespace) -> list[dict[str, Any]]:
         "apiVersion": "apps/v1",
         "kind": "Deployment",
         "metadata": {
-            "name": args.deployment,
+            "name": deployment_name,
             "namespace": args.namespace,
             "labels": object_labels,
         },
@@ -170,7 +244,7 @@ def build_k8s_manifest(args: argparse.Namespace) -> list[dict[str, Any]]:
                     "volumes": [
                         {
                             "name": "dispatcher-config",
-                            "secret": {"secretName": f"{args.deployment}-config"},
+                            "secret": {"secretName": f"{deployment_name}-config"},
                         },
                         {"name": "dispatcher-logs", "emptyDir": {}},
                         {"name": "dispatcher-reports", "emptyDir": {}},
