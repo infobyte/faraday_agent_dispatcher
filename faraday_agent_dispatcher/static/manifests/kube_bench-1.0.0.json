@@ -10,7 +10,7 @@
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network and Vulnerability Scanners",
-    "name": "kube-bench",
+    "name": "kube_bench",
     "title": "kube-bench",
     "website": "https://github.com/aquasecurity/kube-bench",
     "description": "CIS Kubernetes Benchmark checks (master/etcd/controlplane/node/policies). Manual mapping (no upstream parser)",

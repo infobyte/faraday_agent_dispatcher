@@ -19,13 +19,12 @@ ENV PATH="/opt/dispatcher_venv/bin:$PATH"
 COPY . .
 RUN pip install .
 
-# --- Offensive Checks: vendor manifests + patch plugins into the venv ---
-# The dispatcher only discovers tool manifests from the installed
-# faraday_agent_parameters_types package, so copy the offensive-check
-# manifests into its static/manifests dir (avoids a package release).
+# --- Offensive Checks: patch bundled faraday_plugins parsers ---
+# The offensive-check manifests ship inside the dispatcher package
+# (faraday_agent_dispatcher/static/manifests, resolved by metadata_utils), so no
+# parameters-types copy is needed. We only patch two plugin parsers here until
+# the fixes are released upstream (Trivy Code:null, CrowdStrike missing severity).
 RUN apt-get update && apt-get install -y --no-install-recommends patch \
-    && PARAM_DIR="$(python -c 'import os, faraday_agent_parameters_types.utils as u; print(os.path.join(os.path.dirname(u.__file__), "static", "manifests"))')" \
-    && cp /app/offensive_checks/manifests/*.json "$PARAM_DIR/" \
     && PLUGINS_DIR="$(python -c 'import os, faraday_plugins; print(os.path.dirname(faraday_plugins.__file__))')" \
     && patch -p2 -d "$PLUGINS_DIR" < /app/offensive_checks/patches/faraday_plugins_offensive_fixes.patch \
     && rm -rf /var/lib/apt/lists/*

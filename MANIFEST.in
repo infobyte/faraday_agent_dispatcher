@@ -13,3 +13,4 @@ recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
 
 prune faraday_agent_dispatcher/static/executors/dev
 graft faraday_agent_dispatcher/static/executors/official
+graft faraday_agent_dispatcher/static/manifests

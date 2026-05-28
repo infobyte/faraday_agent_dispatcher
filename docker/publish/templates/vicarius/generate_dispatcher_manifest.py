@@ -14,7 +14,7 @@ from typing import Any
 
 import yaml
 from faraday_agent_dispatcher import __version__
-from faraday_agent_parameters_types.utils import get_manifests
+from faraday_agent_dispatcher.utils.metadata_utils import all_manifests
 
 DEFAULT_EXECUTOR_ENVS = {
     "arachni": {"ARACHNI_PATH": "/usr/local/src/arachni/bin"},
@@ -41,7 +41,7 @@ AGENT_GROUPS = {
     },
     "container-k8s": {
         "agent_name": "container-k8s-agent",
-        "executors": ["trivy", "grype", "kubescape", "kube-bench"],
+        "executors": ["trivy", "grype", "kubescape", "kube_bench"],
     },
     "discovery-osint": {
         "agent_name": "discovery-osint-agent",
@@ -82,7 +82,7 @@ def parse_args() -> argparse.Namespace:
 
 def build_executors(only: list[str] | None = None) -> dict[str, dict[str, Any]]:
     executors = {}
-    manifests = get_manifests(__version__)
+    manifests = all_manifests()
 
     if only is not None:
         missing = [name for name in only if name not in manifests]
