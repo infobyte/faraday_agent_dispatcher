@@ -1,5 +1,12 @@
 ARG TAG=""
 ARG REGISTRY="registry.gitlab.com/faradaysec/cloud"
+# Final-stage base. Defaults to the private cloud registry image (REGISTRY+TAG).
+# Override for local builds, e.g. --build-arg BASE_IMAGE=faradaysec/faraday_agent_dispatcher:3.9.1
+ARG BASE_IMAGE="${REGISTRY}/faraday_agent_dispatcher:${TAG}"
+ARG KICS_VERSION=2.1.6
+
+#### KICS binary + query assets (no standalone release binary exists) ####
+FROM checkmarx/kics:v${KICS_VERSION} AS kics
 
 #### Dispatcher builder ####
 FROM python:3.13.7-slim AS dispatcher-build
@@ -24,7 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends patch \
     && rm -rf /var/lib/apt/lists/*
 
 #### Final image ####
-FROM ${REGISTRY}/faraday_agent_dispatcher:$TAG
+FROM ${BASE_IMAGE}
 COPY --from=dispatcher-build /opt/dispatcher_venv /opt/dispatcher_venv
 
 ENV PATH="/opt/dispatcher_venv/bin:$PATH"
@@ -34,7 +41,7 @@ ENV PATH="/opt/dispatcher_venv/bin:$PATH"
 # Pinned versions; linux/amd64 (EKS corporate node-group).
 # ---------------------------------------------------------------------------
 ARG TARGETARCH=amd64
-ARG TRIVY_VERSION=0.58.1
+ARG TRIVY_VERSION=0.69.3
 ARG GRYPE_VERSION=0.87.0
 ARG GITLEAKS_VERSION=8.21.2
 ARG TRUFFLEHOG_VERSION=3.88.0
@@ -44,7 +51,6 @@ ARG SUBFINDER_VERSION=2.6.7
 ARG KUBESCAPE_VERSION=3.0.22
 ARG KUBE_BENCH_VERSION=0.10.0
 ARG TFSEC_VERSION=1.28.13
-ARG KICS_VERSION=2.1.6
 
 USER root
 
@@ -56,45 +62,53 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Python CLI tools in isolated pipx envs (avoids clashing with the dispatcher venv).
+# prowler is pinned to v3.x: the faraday_plugins ProwlerPlugin parses Prowler v3
+# native JSON (keys Region/CheckTitle/Status); v4+ emit OCSF which it cannot read.
+# Separate RUN layers so a transient network failure only re-runs the failed tool,
+# and give pip generous retries/timeouts (PyPI resets are common under emulation).
 ENV PIPX_HOME=/opt/pipx
 ENV PIPX_BIN_DIR=/usr/local/bin
-RUN pipx install semgrep \
-    && pipx install bandit \
-    && pipx install checkov \
-    && pipx install prowler
+ENV PIP_DEFAULT_TIMEOUT=120
+ENV PIP_RETRIES=10
+RUN pipx install semgrep
+RUN pipx install bandit
+RUN pipx install checkov
+RUN pipx install 'prowler<4'
 
 # Snyk CLI (Node).
-RUN npm install -g snyk && npm cache clean --force
+RUN npm config set fetch-retries 5 && npm install -g snyk && npm cache clean --force
 
-# Go / release-binary tools (linux/${TARGETARCH}).
+# Go / release-binary tools (linux/${TARGETARCH}). curl retries transient resets.
 RUN set -eux; \
     cd /tmp; \
+    dl() { curl -sSL --retry 4 --retry-delay 3 --retry-connrefused "$@"; }; \
     # Trivy
-    curl -sSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" | tar -xz trivy && mv trivy /usr/local/bin/; \
+    dl "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" | tar -xz trivy && mv trivy /usr/local/bin/; \
     # Grype
-    curl -sSL "https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_${TARGETARCH}.tar.gz" | tar -xz grype && mv grype /usr/local/bin/; \
+    dl "https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_${TARGETARCH}.tar.gz" | tar -xz grype && mv grype /usr/local/bin/; \
     # Gitleaks
-    curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks && mv gitleaks /usr/local/bin/; \
+    dl "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks && mv gitleaks /usr/local/bin/; \
     # TruffleHog
-    curl -sSL "https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/trufflehog_${TRUFFLEHOG_VERSION}_linux_${TARGETARCH}.tar.gz" | tar -xz trufflehog && mv trufflehog /usr/local/bin/; \
+    dl "https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/trufflehog_${TRUFFLEHOG_VERSION}_linux_${TARGETARCH}.tar.gz" | tar -xz trufflehog && mv trufflehog /usr/local/bin/; \
     # ffuf
-    curl -sSL "https://github.com/ffuf/ffuf/releases/download/v${FFUF_VERSION}/ffuf_${FFUF_VERSION}_linux_${TARGETARCH}.tar.gz" | tar -xz ffuf && mv ffuf /usr/local/bin/; \
+    dl "https://github.com/ffuf/ffuf/releases/download/v${FFUF_VERSION}/ffuf_${FFUF_VERSION}_linux_${TARGETARCH}.tar.gz" | tar -xz ffuf && mv ffuf /usr/local/bin/; \
     # naabu
-    curl -sSL -o naabu.zip "https://github.com/projectdiscovery/naabu/releases/download/v${NAABU_VERSION}/naabu_${NAABU_VERSION}_linux_${TARGETARCH}.zip" && unzip -o naabu.zip naabu && mv naabu /usr/local/bin/ && rm naabu.zip; \
+    dl -o naabu.zip "https://github.com/projectdiscovery/naabu/releases/download/v${NAABU_VERSION}/naabu_${NAABU_VERSION}_linux_${TARGETARCH}.zip" && unzip -o naabu.zip naabu && mv naabu /usr/local/bin/ && rm naabu.zip; \
     # subfinder
-    curl -sSL -o subfinder.zip "https://github.com/projectdiscovery/subfinder/releases/download/v${SUBFINDER_VERSION}/subfinder_${SUBFINDER_VERSION}_linux_${TARGETARCH}.zip" && unzip -o subfinder.zip subfinder && mv subfinder /usr/local/bin/ && rm subfinder.zip; \
+    dl -o subfinder.zip "https://github.com/projectdiscovery/subfinder/releases/download/v${SUBFINDER_VERSION}/subfinder_${SUBFINDER_VERSION}_linux_${TARGETARCH}.zip" && unzip -o subfinder.zip subfinder && mv subfinder /usr/local/bin/ && rm subfinder.zip; \
     # kubescape
-    curl -sSL -o /usr/local/bin/kubescape "https://github.com/kubescape/kubescape/releases/download/v${KUBESCAPE_VERSION}/kubescape-ubuntu-latest" && chmod +x /usr/local/bin/kubescape; \
+    dl -o /usr/local/bin/kubescape "https://github.com/kubescape/kubescape/releases/download/v${KUBESCAPE_VERSION}/kubescape-ubuntu-latest" && chmod +x /usr/local/bin/kubescape; \
     # kube-bench
-    curl -sSL "https://github.com/aquasecurity/kube-bench/releases/download/v${KUBE_BENCH_VERSION}/kube-bench_${KUBE_BENCH_VERSION}_linux_${TARGETARCH}.tar.gz" | tar -xz kube-bench && mv kube-bench /usr/local/bin/; \
+    dl "https://github.com/aquasecurity/kube-bench/releases/download/v${KUBE_BENCH_VERSION}/kube-bench_${KUBE_BENCH_VERSION}_linux_${TARGETARCH}.tar.gz" | tar -xz kube-bench && mv kube-bench /usr/local/bin/; \
     # tfsec
-    curl -sSL -o /usr/local/bin/tfsec "https://github.com/aquasecurity/tfsec/releases/download/v${TFSEC_VERSION}/tfsec-linux-${TARGETARCH}" && chmod +x /usr/local/bin/tfsec; \
-    # kics (needs its query packs; install under /opt and wrap)
-    curl -sSL -o kics.tar.gz "https://github.com/Checkmarx/kics/releases/download/v${KICS_VERSION}/kics_${KICS_VERSION}_linux_x64.tar.gz" && mkdir -p /opt/kics && tar -xz -C /opt/kics -f kics.tar.gz && mv /opt/kics/kics /usr/local/bin/kics && rm kics.tar.gz; \
+    dl -o /usr/local/bin/tfsec "https://github.com/aquasecurity/tfsec/releases/download/v${TFSEC_VERSION}/tfsec-linux-${TARGETARCH}" && chmod +x /usr/local/bin/tfsec; \
     chmod +x /usr/local/bin/*; \
     rm -rf /tmp/*
 
-# kics resolves its query library relative to this path unless -q is passed.
+# KICS has no standalone release binary; copy the binary + query assets from the
+# official image. kics resolves its query library from KICS_QUERIES_PATH.
+COPY --from=kics /app/bin/kics /usr/local/bin/kics
+COPY --from=kics /app/bin/assets /opt/kics/assets
 ENV KICS_QUERIES_PATH=/opt/kics/assets/queries
 
 ENTRYPOINT ["faraday-dispatcher", "run"]
