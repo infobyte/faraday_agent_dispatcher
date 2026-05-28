@@ -22,9 +22,12 @@ def build_command(output_dir: Path):
 
     cmd = [
         "checkov",
-        "--directory", target,
-        "--output", "sarif",
-        "--output-file-path", str(output_dir),
+        "--directory",
+        target,
+        "--output",
+        "sarif",
+        "--output-file-path",
+        str(output_dir),
         "--quiet",
         "--soft-fail",
     ]

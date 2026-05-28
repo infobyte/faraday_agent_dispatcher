@@ -19,10 +19,7 @@ SEVERITY_MAP = {
 def discover_targets(root: Path):
     if root.is_file():
         return [root]
-    return [
-        p for p in root.rglob("*")
-        if p.is_file() and (p.suffix in {".sh", ".bash"} or _has_shebang(p))
-    ]
+    return [p for p in root.rglob("*") if p.is_file() and (p.suffix in {".sh", ".bash"} or _has_shebang(p))]
 
 
 def _has_shebang(path: Path) -> bool:
@@ -105,12 +102,14 @@ def main():
 
     hosts = []
     for file_path, items in by_file.items():
-        hosts.append({
-            "ip": file_path,
-            "hostnames": [Path(file_path).name],
-            "description": "ShellCheck findings",
-            "vulnerabilities": [to_vuln(i) for i in items],
-        })
+        hosts.append(
+            {
+                "ip": file_path,
+                "hostnames": [Path(file_path).name],
+                "description": "ShellCheck findings",
+                "vulnerabilities": [to_vuln(i) for i in items],
+            }
+        )
 
     print(json.dumps({"hosts": hosts, "command": faraday_command("ShellCheck", target, started)}))
 

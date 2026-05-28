@@ -16,7 +16,6 @@ import yaml
 from faraday_agent_dispatcher import __version__
 from faraday_agent_parameters_types.utils import get_manifests
 
-
 DEFAULT_EXECUTOR_ENVS = {
     "arachni": {"ARACHNI_PATH": "/usr/local/src/arachni/bin"},
     "nuclei": {"NUCLEI_TEMPLATES": "/root/nuclei-templates"},

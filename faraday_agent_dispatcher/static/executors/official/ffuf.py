@@ -36,12 +36,18 @@ def build_command(output_path: Path):
 
     cmd = [
         "ffuf",
-        "-u", target,
-        "-w", wordlist,
-        "-t", str(threads),
-        "-mc", match_codes,
-        "-of", "json",
-        "-o", str(output_path),
+        "-u",
+        target,
+        "-w",
+        wordlist,
+        "-t",
+        str(threads),
+        "-mc",
+        match_codes,
+        "-of",
+        "json",
+        "-o",
+        str(output_path),
         "-s",
     ]
 
@@ -82,30 +88,34 @@ def build_report(ffuf_output: dict, started: float) -> dict:
     for result in ffuf_output.get("results", []):
         path = result.get("url", "")
         status = result.get("status")
-        vulnerabilities.append({
-            "name": f"Discovered path: {path}",
-            "desc": (
-                f"ffuf discovered the resource `{path}`.\n\n"
-                f"Status: {status}\n"
-                f"Length: {result.get('length')}\n"
-                f"Words: {result.get('words')}\n"
-                f"Lines: {result.get('lines')}\n"
-                f"Content-Type: {result.get('content-type', 'unknown')}"
-            ),
-            "severity": severity,
-            "type": "Vulnerability",
-            "data": json.dumps(result.get("input", {})),
-            "external_id": f"FFUF-{status}-{path}",
-            "refs": [{"type": "other", "name": path}],
-        })
+        vulnerabilities.append(
+            {
+                "name": f"Discovered path: {path}",
+                "desc": (
+                    f"ffuf discovered the resource `{path}`.\n\n"
+                    f"Status: {status}\n"
+                    f"Length: {result.get('length')}\n"
+                    f"Words: {result.get('words')}\n"
+                    f"Lines: {result.get('lines')}\n"
+                    f"Content-Type: {result.get('content-type', 'unknown')}"
+                ),
+                "severity": severity,
+                "type": "Vulnerability",
+                "data": json.dumps(result.get("input", {})),
+                "external_id": f"FFUF-{status}-{path}",
+                "refs": [{"type": "other", "name": path}],
+            }
+        )
 
     return {
-        "hosts": [{
-            "ip": host_ip,
-            "hostnames": hostnames,
-            "description": "ffuf web content discovery",
-            "vulnerabilities": vulnerabilities,
-        }],
+        "hosts": [
+            {
+                "ip": host_ip,
+                "hostnames": hostnames,
+                "description": "ffuf web content discovery",
+                "vulnerabilities": vulnerabilities,
+            }
+        ],
         "command": faraday_command("ffuf", target, started),
     }
 

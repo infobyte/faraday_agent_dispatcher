@@ -20,9 +20,12 @@ def build_command(output_path: Path):
     exclude_checks = os.environ.get("EXECUTOR_CONFIG_TFSEC_EXCLUDE")
 
     cmd = [
-        "tfsec", target,
-        "--format", "sarif",
-        "--out", str(output_path),
+        "tfsec",
+        target,
+        "--format",
+        "sarif",
+        "--out",
+        str(output_path),
         "--soft-fail",
     ]
 

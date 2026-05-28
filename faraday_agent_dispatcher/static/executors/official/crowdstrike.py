@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import json
-import subprocess
 
 from faraday_plugins.plugins.repo.crowdstrike.plugin import Crowdstrike
 

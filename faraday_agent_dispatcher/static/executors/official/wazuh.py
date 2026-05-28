@@ -115,7 +115,9 @@ def to_vuln(item: dict) -> dict:
         "external_id": cve_id,
         "cve": [cve_id] if cve_id else [],
         "data": json.dumps({k: v for k, v in item.items() if k in {"cvss2_score", "cvss3_score", "status"}}),
-        "refs": [{"type": "other", "name": item.get("external_references", "")}] if item.get("external_references") else [],
+        "refs": (
+            [{"type": "other", "name": item.get("external_references", "")}] if item.get("external_references") else []
+        ),
         "resolution": item.get("solution", ""),
     }
 
@@ -128,7 +130,7 @@ def main():
 
     agent_filter = os.getenv("EXECUTOR_CONFIG_WAZUH_AGENT_IDS")
     min_severity = os.getenv("EXECUTOR_CONFIG_WAZUH_MIN_SEVERITY")
-    verify_ssl = (os.getenv("EXECUTOR_CONFIG_WAZUH_VERIFY_SSL", "true").lower() == "true")
+    verify_ssl = os.getenv("EXECUTOR_CONFIG_WAZUH_VERIFY_SSL", "true").lower() == "true"
 
     token = authenticate(base_url, username, password, verify_ssl)
     agents = list_agents(base_url, token, agent_filter, verify_ssl)
@@ -139,17 +141,19 @@ def main():
         ip = agent.get("ip") or agent.get("id") or "unknown"
         hostnames = [agent["name"]] if agent.get("name") else []
         vulns = [to_vuln(v) for v in get_agent_vulns(base_url, token, agent["id"], min_severity, verify_ssl)]
-        hosts.append({
-            "ip": ip,
-            "hostnames": hostnames,
-            "os": agent.get("os", {}).get("name", ""),
-            "description": (
-                f"Wazuh agent {agent.get('id')} ({agent.get('name', 'N/A')})\n"
-                f"OS: {agent.get('os', {}).get('platform', 'N/A')} {agent.get('os', {}).get('version', '')}\n"
-                f"Last keep-alive: {agent.get('lastKeepAlive', 'N/A')}"
-            ),
-            "vulnerabilities": vulns,
-        })
+        hosts.append(
+            {
+                "ip": ip,
+                "hostnames": hostnames,
+                "os": agent.get("os", {}).get("name", ""),
+                "description": (
+                    f"Wazuh agent {agent.get('id')} ({agent.get('name', 'N/A')})\n"
+                    f"OS: {agent.get('os', {}).get('platform', 'N/A')} {agent.get('os', {}).get('version', '')}\n"
+                    f"Last keep-alive: {agent.get('lastKeepAlive', 'N/A')}"
+                ),
+                "vulnerabilities": vulns,
+            }
+        )
 
     command = {
         "tool": "Wazuh",

@@ -20,11 +20,16 @@ def build_command(output_dir: Path):
     exclude_severities = os.environ.get("EXECUTOR_CONFIG_KICS_EXCLUDE_SEVERITIES")
 
     cmd = [
-        "kics", "scan",
-        "--path", target,
-        "--output-path", str(output_dir),
-        "--output-name", "kics",
-        "--report-formats", "sarif",
+        "kics",
+        "scan",
+        "--path",
+        target,
+        "--output-path",
+        str(output_dir),
+        "--output-name",
+        "kics",
+        "--report-formats",
+        "sarif",
         "--no-color",
         "--no-progress",
     ]

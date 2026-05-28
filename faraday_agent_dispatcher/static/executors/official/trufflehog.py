@@ -90,12 +90,14 @@ def main():
 
     hosts = []
     for file_path, items in by_file.items():
-        hosts.append({
-            "ip": file_path,
-            "hostnames": [],
-            "description": "TruffleHog secret findings",
-            "vulnerabilities": [to_vuln(i) for i in items],
-        })
+        hosts.append(
+            {
+                "ip": file_path,
+                "hostnames": [],
+                "description": "TruffleHog secret findings",
+                "vulnerabilities": [to_vuln(i) for i in items],
+            }
+        )
 
     print(json.dumps({"hosts": hosts, "command": faraday_command(target, started)}))
 

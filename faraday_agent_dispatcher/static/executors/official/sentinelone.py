@@ -88,23 +88,27 @@ def to_host_payload(threats):
             }
         ti = t.get("threatInfo", {}) or {}
         agent_data = by_agent[agent_id]
-        agent_data["vulnerabilities"].append({
-            "name": ti.get("threatName", t.get("id", "SentinelOne threat"))[:80],
-            "desc": (
-                f"Classification: {ti.get('classification', 'N/A')}\n"
-                f"Classification source: {ti.get('classificationSource', 'N/A')}\n"
-                f"Detection type: {ti.get('detectionType', 'N/A')}\n"
-                f"Mitigation status: {ti.get('mitigationStatus', 'N/A')}\n"
-                f"Confidence: {ti.get('confidenceLevel', 'N/A')}\n"
-                f"File path: {ti.get('filePath', 'N/A')}\n"
-                f"SHA1: {ti.get('sha1', 'N/A')}"
-            ),
-            "severity": normalize_severity(ti.get("confidenceLevel")),
-            "type": "Vulnerability",
-            "external_id": t.get("id", ""),
-            "resolution": ti.get("mitigationStatus", ""),
-            "refs": [{"type": "other", "name": ti.get("originatorProcess", "")}] if ti.get("originatorProcess") else [],
-        })
+        agent_data["vulnerabilities"].append(
+            {
+                "name": ti.get("threatName", t.get("id", "SentinelOne threat"))[:80],
+                "desc": (
+                    f"Classification: {ti.get('classification', 'N/A')}\n"
+                    f"Classification source: {ti.get('classificationSource', 'N/A')}\n"
+                    f"Detection type: {ti.get('detectionType', 'N/A')}\n"
+                    f"Mitigation status: {ti.get('mitigationStatus', 'N/A')}\n"
+                    f"Confidence: {ti.get('confidenceLevel', 'N/A')}\n"
+                    f"File path: {ti.get('filePath', 'N/A')}\n"
+                    f"SHA1: {ti.get('sha1', 'N/A')}"
+                ),
+                "severity": normalize_severity(ti.get("confidenceLevel")),
+                "type": "Vulnerability",
+                "external_id": t.get("id", ""),
+                "resolution": ti.get("mitigationStatus", ""),
+                "refs": (
+                    [{"type": "other", "name": ti.get("originatorProcess", "")}] if ti.get("originatorProcess") else []
+                ),
+            }
+        )
     return list(by_agent.values())
 
 
@@ -114,7 +118,7 @@ def main():
     token = env("SENTINELONE_TOKEN", required=True)
     account_id = env("SENTINELONE_ACCOUNT_ID")
     since = os.getenv("EXECUTOR_CONFIG_SENTINELONE_SINCE")
-    verify_ssl = (os.getenv("EXECUTOR_CONFIG_SENTINELONE_VERIFY_SSL", "true").lower() == "true")
+    verify_ssl = os.getenv("EXECUTOR_CONFIG_SENTINELONE_VERIFY_SSL", "true").lower() == "true"
 
     threats = get_threats(base_url, token, account_id, since, verify_ssl)
     log(f"SentinelOne: {len(threats)} threats fetched")

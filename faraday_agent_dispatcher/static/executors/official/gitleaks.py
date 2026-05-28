@@ -27,9 +27,12 @@ def build_command(output_path: Path):
     redact = os.environ.get("EXECUTOR_CONFIG_GITLEAKS_REDACT")
 
     cmd = [
-        "gitleaks", mode,
-        "--report-format", "json",
-        "--report-path", str(output_path),
+        "gitleaks",
+        mode,
+        "--report-format",
+        "json",
+        "--report-path",
+        str(output_path),
         "--no-banner",
     ]
 

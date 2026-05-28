@@ -24,10 +24,14 @@ def build_command(output_dir: Path):
     regions = os.environ.get("EXECUTOR_CONFIG_PROWLER_REGIONS")
 
     cmd = [
-        "prowler", provider,
-        "--output-formats", "json",
-        "--output-directory", str(output_dir),
-        "--output-filename", "prowler",
+        "prowler",
+        provider,
+        "--output-formats",
+        "json",
+        "--output-directory",
+        str(output_dir),
+        "--output-filename",
+        "prowler",
     ]
 
     if checks:
