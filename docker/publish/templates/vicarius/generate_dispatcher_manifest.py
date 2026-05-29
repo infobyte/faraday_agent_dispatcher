@@ -30,34 +30,95 @@ AGENT_GROUPS = {
     "code-sast": {
         "agent_name": "code-sast-agent",
         "executors": ["bandit", "semgrep", "shellcheck", "snyk"],
+        "description": (
+            "Static Application Security Testing (SAST) for source code. Runs bandit (Python), "
+            "semgrep (multi-language with community rule packs), shellcheck (shell scripts) and "
+            "snyk (SCA + SAST + IaC) against a local path or a git repo cloned at scan time. "
+            "Use this agent to find code-level vulnerabilities, unsafe patterns, weak crypto, "
+            "and vulnerable dependencies. Private-repo clones authenticate with the "
+            "GIT_USERNAME / GIT_TOKEN env vars; snyk additionally needs SNYK_TOKEN."
+        ),
     },
     "secrets": {
         "agent_name": "secrets-agent",
         "executors": ["gitleaks", "trufflehog"],
+        "description": (
+            "Secret detection across source trees and full git history. Runs gitleaks "
+            "(pattern-based, history-aware) and trufflehog (with credential verification — "
+            "only reports a secret as confirmed once it successfully authenticates). Surfaces "
+            "hard-coded API keys, tokens, AWS keys, private keys, and database creds. Clones "
+            "private repositories at scan time with the GIT_USERNAME / GIT_TOKEN env vars."
+        ),
     },
     "iac-cloud": {
         "agent_name": "iac-cloud-agent",
         "executors": ["checkov", "prowler", "tfsec", "kics"],
+        "description": (
+            "Infrastructure-as-Code static analysis and Cloud Security Posture Management. "
+            "Runs checkov, tfsec and kics against IaC files (Terraform, Kubernetes, "
+            "CloudFormation, Dockerfile, Ansible, Helm, ARM) — cloned at scan time via "
+            "GIT_USERNAME / GIT_TOKEN. Also runs prowler live against AWS, Azure or GCP — "
+            "set the corresponding cloud credentials as agent env vars before launching "
+            "(AWS_ACCESS_KEY_ID, AZURE_TENANT_ID/CLIENT_ID/CLIENT_SECRET, "
+            "GOOGLE_APPLICATION_CREDENTIALS)."
+        ),
     },
     "container-k8s": {
         "agent_name": "container-k8s-agent",
         "executors": ["trivy", "grype", "kubescape", "kube_bench"],
+        "description": (
+            "Container and Kubernetes security scanning. Runs trivy (multi-target — images, "
+            "filesystems, repos, IaC, clusters) and grype (image / filesystem / SBOM vuln "
+            "scanner) for CVEs; kubescape for cluster posture against NSA / MITRE / CIS / "
+            "ArmoBest frameworks; and kube-bench for the CIS Kubernetes Benchmark on the host "
+            "where the executor runs. Cluster scans need a kubeconfig inside the container."
+        ),
     },
     "discovery-osint": {
         "agent_name": "discovery-osint-agent",
         "executors": ["subfinder", "naabu"],
+        "description": (
+            "Passive reconnaissance and host discovery. Runs subfinder (subdomain enumeration "
+            "from dozens of public sources — crt.sh, VirusTotal, AlienVault, etc., without "
+            "touching the target) and naabu (fast SYN/CONNECT port scanner from "
+            "ProjectDiscovery). Naabu is the reason the agents live on DigitalOcean — "
+            "outbound port scanning is prohibited from the AWS network."
+        ),
     },
     "web-dast": {
         "agent_name": "web-dast-agent",
         "executors": ["ffuf"],
+        "description": (
+            "Web fuzzing / dynamic application testing. Runs ffuf to discover paths, "
+            "parameters and virtual hosts by substituting each line of a wordlist into the "
+            "literal FUZZ token in the target URL. The image ships no wordlist — place one "
+            "in the container (e.g. via docker exec) before launching, and pass its absolute "
+            "path as FFUF_WORDLIST."
+        ),
     },
     "endpoint-edr": {
         "agent_name": "endpoint-edr-agent",
         "executors": ["crowdstrike", "sentinelone", "wazuh"],
+        "description": (
+            "Endpoint Detection and Response data import. Pulls findings from CrowdStrike "
+            "Falcon (Spotlight JSON export pre-staged inside the container), SentinelOne "
+            "(live management API at /web/api/v2.1/threats) and Wazuh (live REST API). "
+            "Configure each vendor's URL and API credentials as agent env vars "
+            "(SENTINELONE_URL/_TOKEN, WAZUH_URL/_USERNAME/_PASSWORD) before scanning."
+        ),
     },
     "remediate": {
         "agent_name": "remediate",
         "executors": ["vicarius"],
+        "description": (
+            "Endpoint remediation status import via the Vicarius vRx External Data API. "
+            "Pulls asset inventory, active CVEs grouped by vulnerabilityId, and missing "
+            "patches per endpoint. Configure VICARIUS_API_URL and VICARIUS_TOKEN as agent "
+            "env vars (the token is sent as the 'Vicarius-Token' header). Read-only today — "
+            "patch execution and external-findings ingest are not exposed by the vRx PAT "
+            "scope; new modes (apply-patch, run-script) will be added if Vicarius opens "
+            "those endpoints."
+        ),
     },
 }
 
@@ -127,7 +188,7 @@ def resolve_group(args: argparse.Namespace):
         group = AGENT_GROUPS[args.group]
         agent_name = group["agent_name"]
         deployment = f"vicarius-{args.group}-dispatcher"
-        description = f"Offensive Checks {args.group} agent for Vicarius"
+        description = group.get("description") or f"Offensive Checks {args.group} agent for Vicarius"
         return agent_name, deployment, group["executors"], description
     return (
         args.agent_name,
