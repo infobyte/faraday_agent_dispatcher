@@ -1,12 +1,40 @@
 {
     "arguments": {
-        "FFUF_TARGET": {"mandatory": true, "type": "string", "base": "string"},
-        "FFUF_WORDLIST": {"mandatory": true, "type": "string", "base": "string"},
-        "FFUF_THREADS": {"mandatory": false, "type": "integer", "base": "integer"},
-        "FFUF_MATCH_CODES": {"mandatory": false, "type": "string", "base": "string"},
-        "FFUF_FILTER_SIZE": {"mandatory": false, "type": "string", "base": "string"},
-        "FFUF_EXTENSIONS": {"mandatory": false, "type": "string", "base": "string"},
-        "FFUF_SEVERITY": {"mandatory": false, "type": "string", "base": "string"}
+        "FFUF_TARGET": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "FFUF_WORDLIST": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "FFUF_THREADS": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        },
+        "FFUF_MATCH_CODES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "FFUF_FILTER_SIZE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "FFUF_EXTENSIONS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "FFUF_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        }
     },
     "environment_variables": [],
     "check_cmds": [
@@ -17,7 +45,7 @@
     "name": "ffuf",
     "title": "ffuf",
     "website": "https://github.com/ffuf/ffuf",
-    "description": "Fast web fuzzer for content/parameter/vhost discovery",
+    "description": "HTTP fuzzer \u2014 substitutes the literal token 'FUZZ' in the URL with each line of a wordlist. Set FFUF_TARGET (e.g. 'https://target.example.com/FUZZ') and FFUF_WORDLIST to an absolute path inside the container. The agent image ships no wordlist; place one in the container before launching the scan. FFUF_MATCH_CODES and FFUF_FILTER_SIZE help cut soft-404 noise; FFUF_EXTENSIONS appends suffixes (.php, .bak, .zip).",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "ffuf.py"

@@ -43,7 +43,7 @@
     "name": "checkov",
     "title": "Checkov",
     "website": "https://www.checkov.io/",
-    "description": "Static analysis for IaC (Terraform, CloudFormation, Kubernetes, Helm, ARM, Dockerfile, secrets) -> SARIF output via faraday_plugins.sarif",
+    "description": "Static analysis for Infrastructure-as-Code: Terraform, CloudFormation, Kubernetes, Helm, ARM, Dockerfile, and embedded secrets. Set CHECKOV_TARGET to a directory; restrict scope with CHECKOV_FRAMEWORK (CSV of frameworks) and skip noisy findings with CHECKOV_SKIP_CHECK (CSV of check IDs), or run only certain checks with CHECKOV_CHECK.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "checkov.py"

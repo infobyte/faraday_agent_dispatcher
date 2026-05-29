@@ -1,10 +1,30 @@
 {
     "arguments": {
-        "KUBESCAPE_SCAN_TARGET": {"mandatory": false, "type": "string", "base": "string"},
-        "KUBESCAPE_FRAMEWORK": {"mandatory": false, "type": "string", "base": "string"},
-        "KUBESCAPE_CONTROL_ID": {"mandatory": false, "type": "string", "base": "string"},
-        "KUBESCAPE_KUBECONFIG": {"mandatory": false, "type": "string", "base": "string"},
-        "KUBESCAPE_MANIFEST_PATH": {"mandatory": false, "type": "string", "base": "string"}
+        "KUBESCAPE_SCAN_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "KUBESCAPE_FRAMEWORK": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "KUBESCAPE_CONTROL_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "KUBESCAPE_KUBECONFIG": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "KUBESCAPE_MANIFEST_PATH": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        }
     },
     "environment_variables": [],
     "check_cmds": [
@@ -15,7 +35,7 @@
     "name": "kubescape",
     "title": "Kubescape",
     "website": "https://kubescape.io/",
-    "description": "Kubernetes posture & compliance scanner (NSA, MITRE, CIS, Soc2)",
+    "description": "Kubernetes posture scanner that runs framework controls (NSA, MITRE, CIS, ArmoBest, DevOpsBest, Soc2). KUBESCAPE_SCAN_TARGET controls the mode (cluster|framework|manifest). Cluster mode needs a kubeconfig inside the container at KUBESCAPE_KUBECONFIG; manifest mode scans the YAMLs at KUBESCAPE_MANIFEST_PATH. Restrict to a single framework or control with KUBESCAPE_FRAMEWORK / KUBESCAPE_CONTROL_ID.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "kubescape.py"

@@ -1,10 +1,30 @@
 {
     "arguments": {
-        "TRIVY_TARGET": {"mandatory": true, "type": "string", "base": "string"},
-        "TRIVY_SCAN_TYPE": {"mandatory": false, "type": "string", "base": "string"},
-        "TRIVY_SEVERITY": {"mandatory": false, "type": "string", "base": "string"},
-        "TRIVY_SKIP_DIRS": {"mandatory": false, "type": "string", "base": "string"},
-        "TRIVY_IGNORE_UNFIXED": {"mandatory": false, "type": "boolean", "base": "boolean"}
+        "TRIVY_TARGET": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "TRIVY_SCAN_TYPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "TRIVY_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "TRIVY_SKIP_DIRS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "TRIVY_IGNORE_UNFIXED": {
+            "mandatory": false,
+            "type": "boolean",
+            "base": "boolean"
+        }
     },
     "environment_variables": [],
     "check_cmds": [
@@ -15,7 +35,7 @@
     "name": "trivy",
     "title": "Trivy",
     "website": "https://trivy.dev/",
-    "description": "Container image, filesystem, repository, IaC and Kubernetes vulnerability scanner",
+    "description": "Aqua Trivy \u2014 multi-target vulnerability and misconfiguration scanner. Pick the mode with TRIVY_SCAN_TYPE (fs / image / repo / config / k8s) and pass the corresponding target in TRIVY_TARGET (a directory, image reference, repo URL, IaC dir, or cluster name). TRIVY_SEVERITY filters by severity (CSV, e.g. HIGH,CRITICAL); TRIVY_IGNORE_UNFIXED=true hides vulnerabilities without an upstream fix.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "trivy.py"

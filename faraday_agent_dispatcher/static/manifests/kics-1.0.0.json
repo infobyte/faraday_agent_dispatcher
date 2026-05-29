@@ -38,7 +38,7 @@
     "name": "kics",
     "title": "KICS",
     "website": "https://kics.io/",
-    "description": "Keeping Infrastructure as Code Secure: Terraform, Kubernetes, Dockerfile, CloudFormation, Ansible, Helm. SARIF -> faraday_plugins.sarif",
+    "description": "Checkmarx KICS scanner for IaC misconfigurations across Terraform, Kubernetes, Dockerfile, CloudFormation, Ansible, and Helm. Point KICS_TARGET at a directory; restrict scope with KICS_TYPE (e.g. 'Terraform,Kubernetes') and drop noisy findings via KICS_EXCLUDE_SEVERITIES (CSV of severities like 'LOW,INFO').",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "kics.py"

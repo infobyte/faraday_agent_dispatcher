@@ -1,8 +1,20 @@
 {
     "arguments": {
-        "KUBEBENCH_BENCHMARK": {"mandatory": false, "type": "string", "base": "string"},
-        "KUBEBENCH_TARGETS": {"mandatory": false, "type": "string", "base": "string"},
-        "KUBEBENCH_CONFIG_DIR": {"mandatory": false, "type": "string", "base": "string"}
+        "KUBEBENCH_BENCHMARK": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "KUBEBENCH_TARGETS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "KUBEBENCH_CONFIG_DIR": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        }
     },
     "environment_variables": [],
     "check_cmds": [
@@ -13,7 +25,7 @@
     "name": "kube_bench",
     "title": "kube-bench",
     "website": "https://github.com/aquasecurity/kube-bench",
-    "description": "CIS Kubernetes Benchmark checks (master/etcd/controlplane/node/policies). Manual mapping (no upstream parser)",
+    "description": "CIS Kubernetes Benchmark scanner \u2014 runs the master / etcd / controlplane / node / policies checks against the host where the executor runs. Pick the benchmark version with KUBEBENCH_BENCHMARK (cis-1.8, eks-1.2.0, gke-1.6.0, \u2026) and limit which check groups to run with KUBEBENCH_TARGETS (CSV).",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "kube_bench.py"

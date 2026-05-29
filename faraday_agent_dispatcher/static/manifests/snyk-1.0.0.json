@@ -54,7 +54,7 @@
     "name": "snyk",
     "title": "Snyk",
     "website": "https://snyk.io/",
-    "description": "Open source, container, IaC and code vulnerability scanner (SCA + SAST)",
+    "description": "Dependency, IaC, container, and SAST scanner from Snyk. Pick what to scan with SNYK_MODE (test=deps, code=SAST, container=image, iac) and set SNYK_TARGET to a path or image. SNYK_SEVERITY_THRESHOLD filters by severity; SNYK_ALL_PROJECTS=true scans every manifest under the target. Requires a Snyk account token in the agent config (SNYK_TOKEN) \u2014 without it scans will fail to authenticate.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "snyk.py"

@@ -43,7 +43,7 @@
     "name": "semgrep",
     "title": "Semgrep",
     "website": "https://semgrep.dev/",
-    "description": "Static analysis (SAST) for many languages using rule packs",
+    "description": "Multi-language SAST powered by Semgrep's community rule packs (1000+ rules). Set SEMGREP_TARGET to a path (or subpath inside a clone) and optionally SEMGREP_CONFIG to a rule pack like 'auto' (default), 'p/owasp-top-ten', 'p/security-audit', or a rules path. SEMGREP_EXCLUDE skips globs and SEMGREP_TIMEOUT caps per-rule runtime. Supports clone-at-scan via SEMGREP_GIT_URL + GIT_USERNAME / GIT_TOKEN.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "semgrep.py"

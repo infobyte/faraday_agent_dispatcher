@@ -1,7 +1,15 @@
 {
     "arguments": {
-        "SENTINELONE_SINCE": {"mandatory": false, "type": "string", "base": "string"},
-        "SENTINELONE_VERIFY_SSL": {"mandatory": false, "type": "boolean", "base": "boolean"}
+        "SENTINELONE_SINCE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SENTINELONE_VERIFY_SSL": {
+            "mandatory": false,
+            "type": "boolean",
+            "base": "boolean"
+        }
     },
     "environment_variables": [
         "SENTINELONE_URL",
@@ -16,7 +24,7 @@
     "name": "sentinelone",
     "title": "SentinelOne",
     "website": "https://www.sentinelone.com/",
-    "description": "Pulls threats from the SentinelOne management API (/web/api/v2.1/threats) and maps them to Faraday hosts/vulnerabilities",
+    "description": "Pulls threats from the SentinelOne management API (/web/api/v2.1/threats) and maps them to Faraday hosts and vulnerabilities. Configure SENTINELONE_URL (console URL, no trailing slash) and SENTINELONE_TOKEN as agent env vars; optionally scope with SENTINELONE_ACCOUNT_ID. Per-scan, use SENTINELONE_SINCE (ISO date) to limit how far back to fetch.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "sentinelone.py"
