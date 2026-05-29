@@ -1,0 +1,1 @@
+[ADD] `vicarius` executor (Vicarius vRx remediation-status import) + new `remediate` agent group. Modes `assets`/`cves`/`patches` query the vRx External Data API (`Vicarius-Token` auth) and emit Faraday hosts/vulnerabilities. #276

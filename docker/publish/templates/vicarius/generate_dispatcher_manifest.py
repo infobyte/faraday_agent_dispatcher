@@ -55,6 +55,10 @@ AGENT_GROUPS = {
         "agent_name": "endpoint-edr-agent",
         "executors": ["crowdstrike", "sentinelone", "wazuh"],
     },
+    "remediate": {
+        "agent_name": "remediate",
+        "executors": ["vicarius"],
+    },
 }
 
 

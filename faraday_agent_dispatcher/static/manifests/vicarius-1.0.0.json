@@ -1,0 +1,18 @@
+{
+    "arguments": {
+        "VICARIUS_MODE": {"mandatory": false, "type": "string", "base": "string"},
+        "VICARIUS_FROM": {"mandatory": false, "type": "integer", "base": "integer"},
+        "VICARIUS_SIZE": {"mandatory": false, "type": "integer", "base": "integer"}
+    },
+    "environment_variables": ["VICARIUS_API_URL", "VICARIUS_TOKEN"],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Endpoint Remediation",
+    "name": "vicarius",
+    "title": "Vicarius vRx",
+    "website": "https://www.vicarius.io",
+    "description": "Imports Vicarius vRx remediation data (assets, active CVEs, missing patches) into Faraday via the External Data API.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "vicarius.py"
+}
