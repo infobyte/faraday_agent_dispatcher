@@ -217,7 +217,7 @@ def build_k8s_manifest(args: argparse.Namespace) -> list[dict[str, Any]]:
                         {
                             "name": "dispatcher",
                             "image": args.image,
-                            "imagePullPolicy": "IfNotPresent",
+                            "imagePullPolicy": "Always",
                             "args": [
                                 "--config-file",
                                 "/root/.faraday/config/dispatcher.yaml",
