@@ -29,14 +29,19 @@ DEFAULT_EXECUTOR_ENVS = {
 AGENT_GROUPS = {
     "code-sast": {
         "agent_name": "code-sast-agent",
-        "executors": ["bandit", "semgrep", "shellcheck", "snyk"],
+        "executors": [
+            "bandit", "semgrep", "shellcheck", "snyk",
+            "codeql", "dependabot", "github_secrets", "sonarqube", "appscan",
+        ],
         "description": (
-            "Static Application Security Testing (SAST) for source code. Runs bandit (Python), "
-            "semgrep (multi-language with community rule packs), shellcheck (shell scripts) and "
-            "snyk (SCA + SAST + IaC) against a local path or a git repo cloned at scan time. "
-            "Use this agent to find code-level vulnerabilities, unsafe patterns, weak crypto, "
-            "and vulnerable dependencies. Private-repo clones authenticate with the "
-            "GIT_USERNAME / GIT_TOKEN env vars; snyk additionally needs SNYK_TOKEN."
+            "Static Application Security Testing (SAST) and supply-chain signal import for "
+            "source code. Runs bandit (Python), semgrep (multi-language with community rule "
+            "packs), shellcheck (shell scripts), snyk (SCA + SAST + IaC), sonarqube "
+            "(commercial SAST import) and HCL AppScan (commercial SAST/DAST report import). "
+            "Also pulls GitHub-native signals via codeql, dependabot and github_secrets — "
+            "one GitHub PAT in the agent config covers all three GitHub-side imports. "
+            "Private-repo clones authenticate with GIT_USERNAME / GIT_TOKEN; snyk additionally "
+            "needs SNYK_TOKEN."
         ),
     },
     "secrets": {
@@ -76,35 +81,70 @@ AGENT_GROUPS = {
     },
     "discovery-osint": {
         "agent_name": "discovery-osint-agent",
-        "executors": ["subfinder", "naabu"],
+        "executors": ["subfinder", "naabu", "nmap", "shodan2", "sublist3r"],
         "description": (
-            "Passive reconnaissance and host discovery. Runs subfinder (subdomain enumeration "
-            "from dozens of public sources — crt.sh, VirusTotal, AlienVault, etc., without "
-            "touching the target) and naabu (fast SYN/CONNECT port scanner from "
-            "ProjectDiscovery). Naabu is the reason the agents live on DigitalOcean — "
-            "outbound port scanning is prohibited from the AWS network."
+            "Passive reconnaissance and active host discovery. Runs subfinder and sublist3r "
+            "(subdomain enumeration from public sources — crt.sh, VirusTotal, AlienVault, "
+            "etc.), naabu (fast SYN/CONNECT port scanner from ProjectDiscovery), nmap "
+            "(comprehensive port + service + NSE script scanner) and shodan2 (passive "
+            "Internet-wide recon via the Shodan API — needs SHODAN_API_KEY in the agent "
+            "config). Active port scanning (naabu, nmap) is the reason the agents live on "
+            "DigitalOcean — outbound port scanning is prohibited from the AWS network."
         ),
     },
     "web-dast": {
         "agent_name": "web-dast-agent",
-        "executors": ["ffuf"],
+        "executors": ["ffuf", "nuclei", "zap", "nikto2", "wpscan", "burp"],
         "description": (
-            "Web fuzzing / dynamic application testing. Runs ffuf to discover paths, "
-            "parameters and virtual hosts by substituting each line of a wordlist into the "
-            "literal FUZZ token in the target URL. The image ships no wordlist — place one "
-            "in the container (e.g. via docker exec) before launching, and pass its absolute "
-            "path as FFUF_WORDLIST."
+            "Web fuzzing and dynamic application testing. Runs ffuf (HTTP fuzzer — wordlist "
+            "substitution into the FUZZ token), nuclei (ProjectDiscovery's templated vuln "
+            "scanner with a huge community ruleset), nikto2 (web server fingerprinting and "
+            "known-issue checks), zap (OWASP ZAP DAST), wpscan (WordPress vulnerability "
+            "scanner) and burp (Burp Suite Pro report import). The ffuf wordlist must be "
+            "staged inside the container; burp needs a Burp Pro license + pre-exported XML "
+            "to import."
         ),
     },
     "endpoint-edr": {
         "agent_name": "endpoint-edr-agent",
-        "executors": ["crowdstrike", "sentinelone", "wazuh"],
+        "executors": ["crowdstrike", "sentinelone", "wazuh", "microsoft_defender"],
         "description": (
             "Endpoint Detection and Response data import. Pulls findings from CrowdStrike "
             "Falcon (Spotlight JSON export pre-staged inside the container), SentinelOne "
-            "(live management API at /web/api/v2.1/threats) and Wazuh (live REST API). "
-            "Configure each vendor's URL and API credentials as agent env vars "
-            "(SENTINELONE_URL/_TOKEN, WAZUH_URL/_USERNAME/_PASSWORD) before scanning."
+            "(live management API at /web/api/v2.1/threats), Wazuh (live REST API) and "
+            "Microsoft Defender for Endpoint (live Graph API). Configure each vendor's URL "
+            "and API credentials as agent env vars (SENTINELONE_URL/_TOKEN, "
+            "WAZUH_URL/_USERNAME/_PASSWORD, MS_DEFENDER_TENANT_ID/_CLIENT_ID/_CLIENT_SECRET) "
+            "before scanning."
+        ),
+    },
+    "vulnscan": {
+        "agent_name": "vulnscan",
+        "executors": [
+            "nessus", "tenableio", "tenablesc", "insightvm", "qualys",
+            "gvm_openvas", "cisco_cybervision", "report_processor",
+        ],
+        "description": (
+            "Enterprise vulnerability management and report ingest. Pulls findings from "
+            "Nessus, Tenable.io and Tenable.sc (Tenable family), Rapid7 InsightVM, Qualys "
+            "VMDR, OpenVAS/GVM and Cisco Cyber Vision (OT/ICS); plus report_processor as a "
+            "generic SARIF/JSON/XML import path for scan exports produced outside the agents. "
+            "Each vendor needs its API URL + token as agent env vars (TENABLE_IO_ACCESS_KEY/"
+            "SECRET_KEY, NESSUS_URL/USERNAME/PASSWORD, QUALYS_URL/USERNAME/PASSWORD, "
+            "INSIGHTVM_URL/USERNAME/PASSWORD, OPENVAS_URL/USERNAME/PASSWORD, etc.) before "
+            "scanning."
+        ),
+    },
+    "redteam": {
+        "agent_name": "redteam",
+        "executors": ["crackmapexec"],
+        "description": (
+            "Red-team / post-exploitation tooling. Runs CrackMapExec (CME) for Active "
+            "Directory enumeration, SMB / WinRM / MSSQL / SSH authentication checks, "
+            "credential validation, share / session listing, and protocol-level attacks "
+            "across a target range. CrackMapExec needs reachable target hosts and a set of "
+            "credentials passed at scan time (username + password or hash); use this agent "
+            "only against environments where you have explicit testing authorization."
         ),
     },
     "remediate": {
