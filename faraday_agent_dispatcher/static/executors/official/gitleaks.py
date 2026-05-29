@@ -8,15 +8,13 @@ from pathlib import Path
 from faraday_plugins.plugins.repo.gitleaks.plugin import GitleaksPlugin
 
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 
 VALID_MODES = {"dir", "git", "stdin"}
 
 
 def build_command(output_path: Path):
-    target = os.environ.get("EXECUTOR_CONFIG_GITLEAKS_TARGET")
-    if not target:
-        print("GITLEAKS_TARGET is required", file=sys.stderr)
-        sys.exit(1)
+    target = resolve_source_path("GITLEAKS")
 
     mode = os.environ.get("EXECUTOR_CONFIG_GITLEAKS_MODE", "dir")
     if mode not in VALID_MODES:

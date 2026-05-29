@@ -8,13 +8,11 @@ from pathlib import Path
 from faraday_plugins.plugins.repo.sarif.plugin import SarifPlugin
 
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 
 
 def build_command(output_path: Path):
-    target = os.environ.get("EXECUTOR_CONFIG_TFSEC_TARGET")
-    if not target:
-        print("TFSEC_TARGET is required", file=sys.stderr)
-        sys.exit(1)
+    target = resolve_source_path("TFSEC")
 
     minimum_severity = os.environ.get("EXECUTOR_CONFIG_TFSEC_MIN_SEVERITY")
     exclude_checks = os.environ.get("EXECUTOR_CONFIG_TFSEC_EXCLUDE")

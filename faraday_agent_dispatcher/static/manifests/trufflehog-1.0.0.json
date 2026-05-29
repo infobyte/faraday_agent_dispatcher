@@ -1,11 +1,40 @@
 {
     "arguments": {
-        "TRUFFLEHOG_TARGET": {"mandatory": true, "type": "string", "base": "string"},
-        "TRUFFLEHOG_MODE": {"mandatory": false, "type": "string", "base": "string"},
-        "TRUFFLEHOG_ONLY_VERIFIED": {"mandatory": false, "type": "boolean", "base": "boolean"},
-        "TRUFFLEHOG_NO_UPDATE": {"mandatory": false, "type": "boolean", "base": "boolean"}
+        "TRUFFLEHOG_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "TRUFFLEHOG_MODE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "TRUFFLEHOG_ONLY_VERIFIED": {
+            "mandatory": false,
+            "type": "boolean",
+            "base": "boolean"
+        },
+        "TRUFFLEHOG_NO_UPDATE": {
+            "mandatory": false,
+            "type": "boolean",
+            "base": "boolean"
+        },
+        "TRUFFLEHOG_GIT_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "TRUFFLEHOG_GIT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        }
     },
-    "environment_variables": [],
+    "environment_variables": [
+        "GIT_USERNAME",
+        "GIT_TOKEN"
+    ],
     "check_cmds": [
         "trufflehog --version"
     ],

@@ -1,14 +1,50 @@
 {
     "arguments": {
-        "SNYK_TARGET": {"mandatory": true, "type": "string", "base": "string"},
-        "SNYK_MODE": {"mandatory": false, "type": "string", "base": "string"},
-        "SNYK_SEVERITY_THRESHOLD": {"mandatory": false, "type": "string", "base": "string"},
-        "SNYK_ORG": {"mandatory": false, "type": "string", "base": "string"},
-        "SNYK_FILE": {"mandatory": false, "type": "string", "base": "string"},
-        "SNYK_ALL_PROJECTS": {"mandatory": false, "type": "boolean", "base": "boolean"}
+        "SNYK_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SNYK_MODE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SNYK_SEVERITY_THRESHOLD": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SNYK_ORG": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SNYK_FILE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SNYK_ALL_PROJECTS": {
+            "mandatory": false,
+            "type": "boolean",
+            "base": "boolean"
+        },
+        "SNYK_GIT_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SNYK_GIT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        }
     },
     "environment_variables": [
-        "SNYK_TOKEN"
+        "SNYK_TOKEN",
+        "GIT_USERNAME",
+        "GIT_TOKEN"
     ],
     "check_cmds": [
         "snyk --version"

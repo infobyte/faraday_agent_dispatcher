@@ -1,11 +1,40 @@
 {
     "arguments": {
-        "CHECKOV_TARGET": {"mandatory": true, "type": "string", "base": "string"},
-        "CHECKOV_FRAMEWORK": {"mandatory": false, "type": "string", "base": "string"},
-        "CHECKOV_SKIP_CHECK": {"mandatory": false, "type": "string", "base": "string"},
-        "CHECKOV_CHECK": {"mandatory": false, "type": "string", "base": "string"}
+        "CHECKOV_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "CHECKOV_FRAMEWORK": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "CHECKOV_SKIP_CHECK": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "CHECKOV_CHECK": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "CHECKOV_GIT_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "CHECKOV_GIT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        }
     },
-    "environment_variables": [],
+    "environment_variables": [
+        "GIT_USERNAME",
+        "GIT_TOKEN"
+    ],
     "check_cmds": [
         "checkov --version"
     ],

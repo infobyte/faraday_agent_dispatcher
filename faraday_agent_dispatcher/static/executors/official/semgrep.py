@@ -7,13 +7,11 @@ import subprocess
 from faraday_plugins.plugins.repo.semgrep.plugin import SemgrepPlugin
 
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 
 
 def build_command():
-    target = os.environ.get("EXECUTOR_CONFIG_SEMGREP_TARGET")
-    if not target:
-        print("SEMGREP_TARGET is required", file=sys.stderr)
-        sys.exit(1)
+    target = resolve_source_path("SEMGREP")
 
     configs = os.environ.get("EXECUTOR_CONFIG_SEMGREP_CONFIG", "auto")
     exclude = os.environ.get("EXECUTOR_CONFIG_SEMGREP_EXCLUDE")

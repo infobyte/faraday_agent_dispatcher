@@ -7,6 +7,8 @@ import subprocess
 import time
 from datetime import datetime, timezone
 
+from faraday_agent_dispatcher.utils.source_target import resolve_source_path
+
 
 def faraday_command(params: str, started: float) -> dict:
     return {
@@ -23,10 +25,7 @@ def faraday_command(params: str, started: float) -> dict:
 
 def build_command():
     mode = os.environ.get("EXECUTOR_CONFIG_TRUFFLEHOG_MODE", "filesystem")
-    target = os.environ.get("EXECUTOR_CONFIG_TRUFFLEHOG_TARGET")
-    if not target:
-        print("TRUFFLEHOG_TARGET is required", file=sys.stderr)
-        sys.exit(1)
+    target = resolve_source_path("TRUFFLEHOG")
 
     only_verified = os.environ.get("EXECUTOR_CONFIG_TRUFFLEHOG_ONLY_VERIFIED")
     no_update = os.environ.get("EXECUTOR_CONFIG_TRUFFLEHOG_NO_UPDATE", "true")

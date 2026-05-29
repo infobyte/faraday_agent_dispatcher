@@ -1,11 +1,40 @@
 {
     "arguments": {
-        "BANDIT_TARGET": {"mandatory": true, "type": "string", "base": "string"},
-        "BANDIT_CONFIDENCE": {"mandatory": false, "type": "string", "base": "string"},
-        "BANDIT_SEVERITY": {"mandatory": false, "type": "string", "base": "string"},
-        "BANDIT_SKIP": {"mandatory": false, "type": "string", "base": "string"}
+        "BANDIT_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "BANDIT_CONFIDENCE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "BANDIT_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "BANDIT_SKIP": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "BANDIT_GIT_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "BANDIT_GIT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        }
     },
-    "environment_variables": [],
+    "environment_variables": [
+        "GIT_USERNAME",
+        "GIT_TOKEN"
+    ],
     "check_cmds": [
         "bandit --version"
     ],

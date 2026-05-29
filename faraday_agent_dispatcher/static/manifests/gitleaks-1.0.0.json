@@ -1,11 +1,40 @@
 {
     "arguments": {
-        "GITLEAKS_TARGET": {"mandatory": true, "type": "string", "base": "string"},
-        "GITLEAKS_MODE": {"mandatory": false, "type": "string", "base": "string"},
-        "GITLEAKS_CONFIG": {"mandatory": false, "type": "string", "base": "string"},
-        "GITLEAKS_REDACT": {"mandatory": false, "type": "boolean", "base": "boolean"}
+        "GITLEAKS_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "GITLEAKS_MODE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "GITLEAKS_CONFIG": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "GITLEAKS_REDACT": {
+            "mandatory": false,
+            "type": "boolean",
+            "base": "boolean"
+        },
+        "GITLEAKS_GIT_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "GITLEAKS_GIT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        }
     },
-    "environment_variables": [],
+    "environment_variables": [
+        "GIT_USERNAME",
+        "GIT_TOKEN"
+    ],
     "check_cmds": [
         "gitleaks version"
     ],

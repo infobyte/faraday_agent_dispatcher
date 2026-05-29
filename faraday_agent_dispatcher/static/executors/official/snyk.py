@@ -6,15 +6,13 @@ import subprocess
 from faraday_plugins.plugins.repo.snyk.plugin import SnykPlugin
 
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 
 VALID_MODES = {"test", "container", "iac", "code"}
 
 
 def build_command():
-    target = os.environ.get("EXECUTOR_CONFIG_SNYK_TARGET")
-    if not target:
-        print("SNYK_TARGET is required", file=sys.stderr)
-        sys.exit(1)
+    target = resolve_source_path("SNYK")
 
     mode = os.environ.get("EXECUTOR_CONFIG_SNYK_MODE", "test")
     if mode not in VALID_MODES:

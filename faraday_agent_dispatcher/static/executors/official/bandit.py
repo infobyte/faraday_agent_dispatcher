@@ -6,13 +6,11 @@ import subprocess
 from faraday_plugins.plugins.repo.bandit.plugin import BanditPlugin
 
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 
 
 def build_command():
-    target = os.environ.get("EXECUTOR_CONFIG_BANDIT_TARGET")
-    if not target:
-        print("BANDIT_TARGET is required", file=sys.stderr)
-        sys.exit(1)
+    target = resolve_source_path("BANDIT")
 
     confidence = os.environ.get("EXECUTOR_CONFIG_BANDIT_CONFIDENCE")
     severity = os.environ.get("EXECUTOR_CONFIG_BANDIT_SEVERITY")

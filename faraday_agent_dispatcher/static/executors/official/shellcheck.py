@@ -8,6 +8,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from faraday_agent_dispatcher.utils.source_target import resolve_source_path
+
 SEVERITY_MAP = {
     "error": "high",
     "warning": "med",
@@ -65,10 +67,7 @@ def faraday_command(tool: str, params: str, started_at: float) -> dict:
 
 def main():
     started = time.time()
-    target = os.environ.get("EXECUTOR_CONFIG_SHELLCHECK_TARGET")
-    if not target:
-        print("SHELLCHECK_TARGET is required", file=sys.stderr)
-        sys.exit(1)
+    target = resolve_source_path("SHELLCHECK")
 
     severity = os.environ.get("EXECUTOR_CONFIG_SHELLCHECK_SEVERITY")
     extra_shells = os.environ.get("EXECUTOR_CONFIG_SHELLCHECK_SHELL")
