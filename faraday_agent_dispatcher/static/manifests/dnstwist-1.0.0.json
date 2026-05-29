@@ -1,0 +1,18 @@
+{
+    "arguments": {
+        "DNSTWIST_DOMAIN": {"mandatory": true, "type": "string", "base": "string"},
+        "DNSTWIST_REGISTERED_ONLY": {"mandatory": false, "type": "boolean", "base": "boolean"},
+        "DNSTWIST_MX_CHECK": {"mandatory": false, "type": "boolean", "base": "boolean"}
+    },
+    "environment_variables": [],
+    "check_cmds": ["dnstwist --version"],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network Tools",
+    "name": "dnstwist",
+    "title": "dnstwist",
+    "website": "https://github.com/elceef/dnstwist",
+    "description": "dnstwist — typo-squat / lookalike-domain detection for brand-protection workflows. Generates permutations of DNSTWIST_DOMAIN (homoglyphs, bitsquatting, character omission/insertion, transposition, etc.) and resolves them. DNSTWIST_REGISTERED_ONLY=true (default) returns only resolving permutations; DNSTWIST_MX_CHECK=true tests whether each lookalike accepts mail (strong phishing signal — those land as 'high' severity in Faraday).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "dnstwist.py"
+}

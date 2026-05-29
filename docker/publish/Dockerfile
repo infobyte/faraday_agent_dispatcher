@@ -50,6 +50,7 @@ ARG SUBFINDER_VERSION=2.6.7
 ARG KUBESCAPE_VERSION=3.0.22
 ARG KUBE_BENCH_VERSION=0.10.0
 ARG TFSEC_VERSION=1.28.13
+ARG AMASS_VERSION=4.2.0
 
 USER root
 
@@ -73,6 +74,12 @@ RUN pipx install semgrep
 RUN pipx install bandit
 RUN pipx install checkov
 RUN pipx install 'prowler<4'
+# Round-3 discovery-osint additions:
+# dnstwist for typo-squat detection, theHarvester for OSINT, masscan via apt.
+RUN pipx install dnstwist
+RUN pipx install theHarvester
+RUN apt-get update && apt-get install -y --no-install-recommends masscan \
+    && rm -rf /var/lib/apt/lists/*
 
 # Snyk CLI (Node).
 RUN npm config set fetch-retries 5 && npm install -g snyk && npm cache clean --force
@@ -101,6 +108,8 @@ RUN set -eux; \
     dl "https://github.com/aquasecurity/kube-bench/releases/download/v${KUBE_BENCH_VERSION}/kube-bench_${KUBE_BENCH_VERSION}_linux_${TARGETARCH}.tar.gz" | tar -xz kube-bench && mv kube-bench /usr/local/bin/; \
     # tfsec
     dl -o /usr/local/bin/tfsec "https://github.com/aquasecurity/tfsec/releases/download/v${TFSEC_VERSION}/tfsec-linux-${TARGETARCH}" && chmod +x /usr/local/bin/tfsec; \
+    # amass (subdomain + DNS recon)
+    dl -o amass.zip "https://github.com/owasp-amass/amass/releases/download/v${AMASS_VERSION}/amass_Linux_${TARGETARCH}.zip" && unzip -j -o amass.zip "*/amass" -d /usr/local/bin/ && rm amass.zip; \
     chmod +x /usr/local/bin/*; \
     rm -rf /tmp/*
 

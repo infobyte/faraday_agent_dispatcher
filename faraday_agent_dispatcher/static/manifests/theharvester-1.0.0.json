@@ -1,0 +1,19 @@
+{
+    "arguments": {
+        "THEHARVESTER_DOMAIN": {"mandatory": true, "type": "string", "base": "string"},
+        "THEHARVESTER_SOURCES": {"mandatory": false, "type": "string", "base": "string"},
+        "THEHARVESTER_LIMIT": {"mandatory": false, "type": "integer", "base": "integer"},
+        "THEHARVESTER_START": {"mandatory": false, "type": "integer", "base": "integer"}
+    },
+    "environment_variables": [],
+    "check_cmds": ["theHarvester --help"],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network Tools",
+    "name": "theharvester",
+    "title": "theHarvester",
+    "website": "https://github.com/laramies/theHarvester",
+    "description": "theHarvester — OSINT email / subdomain / IP / employee harvesting from public sources (search engines, certificate transparency, code repos, breach archives, social platforms). Set THEHARVESTER_DOMAIN to the target organisation's apex domain; THEHARVESTER_SOURCES (CSV, e.g. 'anubis,crtsh,duckduckgo,hackertarget') restricts which providers are queried. THEHARVESTER_LIMIT caps results per source.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "theharvester.py"
+}

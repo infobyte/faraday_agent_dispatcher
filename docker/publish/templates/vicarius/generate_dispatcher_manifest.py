@@ -81,14 +81,19 @@ AGENT_GROUPS = {
     },
     "discovery-osint": {
         "agent_name": "discovery-osint-agent",
-        "executors": ["subfinder", "naabu", "nmap", "shodan2", "sublist3r"],
+        "executors": [
+            "subfinder", "naabu", "nmap", "shodan2", "sublist3r",
+            "amass", "masscan", "dnstwist", "theharvester",
+        ],
         "description": (
-            "Passive reconnaissance and active host discovery. Runs subfinder and sublist3r "
-            "(subdomain enumeration from public sources — crt.sh, VirusTotal, AlienVault, "
-            "etc.), naabu (fast SYN/CONNECT port scanner from ProjectDiscovery), nmap "
-            "(comprehensive port + service + NSE script scanner) and shodan2 (passive "
-            "Internet-wide recon via the Shodan API — needs SHODAN_API_KEY in the agent "
-            "config). Active port scanning (naabu, nmap) is the reason the agents live on "
+            "Passive reconnaissance, active host discovery and brand-protection signals. "
+            "Subdomain / DNS enum: subfinder, amass (heavier-duty, more sources), sublist3r "
+            "and theharvester (also pulls emails / employees / breaches). Active port "
+            "scanning: naabu (fast SYN/CONNECT), nmap (with NSE scripting) and masscan "
+            "(internet-scale, >1M pps). Passive Internet-wide intel: shodan2 (needs "
+            "SHODAN_API_KEY). Brand-protection: dnstwist (typo-squat / lookalike domain "
+            "detection, with optional MX-record probing to flag phishing-ready domains). "
+            "Active scanning (naabu, nmap, masscan) is the reason the agents live on "
             "DigitalOcean — outbound port scanning is prohibited from the AWS network."
         ),
     },
