@@ -70,6 +70,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--image", default="faradaysec/faraday_agent_dispatcher:3.9.1")
     parser.add_argument("--node-group", default="corporate")
     parser.add_argument(
+        "--image-pull-secret",
+        help="Name of a docker-registry secret to attach as imagePullSecrets "
+        "(needed when --image lives in a private registry).",
+    )
+    parser.add_argument(
         "--group",
         choices=sorted(AGENT_GROUPS),
         help="Restrict to a single capability group (its executors, agent name and deployment name). "
@@ -207,6 +212,7 @@ def build_k8s_manifest(args: argparse.Namespace) -> list[dict[str, Any]]:
                 "spec": {
                     "nodeSelector": {"node-group": args.node_group},
                     "terminationGracePeriodSeconds": 30,
+                    **({"imagePullSecrets": [{"name": args.image_pull_secret}]} if args.image_pull_secret else {}),
                     "containers": [
                         {
                             "name": "dispatcher",
