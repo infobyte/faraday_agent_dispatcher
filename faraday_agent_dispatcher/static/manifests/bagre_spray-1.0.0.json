@@ -1,0 +1,59 @@
+{
+    "arguments": {
+        "TARGET_DOMAIN": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "TARGET_SUBDOMAIN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "PROTOCOLS": {
+            "mandatory": false,
+            "type": "list",
+            "base": "list"
+        },
+        "LIMIT": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        }
+    },
+    "environment_variables": [
+        "BAGRE_SOURCE",
+        "INTELX_API_KEY",
+        "INTELX_BASE_URL",
+        "INTELX_BUCKETS",
+        "INTELX_MAX_FILES",
+        "CLICKHOUSE_HOST",
+        "CLICKHOUSE_PORT",
+        "CLICKHOUSE_DATABASE",
+        "CLICKHOUSE_USER",
+        "CLICKHOUSE_PASSWORD",
+        "FARADAY_URL",
+        "FARADAY_USER",
+        "FARADAY_PASSWORD",
+        "FARADAY_WORKSPACE",
+        "BAGRE_PASSWORD_SPRAY_MAX_ATTEMPTS_PER_USER",
+        "BAGRE_PASSWORD_SPRAY_DELAY_MS",
+        "BAGRE_PASSWORD_SPRAY_TIMEOUT_S",
+        "BAGRE_PASSWORD_SPRAY_MAX_TOTAL_ATTEMPTS",
+        "BAGRE_PASSWORD_SPRAY_CONCURRENCY",
+        "BAGRE_PASSWORD_SPRAY_EXCLUDE_USERS",
+        "BAGRE_PASSWORD_SPRAY_DRY_RUN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import bagre'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network Tools",
+    "name": "bagre_spray",
+    "title": "Bagre Password Spray",
+    "website": "https://intelx.io/",
+    "description": "Validates leaked credentials from Bagre by spraying them against assets and services discovered in the Faraday workspace. Pulls credentials from the configured source (IntelX default — needs INTELX_API_KEY), enumerates targets via the Faraday REST API (FARADAY_URL / USER / PASSWORD / WORKSPACE), and authenticates over ssh/http/https/ftp/smb/smtp/imap/pop3. Lockout guardrails are on by default (max 3 attempts per user, 1000 total per run, 1s inter-attempt delay, excludes admin/administrator/root). Set BAGRE_PASSWORD_SPRAY_DRY_RUN=true to log planned attempts without authenticating. Run only against authorised targets.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "bagre_spray.py"
+}

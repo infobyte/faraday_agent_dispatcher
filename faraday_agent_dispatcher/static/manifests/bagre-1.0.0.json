@@ -1,0 +1,55 @@
+{
+    "arguments": {
+        "TARGET_DOMAIN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "TARGET_SUBDOMAIN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "MAIL_DOMAIN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "URI_PATH": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "LIMIT": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        }
+    },
+    "environment_variables": [
+        "BAGRE_SOURCE",
+        "INTELX_API_KEY",
+        "INTELX_BASE_URL",
+        "INTELX_BUCKETS",
+        "INTELX_MAX_FILES",
+        "INTELX_MAX_FILE_SIZE",
+        "INTELX_TIMEOUT_S",
+        "CLICKHOUSE_HOST",
+        "CLICKHOUSE_PORT",
+        "CLICKHOUSE_DATABASE",
+        "CLICKHOUSE_USER",
+        "CLICKHOUSE_PASSWORD"
+    ],
+    "check_cmds": [
+        "python3 -c 'import bagre'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network Tools",
+    "name": "bagre",
+    "title": "Bagre Threat Intelligence",
+    "website": "https://intelx.io/",
+    "description": "Queries Bagre threat-intelligence sources for compromised credentials tied to a target domain. Default source is Intelligence X (intelx.io) — set INTELX_API_KEY as an agent env var; ClickHouse is an optional backend (BAGRE_SOURCE=clickhouse with CLICKHOUSE_* creds). Per-scan, set TARGET_DOMAIN (e.g. 'faradaysec') and optionally narrow with TARGET_SUBDOMAIN (LIKE wildcards), MAIL_DOMAIN, or URI_PATH. Emits one Faraday host per affected IP with the leaked credential as a vulnerability + linked credential record.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "bagre.py"
+}

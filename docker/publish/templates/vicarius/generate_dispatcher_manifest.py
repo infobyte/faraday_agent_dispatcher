@@ -98,6 +98,8 @@ AGENT_GROUPS = {
             "masscan",
             "dnstwist",
             "theharvester",
+            "bagre",
+            "bagre_spray",
         ],
         "description": (
             "Passive reconnaissance, active host discovery and brand-protection signals. "
@@ -107,8 +109,13 @@ AGENT_GROUPS = {
             "(internet-scale, >1M pps). Passive Internet-wide intel: shodan2 (needs "
             "SHODAN_API_KEY). Brand-protection: dnstwist (typo-squat / lookalike domain "
             "detection, with optional MX-record probing to flag phishing-ready domains). "
-            "Active scanning (naabu, nmap, masscan) is the reason the agents live on "
-            "DigitalOcean — outbound port scanning is prohibited from the AWS network."
+            "Credential threat-intel: bagre queries Intelligence X (or ClickHouse) for "
+            "leaked credentials tied to the target domain; bagre_spray validates them by "
+            "spraying ssh/http(s)/ftp/smb/smtp/imap/pop3 against assets already in the "
+            "workspace (lockout-guarded — 3 attempts/user, excludes admin/root, supports "
+            "BAGRE_PASSWORD_SPRAY_DRY_RUN). Both need INTELX_API_KEY as an agent env var. "
+            "Active scanning (naabu, nmap, masscan, bagre_spray) is the reason the agents "
+            "live on DigitalOcean — outbound port scanning is prohibited from the AWS network."
         ),
     },
     "web-dast": {

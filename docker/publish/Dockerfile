@@ -19,6 +19,14 @@ ENV PATH="/opt/dispatcher_venv/bin:$PATH"
 COPY . .
 RUN pip install .
 
+# --- Offensive Checks: vendored bagre threat-intel package ---
+# Installs the bagre subpackage (clickhouse + intelx sources, credential
+# validators, password-spray engine) into the dispatcher venv so the
+# bagre / bagre_spray executors under static/executors/official can do
+# `from bagre.config import load_config` etc. Pulls clickhouse-driver,
+# tldextract, paramiko, smbprotocol as transitive deps.
+RUN pip install /app/offensive_checks/bagre_pkg
+
 # --- Offensive Checks: patch bundled faraday_plugins parsers ---
 # We patch two plugin parsers here until the fixes are released upstream
 # (Trivy Code:null, CrowdStrike missing severity).

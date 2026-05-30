@@ -1,0 +1,5 @@
+[tool.black]
+line-length = 119
+extend-exclude = '''
+^/offensive_checks/bagre_pkg/
+'''
