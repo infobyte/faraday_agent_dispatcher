@@ -5,6 +5,8 @@ Runs `masscan -oJ` and emits one Faraday host per scanned IP with a
 service entry per open port.
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess

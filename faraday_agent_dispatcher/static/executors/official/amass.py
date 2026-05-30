@@ -6,6 +6,8 @@ IPs as Faraday hosts (one host per unique IP; all subdomains pointing at
 that IP become its hostnames).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess

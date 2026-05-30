@@ -8,6 +8,8 @@ workflows can act on them. Stdlib-only — does not depend on a
 faraday_plugins theharvester parser (not all builds ship it).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
