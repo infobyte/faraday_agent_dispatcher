@@ -33,10 +33,25 @@ import sys
 import time
 from typing import Optional, List, Dict, Any
 
-from bagre.config import load_config
-from bagre.sources import get_source
-from bagre.formatter import format_faraday_output
-from bagre.faraday_credentials import FaradayConfig, import_credentials_and_link
+# The bagre.* package is vendored at offensive_checks/bagre_pkg/ and pip-installed
+# into the dispatcher image via a Dockerfile layer. The unit-test environment
+# does not install it, so we defer ImportError until main() actually runs the
+# executor — this lets test_imports load the module cleanly while keeping the
+# runtime behaviour identical inside the published image.
+try:
+    from bagre.config import load_config
+    from bagre.sources import get_source
+    from bagre.formatter import format_faraday_output
+    from bagre.faraday_credentials import FaradayConfig, import_credentials_and_link
+except ImportError as _bagre_import_error:  # pragma: no cover - exercised only at runtime
+    load_config = None
+    get_source = None
+    format_faraday_output = None
+    FaradayConfig = None
+    import_credentials_and_link = None
+    _BAGRE_IMPORT_ERROR = _bagre_import_error
+else:
+    _BAGRE_IMPORT_ERROR = None
 
 # Global flag to control logging (disabled by default for dispatcher compatibility)
 ENABLE_LOGGING = os.environ.get("BAGRE_ENABLE_LOGGING", "").lower() in ("1", "true", "yes")
@@ -287,6 +302,16 @@ def output_json(data: dict) -> None:
 def main() -> int:
     """Main entry point for the Bagre executor."""
     start_time = time.time()
+
+    if _BAGRE_IMPORT_ERROR is not None:
+        print(
+            f"[BAGRE FATAL] bagre package not installed in this environment: {_BAGRE_IMPORT_ERROR}. "
+            "The published dispatcher image vendors it via offensive_checks/bagre_pkg.",
+            file=sys.stderr,
+            flush=True,
+        )
+        output_json({"hosts": [], "command": {"tool": "bagre", "command": "bagre.py", "duration": 0}})
+        return 1
 
     try:
         # Parse arguments

@@ -39,20 +39,40 @@ import time
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 
-from bagre.config import load_config
-from bagre.sources import get_source
-from bagre.sources.intelx_source import _decompose_url, host_in_scope, reconstruct_host
-from bagre.faraday_credentials import FaradayConfig
-from bagre.faraday_workspace import FaradayWorkspaceClient
-from bagre.credential_validator import SUPPORTED_PROTOCOLS
-from bagre.password_spray_engine import (
-    PasswordSprayPolicy,
-    PasswordSprayAttempt,
-    build_jobs,
-    build_endpoint_jobs,
-    discover_login_endpoints,
-    run_password_spray,
-)
+# See bagre.py for the rationale behind deferring this ImportError until main().
+try:
+    from bagre.config import load_config
+    from bagre.sources import get_source
+    from bagre.sources.intelx_source import _decompose_url, host_in_scope, reconstruct_host
+    from bagre.faraday_credentials import FaradayConfig
+    from bagre.faraday_workspace import FaradayWorkspaceClient
+    from bagre.credential_validator import SUPPORTED_PROTOCOLS
+    from bagre.password_spray_engine import (
+        PasswordSprayPolicy,
+        PasswordSprayAttempt,
+        build_jobs,
+        build_endpoint_jobs,
+        discover_login_endpoints,
+        run_password_spray,
+    )
+except ImportError as _bagre_import_error:  # pragma: no cover - exercised only at runtime
+    load_config = None
+    get_source = None
+    _decompose_url = None
+    host_in_scope = None
+    reconstruct_host = None
+    FaradayConfig = None
+    FaradayWorkspaceClient = None
+    SUPPORTED_PROTOCOLS = ()
+    PasswordSprayPolicy = None
+    PasswordSprayAttempt = None
+    build_jobs = None
+    build_endpoint_jobs = None
+    discover_login_endpoints = None
+    run_password_spray = None
+    _BAGRE_IMPORT_ERROR = _bagre_import_error
+else:
+    _BAGRE_IMPORT_ERROR = None
 
 DEFAULT_EXCLUDED = "admin,administrator,root"
 LOG_PREFIX = "[BAGRE-PASSWORD-SPRAY]"
@@ -307,6 +327,15 @@ def attempts_to_bulk_create(
 def main() -> int:
     start = time.time()
     started_at_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+
+    if _BAGRE_IMPORT_ERROR is not None:
+        log(
+            f"{LOG_PREFIX} FATAL bagre package not installed: {_BAGRE_IMPORT_ERROR}. "
+            "The published dispatcher image vendors it via offensive_checks/bagre_pkg."
+        )
+        output_json(empty_output(SCRIPT_NAME, 0.0, "bagre package missing"))
+        return 1
+
     try:
         args = parse_args()
     except SystemExit:
