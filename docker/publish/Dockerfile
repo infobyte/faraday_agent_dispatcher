@@ -20,14 +20,23 @@ COPY . .
 RUN pip install .
 
 # --- Offensive Checks: patch bundled faraday_plugins parsers ---
-# The offensive-check manifests ship inside the dispatcher package
-# (faraday_agent_dispatcher/static/manifests, resolved by metadata_utils), so no
-# parameters-types copy is needed. We only patch two plugin parsers here until
-# the fixes are released upstream (Trivy Code:null, CrowdStrike missing severity).
+# We patch two plugin parsers here until the fixes are released upstream
+# (Trivy Code:null, CrowdStrike missing severity).
 RUN apt-get update && apt-get install -y --no-install-recommends patch \
     && PLUGINS_DIR="$(python -c 'import os, faraday_plugins; print(os.path.dirname(faraday_plugins.__file__))')" \
     && patch -p2 -d "$PLUGINS_DIR" < /app/offensive_checks/patches/faraday_plugins_offensive_fixes.patch \
     && rm -rf /var/lib/apt/lists/*
+
+# --- Offensive Checks: surface our manifests to faraday_agent_parameters_types ---
+# The dispatcher's on_connect (dispatcher_io.py:657) reads executor categories
+# from faraday_agent_parameters_types.utils.get_manifests(), which scans only
+# that package's static/manifests dir. Without copying our 21 manifests there,
+# every offensive-check executor lands on the Faraday server with category=null
+# (the manifests in faraday_agent_dispatcher/static/manifests are only seen by
+# our metadata_utils fallback, which on_connect doesn't use).
+RUN PT_DIR="$(python -c 'import os, faraday_agent_parameters_types; print(os.path.join(os.path.dirname(faraday_agent_parameters_types.__file__), \"static\", \"manifests\"))')" \
+    && cp /app/faraday_agent_dispatcher/static/manifests/*.json "$PT_DIR"/ \
+    && echo "vendored offensive-check manifests into $PT_DIR"
 
 #### Final image ####
 FROM ${BASE_IMAGE}
