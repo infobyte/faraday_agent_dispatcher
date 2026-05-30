@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
+from faraday_agent_dispatcher.utils import arg_helpers
+
 SEVERITY_MAP = {
     "info": "info",
     "low": "low",
@@ -30,9 +32,9 @@ def build_command(output_path: Path):
         sys.exit(1)
 
     threads = os.environ.get("EXECUTOR_CONFIG_FFUF_THREADS", "40")
-    match_codes = os.environ.get("EXECUTOR_CONFIG_FFUF_MATCH_CODES", "200,204,301,302,307,401,403")
+    match_codes = arg_helpers.csv("EXECUTOR_CONFIG_FFUF_MATCH_CODES", "200,204,301,302,307,401,403")
     filter_size = os.environ.get("EXECUTOR_CONFIG_FFUF_FILTER_SIZE")
-    extensions = os.environ.get("EXECUTOR_CONFIG_FFUF_EXTENSIONS")
+    extensions = arg_helpers.csv("EXECUTOR_CONFIG_FFUF_EXTENSIONS")
 
     cmd = [
         "ffuf",
@@ -78,7 +80,7 @@ def faraday_command(tool: str, params: str, started_at: float) -> dict:
 
 
 def build_report(ffuf_output: dict, started: float) -> dict:
-    severity = normalize_severity(os.environ.get("EXECUTOR_CONFIG_FFUF_SEVERITY", "info"))
+    severity = normalize_severity(arg_helpers.single("EXECUTOR_CONFIG_FFUF_SEVERITY", "info"))
     target = os.environ.get("EXECUTOR_CONFIG_FFUF_TARGET", "")
     parsed = urlparse(target.replace("FUZZ", ""))
     host_ip = parsed.hostname or "unknown"

@@ -19,13 +19,15 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 
+from faraday_agent_dispatcher.utils import arg_helpers
+
 
 def build_command(basepath: Path) -> list[str]:
     domain = os.environ.get("EXECUTOR_CONFIG_THEHARVESTER_DOMAIN")
     if not domain:
         print("THEHARVESTER_DOMAIN is required", file=sys.stderr)
         sys.exit(1)
-    sources = os.environ.get(
+    sources = arg_helpers.csv(
         "EXECUTOR_CONFIG_THEHARVESTER_SOURCES",
         "anubis,crtsh,duckduckgo,hackertarget",
     )

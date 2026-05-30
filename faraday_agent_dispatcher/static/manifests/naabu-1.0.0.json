@@ -17,8 +17,8 @@
         },
         "NAABU_TOP_PORTS": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "integer",
+            "base": "integer"
         },
         "NAABU_RATE": {
             "mandatory": false,

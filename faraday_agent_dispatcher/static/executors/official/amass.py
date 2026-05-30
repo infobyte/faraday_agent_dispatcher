@@ -16,6 +16,8 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from faraday_agent_dispatcher.utils import arg_helpers
+
 
 def build_command(output_path: Path) -> list[str]:
     domain = os.environ.get("EXECUTOR_CONFIG_AMASS_DOMAIN")
@@ -28,7 +30,7 @@ def build_command(output_path: Path) -> list[str]:
     timeout = os.environ.get("EXECUTOR_CONFIG_AMASS_TIMEOUT")
     if timeout:
         cmd += ["-timeout", str(timeout)]
-    resolvers = os.environ.get("EXECUTOR_CONFIG_AMASS_RESOLVERS")
+    resolvers = arg_helpers.csv("EXECUTOR_CONFIG_AMASS_RESOLVERS")
     if resolvers:
         cmd += ["-r", resolvers]
     return cmd

@@ -12,8 +12,8 @@
         },
         "SUBFINDER_SOURCES": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "SUBFINDER_THREADS": {
             "mandatory": false,
@@ -35,7 +35,7 @@
     "name": "subfinder",
     "title": "Subfinder",
     "website": "https://github.com/projectdiscovery/subfinder",
-    "description": "Passive subdomain enumeration \u2014 queries dozens of public sources (crt.sh, VirusTotal, AlienVault, etc.) without touching the target itself. Set SUBFINDER_DOMAIN to an apex domain (no scheme, e.g. 'faradaysec.com') or use SUBFINDER_DOMAIN_LIST for several. SUBFINDER_RECURSIVE=true expands discovered subdomains; SUBFINDER_SOURCES restricts which providers are used.",
+    "description": "Passive subdomain enumeration — queries dozens of public sources (crt.sh, VirusTotal, AlienVault, etc.) without touching the target itself. Set SUBFINDER_DOMAIN to an apex domain (no scheme, e.g. 'faradaysec.com') or use SUBFINDER_DOMAIN_LIST for several. SUBFINDER_RECURSIVE=true expands discovered subdomains; SUBFINDER_SOURCES restricts which providers are used.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "subfinder.py"

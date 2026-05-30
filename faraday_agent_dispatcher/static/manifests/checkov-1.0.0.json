@@ -7,22 +7,22 @@
         },
         "CHECKOV_FRAMEWORK": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "CHECKOV_SKIP_CHECK": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "CHECKOV_CHECK": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "CHECKOV_GIT_URL": {
             "mandatory": false,
-            "type": "string",
+            "type": "url",
             "base": "string"
         },
         "CHECKOV_GIT_REF": {

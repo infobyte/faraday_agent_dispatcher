@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 
 import requests
 
+from faraday_agent_dispatcher.utils import arg_helpers
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 SEVERITY_MAP = {
@@ -128,8 +130,8 @@ def main():
     username = env("WAZUH_USERNAME", required=True)
     password = env("WAZUH_PASSWORD", required=True)
 
-    agent_filter = os.getenv("EXECUTOR_CONFIG_WAZUH_AGENT_IDS")
-    min_severity = os.getenv("EXECUTOR_CONFIG_WAZUH_MIN_SEVERITY")
+    agent_filter = arg_helpers.csv("EXECUTOR_CONFIG_WAZUH_AGENT_IDS")
+    min_severity = arg_helpers.single("EXECUTOR_CONFIG_WAZUH_MIN_SEVERITY")
     verify_ssl = os.getenv("EXECUTOR_CONFIG_WAZUH_VERIFY_SSL", "true").lower() == "true"
 
     token = authenticate(base_url, username, password, verify_ssl)

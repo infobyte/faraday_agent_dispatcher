@@ -5,6 +5,7 @@ import subprocess
 
 from faraday_plugins.plugins.repo.snyk.plugin import SnykPlugin
 
+from faraday_agent_dispatcher.utils import arg_helpers
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 
@@ -14,12 +15,12 @@ VALID_MODES = {"test", "container", "iac", "code"}
 def build_command():
     target = resolve_source_path("SNYK")
 
-    mode = os.environ.get("EXECUTOR_CONFIG_SNYK_MODE", "test")
+    mode = arg_helpers.single("EXECUTOR_CONFIG_SNYK_MODE", "test")
     if mode not in VALID_MODES:
         print(f"Invalid SNYK_MODE: {mode}", file=sys.stderr)
         sys.exit(1)
 
-    severity_threshold = os.environ.get("EXECUTOR_CONFIG_SNYK_SEVERITY_THRESHOLD")
+    severity_threshold = arg_helpers.single("EXECUTOR_CONFIG_SNYK_SEVERITY_THRESHOLD")
     org = os.environ.get("EXECUTOR_CONFIG_SNYK_ORG")
     file_arg = os.environ.get("EXECUTOR_CONFIG_SNYK_FILE")
     all_projects = os.environ.get("EXECUTOR_CONFIG_SNYK_ALL_PROJECTS")

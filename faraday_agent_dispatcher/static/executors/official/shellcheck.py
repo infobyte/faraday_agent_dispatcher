@@ -8,6 +8,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from faraday_agent_dispatcher.utils import arg_helpers
 from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 
 SEVERITY_MAP = {
@@ -69,8 +70,8 @@ def main():
     started = time.time()
     target = resolve_source_path("SHELLCHECK")
 
-    severity = os.environ.get("EXECUTOR_CONFIG_SHELLCHECK_SEVERITY")
-    extra_shells = os.environ.get("EXECUTOR_CONFIG_SHELLCHECK_SHELL")
+    severity = arg_helpers.single("EXECUTOR_CONFIG_SHELLCHECK_SEVERITY")
+    extra_shells = arg_helpers.single("EXECUTOR_CONFIG_SHELLCHECK_SHELL")
 
     targets = discover_targets(Path(target))
     if not targets:

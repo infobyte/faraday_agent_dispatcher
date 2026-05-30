@@ -5,13 +5,14 @@ import subprocess
 
 from faraday_plugins.plugins.repo.trivy_json.plugin import TrivyJsonPlugin
 
+from faraday_agent_dispatcher.utils import arg_helpers
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
 VALID_SCAN_TYPES = {"fs", "image", "repo", "config", "k8s"}
 
 
 def build_command():
-    scan_type = os.environ.get("EXECUTOR_CONFIG_TRIVY_SCAN_TYPE", "fs")
+    scan_type = arg_helpers.single("EXECUTOR_CONFIG_TRIVY_SCAN_TYPE", "fs")
     if scan_type not in VALID_SCAN_TYPES:
         print(f"Invalid TRIVY_SCAN_TYPE: {scan_type}", file=sys.stderr)
         sys.exit(1)
@@ -21,8 +22,8 @@ def build_command():
         print("TRIVY_TARGET is required", file=sys.stderr)
         sys.exit(1)
 
-    severity = os.environ.get("EXECUTOR_CONFIG_TRIVY_SEVERITY")
-    skip_dirs = os.environ.get("EXECUTOR_CONFIG_TRIVY_SKIP_DIRS")
+    severity = arg_helpers.csv("EXECUTOR_CONFIG_TRIVY_SEVERITY")
+    skip_dirs = arg_helpers.csv("EXECUTOR_CONFIG_TRIVY_SKIP_DIRS")
     ignore_unfixed = os.environ.get("EXECUTOR_CONFIG_TRIVY_IGNORE_UNFIXED")
     scanners = os.environ.get("EXECUTOR_CONFIG_TRIVY_SCANNERS", "vuln,secret,misconfig")
 

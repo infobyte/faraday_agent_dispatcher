@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-import os
 import sys
 import subprocess
 
 from faraday_plugins.plugins.repo.bandit.plugin import BanditPlugin
 
+from faraday_agent_dispatcher.utils import arg_helpers
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 
@@ -12,9 +12,9 @@ from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 def build_command():
     target = resolve_source_path("BANDIT")
 
-    confidence = os.environ.get("EXECUTOR_CONFIG_BANDIT_CONFIDENCE")
-    severity = os.environ.get("EXECUTOR_CONFIG_BANDIT_SEVERITY")
-    skip = os.environ.get("EXECUTOR_CONFIG_BANDIT_SKIP")
+    confidence = arg_helpers.single("EXECUTOR_CONFIG_BANDIT_CONFIDENCE")
+    severity = arg_helpers.single("EXECUTOR_CONFIG_BANDIT_SEVERITY")
+    skip = arg_helpers.csv("EXECUTOR_CONFIG_BANDIT_SKIP")
 
     cmd = ["bandit", "-r", "-f", "xml", "-q"]
 

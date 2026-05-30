@@ -7,8 +7,8 @@
         },
         "TRUFFLEHOG_MODE": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "TRUFFLEHOG_ONLY_VERIFIED": {
             "mandatory": false,
@@ -22,7 +22,7 @@
         },
         "TRUFFLEHOG_GIT_URL": {
             "mandatory": false,
-            "type": "string",
+            "type": "url",
             "base": "string"
         },
         "TRUFFLEHOG_GIT_REF": {
@@ -43,7 +43,7 @@
     "name": "trufflehog",
     "title": "TruffleHog",
     "website": "https://github.com/trufflesecurity/trufflehog",
-    "description": "Secrets scanner with credential verification \u2014 it only reports a secret as confirmed once it successfully authenticates against the vendor's API. Set TRUFFLEHOG_TARGET and TRUFFLEHOG_MODE (filesystem/git/github/gitlab); TRUFFLEHOG_ONLY_VERIFIED=true suppresses unverified matches for low-noise output.",
+    "description": "Secrets scanner with credential verification — it only reports a secret as confirmed once it successfully authenticates against the vendor's API. Set TRUFFLEHOG_TARGET and TRUFFLEHOG_MODE (filesystem/git/github/gitlab); TRUFFLEHOG_ONLY_VERIFIED=true suppresses unverified matches for low-noise output.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "trufflehog.py"

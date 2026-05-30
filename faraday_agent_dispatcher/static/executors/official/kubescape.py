@@ -7,18 +7,19 @@ from pathlib import Path
 
 from faraday_plugins.plugins.repo.kubescape.plugin import KubescapePlugin
 
+from faraday_agent_dispatcher.utils import arg_helpers
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
 VALID_SCAN_TARGETS = {"cluster", "framework", "control"}
 
 
 def build_command(output_path: Path):
-    scan_target = os.environ.get("EXECUTOR_CONFIG_KUBESCAPE_SCAN_TARGET", "cluster")
+    scan_target = arg_helpers.single("EXECUTOR_CONFIG_KUBESCAPE_SCAN_TARGET", "cluster")
     if scan_target not in VALID_SCAN_TARGETS:
         print(f"Invalid KUBESCAPE_SCAN_TARGET: {scan_target}", file=sys.stderr)
         sys.exit(1)
 
-    framework = os.environ.get("EXECUTOR_CONFIG_KUBESCAPE_FRAMEWORK", "nsa")
+    framework = arg_helpers.single("EXECUTOR_CONFIG_KUBESCAPE_FRAMEWORK", "nsa")
     kubeconfig = os.environ.get("EXECUTOR_CONFIG_KUBESCAPE_KUBECONFIG")
     manifest_path = os.environ.get("EXECUTOR_CONFIG_KUBESCAPE_MANIFEST_PATH")
 

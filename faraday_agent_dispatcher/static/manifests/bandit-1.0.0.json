@@ -7,22 +7,22 @@
         },
         "BANDIT_CONFIDENCE": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "BANDIT_SEVERITY": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "BANDIT_SKIP": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "BANDIT_GIT_URL": {
             "mandatory": false,
-            "type": "string",
+            "type": "url",
             "base": "string"
         },
         "BANDIT_GIT_REF": {

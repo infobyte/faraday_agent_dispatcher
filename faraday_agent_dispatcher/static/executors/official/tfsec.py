@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import sys
 import tempfile
 import subprocess
@@ -7,6 +6,7 @@ from pathlib import Path
 
 from faraday_plugins.plugins.repo.sarif.plugin import SarifPlugin
 
+from faraday_agent_dispatcher.utils import arg_helpers
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 
@@ -14,8 +14,8 @@ from faraday_agent_dispatcher.utils.source_target import resolve_source_path
 def build_command(output_path: Path):
     target = resolve_source_path("TFSEC")
 
-    minimum_severity = os.environ.get("EXECUTOR_CONFIG_TFSEC_MIN_SEVERITY")
-    exclude_checks = os.environ.get("EXECUTOR_CONFIG_TFSEC_EXCLUDE")
+    minimum_severity = arg_helpers.single("EXECUTOR_CONFIG_TFSEC_MIN_SEVERITY")
+    exclude_checks = arg_helpers.csv("EXECUTOR_CONFIG_TFSEC_EXCLUDE")
 
     cmd = [
         "tfsec",

@@ -2,13 +2,13 @@
     "arguments": {
         "KUBESCAPE_SCAN_TARGET": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "KUBESCAPE_FRAMEWORK": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "KUBESCAPE_CONTROL_ID": {
             "mandatory": false,

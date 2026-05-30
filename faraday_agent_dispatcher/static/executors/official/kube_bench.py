@@ -7,6 +7,8 @@ import subprocess
 import time
 from datetime import datetime, timezone
 
+from faraday_agent_dispatcher.utils import arg_helpers
+
 SEVERITY_MAP = {"FAIL": "high", "WARN": "med", "INFO": "info", "PASS": "info"}
 
 
@@ -24,8 +26,8 @@ def faraday_command(params: str, started: float) -> dict:
 
 
 def build_command():
-    benchmark = os.environ.get("EXECUTOR_CONFIG_KUBEBENCH_BENCHMARK")
-    targets = os.environ.get("EXECUTOR_CONFIG_KUBEBENCH_TARGETS")
+    benchmark = arg_helpers.single("EXECUTOR_CONFIG_KUBEBENCH_BENCHMARK")
+    targets = arg_helpers.csv("EXECUTOR_CONFIG_KUBEBENCH_TARGETS")
     config_dir = os.environ.get("EXECUTOR_CONFIG_KUBEBENCH_CONFIG_DIR")
 
     cmd = ["kube-bench", "run", "--json"]

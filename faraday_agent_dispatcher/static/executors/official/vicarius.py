@@ -9,8 +9,8 @@ Modes:
   cves     -> /aggregation/searchGroup (OrganizationEndpointVulnerabilities)
   patches  -> /organizationEndpointExternalReferenceExternalReferences/search
 
-VICARIUS_API_URL + VICARIUS_TOKEN are taken from the dispatcher config
-(env vars set as varenvs in dispatcher.yaml).
+VICARIUS_API_URL + VICARIUS_TOKEN can be provided as per-scan args or as agent
+varenvs; per-scan values take precedence.
 """
 
 import json
@@ -20,14 +20,21 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
+from faraday_agent_dispatcher.utils import arg_helpers
+
 VALID_MODES = {"assets", "cves", "patches"}
 
 
+def _resolve_base_and_token():
+    base = arg_helpers.single("EXECUTOR_CONFIG_VICARIUS_API_URL") or os.environ.get("VICARIUS_API_URL", "")
+    token = arg_helpers.single("EXECUTOR_CONFIG_VICARIUS_TOKEN") or os.environ.get("VICARIUS_TOKEN", "")
+    return base.rstrip("/"), token
+
+
 def _api(path, query):
-    base = os.environ.get("VICARIUS_API_URL", "").rstrip("/")
-    token = os.environ.get("VICARIUS_TOKEN")
+    base, token = _resolve_base_and_token()
     if not base or not token:
-        print("VICARIUS_API_URL and VICARIUS_TOKEN must be set in the agent config", file=sys.stderr)
+        print("VICARIUS_API_URL and VICARIUS_TOKEN must be set (per-scan or as agent varenvs)", file=sys.stderr)
         sys.exit(1)
     url = f"{base}{path}?{urllib.parse.urlencode(query)}"
     req = urllib.request.Request(url, headers={"Vicarius-Token": token, "Accept": "application/json"})
@@ -186,21 +193,39 @@ def run_patches():
     return list(hosts.values())
 
 
+MODE_RUNNERS = {"assets": run_assets, "cves": run_cves, "patches": run_patches}
+
+
+def _merge(into, hosts):
+    for host in hosts:
+        existing = into.get(host["ip"])
+        if existing is None:
+            into[host["ip"]] = host
+        else:
+            existing["vulnerabilities"].extend(host.get("vulnerabilities") or [])
+            for hostname in host.get("hostnames") or []:
+                if hostname not in existing["hostnames"]:
+                    existing["hostnames"].append(hostname)
+
+
 def main():
-    mode = os.environ.get("EXECUTOR_CONFIG_VICARIUS_MODE", "cves").lower()
-    if mode not in VALID_MODES:
-        print(f"Invalid VICARIUS_MODE: {mode}. Use one of: {sorted(VALID_MODES)}", file=sys.stderr)
+    modes = [m.lower() for m in arg_helpers.items("EXECUTOR_CONFIG_VICARIUS_MODE")] or ["cves"]
+    invalid = [m for m in modes if m not in VALID_MODES]
+    if invalid:
+        print(f"Invalid VICARIUS_MODE value(s): {invalid}. Use any of: {sorted(VALID_MODES)}", file=sys.stderr)
         sys.exit(1)
 
     start = datetime.now(timezone.utc)
-    hosts = {"assets": run_assets, "cves": run_cves, "patches": run_patches}[mode]()
+    merged: dict = {}
+    for mode in modes:
+        _merge(merged, MODE_RUNNERS[mode]())
     duration_ms = int((datetime.now(timezone.utc) - start).total_seconds() * 1000)
 
     output = {
-        "hosts": hosts,
+        "hosts": list(merged.values()),
         "command": {
             "tool": "vicarius",
-            "command": f"vicarius {mode}",
+            "command": f"vicarius {','.join(modes)}",
             "params": "",
             "user": "",
             "hostname": "",

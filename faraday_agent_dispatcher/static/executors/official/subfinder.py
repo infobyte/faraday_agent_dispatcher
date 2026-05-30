@@ -8,6 +8,7 @@ from pathlib import Path
 
 from faraday_plugins.plugins.repo.subfinderjson.plugin import SubfinderPluginJSON
 
+from faraday_agent_dispatcher.utils import arg_helpers
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
 
@@ -18,7 +19,7 @@ def build_command(output_path: Path):
         print("SUBFINDER_DOMAIN or SUBFINDER_DOMAIN_LIST is required", file=sys.stderr)
         sys.exit(1)
 
-    sources = os.environ.get("EXECUTOR_CONFIG_SUBFINDER_SOURCES")
+    sources = arg_helpers.csv("EXECUTOR_CONFIG_SUBFINDER_SOURCES")
     threads = os.environ.get("EXECUTOR_CONFIG_SUBFINDER_THREADS")
     recursive = os.environ.get("EXECUTOR_CONFIG_SUBFINDER_RECURSIVE")
 

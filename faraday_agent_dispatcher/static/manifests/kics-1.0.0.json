@@ -7,17 +7,17 @@
         },
         "KICS_TYPE": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "KICS_EXCLUDE_SEVERITIES": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "KICS_GIT_URL": {
             "mandatory": false,
-            "type": "string",
+            "type": "url",
             "base": "string"
         },
         "KICS_GIT_REF": {

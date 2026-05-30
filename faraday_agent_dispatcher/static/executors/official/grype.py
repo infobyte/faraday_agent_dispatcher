@@ -5,6 +5,7 @@ import subprocess
 
 from faraday_plugins.plugins.repo.grype.plugin import GrypePlugin
 
+from faraday_agent_dispatcher.utils import arg_helpers
 from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
 
 
@@ -14,9 +15,9 @@ def build_command():
         print("GRYPE_TARGET is required", file=sys.stderr)
         sys.exit(1)
 
-    fail_on = os.environ.get("EXECUTOR_CONFIG_GRYPE_FAIL_ON")
+    fail_on = arg_helpers.single("EXECUTOR_CONFIG_GRYPE_FAIL_ON")
     only_fixed = os.environ.get("EXECUTOR_CONFIG_GRYPE_ONLY_FIXED")
-    scope = os.environ.get("EXECUTOR_CONFIG_GRYPE_SCOPE")
+    scope = arg_helpers.single("EXECUTOR_CONFIG_GRYPE_SCOPE")
 
     cmd = ["grype", target, "-o", "json", "-q"]
 

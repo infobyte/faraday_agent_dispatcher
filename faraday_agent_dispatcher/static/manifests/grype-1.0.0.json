@@ -7,8 +7,8 @@
         },
         "GRYPE_FAIL_ON": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         },
         "GRYPE_ONLY_FIXED": {
             "mandatory": false,
@@ -17,8 +17,8 @@
         },
         "GRYPE_SCOPE": {
             "mandatory": false,
-            "type": "string",
-            "base": "string"
+            "type": "list",
+            "base": "list"
         }
     },
     "environment_variables": [],

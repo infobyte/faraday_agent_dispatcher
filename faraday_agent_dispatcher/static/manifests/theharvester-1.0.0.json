@@ -1,7 +1,7 @@
 {
     "arguments": {
         "THEHARVESTER_DOMAIN": {"mandatory": true, "type": "string", "base": "string"},
-        "THEHARVESTER_SOURCES": {"mandatory": false, "type": "string", "base": "string"},
+        "THEHARVESTER_SOURCES": {"mandatory": false, "type": "list", "base": "list"},
         "THEHARVESTER_LIMIT": {"mandatory": false, "type": "integer", "base": "integer"},
         "THEHARVESTER_START": {"mandatory": false, "type": "integer", "base": "integer"}
     },
