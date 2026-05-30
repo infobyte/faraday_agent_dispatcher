@@ -4,6 +4,7 @@
 Runs `masscan -oJ` and emits one Faraday host per scanned IP with a
 service entry per open port.
 """
+
 import json
 import os
 import subprocess
@@ -52,31 +53,53 @@ def main():
                 ip = entry.get("ip", "")
                 if not ip:
                     continue
-                h = hosts_by_ip.setdefault(ip, {
-                    "ip": ip, "os": "unknown", "hostnames": [],
-                    "description": "", "mac": None, "credentials": [],
-                    "services": [], "vulnerabilities": [], "tags": [],
-                })
+                h = hosts_by_ip.setdefault(
+                    ip,
+                    {
+                        "ip": ip,
+                        "os": "unknown",
+                        "hostnames": [],
+                        "description": "",
+                        "mac": None,
+                        "credentials": [],
+                        "services": [],
+                        "vulnerabilities": [],
+                        "tags": [],
+                    },
+                )
                 for p in entry.get("ports", []) or []:
                     proto = p.get("proto", "tcp")
-                    h["services"].append({
-                        "name": str(p.get("port", "")),
-                        "protocol": proto if proto in ALLOWED_PROTO else "tcp",
-                        "port": int(p.get("port", 0)),
-                        "status": "open" if p.get("status") == "open" else "closed",
-                        "version": "", "description": "",
-                        "credentials": [], "vulnerabilities": [], "tags": [],
-                    })
+                    h["services"].append(
+                        {
+                            "name": str(p.get("port", "")),
+                            "protocol": proto if proto in ALLOWED_PROTO else "tcp",
+                            "port": int(p.get("port", 0)),
+                            "status": "open" if p.get("status") == "open" else "closed",
+                            "version": "",
+                            "description": "",
+                            "credentials": [],
+                            "vulnerabilities": [],
+                            "tags": [],
+                        }
+                    )
     duration_ms = int((datetime.now(timezone.utc) - start).total_seconds() * 1000)
-    print(json.dumps({
-        "hosts": list(hosts_by_ip.values()),
-        "command": {
-            "tool": "masscan", "command": "masscan",
-            "params": "", "user": "", "hostname": "",
-            "start_date": start.isoformat(),
-            "duration": duration_ms, "import_source": "report",
-        },
-    }))
+    print(
+        json.dumps(
+            {
+                "hosts": list(hosts_by_ip.values()),
+                "command": {
+                    "tool": "masscan",
+                    "command": "masscan",
+                    "params": "",
+                    "user": "",
+                    "hostname": "",
+                    "start_date": start.isoformat(),
+                    "duration": duration_ms,
+                    "import_source": "report",
+                },
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

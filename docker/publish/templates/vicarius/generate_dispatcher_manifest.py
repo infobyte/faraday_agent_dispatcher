@@ -30,8 +30,15 @@ AGENT_GROUPS = {
     "code-sast": {
         "agent_name": "code-sast-agent",
         "executors": [
-            "bandit", "semgrep", "shellcheck", "snyk",
-            "codeql", "dependabot", "github_secrets", "sonarqube", "appscan",
+            "bandit",
+            "semgrep",
+            "shellcheck",
+            "snyk",
+            "codeql",
+            "dependabot",
+            "github_secrets",
+            "sonarqube",
+            "appscan",
         ],
         "description": (
             "Static Application Security Testing (SAST) and supply-chain signal import for "
@@ -82,8 +89,15 @@ AGENT_GROUPS = {
     "discovery-osint": {
         "agent_name": "discovery-osint-agent",
         "executors": [
-            "subfinder", "naabu", "nmap", "shodan2", "sublist3r",
-            "amass", "masscan", "dnstwist", "theharvester",
+            "subfinder",
+            "naabu",
+            "nmap",
+            "shodan2",
+            "sublist3r",
+            "amass",
+            "masscan",
+            "dnstwist",
+            "theharvester",
         ],
         "description": (
             "Passive reconnaissance, active host discovery and brand-protection signals. "
@@ -126,8 +140,14 @@ AGENT_GROUPS = {
     "vulnscan": {
         "agent_name": "vulnscan",
         "executors": [
-            "nessus", "tenableio", "tenablesc", "insightvm", "qualys",
-            "gvm_openvas", "cisco_cybervision", "report_processor",
+            "nessus",
+            "tenableio",
+            "tenablesc",
+            "insightvm",
+            "qualys",
+            "gvm_openvas",
+            "cisco_cybervision",
+            "report_processor",
         ],
         "description": (
             "Enterprise vulnerability management and report ingest. Pulls findings from "

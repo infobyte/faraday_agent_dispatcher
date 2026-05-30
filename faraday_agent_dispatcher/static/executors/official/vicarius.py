@@ -51,10 +51,14 @@ def _pick(d, *keys, default=""):
 def _severity(sev):
     if isinstance(sev, (int, float)):
         s = float(sev)
-        if s >= 9: return "critical"
-        if s >= 7: return "high"
-        if s >= 4: return "medium"
-        if s > 0: return "low"
+        if s >= 9:
+            return "critical"
+        if s >= 7:
+            return "high"
+        if s >= 4:
+            return "medium"
+        if s > 0:
+            return "low"
         return "info"
     s = str(sev or "").strip().lower()
     return s if s in {"critical", "high", "medium", "low", "info", "unclassified"} else "info"
@@ -115,33 +119,41 @@ def run_cves():
         for a in affected:
             ip = _pick(a, "ipAddress", "ip", default="") or _pick(a, "assetName", default="unknown")
             host = hosts.setdefault(ip, _host_from_asset(a))
-            host["vulnerabilities"].append({
-                "name": cve,
-                "desc": desc,
-                "severity": sev,
-                "refs": [{"name": f"https://nvd.nist.gov/vuln/detail/{cve}", "type": "other"}] if cve.upper().startswith("CVE-") else [],
-                "external_id": cve,
-                "type": "Vulnerability",
-                "resolution": "",
-                "data": "",
-                "custom_fields": {},
-                "status": "open",
-                "impact": {},
-                "policyviolations": [],
-                "cve": [cve] if cve.upper().startswith("CVE-") else [],
-                "cvss3": {},
-                "cvss2": {},
-                "confirmed": False,
-                "tags": [],
-                "cwe": [],
-            })
+            host["vulnerabilities"].append(
+                {
+                    "name": cve,
+                    "desc": desc,
+                    "severity": sev,
+                    "refs": (
+                        [{"name": f"https://nvd.nist.gov/vuln/detail/{cve}", "type": "other"}]
+                        if cve.upper().startswith("CVE-")
+                        else []
+                    ),
+                    "external_id": cve,
+                    "type": "Vulnerability",
+                    "resolution": "",
+                    "data": "",
+                    "custom_fields": {},
+                    "status": "open",
+                    "impact": {},
+                    "policyviolations": [],
+                    "cve": [cve] if cve.upper().startswith("CVE-") else [],
+                    "cvss3": {},
+                    "cvss2": {},
+                    "confirmed": False,
+                    "tags": [],
+                    "cwe": [],
+                }
+            )
     return list(hosts.values())
 
 
 def run_patches():
     page_from = int(os.environ.get("EXECUTOR_CONFIG_VICARIUS_FROM", "0"))
     page_size = int(os.environ.get("EXECUTOR_CONFIG_VICARIUS_SIZE", "500"))
-    items = _api("/organizationEndpointExternalReferenceExternalReferences/search", {"from": page_from, "size": page_size})
+    items = _api(
+        "/organizationEndpointExternalReferenceExternalReferences/search", {"from": page_from, "size": page_size}
+    )
     hosts = {}
     for it in items:
         ip = _pick(it, "ipAddress", "ip", default="") or _pick(it, "assetName", "hostName", default="unknown")
@@ -149,26 +161,28 @@ def run_patches():
         patch = _pick(it, "patchName", "kbId", "externalReferenceName", "name", default="missing-patch")
         product = _pick(it, "productName", "applicationName", default="")
         sev = _severity(_pick(it, "severity", default="high"))
-        host["vulnerabilities"].append({
-            "name": f"Missing patch: {patch}" + (f" ({product})" if product else ""),
-            "desc": f"vRx reports missing patch {patch} on this endpoint.",
-            "severity": sev,
-            "refs": [],
-            "external_id": patch,
-            "type": "Vulnerability",
-            "resolution": "Apply the patch via Vicarius vRx.",
-            "data": "",
-            "custom_fields": {},
-            "status": "open",
-            "impact": {},
-            "policyviolations": [],
-            "cve": [],
-            "cvss3": {},
-            "cvss2": {},
-            "confirmed": False,
-            "tags": ["missing-patch"],
-            "cwe": [],
-        })
+        host["vulnerabilities"].append(
+            {
+                "name": f"Missing patch: {patch}" + (f" ({product})" if product else ""),
+                "desc": f"vRx reports missing patch {patch} on this endpoint.",
+                "severity": sev,
+                "refs": [],
+                "external_id": patch,
+                "type": "Vulnerability",
+                "resolution": "Apply the patch via Vicarius vRx.",
+                "data": "",
+                "custom_fields": {},
+                "status": "open",
+                "impact": {},
+                "policyviolations": [],
+                "cve": [],
+                "cvss3": {},
+                "cvss2": {},
+                "confirmed": False,
+                "tags": ["missing-patch"],
+                "cwe": [],
+            }
+        )
     return list(hosts.values())
 
 

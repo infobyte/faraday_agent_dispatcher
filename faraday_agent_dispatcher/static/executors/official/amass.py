@@ -5,6 +5,7 @@ Runs `amass enum -json` and emits the discovered subdomains + resolved
 IPs as Faraday hosts (one host per unique IP; all subdomains pointing at
 that IP become its hostnames).
 """
+
 import json
 import os
 import subprocess
@@ -52,23 +53,40 @@ def main():
                     ip = addr.get("ip", "")
                     if not ip:
                         continue
-                    h = hosts_by_ip.setdefault(ip, {
-                        "ip": ip, "os": "unknown", "hostnames": [],
-                        "description": "", "mac": None, "credentials": [],
-                        "services": [], "vulnerabilities": [], "tags": [],
-                    })
+                    h = hosts_by_ip.setdefault(
+                        ip,
+                        {
+                            "ip": ip,
+                            "os": "unknown",
+                            "hostnames": [],
+                            "description": "",
+                            "mac": None,
+                            "credentials": [],
+                            "services": [],
+                            "vulnerabilities": [],
+                            "tags": [],
+                        },
+                    )
                     if name and name not in h["hostnames"]:
                         h["hostnames"].append(name)
     duration_ms = int((datetime.now(timezone.utc) - start).total_seconds() * 1000)
-    print(json.dumps({
-        "hosts": list(hosts_by_ip.values()),
-        "command": {
-            "tool": "amass", "command": "amass enum",
-            "params": "", "user": "", "hostname": "",
-            "start_date": start.isoformat(),
-            "duration": duration_ms, "import_source": "report",
-        },
-    }))
+    print(
+        json.dumps(
+            {
+                "hosts": list(hosts_by_ip.values()),
+                "command": {
+                    "tool": "amass",
+                    "command": "amass enum",
+                    "params": "",
+                    "user": "",
+                    "hostname": "",
+                    "start_date": start.isoformat(),
+                    "duration": duration_ms,
+                    "import_source": "report",
+                },
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

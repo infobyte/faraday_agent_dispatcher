@@ -6,6 +6,7 @@ character transpositions, etc.) and resolves them. Each resolved
 permutation becomes a Faraday host with a 'Lookalike domain detected'
 vulnerability so brand-protection workflows can act on it.
 """
+
 import json
 import os
 import subprocess
@@ -42,37 +43,63 @@ def main():
         mx = it.get("dns_mx", []) or []
         whois = it.get("whois_registrar", "") or ""
         sev = "high" if mx else "med"
-        hosts.append({
-            "ip": ip, "os": "unknown",
-            "hostnames": [d] if d else [],
-            "description": f"Lookalike domain detected by dnstwist (fuzzer={fuzzer})",
-            "mac": None, "credentials": [], "services": [],
-            "vulnerabilities": [{
-                "name": f"Lookalike / typo-squat domain: {d}",
-                "desc": (f"dnstwist detected the permutation '{d}' of '{domain}' "
-                         f"via the '{fuzzer}' fuzzer. "
-                         f"dns_a={ips} dns_mx={mx} whois_registrar={whois!r}"),
-                "severity": sev,
-                "refs": [], "external_id": fuzzer,
-                "type": "Vulnerability",
-                "resolution": "Investigate ownership; consider defensive registration or takedown.",
-                "data": "", "custom_fields": {}, "status": "open",
-                "impact": {}, "policyviolations": [], "cve": [],
-                "cvss3": {}, "cvss2": {}, "easeofresolution": None,
-                "confirmed": False, "tags": ["typo-squat", fuzzer], "cwe": [],
-            }],
-            "tags": [],
-        })
+        hosts.append(
+            {
+                "ip": ip,
+                "os": "unknown",
+                "hostnames": [d] if d else [],
+                "description": f"Lookalike domain detected by dnstwist (fuzzer={fuzzer})",
+                "mac": None,
+                "credentials": [],
+                "services": [],
+                "vulnerabilities": [
+                    {
+                        "name": f"Lookalike / typo-squat domain: {d}",
+                        "desc": (
+                            f"dnstwist detected the permutation '{d}' of '{domain}' "
+                            f"via the '{fuzzer}' fuzzer. "
+                            f"dns_a={ips} dns_mx={mx} whois_registrar={whois!r}"
+                        ),
+                        "severity": sev,
+                        "refs": [],
+                        "external_id": fuzzer,
+                        "type": "Vulnerability",
+                        "resolution": "Investigate ownership; consider defensive registration or takedown.",
+                        "data": "",
+                        "custom_fields": {},
+                        "status": "open",
+                        "impact": {},
+                        "policyviolations": [],
+                        "cve": [],
+                        "cvss3": {},
+                        "cvss2": {},
+                        "easeofresolution": None,
+                        "confirmed": False,
+                        "tags": ["typo-squat", fuzzer],
+                        "cwe": [],
+                    }
+                ],
+                "tags": [],
+            }
+        )
     duration_ms = int((datetime.now(timezone.utc) - start).total_seconds() * 1000)
-    print(json.dumps({
-        "hosts": hosts,
-        "command": {
-            "tool": "dnstwist", "command": "dnstwist",
-            "params": "", "user": "", "hostname": "",
-            "start_date": start.isoformat(),
-            "duration": duration_ms, "import_source": "report",
-        },
-    }))
+    print(
+        json.dumps(
+            {
+                "hosts": hosts,
+                "command": {
+                    "tool": "dnstwist",
+                    "command": "dnstwist",
+                    "params": "",
+                    "user": "",
+                    "hostname": "",
+                    "start_date": start.isoformat(),
+                    "duration": duration_ms,
+                    "import_source": "report",
+                },
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

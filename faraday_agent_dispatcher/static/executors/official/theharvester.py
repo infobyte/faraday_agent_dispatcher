@@ -5,6 +5,7 @@ Runs theHarvester and parses the XML output via faraday_plugins'
 TheHarvesterPlugin so emails / subdomains / hosts land in Faraday in
 the canonical bulk-create shape.
 """
+
 import os
 import subprocess
 import sys
