@@ -77,7 +77,9 @@ RUN pipx install 'prowler<4'
 # Round-3 discovery-osint additions:
 # dnstwist for typo-squat detection, theHarvester for OSINT, masscan via apt.
 RUN pipx install dnstwist
-RUN pipx install theHarvester
+# theHarvester's PyPI release ships no CLI entry point — install from the
+# upstream git repo where setup.py declares console_scripts properly.
+RUN pipx install "git+https://github.com/laramies/theHarvester.git"
 RUN apt-get update && apt-get install -y --no-install-recommends masscan \
     && rm -rf /var/lib/apt/lists/*
 
