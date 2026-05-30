@@ -7,13 +7,13 @@
         },
         "SNYK_MODE": {
             "mandatory": false,
-            "type": "list",
-            "base": "list"
+            "type": "string",
+            "base": "string"
         },
         "SNYK_SEVERITY_THRESHOLD": {
             "mandatory": false,
-            "type": "list",
-            "base": "list"
+            "type": "string",
+            "base": "string"
         },
         "SNYK_ORG": {
             "mandatory": false,
@@ -54,7 +54,7 @@
     "name": "snyk",
     "title": "Snyk",
     "website": "https://snyk.io/",
-    "description": "Dependency, IaC, container, and SAST scanner from Snyk. Pick what to scan with SNYK_MODE (test=deps, code=SAST, container=image, iac) and set SNYK_TARGET to a path or image. SNYK_SEVERITY_THRESHOLD filters by severity; SNYK_ALL_PROJECTS=true scans every manifest under the target. Requires a Snyk account token in the agent config (SNYK_TOKEN) — without it scans will fail to authenticate.",
+    "description": "Dependency, IaC, container, and SAST scanner from Snyk. Pick what to scan with SNYK_MODE — valid values: test (deps) | code (SAST) | container (image) | iac. Set SNYK_TARGET to a path or image. SNYK_SEVERITY_THRESHOLD filters findings — valid values: low | medium | high | critical. SNYK_ALL_PROJECTS=true scans every manifest under the target. Requires a Snyk account token in the agent config (SNYK_TOKEN) — without it scans will fail to authenticate.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "snyk.py"

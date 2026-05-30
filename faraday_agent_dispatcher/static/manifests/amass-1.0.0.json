@@ -12,7 +12,7 @@
     "name": "amass",
     "title": "OWASP Amass",
     "website": "https://owasp.org/www-project-amass/",
-    "description": "OWASP Amass — comprehensive subdomain enumeration and DNS reconnaissance from dozens of public + active sources (certificate transparency, DNS brute, scraping, web archives, reverse-whois). Set AMASS_DOMAIN to the apex domain; AMASS_PASSIVE=true restricts to non-touching sources for stealth, AMASS_TIMEOUT caps the run in minutes, and AMASS_RESOLVERS provides a custom resolver list (comma-separated). Emits one Faraday host per unique IP with all subdomains pointing at it as hostnames.",
+    "description": "OWASP Amass — comprehensive subdomain enumeration and DNS reconnaissance. Set AMASS_DOMAIN to the apex domain (no scheme, e.g. faradaysec.com). AMASS_PASSIVE=true restricts to non-touching sources for stealth. AMASS_TIMEOUT caps the run in minutes. AMASS_RESOLVERS is a list of DNS resolvers (e.g. 1.1.1.1, 8.8.8.8, 9.9.9.9). Emits one Faraday host per unique IP with all subdomains pointing at it as hostnames.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "amass.py"

@@ -7,8 +7,8 @@
         },
         "TFSEC_MIN_SEVERITY": {
             "mandatory": false,
-            "type": "list",
-            "base": "list"
+            "type": "string",
+            "base": "string"
         },
         "TFSEC_EXCLUDE": {
             "mandatory": false,
@@ -38,7 +38,7 @@
     "name": "tfsec",
     "title": "tfsec",
     "website": "https://aquasecurity.github.io/tfsec/",
-    "description": "Static analysis for Terraform — detects AWS/Azure/GCP misconfigurations and best-practice violations. TFSEC_TARGET is the directory containing .tf files; TFSEC_MIN_SEVERITY filters by severity (LOW/MEDIUM/HIGH/CRITICAL); TFSEC_EXCLUDE is a CSV of check IDs to ignore. Note: tfsec is being merged into Trivy upstream — use Trivy config-mode for new work.",
+    "description": "Static analysis for Terraform — detects AWS/Azure/GCP misconfigurations and best-practice violations. TFSEC_TARGET is the directory containing .tf files. TFSEC_MIN_SEVERITY filters by severity — valid values: LOW | MEDIUM | HIGH | CRITICAL. TFSEC_EXCLUDE is a list of check IDs to ignore (e.g. aws-s3-enable-bucket-encryption, aws-vpc-no-public-egress-sgr). Note: tfsec is being merged into Trivy upstream — use Trivy config-mode for new work.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "tfsec.py"

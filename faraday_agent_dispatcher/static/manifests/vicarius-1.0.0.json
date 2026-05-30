@@ -12,8 +12,8 @@
         },
         "VICARIUS_MODE": {
             "mandatory": false,
-            "type": "list",
-            "base": "list"
+            "type": "string",
+            "base": "string"
         },
         "VICARIUS_FROM": {
             "mandatory": false,
@@ -36,7 +36,7 @@
     "name": "vicarius",
     "title": "Vicarius vRx",
     "website": "https://www.vicarius.io",
-    "description": "Imports remediation status from Vicarius vRx via the External Data API. VICARIUS_MODE picks the view: 'assets' (asset inventory and OS/IP metadata), 'cves' (active vulnerabilities grouped by vulnerabilityId — each emitted as a Faraday vuln on every affected host), or 'patches' (missing patches per endpoint). VICARIUS_API_URL and VICARIUS_TOKEN can be set per-scan (the token is sent as the 'Vicarius-Token' header) or as agent env vars for shared defaults — the per-scan value wins. Use VICARIUS_FROM / VICARIUS_SIZE for pagination. Read-only today — patch execution and external-findings ingest are not exposed by the vRx PAT scope.",
+    "description": "Imports remediation status from Vicarius vRx via the External Data API. VICARIUS_MODE picks the view — valid values: assets (asset inventory and OS/IP metadata) | cves (active vulnerabilities grouped by vulnerabilityId — each emitted as a Faraday vuln on every affected host) | patches (missing patches per endpoint). VICARIUS_API_URL and VICARIUS_TOKEN can be set per-scan (the token is sent as the 'Vicarius-Token' header) or as agent env vars for shared defaults — the per-scan value wins. Use VICARIUS_FROM / VICARIUS_SIZE for pagination. Read-only today — patch execution and external-findings ingest are not exposed by the vRx PAT scope.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "vicarius.py"

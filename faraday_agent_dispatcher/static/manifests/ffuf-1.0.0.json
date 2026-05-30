@@ -32,8 +32,8 @@
         },
         "FFUF_SEVERITY": {
             "mandatory": false,
-            "type": "list",
-            "base": "list"
+            "type": "string",
+            "base": "string"
         }
     },
     "environment_variables": [],
@@ -45,7 +45,7 @@
     "name": "ffuf",
     "title": "ffuf",
     "website": "https://github.com/ffuf/ffuf",
-    "description": "HTTP fuzzer — substitutes the literal token 'FUZZ' in the URL with each line of a wordlist. Set FFUF_TARGET (e.g. 'https://target.example.com/FUZZ') and FFUF_WORDLIST to an absolute path inside the container. The agent image ships no wordlist; place one in the container before launching the scan. FFUF_MATCH_CODES and FFUF_FILTER_SIZE help cut soft-404 noise; FFUF_EXTENSIONS appends suffixes (.php, .bak, .zip).",
+    "description": "HTTP fuzzer — substitutes the literal token 'FUZZ' in the URL with each line of a wordlist. Set FFUF_TARGET (e.g. https://target.example.com/FUZZ) and FFUF_WORDLIST to an absolute path inside the container. The agent image ships no wordlist; place one in the container before launching the scan. FFUF_MATCH_CODES is a list of HTTP status codes to consider hits (e.g. 200, 204, 301, 302, 401, 403); FFUF_FILTER_SIZE filters out responses of a given size (e.g. soft-404 length); FFUF_EXTENSIONS is a list of suffixes to append to each word (e.g. .php, .bak, .zip). FFUF_SEVERITY labels findings — valid values: info | low | medium | high.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "ffuf.py"

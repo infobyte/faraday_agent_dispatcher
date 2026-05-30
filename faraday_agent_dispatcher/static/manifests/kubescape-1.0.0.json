@@ -2,13 +2,13 @@
     "arguments": {
         "KUBESCAPE_SCAN_TARGET": {
             "mandatory": false,
-            "type": "list",
-            "base": "list"
+            "type": "string",
+            "base": "string"
         },
         "KUBESCAPE_FRAMEWORK": {
             "mandatory": false,
-            "type": "list",
-            "base": "list"
+            "type": "string",
+            "base": "string"
         },
         "KUBESCAPE_CONTROL_ID": {
             "mandatory": false,
@@ -35,7 +35,7 @@
     "name": "kubescape",
     "title": "Kubescape",
     "website": "https://kubescape.io/",
-    "description": "Kubernetes posture scanner that runs framework controls (NSA, MITRE, CIS, ArmoBest, DevOpsBest, Soc2). KUBESCAPE_SCAN_TARGET controls the mode (cluster|framework|manifest). Cluster mode needs a kubeconfig inside the container at KUBESCAPE_KUBECONFIG; manifest mode scans the YAMLs at KUBESCAPE_MANIFEST_PATH. Restrict to a single framework or control with KUBESCAPE_FRAMEWORK / KUBESCAPE_CONTROL_ID.",
+    "description": "Kubernetes posture scanner. KUBESCAPE_SCAN_TARGET picks what to scan — valid values: cluster (live cluster via kubeconfig) | framework (a single framework against the cluster) | control (a single control). Cluster mode needs a kubeconfig inside the container at KUBESCAPE_KUBECONFIG; manifest mode scans the YAMLs at KUBESCAPE_MANIFEST_PATH. KUBESCAPE_FRAMEWORK picks the rule pack — valid values: nsa | mitre | cis | armobest | devopsbest | soc2. KUBESCAPE_CONTROL_ID runs a single control (e.g. C-0001).",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "kubescape.py"

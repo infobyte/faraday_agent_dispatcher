@@ -7,8 +7,8 @@
         },
         "WAZUH_MIN_SEVERITY": {
             "mandatory": false,
-            "type": "list",
-            "base": "list"
+            "type": "string",
+            "base": "string"
         },
         "WAZUH_VERIFY_SSL": {
             "mandatory": false,
@@ -29,7 +29,7 @@
     "name": "wazuh",
     "title": "Wazuh",
     "website": "https://wazuh.com/",
-    "description": "Pulls vulnerability findings from a Wazuh manager via its REST API. Provide WAZUH_URL (e.g. https://wazuh.example:55000), WAZUH_USERNAME, and WAZUH_PASSWORD as agent env vars. Per-scan, set WAZUH_AGENT_IDS (CSV of Wazuh agent IDs to query — '000' for the manager itself) and optionally WAZUH_MIN_SEVERITY (Low/Medium/High/Critical).",
+    "description": "Pulls vulnerability findings from a Wazuh manager via its REST API. Provide WAZUH_URL (e.g. https://wazuh.example:55000), WAZUH_USERNAME, and WAZUH_PASSWORD as agent env vars. WAZUH_AGENT_IDS is a list of Wazuh agent IDs to query (e.g. 001, 002, 003 — use '000' for the manager itself). WAZUH_MIN_SEVERITY filters findings — valid values: Low | Medium | High | Critical.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "wazuh.py"

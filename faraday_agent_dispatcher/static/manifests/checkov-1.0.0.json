@@ -43,7 +43,7 @@
     "name": "checkov",
     "title": "Checkov",
     "website": "https://www.checkov.io/",
-    "description": "Static analysis for Infrastructure-as-Code: Terraform, CloudFormation, Kubernetes, Helm, ARM, Dockerfile, and embedded secrets. Set CHECKOV_TARGET to a directory; restrict scope with CHECKOV_FRAMEWORK (CSV of frameworks) and skip noisy findings with CHECKOV_SKIP_CHECK (CSV of check IDs), or run only certain checks with CHECKOV_CHECK.",
+    "description": "Static analysis for Infrastructure-as-Code: Terraform, CloudFormation, Kubernetes, Helm, ARM, Dockerfile, and embedded secrets. Set CHECKOV_TARGET to a directory. CHECKOV_FRAMEWORK is a list of frameworks to scan (e.g. terraform, kubernetes, dockerfile, cloudformation, helm, ansible, arm, secrets). CHECKOV_SKIP_CHECK is a list of check IDs to skip (e.g. CKV_AWS_20, CKV_AWS_57). CHECKOV_CHECK restricts the scan to specific check IDs (e.g. CKV_AWS_18). Clone-at-scan via CHECKOV_GIT_URL + GIT_USERNAME / GIT_TOKEN.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "checkov.py"

@@ -7,8 +7,8 @@
         },
         "GITLEAKS_MODE": {
             "mandatory": false,
-            "type": "list",
-            "base": "list"
+            "type": "string",
+            "base": "string"
         },
         "GITLEAKS_CONFIG": {
             "mandatory": false,
@@ -43,7 +43,7 @@
     "name": "gitleaks",
     "title": "Gitleaks",
     "website": "https://github.com/gitleaks/gitleaks",
-    "description": "Detects hard-coded secrets (API keys, tokens, private keys) in source code and — with GITLEAKS_MODE=git — across the entire git history. GITLEAKS_TARGET is the path (or subpath inside a clone); GITLEAKS_REDACT=true masks the actual secret values in the output. Use GITLEAKS_GIT_URL + GIT_USERNAME / GIT_TOKEN to clone private repositories at scan time.",
+    "description": "Detects hard-coded secrets (API keys, tokens, private keys) in source code. GITLEAKS_MODE picks the scan kind — valid values: dir (filesystem walk) | git (scans the entire git history) | stdin (read from stdin). GITLEAKS_TARGET is the path (or subpath inside a clone); GITLEAKS_REDACT=true masks the actual secret values in the output. Use GITLEAKS_GIT_URL + GIT_USERNAME / GIT_TOKEN to clone private repositories at scan time.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "gitleaks.py"

@@ -38,7 +38,7 @@
     "name": "kics",
     "title": "KICS",
     "website": "https://kics.io/",
-    "description": "Checkmarx KICS scanner for IaC misconfigurations across Terraform, Kubernetes, Dockerfile, CloudFormation, Ansible, and Helm. Point KICS_TARGET at a directory; restrict scope with KICS_TYPE (e.g. 'Terraform,Kubernetes') and drop noisy findings via KICS_EXCLUDE_SEVERITIES (CSV of severities like 'LOW,INFO').",
+    "description": "Checkmarx KICS scanner for IaC misconfigurations across Terraform, Kubernetes, Dockerfile, CloudFormation, Ansible, and Helm. Point KICS_TARGET at a directory. KICS_TYPE is a list of platforms to scan (e.g. Terraform, Kubernetes, Dockerfile, CloudFormation, Ansible, Helm). KICS_EXCLUDE_SEVERITIES is a list of severities to drop (e.g. LOW, INFO, TRACE).",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "kics.py"

@@ -12,7 +12,7 @@
     "name": "theharvester",
     "title": "theHarvester",
     "website": "https://github.com/laramies/theHarvester",
-    "description": "theHarvester — OSINT email / subdomain / IP / employee harvesting from public sources (search engines, certificate transparency, code repos, breach archives, social platforms). Set THEHARVESTER_DOMAIN to the target organisation's apex domain; THEHARVESTER_SOURCES (CSV, e.g. 'anubis,crtsh,duckduckgo,hackertarget') restricts which providers are queried. THEHARVESTER_LIMIT caps results per source.",
+    "description": "theHarvester — OSINT email / subdomain / IP / employee harvesting from public sources. Set THEHARVESTER_DOMAIN to the target organisation's apex domain. THEHARVESTER_SOURCES is a list of providers to query (e.g. anubis, crtsh, duckduckgo, hackertarget, baidu, bing, virustotal, shodan, securityTrails). THEHARVESTER_LIMIT caps results per source.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "theharvester.py"
