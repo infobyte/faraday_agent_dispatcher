@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends patch \
 # every offensive-check executor lands on the Faraday server with category=null
 # (the manifests in faraday_agent_dispatcher/static/manifests are only seen by
 # our metadata_utils fallback, which on_connect doesn't use).
-RUN PT_DIR="$(python -c 'import os, faraday_agent_parameters_types; print(os.path.join(os.path.dirname(faraday_agent_parameters_types.__file__), \"static\", \"manifests\"))')" \
+RUN PT_DIR="$(python -c 'import os, faraday_agent_parameters_types; print(os.path.join(os.path.dirname(faraday_agent_parameters_types.__file__), "static", "manifests"))')" \
     && cp /app/faraday_agent_dispatcher/static/manifests/*.json "$PT_DIR"/ \
     && echo "vendored offensive-check manifests into $PT_DIR"
 
