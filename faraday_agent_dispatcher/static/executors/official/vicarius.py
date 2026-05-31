@@ -72,19 +72,50 @@ def _severity(sev):
 
 
 def _host_from_asset(a):
+    # vRx /endpoint/search records typically carry only endpointName + endpointOperatingSystem;
+    # no ipAddress field is exposed. Faraday's bulk_create silently drops hosts whose `ip`
+    # isn't IP-shaped, so fall back to 0.0.0.0 and keep the endpointName as the hostname
+    # rather than (mis-)using it as the IP.
     ip = _pick(a, "ipAddress", "ip", "primaryIp", default="")
     name = _pick(a, "assetName", "hostName", "endpointName", "name", default="")
-    os_name = _pick(a, "operatingSystem", "os", "osName", default="unknown")
+    os_blob = a.get("endpointOperatingSystem") or {}
+    os_name = (
+        _pick(a, "operatingSystem", "os", "osName", default="")
+        or _pick(os_blob, "operatingSystemName", "name", default="")
+        or "unknown"
+    )
+    desc_parts = []
+    base_desc = _pick(a, "description", default="")
+    if base_desc:
+        desc_parts.append(base_desc)
+    endpoint_id = a.get("endpointId")
+    if endpoint_id:
+        desc_parts.append(f"vRx endpointId={endpoint_id}")
+    scores = a.get("endpointEndpointScores") or {}
+    score_val = scores.get("endpointScoresScore")
+    sens_name = (scores.get("endpointScoresSensitivityLevel") or {}).get("sensitivityLevelName")
+    if score_val is not None:
+        desc_parts.append(f"vRx score={score_val}" + (f" sensitivity={sens_name}" if sens_name else ""))
+    status = (a.get("endpointEndpointStatus") or {}).get("name") or (a.get("endpointEndpointStatus") or {}).get(
+        "statusName"
+    )
+    if status:
+        desc_parts.append(f"status={status}")
+    tags = []
+    if endpoint_id:
+        tags.append(f"vrx:endpoint:{endpoint_id}")
+    if sens_name:
+        tags.append(f"vrx:sensitivity:{sens_name.lower()}")
     return {
-        "ip": ip or name or "unknown",
+        "ip": ip or "0.0.0.0",
         "os": os_name,
-        "hostnames": [name] if name and name != ip else [],
-        "description": _pick(a, "description", default=""),
+        "hostnames": [name] if name else [],
+        "description": " | ".join(desc_parts),
         "mac": _pick(a, "macAddress", "mac", default=None),
         "credentials": [],
         "services": [],
         "vulnerabilities": [],
-        "tags": [],
+        "tags": tags,
     }
 
 
