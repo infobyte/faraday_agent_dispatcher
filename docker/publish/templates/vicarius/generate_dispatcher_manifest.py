@@ -156,6 +156,7 @@ AGENT_GROUPS = {
             "cisco_cybervision",
             "tripwire_ip360",
             "vulndb",
+            "edgescan",
             "report_processor",
         ],
         "description": (
