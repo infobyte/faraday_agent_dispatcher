@@ -1,0 +1,36 @@
+{
+    "arguments": {
+        "IP360_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string",
+            "description": "Base URL of the Tripwire IP360 VnE console (e.g. https://ip360.example.com)."
+        },
+        "IP360_SCOPE_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional IP360 scope identifier to filter scans. Omit to consider every scope."
+        },
+        "IP360_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Default: info."
+        }
+    },
+    "environment_variables": [
+        "IP360_USER",
+        "IP360_API_KEY"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "tripwire_ip360",
+    "title": "Tripwire IP360",
+    "website": "https://www.tripwire.com/products/tripwire-ip360",
+    "description": "Tripwire IP360 vulnerability scanner importer. Pulls the most recent scan via /api/2.0/vulnscans and per-device findings via /api/2.0/devices/{id}/vulns; emits one Faraday host per scanned device with severity mapped from the IP360 score (0=info, <=2500=low, <=10000=medium, <=25000=high, >25000=critical). Auth is HTTP Basic with IP360_USER + IP360_API_KEY.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "tripwire_ip360.py"
+}

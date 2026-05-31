@@ -154,6 +154,7 @@ AGENT_GROUPS = {
             "qualys",
             "gvm_openvas",
             "cisco_cybervision",
+            "tripwire_ip360",
             "report_processor",
         ],
         "description": (
