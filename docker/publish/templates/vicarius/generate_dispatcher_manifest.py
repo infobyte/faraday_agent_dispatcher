@@ -155,6 +155,7 @@ AGENT_GROUPS = {
             "gvm_openvas",
             "cisco_cybervision",
             "tripwire_ip360",
+            "vulndb",
             "report_processor",
         ],
         "description": (

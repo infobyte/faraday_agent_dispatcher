@@ -1,0 +1,42 @@
+{
+    "arguments": {
+        "VULNDB_CPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "CPE 2.3 string to query (e.g. cpe:2.3:a:apache:http_server:2.4.54). At least one of VULNDB_CPE or VULNDB_VENDOR is required."
+        },
+        "VULNDB_VENDOR": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Vendor name or numeric VulnDB vendor id (e.g. 'apache' or '15'). Resolved via /vendors lookup when a name is supplied. At least one of VULNDB_CPE or VULNDB_VENDOR is required."
+        },
+        "VULNDB_PRODUCT": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional product name narrowing the vendor query (forwarded as product_name to /vendors/{id}/vulnerabilities). Ignored when VULNDB_VENDOR is not set."
+        },
+        "VULNDB_LIMIT": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Maximum vulnerabilities to retrieve per query. Default 100; pagination stops once this many entries have been collected."
+        }
+    },
+    "environment_variables": [
+        "VULNDB_KEY",
+        "VULNDB_SECRET"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "vulndb",
+    "title": "VulnDB",
+    "website": "https://vulndb.flashpoint.io",
+    "description": "VulnDB / Flashpoint vulnerability database importer. Queries /api/v1/vulnerabilities (by CPE) and /api/v1/vendors/{id}/vulnerabilities (by vendor, optionally narrowed by product); emits one synthetic Faraday host per query target with severity bucketed from CVSS (0=info, <4=low, <7=medium, <9=high, >=9=critical). Auth is HMAC-SHA1 — VULNDB_KEY identifies the consumer, VULNDB_SECRET signs each request (X-Vulndb-Key / X-Vulndb-Hmac / X-Vulndb-Timestamp / X-Vulndb-Nonce headers).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "vulndb.py"
+}
