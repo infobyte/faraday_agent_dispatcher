@@ -17,6 +17,21 @@
             "type": "string",
             "base": "string",
             "description": "Optional client-side severity floor for SCCM / MECM missing-update findings. Accepts info | low | medium | high | critical (plus Microsoft synonyms: severe -> critical, important -> high, moderate / warning -> medium, minor -> low, informational / information / unspecified / none / unknown -> info) plus numeric-string input bucketed first via severity_from_sccm_numeric (the SCCM internal 0/2/6/8/10 scale: 0=None, 2=Low, 6=Moderate, 8=Important, 10=Critical) and then via severity_from_cvss as a secondary fallback. Updates below the floor are dropped from the Faraday output after per-update severity normalisation (bucketed from the freeform SeverityName string enum + numeric Severity 0/2/6/8/10 fallback + optional CVSS3Score / CVSS2Score 0-10 secondary fallback). Defaults to info (no filtering)."
+        },
+        "SCCM_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "SCCM_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "SCCM_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

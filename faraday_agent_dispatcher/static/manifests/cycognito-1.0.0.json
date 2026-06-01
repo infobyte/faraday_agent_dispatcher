@@ -10,13 +10,28 @@
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Optional severity floor applied client-side on the issues surface. Accepts the canonical Faraday enum (info / low / medium / high / critical) plus CyCognito-side aliases (Important / Major / Moderate / Informational / Sev1..Sev5). Defaults to '' (no filter; we emit the full hits surface). Garbage values are logged and ignored. CyCognito's server-side filter grammar lives in CYCOG_FILTER — this arg is the gentle, client-side floor."
+            "description": "Optional severity floor applied client-side on the issues surface. Accepts the canonical Faraday enum (info / low / medium / high / critical) plus CyCognito-side aliases (Important / Major / Moderate / Informational / Sev1..Sev5). Defaults to '' (no filter; we emit the full hits surface). Garbage values are logged and ignored. CyCognito's server-side filter grammar lives in CYCOG_FILTER \u2014 this arg is the gentle, client-side floor."
         },
         "CYCOG_PAGES": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Optional per-surface page-walk cap. Each CyCognito v1 search page returns up to 100 hits via count=100; CYCOG_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited CyCognito API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (≈ 500 hits per surface, 1000 total across assets + issues)."
+            "description": "Optional per-surface page-walk cap. Each CyCognito v1 search page returns up to 100 hits via count=100; CYCOG_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited CyCognito API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (\u2248 500 hits per surface, 1000 total across assets + issues)."
+        },
+        "CYCOG_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "CYCOG_REALM": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "CYCOG_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -32,7 +47,7 @@
     "name": "cycognito",
     "title": "CyCognito",
     "website": "https://www.cycognito.com/",
-    "description": "CyCognito EASM importer. Pulls externally-discovered assets and issues from a CyCognito realm (organisation) and emits Faraday bulk-create JSON. Each CyCognito asset becomes one Faraday host (ip = the asset's first public IP, falling back to synthetic 0.0.0.0 for domain-keyed assets); per-asset issues attach as one Faraday vulnerability per issue_id with the [EASM] engine prefix. Endpoints used: POST /v1/assets (paginated external-asset inventory; the canonical CyCognito pivot — every issue joins by asset_id) and POST /v1/issues (paginated finding inventory with severity + category + cves + remediation guidance). Pagination is offset-based: count=100 per page, offset advanced via the response envelope's next_offset cursor (or current_offset + page_size when the envelope is silent), walked page-by-page until the page comes up short or CYCOG_PAGES is reached. JSON body carries realm (CYCOG_REALM) + filter (CYCOG_FILTER, the operator-supplied free-form JSON filter) + count + offset. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to priority / risk_rating / risk_score (CyCognito 0-10 scale) then CVSS when nothing else lands; aliases collapse CyCognito-side labels (Important / Major / Moderate / Informational / Sev1..Sev5) onto the canonical Faraday bucket. Status mapping covers new / in_progress / investigating -> open, resolved / closed / remediated -> closed, and false_positive / risk_accepted / wont_fix -> risk-accepted. Refs include CyCognito-Asset / CyCognito-AssetName / CyCognito-AssetType / CyCognito-Org / CyCognito-Id / CyCognito-Category / CyCognito-Port pivots plus any url / reference_url / evidence_url surfaced on the issue. Auth: CyCognito uses a single long-lived API token created in the CyCognito console under Settings -> API. The dispatcher carries the token on every request as the Authorization: <CYCOG_TOKEN> header. CYCOG_HOST is the CyCognito tenant host (e.g. api.platform.cycognito.com) and CYCOG_REALM is the organisation identifier scoping the search. Tags: [cycognito, easm].",
+    "description": "CyCognito EASM importer. Pulls externally-discovered assets and issues from a CyCognito realm (organisation) and emits Faraday bulk-create JSON. Each CyCognito asset becomes one Faraday host (ip = the asset's first public IP, falling back to synthetic 0.0.0.0 for domain-keyed assets); per-asset issues attach as one Faraday vulnerability per issue_id with the [EASM] engine prefix. Endpoints used: POST /v1/assets (paginated external-asset inventory; the canonical CyCognito pivot \u2014 every issue joins by asset_id) and POST /v1/issues (paginated finding inventory with severity + category + cves + remediation guidance). Pagination is offset-based: count=100 per page, offset advanced via the response envelope's next_offset cursor (or current_offset + page_size when the envelope is silent), walked page-by-page until the page comes up short or CYCOG_PAGES is reached. JSON body carries realm (CYCOG_REALM) + filter (CYCOG_FILTER, the operator-supplied free-form JSON filter) + count + offset. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to priority / risk_rating / risk_score (CyCognito 0-10 scale) then CVSS when nothing else lands; aliases collapse CyCognito-side labels (Important / Major / Moderate / Informational / Sev1..Sev5) onto the canonical Faraday bucket. Status mapping covers new / in_progress / investigating -> open, resolved / closed / remediated -> closed, and false_positive / risk_accepted / wont_fix -> risk-accepted. Refs include CyCognito-Asset / CyCognito-AssetName / CyCognito-AssetType / CyCognito-Org / CyCognito-Id / CyCognito-Category / CyCognito-Port pivots plus any url / reference_url / evidence_url surfaced on the issue. Auth: CyCognito uses a single long-lived API token created in the CyCognito console under Settings -> API. The dispatcher carries the token on every request as the Authorization: <CYCOG_TOKEN> header. CYCOG_HOST is the CyCognito tenant host (e.g. api.platform.cycognito.com) and CYCOG_REALM is the organisation identifier scoping the search. Tags: [cycognito, easm].",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "cycognito.py"

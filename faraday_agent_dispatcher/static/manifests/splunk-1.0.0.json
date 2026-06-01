@@ -4,7 +4,7 @@
             "mandatory": true,
             "type": "string",
             "base": "string",
-            "description": "SPL (Search Processing Language) query the dispatcher runs against the Splunk tenant. Accepts either the canonical search-command form ('index=notable severity=high', 'index=wineventlog EventCode=4625 | stats count by user') or a generating-command form ('| tstats count from datamodel=Network_Traffic', '| inputlookup notable_events.csv'). When neither leading 'search ' nor a leading '|' is present the executor prepends 'search ' so a bare 'index=foo' still posts cleanly. Each result row emitted by the search becomes one Faraday vulnerability — keep the SPL scoped (use index + sourcetype filters + per-rule transforms) so the result-row catalogue stays manageable. The executor caps pagination at PAGE_SIZE=100 per page x MAX_PAGES=200 = 20k rows."
+            "description": "SPL (Search Processing Language) query the dispatcher runs against the Splunk tenant. Accepts either the canonical search-command form ('index=notable severity=high', 'index=wineventlog EventCode=4625 | stats count by user') or a generating-command form ('| tstats count from datamodel=Network_Traffic', '| inputlookup notable_events.csv'). When neither leading 'search ' nor a leading '|' is present the executor prepends 'search ' so a bare 'index=foo' still posts cleanly. Each result row emitted by the search becomes one Faraday vulnerability \u2014 keep the SPL scoped (use index + sourcetype filters + per-rule transforms) so the result-row catalogue stays manageable. The executor caps pagination at PAGE_SIZE=100 per page x MAX_PAGES=200 = 20k rows."
         },
         "SPLUNK_EARLIEST": {
             "mandatory": false,
@@ -16,13 +16,33 @@
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Optional Splunk time-modifier for the search's latest_time bound. Same syntax as SPLUNK_EARLIEST — typically 'now' or a relative-from-earliest modifier like '@d' (start-of-day) / '@h' (start-of-hour). When blank the saved-search default applies."
+            "description": "Optional Splunk time-modifier for the search's latest_time bound. Same syntax as SPLUNK_EARLIEST \u2014 typically 'now' or a relative-from-earliest modifier like '@d' (start-of-day) / '@h' (start-of-hour). When blank the saved-search default applies."
         },
         "SPLUNK_MIN_SEVERITY": {
             "mandatory": false,
             "type": "string",
             "base": "string",
             "description": "Optional client-side severity floor for Splunk result rows. Accepts info | low | medium | high | critical (plus Splunk synonyms: informational / debug -> info, notice / minor -> low, warning / moderate -> medium, important -> high, fatal / severe -> critical) plus numeric input bucketed via Splunk-ES 1-5 (1 info, 2 low, 3 medium, 4 high, 5 critical) or CVSS 0-10 fallback. Rows below the floor are dropped from the Faraday output after per-row severity normalisation (bucketed from the freeform severity string + numeric severity_id / urgency / severity_score fallback). Defaults to info (no filtering)."
+        },
+        "SPLUNK_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "SPLUNK_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "SPLUNK_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "SPLUNK_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -39,7 +59,7 @@
     "name": "splunk",
     "title": "Splunk Search Jobs",
     "website": "https://www.splunk.com",
-    "description": "Splunk REST search-job importer. Runs an SPL (Search Processing Language) saved-search query against a Splunk Enterprise / Splunk Cloud REST tenant and emits each result row as a Faraday vulnerability attached to a synthetic per-search host record (Splunk's surface is search-scoped, not asset-scoped, so the host is a synthetic per-query bucket keyed on the Splunk endpoint hostname rather than an IP-keyed asset). Three-call workflow: POST /services/search/jobs (creates the async job, returns sid), GET /services/search/jobs/{sid} polled until isDone=1 or dispatchState=FAILED (POLL_INTERVAL=2s capped at MAX_POLLS=150 = ~5 minutes), then paginated GET /services/search/jobs/{sid}/results?count=N&offset=M (PAGE_SIZE=100 per page capped at MAX_PAGES=200 = 20k rows). Each result row attaches as a Faraday vulnerability with the engine prefix [SIEM]. Severity bucketed from the freeform severity string enum (informational / low / medium / high / critical / debug / warning) with the numeric severity_id / urgency / priority (Splunk-ES 1-5) used as a fallback and severity_score / cvss / cvss_score (0-10) used as a CVSS-style secondary fallback. Status mapped from status / event_status / disposition / notable_event_status / state (new / unassigned / assigned / open / in_progress / pending -> open, resolved / fixed / closed / mitigated / patched -> closed, risk_accepted / waived / will_not_fix / false_positive / suppressed / dismissed / ignored -> risk-accepted, plus Splunk-ES numeric status id 0-3 -> open, 4-5 -> closed). Refs include Splunk-Event / Splunk-EventHash / Splunk-Rule / Splunk-SavedSearch / Splunk-Index / Splunk-Source / Splunk-Host pivots plus inline URLs from references / advisory_urls / links fields. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from cve / cveId / cves / cve_ids plus message / description / signature / summary / _raw / rule_name token scans. Auth: prefers Authorization: Bearer <SPLUNK_TOKEN> (Splunk 7.3+ — created in Splunk Web under Settings -> Tokens -> New Token) and falls back to HTTP Basic auth with SPLUNK_USER / SPLUNK_PASSWORD when the token is unset. SPLUNK_HOST is the management endpoint (typically port 8089 on on-prem, e.g. https://splunk.example.com:8089; Splunk Cloud exposes this as https://<stack>.splunkcloud.com:8089) — hard-validated client-side as http(s)://host[:port]. SPLUNK_SEARCH_QUERY is the SPL string; SPLUNK_EARLIEST / SPLUNK_LATEST are optional Splunk time modifiers; SPLUNK_MIN_SEVERITY is the optional severity floor. Tags: [splunk, siem, siem-analytics].",
+    "description": "Splunk REST search-job importer. Runs an SPL (Search Processing Language) saved-search query against a Splunk Enterprise / Splunk Cloud REST tenant and emits each result row as a Faraday vulnerability attached to a synthetic per-search host record (Splunk's surface is search-scoped, not asset-scoped, so the host is a synthetic per-query bucket keyed on the Splunk endpoint hostname rather than an IP-keyed asset). Three-call workflow: POST /services/search/jobs (creates the async job, returns sid), GET /services/search/jobs/{sid} polled until isDone=1 or dispatchState=FAILED (POLL_INTERVAL=2s capped at MAX_POLLS=150 = ~5 minutes), then paginated GET /services/search/jobs/{sid}/results?count=N&offset=M (PAGE_SIZE=100 per page capped at MAX_PAGES=200 = 20k rows). Each result row attaches as a Faraday vulnerability with the engine prefix [SIEM]. Severity bucketed from the freeform severity string enum (informational / low / medium / high / critical / debug / warning) with the numeric severity_id / urgency / priority (Splunk-ES 1-5) used as a fallback and severity_score / cvss / cvss_score (0-10) used as a CVSS-style secondary fallback. Status mapped from status / event_status / disposition / notable_event_status / state (new / unassigned / assigned / open / in_progress / pending -> open, resolved / fixed / closed / mitigated / patched -> closed, risk_accepted / waived / will_not_fix / false_positive / suppressed / dismissed / ignored -> risk-accepted, plus Splunk-ES numeric status id 0-3 -> open, 4-5 -> closed). Refs include Splunk-Event / Splunk-EventHash / Splunk-Rule / Splunk-SavedSearch / Splunk-Index / Splunk-Source / Splunk-Host pivots plus inline URLs from references / advisory_urls / links fields. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from cve / cveId / cves / cve_ids plus message / description / signature / summary / _raw / rule_name token scans. Auth: prefers Authorization: Bearer <SPLUNK_TOKEN> (Splunk 7.3+ \u2014 created in Splunk Web under Settings -> Tokens -> New Token) and falls back to HTTP Basic auth with SPLUNK_USER / SPLUNK_PASSWORD when the token is unset. SPLUNK_HOST is the management endpoint (typically port 8089 on on-prem, e.g. https://splunk.example.com:8089; Splunk Cloud exposes this as https://<stack>.splunkcloud.com:8089) \u2014 hard-validated client-side as http(s)://host[:port]. SPLUNK_SEARCH_QUERY is the SPL string; SPLUNK_EARLIEST / SPLUNK_LATEST are optional Splunk time modifiers; SPLUNK_MIN_SEVERITY is the optional severity floor. Tags: [splunk, siem, siem-analytics].",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "splunk.py"

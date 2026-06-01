@@ -10,13 +10,23 @@
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Optional client-side substring filter applied to the Deep Security computer's hostName / displayName. The match is case-insensitive — useful to scope a run to a single business unit (e.g. `prod-` or `corp-`) without changing the API key's role on the manager side. Defaults to None (no filter)."
+            "description": "Optional client-side substring filter applied to the Deep Security computer's hostName / displayName. The match is case-insensitive \u2014 useful to scope a run to a single business unit (e.g. `prod-` or `corp-`) without changing the API key's role on the manager side. Defaults to None (no filter)."
         },
         "DSM_MIN_SEVERITY": {
             "mandatory": false,
             "type": "string",
             "base": "string",
             "description": "Optional client-side severity floor for Deep Security findings. Accepts info | low | medium | high | critical (plus Deep Security synonyms: informational, important / major, moderate, minor, none / unspecified / unknown) plus the numeric 1..4 enum the DSM IPS rule catalogue uses (1=Low, 2=Medium, 3=High, 4=Critical). Findings below the floor are dropped from the Faraday output after per-finding severity normalisation (anti-malware events bucket off the malwareType enum; IPS rules bucket off the canonical severity integer with CVSS fallback). Defaults to info (no filtering)."
+        },
+        "DSM_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "DSM_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

@@ -11,6 +11,16 @@
             "type": "string",
             "base": "string",
             "description": "PingCastle healthcheck depth, forwarded as --healthcheck-level. Valid values: Light, Normal, Full. Default: Normal."
+        },
+        "PINGCASTLE_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "PINGCASTLE_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

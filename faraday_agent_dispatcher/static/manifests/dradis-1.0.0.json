@@ -5,6 +5,16 @@
             "type": "string",
             "base": "string",
             "description": "Dradis Pro project ID to import. Issues and nodes are pulled from /pro/api/projects/{id}/issues and /pro/api/projects/{id}/nodes; the project ID is also sent in the mandatory Dradis-Project-Id header on every project-scoped request."
+        },
+        "DRADIS_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "DRADIS_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -17,7 +27,7 @@
     "name": "dradis",
     "title": "Dradis Pro",
     "website": "https://dradisframework.com/pro/",
-    "description": "Dradis Pro REST API importer. Pulls issues (/pro/api/projects/{id}/issues) and nodes (/pro/api/projects/{id}/nodes) for the configured project and walks each node's evidence (/pro/api/projects/{id}/nodes/{node_id}/evidence) to determine which issues are observed where. Emits one Faraday host per Dradis node with its evidenced issues attached as vulnerabilities; issues with no node evidence are attached to a synthetic 0.0.0.0 host so the data is still imported. Severity is parsed from the issue's Rating / Severity field (Critical/High/Medium/Low/Info — also accepts Informational and Moderate) and falls back to CVSS v3 bucketing when only a numeric score is available. Auth is `Authorization: Token token=\"<DRADIS_TOKEN>\"`; the Dradis-Project-Id header is sent on every request. DRADIS_HOST is the Dradis Pro base URL.",
+    "description": "Dradis Pro REST API importer. Pulls issues (/pro/api/projects/{id}/issues) and nodes (/pro/api/projects/{id}/nodes) for the configured project and walks each node's evidence (/pro/api/projects/{id}/nodes/{node_id}/evidence) to determine which issues are observed where. Emits one Faraday host per Dradis node with its evidenced issues attached as vulnerabilities; issues with no node evidence are attached to a synthetic 0.0.0.0 host so the data is still imported. Severity is parsed from the issue's Rating / Severity field (Critical/High/Medium/Low/Info \u2014 also accepts Informational and Moderate) and falls back to CVSS v3 bucketing when only a numeric score is available. Auth is `Authorization: Token token=\"<DRADIS_TOKEN>\"`; the Dradis-Project-Id header is sent on every request. DRADIS_HOST is the Dradis Pro base URL.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "dradis.py"

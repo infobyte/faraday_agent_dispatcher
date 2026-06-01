@@ -17,6 +17,16 @@
             "type": "string",
             "base": "string",
             "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Default: info."
+        },
+        "IP360_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "IP360_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

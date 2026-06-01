@@ -29,6 +29,16 @@
             "mandatory": false,
             "type": "string",
             "base": "string"
+        },
+        "GIT_USERNAME": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "GIT_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -43,7 +53,7 @@
     "name": "bandit",
     "title": "Bandit",
     "website": "https://bandit.readthedocs.io/",
-    "description": "Python source-code security scanner (SAST). Point BANDIT_TARGET at a file or directory (or a subpath inside a clone when using BANDIT_GIT_URL). BANDIT_CONFIDENCE filters by minimum confidence — valid values: LOW | MEDIUM | HIGH. BANDIT_SEVERITY filters by minimum severity — valid values: LOW | MEDIUM | HIGH. BANDIT_SKIP is a list of bandit test IDs to ignore (e.g. B101, B301, B608). Supports private-repo cloning at scan time via GIT_USERNAME / GIT_TOKEN in the agent config.",
+    "description": "Python source-code security scanner (SAST). Point BANDIT_TARGET at a file or directory (or a subpath inside a clone when using BANDIT_GIT_URL). BANDIT_CONFIDENCE filters by minimum confidence \u2014 valid values: LOW | MEDIUM | HIGH. BANDIT_SEVERITY filters by minimum severity \u2014 valid values: LOW | MEDIUM | HIGH. BANDIT_SKIP is a list of bandit test IDs to ignore (e.g. B101, B301, B608). Supports private-repo cloning at scan time via GIT_USERNAME / GIT_TOKEN in the agent config.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "bandit.py"

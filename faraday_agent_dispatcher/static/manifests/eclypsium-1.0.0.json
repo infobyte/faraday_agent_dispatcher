@@ -5,6 +5,16 @@
             "type": "string",
             "base": "string",
             "description": "Optional Eclypsium device group name to filter the device inventory (forwarded as the 'group' query parameter on /api/v1/devices). Omit to pull every device visible to the token."
+        },
+        "ECLYPSIUM_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "ECLYPSIUM_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -17,7 +27,7 @@
     "name": "eclypsium",
     "title": "Eclypsium",
     "website": "https://eclypsium.com",
-    "description": "Eclypsium firmware security platform importer. Pulls devices via /api/v1/devices (optionally filtered by group) and per-device firmware findings via /api/v1/findings; emits one Faraday host per Eclypsium device with host.os set to the firmware vendor/model so firmware-targeted vulnerabilities land on a recognisable asset. Auth is token-based — set ECLYPSIUM_TOKEN (sent as Authorization: Bearer) and ECLYPSIUM_HOST to the platform base URL (e.g. https://your-tenant.eclypsium.cloud).",
+    "description": "Eclypsium firmware security platform importer. Pulls devices via /api/v1/devices (optionally filtered by group) and per-device firmware findings via /api/v1/findings; emits one Faraday host per Eclypsium device with host.os set to the firmware vendor/model so firmware-targeted vulnerabilities land on a recognisable asset. Auth is token-based \u2014 set ECLYPSIUM_TOKEN (sent as Authorization: Bearer) and ECLYPSIUM_HOST to the platform base URL (e.g. https://your-tenant.eclypsium.cloud).",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "eclypsium.py"

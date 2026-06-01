@@ -14,6 +14,21 @@
             "mandatory": false,
             "type": "boolean",
             "base": "boolean"
+        },
+        "WAZUH_URL": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "WAZUH_USERNAME": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "WAZUH_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -29,7 +44,7 @@
     "name": "wazuh",
     "title": "Wazuh",
     "website": "https://wazuh.com/",
-    "description": "Pulls vulnerability findings from a Wazuh manager via its REST API. Provide WAZUH_URL (e.g. https://wazuh.example:55000), WAZUH_USERNAME, and WAZUH_PASSWORD as agent env vars. WAZUH_AGENT_IDS is a list of Wazuh agent IDs to query (e.g. 001, 002, 003 — use '000' for the manager itself). WAZUH_MIN_SEVERITY filters findings — valid values: Low | Medium | High | Critical.",
+    "description": "Pulls vulnerability findings from a Wazuh manager via its REST API. Provide WAZUH_URL (e.g. https://wazuh.example:55000), WAZUH_USERNAME, and WAZUH_PASSWORD as agent env vars. WAZUH_AGENT_IDS is a list of Wazuh agent IDs to query (e.g. 001, 002, 003 \u2014 use '000' for the manager itself). WAZUH_MIN_SEVERITY filters findings \u2014 valid values: Low | Medium | High | Critical.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "wazuh.py"

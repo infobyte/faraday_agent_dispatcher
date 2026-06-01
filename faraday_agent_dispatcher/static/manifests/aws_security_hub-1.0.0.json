@@ -17,6 +17,21 @@
             "type": "string",
             "base": "string",
             "description": "Optional cap on the total number of findings to process (defaults to 1000). The boto3 paginator emits 100 findings per API page (Security Hub's hard cap); this value stops iteration once the requested number of findings has been collected. Non-numeric / non-positive inputs are logged and dropped (the default 1000 is used)."
+        },
+        "AWS_ACCESS_KEY_ID": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "AWS_SECRET_ACCESS_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "AWS_SESSION_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -32,7 +47,7 @@
     "name": "aws_security_hub",
     "title": "AWS Security Hub",
     "website": "https://aws.amazon.com/security-hub/",
-    "description": "AWS Security Hub vendor-native CSPM importer. Pulls security findings from AWS Security Hub via the canonical boto3 securityhub.get_findings API and emits Faraday bulk-create JSON to stdout. Security Hub aggregates findings from native AWS services (GuardDuty, Inspector, Macie, IAM Access Analyzer, Firewall Manager) and third-party partner integrations using the AWS Security Finding Format (ASFF). Each affected AWS resource (Finding.Resources[0]) becomes one Faraday host (synthetic 0.0.0.0 ip; EC2 instances surface the first Resources[].Details.AwsEc2Instance.IpV4Addresses entry as the host IP when present); per-resource findings attach as Faraday vulnerabilities — one per Security Hub finding Id with [CNAPP] engine prefix. Severity is normalised from ASFF Severity.Label (CRITICAL / HIGH / MEDIUM / LOW / INFORMATIONAL) with Severity.Normalized (0-100) bucketing as a fallback when Label is missing and CVSS v3 base-score bucketing as a further fallback when only a numeric Vulnerabilities[].Cvss[].BaseScore is present. Status mapped from Workflow.Status (NEW / NOTIFIED → open, RESOLVED → closed, SUPPRESSED → risk-accepted) with RecordState (ARCHIVED → closed) as a fallback. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from Vulnerabilities[].Id + Vulnerabilities[].RelatedVulnerabilities[] + free-form Title / Description token-scan. Refs include CWE-* from Vulnerabilities[].CodeVulnerabilities[].Cwes, SecHub-Generator / SecHub-Product / SecHub-Vuln pivots, Vulnerabilities[].ReferenceUrls + Vendor.Url, Remediation.Recommendation.Url, SourceUrl, and Compliance.RelatedRequirements. Resolution is built from Remediation.Recommendation.Text (Security Hub's canonical guidance) with a VulnerablePackages FixedInVersion fallback like 'Upgrade pkg to ver.'. Filters are passed through verbatim as the JSON-encoded AwsSecurityFindingFilters document the operator supplies via SECHUB_FILTERS_JSON. Auth: AWS Security Hub uses the standard AWS SigV4 credential chain. A service account ('IAM principal') with the securityhub:GetFindings permission is required, with credentials exposed as AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (+ optional AWS_SESSION_TOKEN for STS-vended session credentials). AWS_REGION pins the regional Security Hub endpoint. Tags: [aws_security_hub, cnapp, cloud-native-posture].",
+    "description": "AWS Security Hub vendor-native CSPM importer. Pulls security findings from AWS Security Hub via the canonical boto3 securityhub.get_findings API and emits Faraday bulk-create JSON to stdout. Security Hub aggregates findings from native AWS services (GuardDuty, Inspector, Macie, IAM Access Analyzer, Firewall Manager) and third-party partner integrations using the AWS Security Finding Format (ASFF). Each affected AWS resource (Finding.Resources[0]) becomes one Faraday host (synthetic 0.0.0.0 ip; EC2 instances surface the first Resources[].Details.AwsEc2Instance.IpV4Addresses entry as the host IP when present); per-resource findings attach as Faraday vulnerabilities \u2014 one per Security Hub finding Id with [CNAPP] engine prefix. Severity is normalised from ASFF Severity.Label (CRITICAL / HIGH / MEDIUM / LOW / INFORMATIONAL) with Severity.Normalized (0-100) bucketing as a fallback when Label is missing and CVSS v3 base-score bucketing as a further fallback when only a numeric Vulnerabilities[].Cvss[].BaseScore is present. Status mapped from Workflow.Status (NEW / NOTIFIED \u2192 open, RESOLVED \u2192 closed, SUPPRESSED \u2192 risk-accepted) with RecordState (ARCHIVED \u2192 closed) as a fallback. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from Vulnerabilities[].Id + Vulnerabilities[].RelatedVulnerabilities[] + free-form Title / Description token-scan. Refs include CWE-* from Vulnerabilities[].CodeVulnerabilities[].Cwes, SecHub-Generator / SecHub-Product / SecHub-Vuln pivots, Vulnerabilities[].ReferenceUrls + Vendor.Url, Remediation.Recommendation.Url, SourceUrl, and Compliance.RelatedRequirements. Resolution is built from Remediation.Recommendation.Text (Security Hub's canonical guidance) with a VulnerablePackages FixedInVersion fallback like 'Upgrade pkg to ver.'. Filters are passed through verbatim as the JSON-encoded AwsSecurityFindingFilters document the operator supplies via SECHUB_FILTERS_JSON. Auth: AWS Security Hub uses the standard AWS SigV4 credential chain. A service account ('IAM principal') with the securityhub:GetFindings permission is required, with credentials exposed as AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (+ optional AWS_SESSION_TOKEN for STS-vended session credentials). AWS_REGION pins the regional Security Hub endpoint. Tags: [aws_security_hub, cnapp, cloud-native-posture].",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "aws_security_hub.py"

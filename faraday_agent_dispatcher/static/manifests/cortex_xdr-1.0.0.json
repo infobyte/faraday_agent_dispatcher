@@ -11,6 +11,21 @@
             "type": "string",
             "base": "string",
             "description": "Optional Cortex XDR incident status filter (CSV of status enum values). Accepts the canonical Cortex XDR status enum (new, under_investigation, resolved_threat_handled, resolved_known_issue, resolved_duplicate, resolved_false_positive, resolved_auto, resolved_other, resolved_security_testing) plus operator-friendly aliases (open -> new + under_investigation, closed -> all resolved_* variants, active -> new + under_investigation). When set, the filter is forwarded server-side via the incidents.get_incidents request body filter so Cortex XDR does the bulk of the filtering server-side. Defaults to None (no filter)."
+        },
+        "CXDR_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "CXDR_API_KEY_ID": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "CXDR_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

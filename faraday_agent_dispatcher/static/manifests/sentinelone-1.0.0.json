@@ -9,6 +9,21 @@
             "mandatory": false,
             "type": "boolean",
             "base": "boolean"
+        },
+        "SENTINELONE_URL": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "SENTINELONE_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "SENTINELONE_ACCOUNT_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
         }
     },
     "environment_variables": [

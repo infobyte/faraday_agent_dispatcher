@@ -17,6 +17,21 @@
             "type": "string",
             "base": "string",
             "description": "Optional client-side severity floor for Satellite errata findings. Accepts info | low | medium | high | critical (plus Red Hat synonyms: severe -> critical, important -> high, moderate / warning -> medium, minor -> low, informational / information / unspecified / none -> info) plus numeric-string CVSS-style input bucketed via severity_from_cvss (<4 low, <7 medium, <9 high, >=9 critical). Errata below the floor are dropped from the Faraday output after per-erratum severity normalisation (bucketed from the Red Hat string enum Critical / Important / Moderate / Low / None + numeric cvss_score 0-10 fallback + erratum type fallback for bugfix / enhancement advisories that carry severity='None'). Defaults to info (no filtering)."
+        },
+        "SATELLITE_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "SATELLITE_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "SATELLITE_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

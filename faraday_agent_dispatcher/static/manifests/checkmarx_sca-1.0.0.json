@@ -10,7 +10,17 @@
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Enforced client-side after severity normalisation (handles Checkmarx SCA's string severities — CRITICAL/HIGH/MEDIUM/LOW/NONE — and CVSS v3 numeric scores). Default: info."
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Enforced client-side after severity normalisation (handles Checkmarx SCA's string severities \u2014 CRITICAL/HIGH/MEDIUM/LOW/NONE \u2014 and CVSS v3 numeric scores). Default: info."
+        },
+        "CXSCA_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "CXSCA_ACCESS_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -23,7 +33,7 @@
     "name": "checkmarx_sca",
     "title": "Checkmarx SCA",
     "website": "https://checkmarx.com/cxsca-open-source-scanning/",
-    "description": "Checkmarx SCA (standalone CxSCA) REST API importer. Pulls Software Composition Analysis findings from a Checkmarx SCA tenant and emits Faraday bulk-create JSON to stdout. Lists projects via /api/projects (or fetches a single project via /api/projects/{id} when CXSCA_PROJECT_ID is set), resolves each project's most recent scan via /api/projects/{id}/scans (with /api/scans?projectId=<id> as a fallback for older CxSCA builds — preferring scans with status done/completed/success and falling back to the most recent of any status), then pulls per-scan vulnerabilities via /api/scans/{id}/vulnerabilities. Each project becomes one Faraday host (synthetic 0.0.0.0 because SCA findings live in dependency manifests, not on IPs); per-scan vulnerabilities are attached as Faraday vulnerabilities — one per CxSCA vulnerability id with [SCA] engine prefix, CVE list, package@version, ecosystem, fixed_in version, CWE/advisory refs and similarityId enrichment in the description. Severity normalised from Checkmarx SCA's string severities (CRITICAL/HIGH/MEDIUM/LOW/NONE, also accepts informational/moderate/negligible) with CVSS v3 fallback when only a numeric score is given (read from cvss3.baseScore / cvssV3.baseScore / cvssScore / score); client-side min-severity floor enforced after normalisation. Status mapped from CxSCA's lifecycle status (new/recurrent/active → open, fixed/resolved → closed) combined with analyst state — NotExploitable / NOT_EXPLOITABLE / PROPOSED_NOT_EXPLOITABLE / SNOOZED become Faraday risk-accepted. Auth: static bearer token via CXSCA_ACCESS_TOKEN sent as 'Authorization: Bearer <token>' on every API call. CXSCA_HOST is the Checkmarx SCA regional base URL (e.g. https://api-sca.checkmarx.net, https://eu.api-sca.checkmarx.net).",
+    "description": "Checkmarx SCA (standalone CxSCA) REST API importer. Pulls Software Composition Analysis findings from a Checkmarx SCA tenant and emits Faraday bulk-create JSON to stdout. Lists projects via /api/projects (or fetches a single project via /api/projects/{id} when CXSCA_PROJECT_ID is set), resolves each project's most recent scan via /api/projects/{id}/scans (with /api/scans?projectId=<id> as a fallback for older CxSCA builds \u2014 preferring scans with status done/completed/success and falling back to the most recent of any status), then pulls per-scan vulnerabilities via /api/scans/{id}/vulnerabilities. Each project becomes one Faraday host (synthetic 0.0.0.0 because SCA findings live in dependency manifests, not on IPs); per-scan vulnerabilities are attached as Faraday vulnerabilities \u2014 one per CxSCA vulnerability id with [SCA] engine prefix, CVE list, package@version, ecosystem, fixed_in version, CWE/advisory refs and similarityId enrichment in the description. Severity normalised from Checkmarx SCA's string severities (CRITICAL/HIGH/MEDIUM/LOW/NONE, also accepts informational/moderate/negligible) with CVSS v3 fallback when only a numeric score is given (read from cvss3.baseScore / cvssV3.baseScore / cvssScore / score); client-side min-severity floor enforced after normalisation. Status mapped from CxSCA's lifecycle status (new/recurrent/active \u2192 open, fixed/resolved \u2192 closed) combined with analyst state \u2014 NotExploitable / NOT_EXPLOITABLE / PROPOSED_NOT_EXPLOITABLE / SNOOZED become Faraday risk-accepted. Auth: static bearer token via CXSCA_ACCESS_TOKEN sent as 'Authorization: Bearer <token>' on every API call. CXSCA_HOST is the Checkmarx SCA regional base URL (e.g. https://api-sca.checkmarx.net, https://eu.api-sca.checkmarx.net).",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "checkmarx_sca.py"

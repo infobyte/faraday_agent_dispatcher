@@ -17,6 +17,16 @@
             "type": "string",
             "base": "string",
             "description": "Optional per-surface page-walk cap. Each Hadrian v1 search page returns up to 100 hits via limit=100; HADRIAN_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited Hadrian API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (~ 500 hits per surface, 1000 total across assets + issues)."
+        },
+        "HADRIAN_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "HADRIAN_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

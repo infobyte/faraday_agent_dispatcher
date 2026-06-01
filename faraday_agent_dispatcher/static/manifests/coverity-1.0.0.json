@@ -4,7 +4,7 @@
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Optional Coverity Connect project name to scope the import. When set, only that project's defects are imported via /api/v2/projects/{name} + /api/v2/issues?projectName=<name>. Omit (and also leave COVERITY_STREAM empty) to enumerate every project visible to the user and import all of their defects. When the REST API returns 404 the executor falls back to the SOAP v9 defectservice (/ws/v9/defectservice → getMergedDefectsForProjects) — in that case at least one of COVERITY_PROJECT / COVERITY_STREAM must be set."
+            "description": "Optional Coverity Connect project name to scope the import. When set, only that project's defects are imported via /api/v2/projects/{name} + /api/v2/issues?projectName=<name>. Omit (and also leave COVERITY_STREAM empty) to enumerate every project visible to the user and import all of their defects. When the REST API returns 404 the executor falls back to the SOAP v9 defectservice (/ws/v9/defectservice \u2192 getMergedDefectsForProjects) \u2014 in that case at least one of COVERITY_PROJECT / COVERITY_STREAM must be set."
         },
         "COVERITY_STREAM": {
             "mandatory": false,
@@ -16,7 +16,22 @@
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Forwarded to the Coverity-side impact filter when possible (Coverity's impact ladder is Low/Medium/High — critical collapses to High) and additionally enforced client-side after severity normalisation. Coverity's string impacts (High/Medium/Low/Audit, also accepts Major/Moderate/Minor/Important/Informational/Unspecified) are normalised here, with CVSS v3 fallback when only a numeric score is given. Default: info."
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Forwarded to the Coverity-side impact filter when possible (Coverity's impact ladder is Low/Medium/High \u2014 critical collapses to High) and additionally enforced client-side after severity normalisation. Coverity's string impacts (High/Medium/Low/Audit, also accepts Major/Moderate/Minor/Important/Informational/Unspecified) are normalised here, with CVSS v3 fallback when only a numeric score is given. Default: info."
+        },
+        "COVERITY_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "COVERITY_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "COVERITY_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -30,7 +45,7 @@
     "name": "coverity",
     "title": "Coverity Connect",
     "website": "https://www.blackduck.com/coverity.html",
-    "description": "Coverity Connect (Black Duck / Synopsys Coverity) REST API importer. Pulls source-code defects from a Coverity Connect server and emits Faraday bulk-create JSON to stdout. Lists projects via /api/v2/projects (or fetches a single project via /api/v2/projects/{name} when COVERITY_PROJECT is set), then per-project (and per-stream when COVERITY_STREAM is set) defects via /api/v2/issues?projectName=<p>&streamName=<s> paginated with offset/pageSize. Each defect is enriched via /api/v2/issues/{cid} for description / events / remediation when the list response is compact. Each project becomes one Faraday host (synthetic 0.0.0.0 because SAST findings live in source repos, not on IPs); per-project defects are attached as Faraday vulnerabilities — one per Coverity merge key (CID) with [SAST] engine prefix, checker name + subcategory, CWE-* refs, CoverityChecker / CoverityCategory / CoverityKind refs, file:line location, function name, merge key, occurrence count, classification, action, owner, first/last detected timestamps and event trail in the description. Severity normalised from Coverity's impact field (High/Medium/Low/Audit — also accepts Major/Moderate/Minor/Important/Informational/Unspecified) with CVSS v3 fallback when only a numeric score is given; client-side COVERITY_MIN_SEVERITY floor enforced after normalisation (and forwarded as the Coverity-side impact filter). Status mapped from Coverity's lifecycle status (Fixed/Resolved/Dismissed/Absent Dismissed → closed, New/Triaged/Open/Various/Reopened → open) combined with analyst triage — classification 'False Positive' / 'Intentional' (and action 'Ignore') become Faraday risk-accepted regardless of lifecycle status. SOAP fallback: when /api/v2/projects returns 404 (Coverity Connect 9.x and earlier do not expose the REST API), the executor falls back to /ws/v9/defectservice (getMergedDefectsForProjects / getMergedDefectsForStreams); a SOAP request requires at least one of COVERITY_PROJECT / COVERITY_STREAM. Auth: HTTP Basic with COVERITY_USER / COVERITY_PASSWORD (Coverity Connect uses the same Basic credential for both REST and SOAP). COVERITY_HOST is the Coverity Connect manager base URL (e.g. https://cov.corp.example.com or https://cov.corp.example.com:8443); bare hostnames are accepted and prefixed with https://.",
+    "description": "Coverity Connect (Black Duck / Synopsys Coverity) REST API importer. Pulls source-code defects from a Coverity Connect server and emits Faraday bulk-create JSON to stdout. Lists projects via /api/v2/projects (or fetches a single project via /api/v2/projects/{name} when COVERITY_PROJECT is set), then per-project (and per-stream when COVERITY_STREAM is set) defects via /api/v2/issues?projectName=<p>&streamName=<s> paginated with offset/pageSize. Each defect is enriched via /api/v2/issues/{cid} for description / events / remediation when the list response is compact. Each project becomes one Faraday host (synthetic 0.0.0.0 because SAST findings live in source repos, not on IPs); per-project defects are attached as Faraday vulnerabilities \u2014 one per Coverity merge key (CID) with [SAST] engine prefix, checker name + subcategory, CWE-* refs, CoverityChecker / CoverityCategory / CoverityKind refs, file:line location, function name, merge key, occurrence count, classification, action, owner, first/last detected timestamps and event trail in the description. Severity normalised from Coverity's impact field (High/Medium/Low/Audit \u2014 also accepts Major/Moderate/Minor/Important/Informational/Unspecified) with CVSS v3 fallback when only a numeric score is given; client-side COVERITY_MIN_SEVERITY floor enforced after normalisation (and forwarded as the Coverity-side impact filter). Status mapped from Coverity's lifecycle status (Fixed/Resolved/Dismissed/Absent Dismissed \u2192 closed, New/Triaged/Open/Various/Reopened \u2192 open) combined with analyst triage \u2014 classification 'False Positive' / 'Intentional' (and action 'Ignore') become Faraday risk-accepted regardless of lifecycle status. SOAP fallback: when /api/v2/projects returns 404 (Coverity Connect 9.x and earlier do not expose the REST API), the executor falls back to /ws/v9/defectservice (getMergedDefectsForProjects / getMergedDefectsForStreams); a SOAP request requires at least one of COVERITY_PROJECT / COVERITY_STREAM. Auth: HTTP Basic with COVERITY_USER / COVERITY_PASSWORD (Coverity Connect uses the same Basic credential for both REST and SOAP). COVERITY_HOST is the Coverity Connect manager base URL (e.g. https://cov.corp.example.com or https://cov.corp.example.com:8443); bare hostnames are accepted and prefixed with https://.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "coverity.py"

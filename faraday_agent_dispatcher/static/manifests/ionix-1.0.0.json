@@ -17,6 +17,16 @@
             "type": "string",
             "base": "string",
             "description": "Optional per-surface page-walk cap. Each Ionix v1 search page returns up to 100 hits via limit=100; IONIX_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited Ionix API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (~ 500 hits per surface, 1000 total across assets + findings)."
+        },
+        "IONIX_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "IONIX_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

@@ -17,6 +17,21 @@
             "type": "string",
             "base": "string",
             "description": "Optional client-side severity floor. Accepts info | low | medium | high | critical (plus the Intune synonyms: informational, important / major, moderate, minor, none / unspecified / unknown). Intune's Graph surface doesn't expose a server-side severity filter, so the floor is applied after each non-compliance finding has been bucketed (nonCompliant -> high, error -> high, conflict -> medium, inGracePeriod -> low, unknown -> info). Defaults to info (no filtering)."
+        },
+        "AZURE_TENANT_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "AZURE_CLIENT_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "AZURE_CLIENT_SECRET": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

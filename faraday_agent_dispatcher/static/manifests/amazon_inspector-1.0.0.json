@@ -17,6 +17,21 @@
             "type": "string",
             "base": "string",
             "description": "Optional CSV of Inspector v2 severities (INFORMATIONAL | LOW | MEDIUM | HIGH | CRITICAL). Faraday-style synonyms (info | low | medium | high | critical) accepted. Forwarded as one filterCriteria.severity EQUALS entry per token. Blank returns every severity."
+        },
+        "AWS_ACCESS_KEY_ID": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "AWS_SECRET_ACCESS_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "AWS_SESSION_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -32,7 +47,7 @@
     "name": "amazon_inspector",
     "title": "Amazon Inspector v2",
     "website": "https://aws.amazon.com/inspector/",
-    "description": "AWS Inspector v2 (Amazon Inspector) vendor-native CSPM importer. Pulls security findings from AWS Inspector v2 via the canonical boto3 inspector2.list_findings API and emits Faraday bulk-create JSON to stdout. Inspector v2 covers EC2 instances (PACKAGE_VULNERABILITY + NETWORK_REACHABILITY), ECR container images (PACKAGE_VULNERABILITY), and Lambda functions (PACKAGE_VULNERABILITY + CODE_VULNERABILITY). Each affected AWS resource becomes one Faraday host (synthetic 0.0.0.0 ip; EC2 instances surface the public/private IPv4 address from resource.details.awsEc2Instance when present); per-resource findings attach as Faraday vulnerabilities — one per Inspector findingArn with [CNAPP] engine prefix. Severity is normalised from Inspector's CRITICAL/HIGH/MEDIUM/LOW/INFORMATIONAL/UNTRIAGED enum with CVSS v3/v2 base-score bucketing as a fallback when only a numeric inspectorScore or packageVulnerabilityDetails.cvss[].baseScore is given. Status mapped from finding.status (ACTIVE → open, CLOSED → closed, SUPPRESSED → risk-accepted). CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from packageVulnerabilityDetails.vulnerabilityId + relatedVulnerabilities + free-form title / description token-scan. Refs include CWE-* from codeVulnerabilityDetails.cwes, Inspector-Rule / Inspector-Detector / Inspector-Vuln pivots, sourceUrl + referenceUrls + remediation.recommendation.Url. Resolution is built from remediation.recommendation.text (Inspector's canonical guidance) with a vulnerablePackages fixed_in_version fallback like 'Upgrade pkg to ver.'. Auth: AWS Inspector v2 uses the standard AWS SigV4 credential chain. A service account ('IAM principal') with the inspector2:ListFindings permission is required, with credentials exposed as AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (+ optional AWS_SESSION_TOKEN for STS-vended session credentials). AWS_REGION pins the regional Inspector endpoint. Tags: [amazon_inspector, cnapp, cloud-native-posture].",
+    "description": "AWS Inspector v2 (Amazon Inspector) vendor-native CSPM importer. Pulls security findings from AWS Inspector v2 via the canonical boto3 inspector2.list_findings API and emits Faraday bulk-create JSON to stdout. Inspector v2 covers EC2 instances (PACKAGE_VULNERABILITY + NETWORK_REACHABILITY), ECR container images (PACKAGE_VULNERABILITY), and Lambda functions (PACKAGE_VULNERABILITY + CODE_VULNERABILITY). Each affected AWS resource becomes one Faraday host (synthetic 0.0.0.0 ip; EC2 instances surface the public/private IPv4 address from resource.details.awsEc2Instance when present); per-resource findings attach as Faraday vulnerabilities \u2014 one per Inspector findingArn with [CNAPP] engine prefix. Severity is normalised from Inspector's CRITICAL/HIGH/MEDIUM/LOW/INFORMATIONAL/UNTRIAGED enum with CVSS v3/v2 base-score bucketing as a fallback when only a numeric inspectorScore or packageVulnerabilityDetails.cvss[].baseScore is given. Status mapped from finding.status (ACTIVE \u2192 open, CLOSED \u2192 closed, SUPPRESSED \u2192 risk-accepted). CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from packageVulnerabilityDetails.vulnerabilityId + relatedVulnerabilities + free-form title / description token-scan. Refs include CWE-* from codeVulnerabilityDetails.cwes, Inspector-Rule / Inspector-Detector / Inspector-Vuln pivots, sourceUrl + referenceUrls + remediation.recommendation.Url. Resolution is built from remediation.recommendation.text (Inspector's canonical guidance) with a vulnerablePackages fixed_in_version fallback like 'Upgrade pkg to ver.'. Auth: AWS Inspector v2 uses the standard AWS SigV4 credential chain. A service account ('IAM principal') with the inspector2:ListFindings permission is required, with credentials exposed as AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (+ optional AWS_SESSION_TOKEN for STS-vended session credentials). AWS_REGION pins the regional Inspector endpoint. Tags: [amazon_inspector, cnapp, cloud-native-posture].",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "amazon_inspector.py"

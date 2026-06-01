@@ -11,6 +11,21 @@
             "type": "string",
             "base": "string",
             "description": "Optional client-side severity floor for WSUS missing-update findings. Accepts info | low | medium | high | critical (plus Microsoft synonyms: severe -> critical, important -> high, moderate / warning -> medium, minor -> low, informational / information / unspecified / none / unknown -> info) plus numeric-string CVSS-style input. Updates below the floor are dropped from the Faraday output after per-update severity normalisation (bucketed from the freeform MsrcSeverity string enum -- Critical / Important / Moderate / Low / Unspecified -- with CVSS 0-10 secondary fallback when an explicit CVSS score has been parsed out of the KB advisory text). Defaults to info (no filtering)."
+        },
+        "WSUS_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "WSUS_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "WSUS_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

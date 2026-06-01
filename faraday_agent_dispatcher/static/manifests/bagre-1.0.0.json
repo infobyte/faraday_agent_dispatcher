@@ -24,6 +24,66 @@
             "mandatory": false,
             "type": "integer",
             "base": "integer"
+        },
+        "BAGRE_SOURCE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "INTELX_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "INTELX_BASE_URL": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "INTELX_BUCKETS": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "INTELX_MAX_FILES": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "INTELX_MAX_FILE_SIZE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "INTELX_TIMEOUT_S": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "CLICKHOUSE_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "CLICKHOUSE_PORT": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "CLICKHOUSE_DATABASE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "CLICKHOUSE_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "CLICKHOUSE_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -48,7 +108,7 @@
     "name": "bagre",
     "title": "Bagre Threat Intelligence",
     "website": "https://intelx.io/",
-    "description": "Queries Bagre threat-intelligence sources for compromised credentials tied to a target domain. Default source is Intelligence X (intelx.io) — set INTELX_API_KEY as an agent env var; ClickHouse is an optional backend (BAGRE_SOURCE=clickhouse with CLICKHOUSE_* creds). Per-scan, set TARGET_DOMAIN (e.g. 'faradaysec') and optionally narrow with TARGET_SUBDOMAIN (LIKE wildcards), MAIL_DOMAIN, or URI_PATH. Emits one Faraday host per affected IP with the leaked credential as a vulnerability + linked credential record.",
+    "description": "Queries Bagre threat-intelligence sources for compromised credentials tied to a target domain. Default source is Intelligence X (intelx.io) \u2014 set INTELX_API_KEY as an agent env var; ClickHouse is an optional backend (BAGRE_SOURCE=clickhouse with CLICKHOUSE_* creds). Per-scan, set TARGET_DOMAIN (e.g. 'faradaysec') and optionally narrow with TARGET_SUBDOMAIN (LIKE wildcards), MAIL_DOMAIN, or URI_PATH. Emits one Faraday host per affected IP with the leaked credential as a vulnerability + linked credential record.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "bagre.py"

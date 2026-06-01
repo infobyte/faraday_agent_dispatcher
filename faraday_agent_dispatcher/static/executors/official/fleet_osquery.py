@@ -105,7 +105,11 @@ def log(msg):
 
 
 def env(name, required=False, default=None):
-    value = os.getenv(name, default)
+    # Per-scan EXECUTOR_CONFIG_<name> arg wins; bare env-var is the fallback.
+    if name.startswith("EXECUTOR_CONFIG_"):
+        value = os.getenv(name, default)
+    else:
+        value = os.environ.get(f"EXECUTOR_CONFIG_{name}") or os.getenv(name, default)
     if required and not value:
         log(f"{name} is required")
         sys.exit(1)

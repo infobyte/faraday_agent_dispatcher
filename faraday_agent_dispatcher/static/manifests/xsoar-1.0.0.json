@@ -11,6 +11,21 @@
             "type": "string",
             "base": "string",
             "description": "Earliest incident occurrence timestamp to pull, forwarded to POST /incidents/search as filter.fromDate. Accepts ISO-8601 (e.g. '2026-01-01T00:00:00.000Z') or relative XSOAR expressions like '7 days ago', '30 days ago'. Omit to pull every incident visible to the API key."
+        },
+        "XSOAR_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "XSOAR_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "XSOAR_API_KEY_ID": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

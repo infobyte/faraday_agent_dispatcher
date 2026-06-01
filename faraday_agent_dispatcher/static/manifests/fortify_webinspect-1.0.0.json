@@ -5,6 +5,16 @@
             "type": "string",
             "base": "string",
             "description": "Optional Fortify WebInspect Enterprise scan id to scope the import. When set, only that scan's vulnerabilities are imported via /api/v2/scans/{id} + /api/v2/scans/{id}/vulnerabilities. Omit to enumerate every scan visible to the token and import each one's vulnerabilities."
+        },
+        "WEBINSPECT_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "WEBINSPECT_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -17,7 +27,7 @@
     "name": "fortify_webinspect",
     "title": "Fortify WebInspect Enterprise",
     "website": "https://www.opentext.com/products/fortify-webinspect",
-    "description": "Fortify WebInspect Enterprise (WIE) REST API importer. Pulls DAST findings from a Fortify WebInspect Enterprise server and emits Faraday bulk-create JSON to stdout. Lists scans via /api/v2/scans (or fetches a single scan via /api/v2/scans/{id} when WEBINSPECT_SCAN_ID is set), then pulls per-scan vulnerabilities via /api/v2/scans/{id}/vulnerabilities paginated with offset / limit. Each vulnerability is grouped by its target URL hostname into one Faraday host per affected web origin (findings without a URL fall back to the scan's start URL, and any that still cannot be tied to a host attach to a synthetic 0.0.0.0 host so the data is still imported). Each Faraday vulnerability carries the [DAST] engine prefix, check / probe name, request method + URL, vulnerable parameter, attack string, response evidence and instance id in the description; recommendations / fixes surface as Faraday resolution; raw request bodies surface as Faraday data. Refs include CWE-* (single + list + list-of-dict shapes), WASC-*, OWASP categories and WebInspectCheck-<checkId>. Severity normalised from WebInspect's 0-4 numeric severity ladder (0=Best Practice→info, 1=Low, 2=Medium, 3=High, 4=Critical) and its string equivalents (Critical/High/Medium/Low/Best Practice; also accepts Information/Informational/Moderate). Status mapped from WIE's lifecycle / audit flags — removed=true → closed, falsePositive / ignored / hidden / suppressed → risk-accepted, status of fixed / resolved / closed → closed, everything else stays open. Auth: WEBINSPECT_TOKEN is the API token returned by WebInspect Enterprise's /api/v2/auth endpoint, sent verbatim as the Authorization header (WIE expects the raw token, no scheme prefix); the executor also passes through values that already start with 'Bearer ' or 'FortifyToken ' unchanged so SSO-backed deployments work too. WEBINSPECT_HOST is the WIE manager base URL.",
+    "description": "Fortify WebInspect Enterprise (WIE) REST API importer. Pulls DAST findings from a Fortify WebInspect Enterprise server and emits Faraday bulk-create JSON to stdout. Lists scans via /api/v2/scans (or fetches a single scan via /api/v2/scans/{id} when WEBINSPECT_SCAN_ID is set), then pulls per-scan vulnerabilities via /api/v2/scans/{id}/vulnerabilities paginated with offset / limit. Each vulnerability is grouped by its target URL hostname into one Faraday host per affected web origin (findings without a URL fall back to the scan's start URL, and any that still cannot be tied to a host attach to a synthetic 0.0.0.0 host so the data is still imported). Each Faraday vulnerability carries the [DAST] engine prefix, check / probe name, request method + URL, vulnerable parameter, attack string, response evidence and instance id in the description; recommendations / fixes surface as Faraday resolution; raw request bodies surface as Faraday data. Refs include CWE-* (single + list + list-of-dict shapes), WASC-*, OWASP categories and WebInspectCheck-<checkId>. Severity normalised from WebInspect's 0-4 numeric severity ladder (0=Best Practice\u2192info, 1=Low, 2=Medium, 3=High, 4=Critical) and its string equivalents (Critical/High/Medium/Low/Best Practice; also accepts Information/Informational/Moderate). Status mapped from WIE's lifecycle / audit flags \u2014 removed=true \u2192 closed, falsePositive / ignored / hidden / suppressed \u2192 risk-accepted, status of fixed / resolved / closed \u2192 closed, everything else stays open. Auth: WEBINSPECT_TOKEN is the API token returned by WebInspect Enterprise's /api/v2/auth endpoint, sent verbatim as the Authorization header (WIE expects the raw token, no scheme prefix); the executor also passes through values that already start with 'Bearer ' or 'FortifyToken ' unchanged so SSO-backed deployments work too. WEBINSPECT_HOST is the WIE manager base URL.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "fortify_webinspect.py"

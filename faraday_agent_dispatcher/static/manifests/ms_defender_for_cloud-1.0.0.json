@@ -17,6 +17,21 @@
             "type": "string",
             "base": "string",
             "description": "Optional client-side severity floor. Accepts info | low | medium | high | critical (plus the Defender synonyms: informational, important / major, moderate, minor, none / unspecified / unknown). Defender for Cloud's list APIs don't expose a server-side severity filter, so the floor is applied after each finding has been bucketed. Defaults to info (no filtering)."
+        },
+        "AZURE_TENANT_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "AZURE_CLIENT_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "AZURE_CLIENT_SECRET": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -32,7 +47,7 @@
     "name": "ms_defender_for_cloud",
     "title": "Microsoft Defender for Cloud",
     "website": "https://azure.microsoft.com/en-us/products/defender-for-cloud",
-    "description": "Microsoft Defender for Cloud (Azure CSPM / CWP) REST importer. Pulls security alerts and security assessments (recommendations) from Defender for Cloud via the canonical Azure REST surface (GET /subscriptions/{sub}/providers/Microsoft.Security/alerts?api-version=2022-01-01 and GET /subscriptions/{sub}/providers/Microsoft.Security/assessments?api-version=2020-01-01) and emits Faraday bulk-create JSON to stdout. Each affected Azure resource (resolved from alert.properties.resourceIdentifiers[].azureResourceId or assessment.properties.resourceDetails.id) becomes one Faraday host (synthetic 0.0.0.0 ip because Defender findings live on ARM resources, not on IPs); per-resource alerts / assessments attach as Faraday vulnerabilities — one per Defender object name with [CNAPP] engine prefix. Severity is normalised from Defender's High / Medium / Low / Informational enum (plus Faraday-side synonyms) with CVSS v3 base-score bucketing as a fallback when only a numeric score is present (subassessment-style payloads). Status mapped from properties.status (alerts: Active / Resolved / Dismissed / InProgress) and properties.status.code (assessments: Healthy / Unhealthy / NotApplicable) into Faraday's open / closed / risk-accepted scheme. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from properties.additionalData.cve / cves / aliases plus free-form title / description / displayName / remediation token-scan. Refs include alertUri / extendedLinks.href / links.azurePortalUri, DefenderAlertType / DefenderIntent / DefenderAlert / DefenderAssessment pivots, MITRE ATT&CK Tactic / Technique pivots, and CWE-* harvested from additionalData. Resolution is built from properties.remediationSteps (one line per step) with an additionalData.remediation fallback. Auth: Defender for Cloud lives behind the standard Azure Resource Manager control plane and uses Azure AD client_credentials. A service-principal app registration is created in the Azure portal with the Security Reader role assigned at the subscription scope; credentials are exposed as AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET. The token exchange is POST https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token with scope=https://management.azure.com/.default. Tags: [ms_defender_for_cloud, cnapp, cloud-native-posture].",
+    "description": "Microsoft Defender for Cloud (Azure CSPM / CWP) REST importer. Pulls security alerts and security assessments (recommendations) from Defender for Cloud via the canonical Azure REST surface (GET /subscriptions/{sub}/providers/Microsoft.Security/alerts?api-version=2022-01-01 and GET /subscriptions/{sub}/providers/Microsoft.Security/assessments?api-version=2020-01-01) and emits Faraday bulk-create JSON to stdout. Each affected Azure resource (resolved from alert.properties.resourceIdentifiers[].azureResourceId or assessment.properties.resourceDetails.id) becomes one Faraday host (synthetic 0.0.0.0 ip because Defender findings live on ARM resources, not on IPs); per-resource alerts / assessments attach as Faraday vulnerabilities \u2014 one per Defender object name with [CNAPP] engine prefix. Severity is normalised from Defender's High / Medium / Low / Informational enum (plus Faraday-side synonyms) with CVSS v3 base-score bucketing as a fallback when only a numeric score is present (subassessment-style payloads). Status mapped from properties.status (alerts: Active / Resolved / Dismissed / InProgress) and properties.status.code (assessments: Healthy / Unhealthy / NotApplicable) into Faraday's open / closed / risk-accepted scheme. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from properties.additionalData.cve / cves / aliases plus free-form title / description / displayName / remediation token-scan. Refs include alertUri / extendedLinks.href / links.azurePortalUri, DefenderAlertType / DefenderIntent / DefenderAlert / DefenderAssessment pivots, MITRE ATT&CK Tactic / Technique pivots, and CWE-* harvested from additionalData. Resolution is built from properties.remediationSteps (one line per step) with an additionalData.remediation fallback. Auth: Defender for Cloud lives behind the standard Azure Resource Manager control plane and uses Azure AD client_credentials. A service-principal app registration is created in the Azure portal with the Security Reader role assigned at the subscription scope; credentials are exposed as AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET. The token exchange is POST https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token with scope=https://management.azure.com/.default. Tags: [ms_defender_for_cloud, cnapp, cloud-native-posture].",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "ms_defender_for_cloud.py"

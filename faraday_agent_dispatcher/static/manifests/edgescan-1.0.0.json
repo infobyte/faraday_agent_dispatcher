@@ -11,6 +11,16 @@
             "type": "string",
             "base": "string",
             "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Mapped to Edgescan's 1-5 scale (info=1, low=2, medium=3, high=4, critical=5) and forwarded as c[severity_gte]. Default: info."
+        },
+        "EDGESCAN_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "EDGESCAN_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -23,7 +33,7 @@
     "name": "edgescan",
     "title": "Edgescan",
     "website": "https://www.edgescan.com",
-    "description": "Edgescan vulnerability management importer. Pulls assets via /api/v1/assets (optionally filtered by tag) and per-asset findings via /api/v1/vulnerabilities; emits one Faraday host per Edgescan asset with severity bucketed from the Edgescan 1-5 scale (1=info, 2=low, 3=medium, 4=high, 5=critical). Auth is token-based — set EDGESCAN_TOKEN; EDGESCAN_HOST defaults to https://live.edgescan.com.",
+    "description": "Edgescan vulnerability management importer. Pulls assets via /api/v1/assets (optionally filtered by tag) and per-asset findings via /api/v1/vulnerabilities; emits one Faraday host per Edgescan asset with severity bucketed from the Edgescan 1-5 scale (1=info, 2=low, 3=medium, 4=high, 5=critical). Auth is token-based \u2014 set EDGESCAN_TOKEN; EDGESCAN_HOST defaults to https://live.edgescan.com.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "edgescan.py"

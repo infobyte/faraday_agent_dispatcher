@@ -11,6 +11,16 @@
             "type": "string",
             "base": "string",
             "description": "Dynatrace v2 timeframe expression forwarded as the 'from' query parameter on /api/v2/securityProblems. Accepts relative expressions like 'now-30m', 'now-24h', 'now-7d', 'now-30d', 'now-90d' or an ISO-8601 timestamp. Default: now-30d."
+        },
+        "DT_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "DT_API_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

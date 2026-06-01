@@ -17,6 +17,11 @@
             "type": "string",
             "base": "string",
             "description": "Optional minimum Conformity risk-level floor (LOW | MEDIUM | HIGH | VERY_HIGH | EXTREME). Forwarded to Conformity as filter[riskLevels] (so the tenant only paginates results that survive the floor) AND enforced client-side after Faraday severity normalisation (LOW -> low, MEDIUM -> medium, HIGH -> high, VERY_HIGH / EXTREME -> critical). Defaults to LOW (no filtering)."
+        },
+        "CONFORMITY_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

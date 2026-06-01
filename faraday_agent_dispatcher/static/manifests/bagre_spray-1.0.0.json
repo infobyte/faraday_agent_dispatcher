@@ -19,6 +19,111 @@
             "mandatory": false,
             "type": "integer",
             "base": "integer"
+        },
+        "BAGRE_SOURCE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "INTELX_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "INTELX_BASE_URL": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "INTELX_BUCKETS": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "INTELX_MAX_FILES": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "CLICKHOUSE_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "CLICKHOUSE_PORT": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "CLICKHOUSE_DATABASE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "CLICKHOUSE_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "CLICKHOUSE_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "FARADAY_URL": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "FARADAY_USER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "FARADAY_PASSWORD": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "FARADAY_WORKSPACE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "BAGRE_PASSWORD_SPRAY_MAX_ATTEMPTS_PER_USER": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "BAGRE_PASSWORD_SPRAY_DELAY_MS": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "BAGRE_PASSWORD_SPRAY_TIMEOUT_S": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "BAGRE_PASSWORD_SPRAY_MAX_TOTAL_ATTEMPTS": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "BAGRE_PASSWORD_SPRAY_CONCURRENCY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "BAGRE_PASSWORD_SPRAY_EXCLUDE_USERS": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "BAGRE_PASSWORD_SPRAY_DRY_RUN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -52,7 +157,7 @@
     "name": "bagre_spray",
     "title": "Bagre Password Spray",
     "website": "https://intelx.io/",
-    "description": "Validates leaked credentials from Bagre by spraying them against assets and services discovered in the Faraday workspace. Pulls credentials from the configured source (IntelX default — needs INTELX_API_KEY), enumerates targets via the Faraday REST API (FARADAY_URL / USER / PASSWORD / WORKSPACE), and authenticates over ssh/http/https/ftp/smb/smtp/imap/pop3. Lockout guardrails are on by default (max 3 attempts per user, 1000 total per run, 1s inter-attempt delay, excludes admin/administrator/root). Set BAGRE_PASSWORD_SPRAY_DRY_RUN=true to log planned attempts without authenticating. Run only against authorised targets.",
+    "description": "Validates leaked credentials from Bagre by spraying them against assets and services discovered in the Faraday workspace. Pulls credentials from the configured source (IntelX default \u2014 needs INTELX_API_KEY), enumerates targets via the Faraday REST API (FARADAY_URL / USER / PASSWORD / WORKSPACE), and authenticates over ssh/http/https/ftp/smb/smtp/imap/pop3. Lockout guardrails are on by default (max 3 attempts per user, 1000 total per run, 1s inter-attempt delay, excludes admin/administrator/root). Set BAGRE_PASSWORD_SPRAY_DRY_RUN=true to log planned attempts without authenticating. Run only against authorised targets.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "bagre_spray.py"

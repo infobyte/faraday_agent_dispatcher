@@ -29,6 +29,16 @@
             "mandatory": false,
             "type": "string",
             "base": "string"
+        },
+        "GIT_USERNAME": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "GIT_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [

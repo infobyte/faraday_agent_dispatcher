@@ -24,6 +24,16 @@
             "mandatory": false,
             "type": "string",
             "base": "string"
+        },
+        "GIT_USERNAME": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "GIT_TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
@@ -38,7 +48,7 @@
     "name": "shellcheck",
     "title": "ShellCheck",
     "website": "https://www.shellcheck.net/",
-    "description": "Static analysis for shell scripts (bash, sh, dash, ksh). Point SHELLCHECK_TARGET at a single script or a directory — it recursively finds and lints every .sh. SHELLCHECK_SEVERITY sets the minimum reported level — valid values: error | warning | info | style. SHELLCHECK_SHELL forces a dialect — valid values: bash | sh | dash | ksh.",
+    "description": "Static analysis for shell scripts (bash, sh, dash, ksh). Point SHELLCHECK_TARGET at a single script or a directory \u2014 it recursively finds and lints every .sh. SHELLCHECK_SEVERITY sets the minimum reported level \u2014 valid values: error | warning | info | style. SHELLCHECK_SHELL forces a dialect \u2014 valid values: bash | sh | dash | ksh.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "shellcheck.py"

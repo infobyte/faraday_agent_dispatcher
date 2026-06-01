@@ -5,6 +5,26 @@
             "type": "string",
             "base": "string",
             "description": "Optional IBM QRadar SOAR (Resilient) incident filter forwarded to POST /rest/orgs/{id}/incidents/query_paged. Pass a JSON document representing an IncidentsQueryDTO (e.g. {\"filters\": [{\"conditions\": [{\"field_name\": \"plan_status\", \"method\": \"equals\", \"value\": \"A\"}]}]}), a bare filters list ([{\"conditions\": [...]}]), or a single condition object ({\"field_name\": \"severity_code\", \"method\": \"gte\", \"value\": 4}). The executor merges the value into the default payload, which sorts by create_date desc. Omit to pull every incident visible to the API key in the organization."
+        },
+        "QRADAR_SOAR_HOST": {
+            "mandatory": true,
+            "type": "url",
+            "base": "string"
+        },
+        "QRADAR_SOAR_ORG_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "QRADAR_SOAR_API_KEY_ID": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
+        },
+        "QRADAR_SOAR_API_KEY_SECRET": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string"
         }
     },
     "environment_variables": [
