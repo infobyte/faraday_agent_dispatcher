@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import sys
 import subprocess
 
@@ -39,8 +40,17 @@ def main():
         print(result.stderr, file=sys.stderr)
 
     if not result.stdout.strip():
-        print("Bandit produced no output", file=sys.stderr)
-        sys.exit(result.returncode or 1)
+        # Bandit's -q + XML formatter writes nothing to stdout when there are
+        # no findings (or when every match was suppressed by `# nosec`).
+        # That's a successful, empty scan — emit an empty Faraday payload
+        # and exit 0 rather than letting the dispatcher flag the run as
+        # "finished with exit code 1". Only escalate when bandit itself
+        # signalled a real error (returncode 2+).
+        if result.returncode in (0, 1):
+            print(json.dumps({"hosts": [], "command": {"tool": "bandit", "command": "bandit", "duration": 0}}))
+            return
+        print(f"Bandit failed with exit code {result.returncode}", file=sys.stderr)
+        sys.exit(result.returncode)
 
     plugin = BanditPlugin(**agent_config.to_plugin_kwargs())
     plugin.parseOutputString(result.stdout)
