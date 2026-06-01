@@ -1,0 +1,29 @@
+{
+    "arguments": {
+        "ORADAD_DOMAIN": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Target Active Directory domain FQDN or domain controller hostname (forwarded as -s to the ORADAD binary, e.g. dc1.example.local)."
+        },
+        "ORADAD_CONFIG_PATH": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Absolute path inside the container to the ORADAD XML config file that defines the templates to collect (forwarded as -c, e.g. /opt/oradad/config.xml)."
+        }
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "oradad --help"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "anssi_oradad",
+    "title": "ANSSI ORADAD",
+    "website": "https://github.com/ANSSI-FR/ORADAD",
+    "description": "ANSSI ORADAD (Outil de Recolte Automatisee d'une Active Directory) importer. Wraps the ORADAD Windows binary (`oradad -c <config> -s <domain> -o <tmpdir>`) against a target AD domain, parses every JSON file produced under the output root and emits one Faraday host for the target domain with every ORADAD template that produced at least one matching LDAP entry attached as a vulnerability. Severity is bucketed from the ORADAD template Type when present (Control=high, Warning=medium, Information=info) with a keyword-based fallback on the template name (Krbtgt / DCSync / AdminSDHolder / UnconstrainedDelegation / SIDHistory / Golden|Silver|Skeleton ticket markers => critical; Trust / Kerberos / AdminCount / WeakEncryption / RC4 / DES / SMBv1 / LMNT / NTLM / Anonymous / Password => high; Stale / Inactive / GPO / Share / DNS / Delegation / SPN / Kerberoast => medium; Schema / RODC / FSMO => low; everything else => info). Auth defaults to the container's Windows integrated authentication / machine account; this executor itself reads no credentials from the environment.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "anssi_oradad.py"
+}

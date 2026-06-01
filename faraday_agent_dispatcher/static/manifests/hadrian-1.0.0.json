@@ -1,0 +1,38 @@
+{
+    "arguments": {
+        "HADRIAN_WORKSPACE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Hadrian workspace identifier, copied from the Hadrian console (Settings -> Workspaces). When set, narrows every /api/v1/ request to the named workspace via the workspace query parameter. Defaults to '' (no narrowing; service-account tokens with cross-workspace scope return every workspace the token has access to)."
+        },
+        "HADRIAN_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional severity floor applied client-side on the issues surface. Accepts the canonical Faraday enum (info / low / medium / high / critical) plus Hadrian-side aliases (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5). Defaults to '' (no filter; we emit the full hits surface). Garbage values are logged and ignored."
+        },
+        "HADRIAN_PAGES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional per-surface page-walk cap. Each Hadrian v1 search page returns up to 100 hits via limit=100; HADRIAN_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited Hadrian API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (~ 500 hits per surface, 1000 total across assets + issues)."
+        }
+    },
+    "environment_variables": [
+        "HADRIAN_HOST",
+        "HADRIAN_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "hadrian",
+    "title": "Hadrian",
+    "website": "https://hadrian.io/",
+    "description": "Hadrian EASM importer. Pulls externally-discovered assets and issues from the Hadrian REST API and emits Faraday bulk-create JSON. Each Hadrian asset becomes one Faraday host (ip = the asset's first public IP, falling back to synthetic 0.0.0.0 for domain-keyed assets); per-asset issues attach as one Faraday vulnerability per issue_id with the [EASM] engine prefix. Endpoints used: GET /api/v1/assets (paginated external-asset inventory; the canonical Hadrian pivot - every issue joins by asset_id) and GET /api/v1/issues (paginated finding inventory with severity + category + cves + remediation guidance). Pagination is offset-based: limit=100 per page, offset advanced via the response envelope's next_offset cursor (or current_offset + page_size when the envelope is silent), walked page-by-page until the page comes up short or HADRIAN_PAGES is reached. Query string carries workspace (HADRIAN_WORKSPACE) + limit + offset. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to priority / risk_rating / risk_score (Hadrian 0-10 scale) then CVSS when nothing else lands; aliases collapse Hadrian-side labels (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5) onto the canonical Faraday bucket. Status mapping covers new / in_progress / investigating / triaged -> open, resolved / closed / remediated / fixed / mitigated / patched -> closed, and false_positive / risk_accepted / accepted_risk / wont_fix -> risk-accepted. Refs include Hadrian-Asset / Hadrian-AssetName / Hadrian-AssetType / Hadrian-Workspace / Hadrian-Id / Hadrian-Category / Hadrian-Port pivots plus any url / reference_url / evidence_url surfaced on the issue. Auth: Hadrian uses a single long-lived API token created in the Hadrian console under Settings -> API Tokens -> New. The dispatcher carries the token on every request as the Authorization: Bearer <HADRIAN_TOKEN> header. HADRIAN_HOST is the Hadrian tenant host (e.g. api.hadrian.io) and HADRIAN_WORKSPACE is the optional workspace identifier scoping the search. Tags: [hadrian, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "hadrian.py"
+}

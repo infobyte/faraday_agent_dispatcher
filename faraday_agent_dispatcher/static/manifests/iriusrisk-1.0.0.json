@@ -1,0 +1,26 @@
+{
+    "arguments": {
+        "IRIUS_PRODUCT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional IriusRisk product ref (the operator-chosen slug surfaced by /api/v1/products) to narrow the fetch to. When set, the executor skips the products walk and goes straight to /api/v1/products/{ref}/threats — useful for scheduled per-product imports of a single mission-critical threat model. When blank / missing (the typical operational mode for first-time imports), the executor walks /api/v1/products page-by-page (size=100, max 100 pages / 5000 products) and pulls threats for every product the operator's tenant exposes. Whitespace is trimmed; refs are case-sensitive in the IriusRisk v1 surface so the operator-supplied value is preserved verbatim."
+        }
+    },
+    "environment_variables": [
+        "IRIUS_HOST",
+        "IRIUS_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "iriusrisk",
+    "title": "IriusRisk Threat Modeling",
+    "website": "https://www.iriusrisk.com/",
+    "description": "IriusRisk Threat Modeling importer. Pulls products + per-product threats from the IriusRisk REST API (/api/v1/products and /api/v1/products/{ref}/threats) and emits Faraday bulk-create JSON. IriusRisk is a threat-modeling SaaS / on-prem product — architects build a product model in the console, the platform's threat library + STRIDE / OWASP / NIST rule packs auto-populate per-product threats with mapped weaknesses (CWE) + countermeasures, and the operator's risk team tracks each threat through the Exposed -> Reviewed -> Mitigated lifecycle. This executor surfaces those threats as Faraday vulnerabilities so the threat-model output joins the operator's existing host-side scanner output under a single workspace. IRIUS_PRODUCT_REF is optional — when blank / missing the executor walks /api/v1/products page-by-page (Spring HATEOAS page=N&size=100, bounded by max 100 pages / 5000 products) and pulls threats for every product the operator's tenant exposes; when set the executor skips the products walk and goes straight to /api/v1/products/{ref}/threats. Auth: IriusRisk uses a per-user API token issued by the console (User Settings -> API Token -> generate); the dispatcher forwards it as the lowercase 'api-token: <IRIUS_TOKEN>' HTTP header on every request (IriusRisk's documented authentication header). IRIUS_HOST is the mandatory tenant base URL (e.g. https://acme.iriusrisk.com or https://eu.iriusrisk.com); IriusRisk is a tenant-keyed product so there is no global default and the executor exits cleanly when missing. Whitespace is trimmed and https:// is added when the operator pasted in a bare FQDN. Each IriusRisk threat becomes one Faraday vulnerability under a single synthetic 0.0.0.0 host with hostname 'iriusrisk' (IriusRisk threats are product-keyed not host-keyed — the operator's other agents emit the host-side findings this feed is correlated against), tagged exactly ['iriusrisk'] per the playbook spec, with a [IriusRisk] name prefix, the canonical product name + threat name (or ref) in the name, and the product-ref::threat-ref composite in external_id so threats with the same ref under different products don't collide. Severity is bucketed from IriusRisk's published riskLevel: Very High -> critical / High -> high / Medium -> medium / Low -> low / Very Low -> info / Nothing -> info; falls back to the numeric riskRating (0..100) ladder when riskLevel is missing (>=75 critical / >=50 high / >=25 medium / >0 low / 0 info). Threats in the terminal Mitigated / NotApplicable / Rejected states are floored to 'info' regardless of the rating ladder (the threat is no longer live) and the closed state is preserved via an explicit Irius-State pivot. Status is always 'open' (an IriusRisk threat can transition to Mitigated in the console but the underlying threat-model entry lives on; Faraday surfaces the finding as open so the operator's remediation workflow takes over). Resolution variants: Mitigated / NotApplicable / Rejected -> reflect the closed state and verify on the affected hosts; threats with attached countermeasures -> apply the IriusRisk-recommended countermeasures listed in the description and update the threat state in the console; bare threats -> review the threat in the IriusRisk console, attach appropriate countermeasures from the threat library, and transition the state from Exposed -> Reviewed -> Mitigated. Refs include the IriusRisk console deep-link for the product (/productLandingPage/{ref}), the canonical NVD CVE permalink for any CVE ids surfaced in the threat description, and explicit Irius-ProductRef / Irius-ProductName / Irius-ThreatRef / Irius-ThreatName / Irius-RiskLevel / Irius-RiskRating / Irius-State / Irius-Category / Irius-CWE / Irius-Countermeasure pivots so operators can pivot from a Faraday finding back to the exact IriusRisk threat record. Tags: [iriusrisk].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "iriusrisk.py"
+}

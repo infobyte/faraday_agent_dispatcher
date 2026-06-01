@@ -1,0 +1,37 @@
+{
+    "arguments": {
+        "MEND_PROJECT_TOKEN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Mend project token (UUID) whose security alerts should be imported. Resolves to /api/v2.0/projects/{token}/alerts/security (with /api/v2.0/projects/{token}/alerts as a fallback for tenants that don't expose the typed sub-resource). Either MEND_PROJECT_TOKEN or MEND_PRODUCT_TOKEN must be supplied — when only MEND_PRODUCT_TOKEN is given the executor walks /api/v2.0/products/{token}/projects and imports every project under the product."
+        },
+        "MEND_PRODUCT_TOKEN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Mend product token (UUID) to fan out across — when supplied without MEND_PROJECT_TOKEN, the executor enumerates the product's projects via /api/v2.0/products/{token}/projects and imports the security alerts for each. Ignored when MEND_PROJECT_TOKEN is also supplied (project-scoped import wins)."
+        },
+        "MEND_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Filters out lower-severity alerts client-side after Faraday severity normalisation (handles Mend's CRITICAL/HIGH/MEDIUM/LOW vulnerability enum, the MAJOR/MEDIUM/MINOR alert-level enum, and CVSS base-score fallback). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "MEND_HOST",
+        "MEND_USER_KEY",
+        "MEND_API_KEY"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Software Composition Analysis",
+    "name": "mend",
+    "title": "Mend (formerly WhiteSource)",
+    "website": "https://www.mend.io/",
+    "description": "Mend (formerly WhiteSource / Mend.io) REST API importer. Pulls Software Composition Analysis findings from Mend and emits Faraday bulk-create JSON to stdout. Authenticates against /api/v2.0/login by POSTing the orgToken (MEND_API_KEY) + userKey (MEND_USER_KEY) and exchanging the pair for a short-lived jwtToken used as 'Authorization: Bearer <jwtToken>' on every subsequent call; a pre-built 'Bearer <token>' value in MEND_API_KEY is accepted and routed verbatim so OAuth tokens minted by an external identity provider can skip the exchange step. Resolves either a single MEND_PROJECT_TOKEN or fans out across MEND_PRODUCT_TOKEN by walking /api/v2.0/products/{token}/projects, then lists every security alert per project via /api/v2.0/projects/{token}/alerts/security (with /api/v2.0/projects/{token}/alerts as a fallback for tenants that don't expose the typed sub-resource — fallback responses are filtered client-side to SECURITY_VULNERABILITY alerts). Library inventory is read via /api/v2.0/projects/{token}/libraries to populate the host description with the library count. Each Mend project becomes one Faraday host (synthetic 0.0.0.0 ip because SCA findings live in dependency manifests, not on IPs) with hostnames = {projectName}@{projectToken}; per-project security alerts attached as Faraday vulnerabilities — one per alert with [SCA] engine prefix, vulnerabilityName in {groupId}:{artifactId}@{version} (or component@version) in the title, library coordinates / filename / packageType / language / licenses, alertType / alertLevel / vulnerabilityType, publishDate / lastUpdatedDate / alertCreated / alertModified, raw alert status, CVSS vector, score and project / projectToken metadata in the description; topFix.fixResolution / remediation / recommendation / solution surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed), references / links URLs, topFix url / origin and allFixes url / origin entries. CVE list harvested from name / vulnerabilityName / cve / cveId / cves / aliases (string + list-of-string + list-of-dict shapes, deduped case-insensitively) on both the alert wrapper and the nested vulnerability object. Severity normalised from Mend's vulnerability enum (CRITICAL / HIGH / MEDIUM / LOW) with the alert-level enum (MAJOR / MEDIUM / MINOR) as a fallback and CVSS v3 bucketing as a further fallback when only a numeric score is given (≤0 info, <4 low, <7 medium, <9 high, ≥9 critical); client-side MEND_MIN_SEVERITY floor enforced after normalisation. Status mapped from the alert's status enum (ACTIVE → open, RESOLVED / FIXED / CLOSED → closed, IGNORED / SUPPRESSED / MUTED → risk-accepted), with analyst-triage flags (ignored / muted / falsePositive / suppressed) winning over the lifecycle status so a Mend alert that's still ACTIVE but flagged false-positive surfaces as risk-accepted. MEND_HOST is the Mend tenant base URL (e.g. https://saas.mend.io or https://app-eu.mend.io).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "mend.py"
+}

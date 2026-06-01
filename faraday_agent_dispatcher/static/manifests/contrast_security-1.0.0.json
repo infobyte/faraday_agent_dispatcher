@@ -1,0 +1,33 @@
+{
+    "arguments": {
+        "CONTRAST_APP_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Contrast application id (UUID) to scope the import. When set, only that application's traces are imported via GET /api/ng/{org_id}/applications/{id} + POST /api/ng/{org_id}/orgtraces/{id}/filter. Omit to enumerate every application visible to the API key under CONTRAST_ORG_ID and import each application's traces."
+        },
+        "CONTRAST_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. When set above 'info', forwarded to the /orgtraces/{id}/filter endpoint as a 'severities' CSV (e.g. HIGH,CRITICAL — info is translated back to Contrast's NOTE) and additionally enforced client-side after severity normalisation (handles Contrast Assess's string severities — CRITICAL/HIGH/MEDIUM/LOW/NOTE). Default: info."
+        }
+    },
+    "environment_variables": [
+        "CONTRAST_HOST",
+        "CONTRAST_ORG_ID",
+        "CONTRAST_AUTH",
+        "CONTRAST_API_KEY",
+        "CONTRAST_SERVICE_KEY"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "contrast_security",
+    "title": "Contrast Security",
+    "website": "https://www.contrastsecurity.com/contrast-assess",
+    "description": "Contrast Security TeamServer REST API importer. Pulls Interactive Application Security Testing (IAST) findings from a Contrast Security tenant (Contrast Assess) and emits Faraday bulk-create JSON to stdout. Lists applications via GET /api/ng/{org_id}/applications (or fetches a single application via GET /api/ng/{org_id}/applications/{id} when CONTRAST_APP_ID is set), then pulls per-application traces via POST /api/ng/{org_id}/orgtraces/{id}/filter paginated with offset/limit. Each trace is enriched via GET /api/ng/{org_id}/traces/{app_id}/trace/{uuid} for request / recommendation / story text. Each application becomes one Faraday host (synthetic 0.0.0.0 because Contrast findings live in deployed applications, not on IPs) with hostname = application name; per-application traces attached as Faraday vulnerabilities — one per Contrast trace uuid with [IAST] engine prefix, rule_name / category / language, request method+URL, first/last time seen, status + sub_status surfacing in the description; raw HTTP requests surface as Faraday data; recommendation / remediation / how-to-fix text surfaces as Faraday resolution. Refs include CWE-* (with the 'CWE-' prefix collapsed), OWASP categories, ContrastRule-<rule>, ContrastCategory-<category>, plus any URLs from the references list. CVE list harvested from cve / cveId / cves (string + list-of-string + list-of-dict shapes, deduped). Severity normalised from Contrast's string enum (CRITICAL/HIGH/MEDIUM/LOW/NOTE — also accepts Important/Moderate/Minor/Informational/None) with CVSS v3 bucketing as a fallback when only a numeric score is given; client-side CONTRAST_MIN_SEVERITY floor enforced after normalisation, and additionally CSV-forwarded as the 'severities' filter on /orgtraces. Status mapped from Contrast's lifecycle status (Reported/Confirmed/Suspicious/Reopened → open, Not a Problem / False Positive sub-status / Acceptable Risk → risk-accepted, Remediated / Fixed / Auto-Remediated → closed). Auth: three Contrast headers travel on every API call — 'Authorization: <CONTRAST_AUTH>' (base64-encoded 'username:service_key' — when CONTRAST_AUTH already looks like the pre-built base64 token it is sent verbatim; when it looks like a username/email it is base64-encoded with CONTRAST_SERVICE_KEY before sending), 'API-Key: <CONTRAST_API_KEY>', and 'Accept: application/json'. CONTRAST_HOST is the TeamServer base URL (e.g. https://app.contrastsecurity.com, https://eu.contrastsecurity.com, or the on-prem manager URL); the /Contrast context path is auto-appended when missing.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "contrast_security.py"
+}

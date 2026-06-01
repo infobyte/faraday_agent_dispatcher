@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "BITSIGHT_COMPANY_GUID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "BitSight company GUID (uuid4 — 8-4-4-4-12 hex groups) identifying the monitored company whose rating + finding catalogue is pulled. Found in the BitSight portal URL bar when viewing a company (My Companies -> select company -> the GUID appears in the address bar after /companies/) or via the BitSight portfolio API (GET /ratings/v1/portfolio). The executor hard-validates the uuid4 shape client-side so a typo can't fan out into '/ratings/v2/companies/None' calls."
+        },
+        "BITSIGHT_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for BitSight findings. Accepts info | low | medium | high | critical (plus BitSight synonyms: severe -> critical, material -> high, moderate -> medium, minor -> low, neutral / informational -> info) plus numeric-string CVSS-style input bucketed via severity_from_cvss (<4 low, <7 medium, <9 high, >=9 critical). Findings below the floor are dropped from the Faraday output after per-finding severity normalisation (bucketed from the freeform severity_category string + numeric severity 0-10 fallback). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "BITSIGHT_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "bitsight",
+    "title": "BitSight Security Ratings",
+    "website": "https://www.bitsight.com",
+    "description": "BitSight Security Ratings REST importer. Pulls the company-level rating record and the open finding catalogue from a BitSight tenant via GET /ratings/v2/companies/{guid} and GET /ratings/v2/companies/{guid}/findings. Each monitored company becomes one Faraday host (keyed by the company GUID — the BitSight surface is company-scoped, not asset-scoped, so the host record is a synthetic per-company bucket rather than an IP-keyed asset) with host.os set to the BitSight rating + grade (e.g. 'BitSight 750 (Advanced)') so the rating itself is visible alongside the per-risk-category findings. Each BitSight open finding (one observation tied to a risk vector — patching cadence, exposed services, malware infections, web app headers, SSL config, etc.) attaches as a Faraday vulnerability with the engine prefix [SECURITY-RATING]. Severity is bucketed from the freeform severity_category string enum (severe / material / moderate / minor / neutral / informational) with the numeric severity 0-10 used as a CVSS-style fallback; status mapped from remediation_status (open / new / detected / in_progress -> open, resolved / fixed / remediated / patched -> closed, risk_accepted / will_not_fix / waived / false_positive / suppressed -> risk-accepted). Pagination uses BitSight's canonical limit + offset cursor pattern (PAGE_SIZE=100 per page capped at MAX_PAGES=200) with links.next + count exhaustion detection. Refs include BitSight-Finding / BitSight-Observation / BitSight-RiskVector / BitSight-RiskCategory / BitSight-Asset pivots plus inline advisory URLs from the remediations block. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from cve / cveId / cves / details.cve plus title / summary / description / evidence token scans. Auth: BitSight uses HTTP Basic auth with the API token as the username and an empty password — the dispatcher carries Authorization: Basic <base64(BITSIGHT_TOKEN:)> plus Accept: application/json on every /ratings/v2/ call. BITSIGHT_TOKEN is the API token created in the BitSight console under Account -> Settings -> API Token. BITSIGHT_COMPANY_GUID is the uuid4 company identifier. Tags: [bitsight, security-rating, security-ratings].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "bitsight.py"
+}

@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "SEKOIA_FILTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Sekoia.io filter expression forwarded server-side as the filter= query parameter on both /v1/sic/alerts and /v1/iocs/observables endpoints. Sekoia.io's filter DSL supports field-equality + boolean composition (e.g. 'urgency:>=70 AND status.name:\"Open\"' for the alerts surface; 'type:\"ipv4-addr\" AND confidence:>=80' for the observables surface). Blank / missing / unparseable input keeps every record (the typical operational mode); whitespace is trimmed and the value is URL-encoded before being placed in the query string."
+        },
+        "SEKOIA_LIMIT": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Optional per-request page size (default 100, clamped [1, 100] per Sekoia.io's documented per-page ceiling on both endpoints). Garbage / bool / unparseable input falls back to the default. Pagination walks offset / limit until either the result set is exhausted, MAX_RESULTS (5000) is reached, or MAX_PAGES (100) is hit."
+        }
+    },
+    "environment_variables": [
+        "SEKOIA_HOST",
+        "SEKOIA_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "sekoia_defend",
+    "title": "Sekoia.io Defend",
+    "website": "https://www.sekoia.io/",
+    "description": "Sekoia.io Defend importer. Pulls alert + observable records from the Sekoia.io REST API (https://api.sekoia.io/v1/sic/alerts and /v1/iocs/observables) and emits Faraday bulk-create JSON. Sekoia.io is a French commercial XDR + CTI platform — analysts curate SOC alerts around operator-side intakes and publish IOC-level observables tied to wider campaigns. The executor walks both endpoints in sequence, applying SEKOIA_FILTER server-side on each call so the API itself does the filtering. SEKOIA_FILTER (optional) is a Sekoia.io filter DSL expression (e.g. 'urgency:>=70 AND status.name:\"Open\"' for alerts; 'type:\"ipv4-addr\" AND confidence:>=80' for observables) forwarded as the filter= query parameter; blank / missing keeps every record. SEKOIA_LIMIT (optional, default 100, clamped [1, 100]) is the per-request page size. Pagination walks offset / limit until either the result set is exhausted, MAX_RESULTS (5000) is reached, or MAX_PAGES (100) is hit; inter-page sleep paces requests at 0.4s. Auth: Sekoia.io uses Bearer-token authentication — the operator creates an API key in the Sekoia.io console (Settings -> API Keys -> Generate) and pastes the returned token into SEKOIA_TOKEN. The dispatcher sends 'Authorization: Bearer <token>' on every request. SEKOIA_HOST is optional and defaults to https://api.sekoia.io (the canonical Sekoia.io REST host); regional / on-prem mirrors are tolerated and https:// is added automatically when the operator pasted in a bare FQDN. Each alert / observable becomes one Faraday vulnerability under a single synthetic 0.0.0.0 host with hostname 'sekoia-defend' (Sekoia.io records are tenant-keyed not host-keyed — the operator's other agents emit the host-side findings this feed is correlated against), tagged exactly ['sekoia-defend'] per the playbook spec, with a [Sekoia][Alert] / [Sekoia][IOC] engine prefix on the name (so operators can filter the two streams independently in the Faraday UI), the canonical Sekoia record id in external_id (alert::<id> / ioc::<id> so records with the same id under different streams don't collide), and the canonical metadata surfaced in both the description and the refs list. Severity for alerts is bucketed from the published urgency 0..100 score: >=80 -> critical / >=60 -> high / >=40 -> medium / >=20 -> low / <20 -> info. Severity for observables is bucketed from the published confidence 0..100 score using the same ladder. Records in the terminal Closed / Rejected / Mitigated states are floored to 'info' regardless of the published bucket (the case is no longer live). Status is always 'open' (a Sekoia record can be closed in the console but the underlying SOC alert / CTI observable lives on; Faraday surfaces the finding as open so the operator's remediation workflow takes over — the Sekoia state is preserved via the info-severity floor + an explicit Sekoia-Status pivot in the refs). Resolution variants: closed alerts -> 'Sekoia has marked this alert as {status}; verify the remediation is reflected on the affected asset before closing the Faraday finding.'; live alerts -> 'Triage in the Sekoia.io console and apply the analyst-recommended remediation per the detection rule playbook.'; IOCs -> type-appropriate blocking recommendation (hashes -> EDR / AV; IPs -> firewall + egress proxy + EDR containment; URLs -> egress proxy + endpoint web-filter; domains -> DNS sinkhole + perimeter blocklist; email -> mail-server blocklist + DMARC quarantine). Refs include the canonical Sekoia.io console deep-link (https://app.sekoia.io/operations/alerts/<short_id> for alerts, /intelligence/objects/<id> for observables), the canonical NVD CVE permalink for any CVE ids surfaced in the title / description / rule name / labels, and explicit Sekoia-AlertID / Sekoia-IocID / Sekoia-Title / Sekoia-Urgency / Sekoia-Confidence / Sekoia-Status / Sekoia-Rule / Sekoia-Type / Sekoia-Asset / Sekoia-Entity / Sekoia-IntakeUUID / Sekoia-KillChain / Sekoia-Label / Sekoia-CVE / Sekoia-ValidFrom / Sekoia-ValidUntil / Sekoia-CreatedAt / Sekoia-UpdatedAt / Sekoia-FirstSeen / Sekoia-LastSeen pivots so operators can pivot from a Faraday finding back to the exact Sekoia record. Tags: [sekoia-defend].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "sekoia_defend.py"
+}

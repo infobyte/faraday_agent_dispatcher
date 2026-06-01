@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "TAEGIS_TENANT_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "The Secureworks Taegis tenant id scoped on every GraphQL request. Taegis is a tenant-keyed managed-detection-and-response SaaS so the tenant id is mandatory — it is forwarded as the 'x-tenant-context: <TAEGIS_TENANT_ID>' HTTP header on every subsequent GraphQL POST and surfaced as a Taegis-TenantID pivot in both the description and the refs list so operators can pivot from a Faraday finding back to the exact Taegis tenant. Whitespace is trimmed. The executor exits cleanly when the tenant id is missing."
+        },
+        "TAEGIS_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Faraday severity floor (case-insensitive 'info' / 'low' / 'medium' / 'high' / 'critical'); records whose mapped severity is strictly below the floor are dropped client-side after the GraphQL fetch. Blank / missing / unparseable values keep every record (the typical operational mode for first-time imports). Operator-friendly aliases are accepted ('informational' -> 'info', 'moderate' -> 'medium', 'crit' -> 'critical'). Useful for scheduled runs that only want to surface the high-priority Taegis output in Faraday and let the long-tail low/info records stay in the Taegis console."
+        }
+    },
+    "environment_variables": [
+        "TAEGIS_CLIENT_ID",
+        "TAEGIS_CLIENT_SECRET"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "secureworks_taegis",
+    "title": "Secureworks Taegis XDR Threat Intelligence",
+    "website": "https://www.secureworks.com/products/taegis-xdr",
+    "description": "Secureworks Taegis XDR Threat Intelligence importer. Pulls investigations + XDR alerts from the canonical Secureworks Taegis XDR GraphQL surface (https://api.ctpx.secureworks.com/graphql) and emits Faraday bulk-create JSON. Taegis XDR is Secureworks' managed-detection-and-response SaaS — sensors + analytics emit XDR alerts, the Counter Threat Unit analysts triage them into investigations, and the operator's SOC works each investigation through Open -> Awaiting Action -> Closed. This executor surfaces both the alert stream and the investigation pipeline as Faraday vulnerabilities so the Taegis output joins the operator's existing host-side scanner output under a single workspace. Two GraphQL queries are issued in a single run: (1) 'investigations' pulls the operator's tenant-scoped investigations (id / title / description / priority / status / type / keyFindings / createdAt / updatedAt / assignee / tags / alertCount), and (2) 'alertsServiceSearch' pulls XDR alerts via the Taegis CQL surface (id / metadata.title / metadata.description / metadata.severity / metadata.confidence / metadata.createdAt / eventCount / status / tenantId). Auth: TAEGIS_CLIENT_ID + TAEGIS_CLIENT_SECRET are both mandatory and are exchanged via OAuth2 client_credentials (HTTP Basic at POST /auth/api/v2/auth/token, grant_type=client_credentials) for a short-lived (~1h) Bearer token sent as Authorization: Bearer ... on every subsequent GraphQL request alongside the tenant scope header x-tenant-context: <TAEGIS_TENANT_ID>. TAEGIS_HOST may optionally be overridden via env to point at a regional mirror (https://api.us.secureworks.com, https://api.eu.secureworks.com) or an offline cache; defaults to https://api.ctpx.secureworks.com (the canonical US-East endpoint). Whitespace is trimmed and https:// is added when the operator pasted in a bare FQDN. Each Taegis record (one per alert + one per investigation) becomes one Faraday vulnerability under a single synthetic 0.0.0.0 host with hostname 'secureworks-taegis' (Taegis records are tenant-keyed not host-keyed — the operator's other agents emit the host-side findings this feed is correlated against), tagged exactly ['secureworks-taegis'] per the playbook spec, with the canonical title in the name (alerts prefixed [Taegis Alert], investigations prefixed [Taegis Investigation] so operators can filter the two streams independently), the canonical id in external_id (alert::<id> / inv::<id> so records with the same id under different streams don't collide), and the canonical metadata fields surfaced in both the description and the refs list. Severity is bucketed from Taegis' published rating: alerts use metadata.severity (0..1 float on XDR -> >=0.8 critical / >=0.6 high / >=0.4 medium / >=0.2 low / <0.2 info; 0..10 numeric scores from vendor adapters bucketed via >=9/>=7/>=4/>0; labelled severities passed through verbatim); investigations use the canonical Critical / High / Medium / Low / Informational priority label (or the 1..5 numeric form mapped via the alias table). Closed / Resolved / Suspended / NotApplicable / False Positive investigations are floored to 'info' regardless of priority (the case is no longer live; the closed state is preserved via an explicit Taegis-Status pivot). Unparseable / missing severity defaults to 'info' — we don't synthesise a ranking Taegis hasn't published. Status is always 'open' (a Taegis record can transition to Closed in the console but the underlying alert / case lives on; Faraday surfaces the finding as open so the operator's remediation workflow takes over). Resolution variants: closed investigations -> reflect the closed state and verify on the affected hosts; live investigations -> work the investigation in the Taegis console and transition the status from Open -> Awaiting Action -> Closed; alerts -> triage the alert in the Taegis console and apply mitigations per the runbook. Refs include the Taegis console deep-link (ctpx.secureworks.com/alerts/<id> or /investigations/<id> with the tenant query string), the canonical NVD CVE permalink for any CVE ids surfaced in the title / description, and explicit Taegis-AlertID / Taegis-InvestigationID / Taegis-TenantID / Taegis-Title / Taegis-Severity / Taegis-Priority / Taegis-Status / Taegis-Type / Taegis-Confidence / Taegis-EventCount / Taegis-AlertCount / Taegis-Assignee / Taegis-CreatedAt / Taegis-UpdatedAt / Taegis-Tag pivots so operators can pivot from a Faraday finding back to the exact Taegis record. Tags: [secureworks-taegis].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "secureworks_taegis.py"
+}

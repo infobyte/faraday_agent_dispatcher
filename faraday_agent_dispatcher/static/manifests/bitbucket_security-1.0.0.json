@@ -1,0 +1,49 @@
+{
+    "arguments": {
+        "BB_WORKSPACE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Bitbucket Cloud workspace slug (the first path segment after https://bitbucket.org/, e.g. mycompany)."
+        },
+        "BB_REPO": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Bitbucket Cloud repository slug (the second path segment after https://bitbucket.org/{workspace}/, e.g. payments-api)."
+        },
+        "BB_COMMIT": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Full 40-char Git commit SHA whose Code Insights security reports should be imported (Bitbucket Code Insights reports are attached per-commit, typically the HEAD commit of a feature branch or the merge commit of a pull request)."
+        },
+        "BB_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Filters out lower-severity annotations client-side after Faraday severity normalisation. Defaults to info (no filtering)."
+        },
+        "BB_INCLUDE_NON_VULN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional flag (1 | true | yes) — when set, also import non-vulnerability annotations (CODE_SMELL / BUG / TEST). Defaults to false (only SECURITY-type reports and VULNERABILITY-type annotations import)."
+        }
+    },
+    "environment_variables": [
+        "BB_HOST",
+        "BB_USER",
+        "BB_APP_PASSWORD"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "bitbucket_security",
+    "title": "Bitbucket Cloud Code Insights",
+    "website": "https://support.atlassian.com/bitbucket-cloud/docs/code-insights/",
+    "description": "Bitbucket Cloud Code Insights REST API importer. Pulls Code Insights security reports (and their annotations) from a Bitbucket Cloud repository at a specific commit and emits Faraday bulk-create JSON to stdout. Lists Code Insights reports posted against the commit via /2.0/repositories/{workspace}/{repo}/commit/{commit}/reports (paginated via page / pagelen), filters to SECURITY-type reports (set BB_INCLUDE_NON_VULN=1 to also import CODE_SMELL / BUG / TEST), then pulls per-report annotations via /2.0/repositories/{workspace}/{repo}/commit/{commit}/reports/{report_id}/annotations. Each Bitbucket repository becomes one Faraday host (synthetic 0.0.0.0 ip because Code Insights findings live in source repos and pull-request diffs, not on IPs) with hostnames = {workspace}/{repo}; per-commit annotations attached as Faraday vulnerabilities — one per annotation with [SAST] engine prefix, path:line source location, annotation_type / report title / reporter / report_id / commit / result / created / updated timestamps and annotation_id surfacing in the description; resolution / remediation / recommendation / solution / fix surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed), OWASP categories (single + list), BitbucketRule-<rule>, BitbucketCheck-<check>, plus any URLs from links / references and the annotation's top-level link field. CVE list harvested from cve / cveId / cveName / cves (string + list-of-string + list-of-dict shapes, deduped case-insensitively). Severity normalised from Bitbucket Code Insights's string enum (CRITICAL / HIGH / MEDIUM / LOW — also accepts Minor / Moderate / Informational / Information / None / Unknown) with CVSS v3 bucketing as a fallback when only a numeric score is given (≤0 info, <4 low, <7 medium, <9 high, ≥9 critical); client-side BB_MIN_SEVERITY floor enforced after normalisation. Status mapped from the annotation's result field (FAILED / SKIPPED / PENDING → open, PASSED → closed, IGNORED → risk-accepted) with boolean triage flags (false_positive / ignored / suppressed / fixed / resolved) as fallbacks. Auth: HTTP Basic with BB_USER + BB_APP_PASSWORD; BB_APP_PASSWORD is a Bitbucket Cloud App Password (Personal Settings → App passwords) with repository:read scope at minimum — the legacy username:password combination is rejected by Bitbucket Cloud since 2022, so an App Password or Workspace Access Token is required. A pre-built 'Bearer <token>' value in BB_APP_PASSWORD (Workspace / Project / Repository Access Token) is also accepted and routed to the Authorization header verbatim. BB_HOST defaults to https://api.bitbucket.org for Bitbucket Cloud; set it to your Bitbucket Data Center API host (e.g. https://bitbucket.corp.example.com) for self-hosted deployments.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "bitbucket_security.py"
+}

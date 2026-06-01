@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "TC_ALERT_TYPE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Mandatory Threat Command alert type to fetch — one of 'AttackIndication', 'DataLeakage', 'Phishing', 'BrandSecurity', 'ExploitableData', 'VIP', 'ReputationLeakage', OR the special value 'iocs' to switch to the /public/v1/iocs/threat-indicators endpoint, OR 'all' to pull every alert type without a server-side type filter. Operator-friendly aliases (phish / leak / brand / attack / exploit / reputation / ioc / indicators) are normalised onto the canonical title-cased Threat Command vocabulary. Forwarded into the alerts-list query string as type=<...> when the alerts endpoint is in effect. Anything else is rejected client-side with a hard error so a typo doesn't silently pull every alert type."
+        },
+        "TC_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum analyst severity to fetch (Low / Medium / High — the canonical Threat Command severity vocabulary). When supplied, the executor forwards every severity at-or-above the floor as a repeated severity=<...> query string parameter (Threat Command's public-v1 API accepts multiple severity values per request) so the API itself does the server-side narrowing — e.g. TC_MIN_SEVERITY=Medium sends severity=Medium&severity=High. Blank / missing / unparseable input keeps every alert (the typical operational mode). Operator-friendly aliases (critical -> High, moderate / med -> Medium) are normalised."
+        }
+    },
+    "environment_variables": [
+        "TC_ACCOUNT_ID",
+        "TC_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "intsights_threat_command",
+    "title": "Rapid7 Threat Command (formerly IntSights)",
+    "website": "https://www.rapid7.com/products/threat-command/",
+    "description": "Rapid7 Threat Command (formerly IntSights) importer. Pulls alert + threat-indicator records from the Threat Command public-v1 REST API (https://api.ti.insight.rapid7.com/public/v1/data/alerts/alerts-list and /public/v1/iocs/threat-indicators) and emits Faraday bulk-create JSON. Threat Command is a commercial external-threat-intelligence platform — analysts curate alerts around an operator's named brand / domain / IP space and publish IOC-level indicators tied to those alerts. The executor exposes two mutually-exclusive operational modes via TC_ALERT_TYPE: (1) the alert-types ('AttackIndication' / 'DataLeakage' / 'Phishing' / 'BrandSecurity' / 'ExploitableData' / 'VIP' / 'ReputationLeakage', plus the 'all' sentinel) page /public/v1/data/alerts/alerts-list with a server-side type=<...> filter pinned to TC_ALERT_TYPE; (2) the 'iocs' sentinel (with aliases ioc / indicators / threat_indicators) swaps to /public/v1/iocs/threat-indicators and pages every IOC the operator's tenant has access to. TC_MIN_SEVERITY (Low / Medium / High) is optional and forwarded server-side as the repeated severity=<...> parameter so the API itself does the severity-narrowing. Pagination walks skip / limit in 50-record (alerts) / 100-record (iocs) pages until either the result set is exhausted, MAX_RESULTS (5000) is reached, or MAX_PAGES (100) is hit; inter-page sleep paces requests at 0.6s to stay under the documented 30 req/min ceiling. Auth: Threat Command uses HTTP Basic auth — the operator creates an API user in the Threat Command console (Automation -> Integrations -> API Credentials -> save the returned 'Account ID' + 'API Key' pair) and pastes the returned values into TC_ACCOUNT_ID + TC_API_KEY. The dispatcher base64-encodes {ACCOUNT_ID}:{API_KEY} and sends 'Authorization: Basic ...' on every request. INTSIGHTS_HOST is an optional environment override (not in the manifest's declared env vars) and defaults to https://api.ti.insight.rapid7.com (the canonical Threat Command host); we use INTSIGHTS_HOST rather than TC_HOST to avoid colliding with the sibling threatconnect executor which already claims TC_HOST for ThreatConnect-the-product. Each alert / indicator becomes one Faraday vulnerability under a single synthetic 0.0.0.0 host with hostname 'intsights-threat-command' (Threat Command records are brand-keyed not host-keyed — the operator's other agents emit the host-side findings this feed is correlated against), tagged exactly ['intsights-threat-command'] per the playbook spec, with a [ThreatCommand] (or [ThreatCommand][IOC]) name prefix, the canonical type + subType + title (or IOC value) in the name, and the Threat Command record id in external_id. Severity is bucketed from Threat Command's published Low / Medium / High ladder: High -> high / Medium -> medium / Low -> low. Closed / acknowledged / dismissed alerts are floored to 'info' regardless of the published ladder. Unscored records default to 'info'. Status is always 'open' (a Threat Command alert can be closed in the console but the underlying external threat lives on; Faraday surfaces the finding as open so the operator's remediation workflow takes over). Resolution defaults to a type-appropriate analyst recommendation: Phishing -> Threat Command Takedown + egress-proxy block; DataLeakage -> credential reset + forensics; BrandSecurity -> trademark counsel + domain-registrar takedown; AttackIndication -> perimeter + EDR blocklist; ExploitableData -> rotate exposed secrets / keys; VIP -> notify executive + expand monitoring; threat-indicator IOCs -> type-appropriate blocking on the operator's perimeter / EDR / DNS resolver. Refs include the canonical Threat Command web-UI permalink, the record id, title, type, subType, severity, status, every asset, every related IOC, every related alert id, every source feed, the analyst-curated sourceURL, any CVE ids surfaced in title / details / related-IOC values (each with its canonical NVD permalink), and foundDate / updateDate / firstSeen / lastSeen timestamps as explicit Tc-* / Ioc-* pivots so operators can pivot from a Faraday finding back to the Threat Command record. Tags: [intsights-threat-command].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "intsights_threat_command.py"
+}

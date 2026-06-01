@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "FOD_RELEASE_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Fortify on Demand release id (numeric) to scope the import. When set, only that release's vulnerabilities are imported via /api/v3/releases/{id} + /api/v3/releases/{id}/vulnerabilities. Omit to enumerate every application visible to the API key via /api/v3/applications, walk each application's releases via /api/v3/applications/{id}/releases, and import each release's vulnerabilities."
+        },
+        "FOD_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. CSV-forwarded as the `filters=severityString:Critical|High|...` query param on /api/v3/releases/{id}/vulnerabilities when > info, and additionally enforced client-side after normalisation (handles FoD's severityString — Critical/High/Medium/Low/Best Practice — and its 0-4 numeric severity ladder: 0=Best Practice→info, 1=Low, 2=Medium, 3=High, 4=Critical). Default: info."
+        }
+    },
+    "environment_variables": [
+        "FOD_HOST",
+        "FOD_TENANT",
+        "FOD_CLIENT_ID",
+        "FOD_CLIENT_SECRET"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "fortify_fod",
+    "title": "Fortify on Demand",
+    "website": "https://www.opentext.com/products/fortify-on-demand",
+    "description": "Fortify on Demand (FoD) REST API importer. Pulls SAST / SCA / DAST findings from a Fortify on Demand tenant and emits Faraday bulk-create JSON to stdout. Lists applications via /api/v3/applications and walks each application's releases via /api/v3/applications/{id}/releases (or fetches a single release via /api/v3/releases/{id} when FOD_RELEASE_ID is set), then pulls per-release vulnerabilities via /api/v3/releases/{id}/vulnerabilities paginated with offset/limit. Each vulnerability is enriched with /api/v3/releases/{id}/vulnerabilities/{vulnId}/details (brief / detail / kingdom / subType / CWE) and /api/v3/releases/{id}/vulnerabilities/{vulnId}/recommendations (used as Faraday resolution). Each release becomes one Faraday host (synthetic 0.0.0.0 because FoD findings live in applications, not on IPs) with hostname = application/release (or just release when the application name matches); per-release vulnerabilities are attached as Faraday vulnerabilities — one per FoD vulnId with engine prefix (analyzer/analysisType/scanType — e.g. [SAST]/[SCA]/[DAST]), Kingdom + SubType refs, CWE-* refs, FortifyRule-* refs, primaryLocationFull:lineNumber source location, sink file:line, instanceId surfacing in the description; recommendations surfaced as Faraday resolution; CVE list harvested from cve/cveId/cveName/cves. Severity normalised from FoD's severityString (Critical/High/Medium/Low/Best Practice — also accepts Informational/Moderate) and its 0-4 numeric severity ladder (0=Best Practice→info, 1=Low, 2=Medium, 3=High, 4=Critical); client-side min-severity floor enforced after normalisation. Status mapped from FoD's lifecycle / audit flags — isSuppressed → risk-accepted, auditorStatus 'Not an Issue' / 'Not Exploitable' / 'False Positive' → risk-accepted, auditorStatus 'Remediated' or closedStatus fixed/resolved/closed/remediated or closedDate set → closed, everything else stays open. Auth: OAuth2 client_credentials against /oauth/token with scope=api-tenant; FOD_TENANT is prepended to FOD_CLIENT_ID as '{tenant}\\{client_id}' when the client id is bare (supports both API-Key and user-password flows). The returned access_token is sent as Authorization: Bearer <token> on every API call. FOD_HOST is the FoD regional API base URL (e.g. https://api.ams.fortify.com, https://api.emea.fortify.com, https://api.apac.fortify.com, https://api.fed.fortifygov.com).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "fortify_fod.py"
+}

@@ -1,0 +1,30 @@
+{
+    "arguments": {
+        "DT_RISK_LEVEL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Dynatrace risk level filter, forwarded to /api/v2/securityProblems as securityProblemSelector=riskLevel(...). Comma-separated combination of: CRITICAL, HIGH, MEDIUM, LOW. Case-insensitive. Omit to pull every risk level visible to the token."
+        },
+        "DT_TIMEFRAME": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Dynatrace v2 timeframe expression forwarded as the 'from' query parameter on /api/v2/securityProblems. Accepts relative expressions like 'now-30m', 'now-24h', 'now-7d', 'now-30d', 'now-90d' or an ISO-8601 timestamp. Default: now-30d."
+        }
+    },
+    "environment_variables": [
+        "DT_HOST",
+        "DT_API_TOKEN"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "dynatrace_security",
+    "title": "Dynatrace Application Security",
+    "website": "https://www.dynatrace.com/platform/application-security/",
+    "description": "Dynatrace Application Security REST API importer. Lists HOST entities via /api/v2/entities?entitySelector=type(HOST) (for ip / hostname / os enrichment), then security problems via /api/v2/securityProblems (filtered by DT_RISK_LEVEL and DT_TIMEFRAME) and per-problem details via /api/v2/securityProblems/{id}. Emits one Faraday host per Dynatrace HOST entity referenced by an in-scope problem with the problems attached as vulnerabilities; problems whose affected entities do not include any HOST (e.g. only PROCESS_GROUP_INSTANCE / KUBERNETES_CLUSTER references) are attached to a synthetic 0.0.0.0 host so the data is still imported. Severity is normalised from Dynatrace's riskLevel (CRITICAL/HIGH/MEDIUM/LOW) and falls back to CVSS v3 bucketing on the riskScore when only a numeric score is available. Auth is `Authorization: Api-Token <DT_API_TOKEN>` with the `entities.read,securityProblems.read` token scopes; DT_HOST is the Dynatrace tenant base URL (e.g. https://<env-id>.live.dynatrace.com or a Managed cluster URL).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "dynatrace_security.py"
+}

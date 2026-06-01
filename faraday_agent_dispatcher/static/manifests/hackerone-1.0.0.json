@@ -1,0 +1,38 @@
+{
+    "arguments": {
+        "H1_PROGRAM_HANDLE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Server-side HackerOne program-scope predicate forwarded as the filter[program][]=<handle> query parameter on GET /v1/reports. Optional; empty / blank walks the entire token's program scope (the typical operational mode for a single-program identity). Comma-separated handles are split and trimmed, then forwarded as multiple filter[program][]=<handle> entries so a single agent can pull reports from several programs in one run (e.g. 'acme-prod,acme-staging,acme-mobile'). HackerOne accepts the literal program handle (the slug shown in the program's URL — hackerone.com/<handle>); the operator's token scope still applies. Whitespace is trimmed around each entry."
+        },
+        "H1_STATE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Server-side HackerOne report-state filter (CSV: 'new' / 'triaged' / 'needs-more-info' / 'pending-program-review' / 'informative' / 'resolved' / 'not-applicable' / 'duplicate' / 'spam' / 'retesting'). Forwarded as a single comma-joined filter[state][]=<csv> query parameter (HackerOne accepts both the comma-joined form and one entry per state but the joined form avoids URL ballooning when the operator supplies many states). Operator-friendly aliases are normalised ('needs-info' -> 'needs-more-info', 'pending' -> 'pending-program-review', 'na' / 'not_applicable' / 'notapplicable' -> 'not-applicable', 'dup' -> 'duplicate', 'closed' / 'fixed' -> 'resolved'). Blank / missing walks every state (the typical operational mode for first-time imports). Unknown / unparseable entries are dropped silently rather than crashing the run."
+        },
+        "H1_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Faraday severity floor (case-insensitive 'info' / 'low' / 'medium' / 'high' / 'critical'); reports whose mapped severity is strictly below the floor are dropped client-side after the fetch. HackerOne's severity field is the program-set CVSS rating (critical / high / medium / low / none — 'none' maps to Faraday's 'info' bucket so the report is still visible). The nested {'rating': '...', 'score': 0..10} shape used on newer programs is tolerated — the rating is preferred and the 0..10 score is used as a fallback. Closed / Resolved / Informative / Not-Applicable / Duplicate / Spam reports are floored to 'info' regardless of the published rating (preserved via an explicit H1-State pivot). Operator-friendly aliases are accepted ('informational' -> 'info', 'moderate' -> 'medium', 'crit' -> 'critical', 'elevated' -> 'high', 'severe' -> 'critical', 'none' -> 'info'). Blank / missing / unparseable values keep every record (the typical operational mode for first-time imports)."
+        }
+    },
+    "environment_variables": [
+        "H1_USER",
+        "H1_API_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Bug Bounty and Pentest Platforms",
+    "name": "hackerone",
+    "title": "HackerOne",
+    "website": "https://www.hackerone.com",
+    "description": "HackerOne crowd-sourced bug-bounty report importer. Pulls validated bug-bounty reports from the HackerOne v1 REST API and emits Faraday bulk-create JSON. HackerOne is a crowd-sourced security platform — external researchers submit vulnerability reports against a program's scope and the program triages, validates, prioritises, and pays out on the resulting findings. This executor surfaces validated reports under the operator's existing Faraday workspace so the external bug-bounty pipeline joins the dispatcher's internal scanner output. Endpoints used: GET https://api.hackerone.com/v1/reports?filter[program][]=<handle>&filter[state][]=<csv>&page[number]=N&page[size]=M (paginated bug-bounty report feed; canonical envelope is JSON:API {'data': [{'id': '...', 'type': 'report', 'attributes': {...}, 'relationships': {...}}], 'links': {'next': '...', 'prev': '...'}} with each record's attributes carrying title, vulnerability_information, state (new / triaged / needs-more-info / pending-program-review / informative / resolved / not-applicable / duplicate / spam / retesting — HackerOne's published state machine), severity (critical / high / medium / low / none label, or a nested {'rating': '...', 'score': 0..10} shape on newer programs), created_at / updated_at / triaged_at / closed_at / disclosed_at, bounty_awarded_amount / bounty_currency, cve_ids (list of attributed CVE strings), weakness (CWE attribution under relationships.weakness.data.attributes.external_id), and vulnerable_endpoint (URL / asset the researcher targeted); relationships carries pointers to program (handle + name) and reporter (researcher username)). Auth: HackerOne's v1 surface uses HTTP Basic Auth — the dispatcher sends Authorization: Basic <base64(H1_USER:H1_API_TOKEN)> on every /v1/ request, with no separate login round-trip (HackerOne provisions a long-lived API token per identity in the platform's API settings; the username is the identity's API handle, not the human-readable display name). H1_HOST is an env-only override (defaults to https://api.hackerone.com); whitespace is trimmed and https:// is added when the operator pasted in a bare FQDN. Pagination is one-based via JSON:API's page[number]=N + page[size]=M (HackerOne caps page[size] at 100); walks until len(records) < page_size or the env-only H1_PAGES knob is reached (default 10, clamped to [1, 100]). 401 short-circuits the whole executor (credentials are wrong); 403 / 429 / 5xx stop pagination and return what we have. Each HackerOne report becomes one Faraday host with host.ip set to the 0.0.0.0 sentinel (bug-bounty reports are keyed on a URL / asset path rather than an IP); the report title and the vulnerable_endpoint URL land on host.hostnames; the report itself becomes one Faraday vulnerability with the [BUG-BOUNTY] engine prefix so external researcher reports land alongside the other crowd-sourced feeds. Severity bucketing: HackerOne's published label vocabulary is CVSS-aligned (critical / high / medium / low / none — 'none' maps to Faraday's 'info' bucket); the nested severity.rating / severity.score shape is tolerated (rating preferred, 0..10 score fallback). Closed / Resolved / Informative / Not-Applicable / Duplicate / Spam reports are floored to 'info' regardless of the published rating (preserved via an explicit H1-State pivot). Unparseable / missing severity defaults to 'info'. Status is always 'open' so the operator's remediation workflow takes over; the closed state is preserved via the info-severity floor + the H1-State pivot. Refs include explicit H1-ReportID / H1-Program / H1-Reporter / H1-State / H1-Substate / H1-CreatedAt / H1-UpdatedAt / H1-TriagedAt / H1-ClosedAt / H1-DisclosedAt / H1-Bounty / H1-Currency / H1-Source / H1-VulnerableEndpoint / H1-Severity / H1-CVSS pivots, plus the canonical https://hackerone.com/<program> / https://hackerone.com/<reporter> / https://hackerone.com/reports/<id> permalinks and the canonical NVD CVE + MITRE CWE permalinks for any CVE / CWE ids surfaced in the cve_ids / weakness / vulnerability_information / title fields. Tags: [hackerone, pentest-platforms, report].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "hackerone.py"
+}

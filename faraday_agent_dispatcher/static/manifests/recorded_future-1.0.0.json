@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "RF_CVE_LIST": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional CSV of CVE ids to fetch (e.g. 'CVE-2024-1234, CVE-2023-5678'). When supplied, the executor walks the list in order and issues one HTTP GET per CVE against /v2/vulnerability/{cveId} — duplicates are deduped, whitespace is trimmed, and malformed entries (must match CVE-YYYY-N+) are dropped with a warning. When not supplied, the executor falls back to the /v2/vulnerability/search endpoint and pages through all Recorded Future analyst-graph vulnerabilities; when RF_MIN_RISK_SCORE is set it is also forwarded server-side as the documented riskScore_gte filter so we don't pay for records that will be dropped client-side. When both args are supplied RF_CVE_LIST wins (the per-CVE mode is the narrower, more deterministic projection) and RF_MIN_RISK_SCORE is still applied client-side to the lookup results."
+        },
+        "RF_MIN_RISK_SCORE": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Optional client-side risk-score filter (0..99 — Recorded Future's proprietary risk scale where higher = more malicious). When supplied, records whose RF risk score is strictly below the filter are dropped after the response is fetched; records RF has not yet scored are also dropped when this filter is set (we cannot prove an unscored record meets the threshold). Blank / missing / unparseable input keeps every record (the typical operational mode). Values below 0 are clamped to 0; values above 99 are clamped to 99. When the search-mode (no RF_CVE_LIST) is in effect, the same threshold is forwarded server-side via riskScore_gte so we don't pay for records that will be dropped client-side."
+        }
+    },
+    "environment_variables": [
+        "RF_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "recorded_future",
+    "title": "Recorded Future Vulnerability Intelligence",
+    "website": "https://www.recordedfuture.com/platform/vulnerability-intelligence",
+    "description": "Recorded Future Vulnerability Intelligence importer. Pulls CVE records from the canonical Recorded Future v2 REST surface (https://api.recordedfuture.com/v2/vulnerability/...) and emits Faraday bulk-create JSON. Two mutually-exclusive operational modes via the manifest args: (1) RF_CVE_LIST (CSV of CVE ids) walks the list in order and issues one HTTP GET per CVE via /v2/vulnerability/{cveId}; invalid-shaped entries are dropped silently. (2) When RF_CVE_LIST is empty the executor falls back to the /v2/vulnerability/search endpoint and pages through all Recorded Future analyst-graph vulnerabilities — RF_MIN_RISK_SCORE is forwarded server-side as the documented riskScore_gte filter when set. Each CVE becomes one Faraday vulnerability under a single synthetic 0.0.0.0 host with hostname 'recorded-future' (RF entries are CVE-keyed not host-keyed — the operator's other agents emit the host-side findings this feed is correlated against). The vulnerability carries tags: ['recorded-future'] and surfaces the RF risk score, criticality label, evidence rules, CVSS, IntelCard URL, threat lists, common names, and timestamps in both the description and the refs list so the operator can pivot from a Faraday finding back to the canonical RF IntelCard. Severity is bucketed from the RF risk score (0..99) — the explicit criticalityLabel text (Very Malicious / Malicious / Suspicious / Unusual / No current evidence) wins when present, falling back to numeric score bucketing (>=90 critical / >=65 high / >=25 medium / >=5 low / ==0 info). Unscored CVEs default to 'info'. Refs include the canonical NVD CVE permalink (https://nvd.nist.gov/vuln/detail/CVE-...), the RF IntelCard URL, every advisory URL RF attached (with source vendor as a suffix), and explicit Rf-CveID / Rf-IntelCard / Rf-RiskScore / Rf-RiskLevel / Rf-Criticality / Rf-RiskString / Rf-Rule / Rf-CvssVersion / Rf-CvssScore / Rf-CvssSeverity / Rf-CvssVector / Rf-ThreatList / Rf-CommonName / Rf-FirstSeen / Rf-LastSeen / Rf-Published / Rf-LastModified pivots. Status is always open (an RF risk score cannot be 'fixed' in the catalog — it can only be remediated on the affected hosts). Auth: RF_TOKEN is mandatory and is sent as an X-RFToken HTTP header on every request — Recorded Future is a commercial product, the v2 API is not anonymously accessible, and the executor exits cleanly when the token is missing. RF_HOST may optionally be overridden via env to point at a federated mirror or an offline cache; defaults to https://api.recordedfuture.com. Tags: [recorded-future].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "recorded_future.py"
+}

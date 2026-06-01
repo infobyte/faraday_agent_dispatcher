@@ -1,0 +1,44 @@
+{
+    "arguments": {
+        "DETECTIFY_TEAM_TOKEN": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Detectify team token, copied from the Detectify console (Team Settings -> API Keys). The team token scopes every /rest/v3/teams/{team_token}/ request and is forwarded verbatim into the URL path on both the domains inventory surface and the findings surface."
+        },
+        "DETECTIFY_DOMAIN_TOKEN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Detectify domain token. When set, narrows the findings request from the team-level surface (/rest/v3/teams/{team_token}/findings/) to the per-domain surface (/rest/v3/teams/{team_token}/domains/{domain_token}/findings/) so only findings on that single domain are pulled. Defaults to '' (no narrowing; the team-level findings surface returns every domain the API key has access to)."
+        },
+        "DETECTIFY_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional severity floor applied client-side on the findings surface. Accepts the canonical Faraday enum (info / low / medium / high / critical) plus Detectify-side aliases (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5). Defaults to '' (no filter; we emit the full hits surface). Garbage values are logged and ignored."
+        },
+        "DETECTIFY_PAGES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional per-surface page-walk cap. Each Detectify v3 search page returns up to 100 hits via limit=100; DETECTIFY_PAGES bounds the marker walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited Detectify API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (≈ 500 hits per surface, 1000 total across domains + findings)."
+        }
+    },
+    "environment_variables": [
+        "DETECTIFY_API_KEY",
+        "DETECTIFY_SECRET"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "detectify",
+    "title": "Detectify",
+    "website": "https://detectify.com/",
+    "description": "Detectify EASM importer. Pulls externally-discovered domains (assets) and findings (vulnerabilities) from the Detectify v3 REST API and emits Faraday bulk-create JSON. Each Detectify domain becomes one Faraday host (ip = synthetic 0.0.0.0 since Detectify is domain-keyed); per-domain findings attach as one Faraday vulnerability per uuid / id with the [EASM] engine prefix. Endpoints used: GET /rest/v3/teams/{team_token}/domains/ (paginated domain inventory for the team; the canonical Detectify pivot — every finding joins by domain_token / domain name) and GET /rest/v3/teams/{team_token}/findings/ (paginated finding inventory at team scope, or /rest/v3/teams/{team_token}/domains/{domain_token}/findings/ when DETECTIFY_DOMAIN_TOKEN is set). Pagination is cursor-based via the marker query parameter; limit=100 per page; marker advanced via the response envelope's next_marker / nextMarker / marker token, walked page-by-page until the marker comes up empty or DETECTIFY_PAGES is reached. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to score (Detectify's CVSS surface) then risk_score (0-10 scale) then priority / risk_rating; aliases collapse Detectify-side labels (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5) onto the canonical Faraday bucket. Status mapping covers new / open / in_progress / investigating -> open, fixed / resolved / closed / mitigated -> closed, and false_positive / accepted_risk / wont_fix -> risk-accepted. Refs include Detectify-Domain / Detectify-DomainName / Detectify-Finding / Detectify-Category / Detectify-CWE pivots plus any references / external_references / url / reference_url / evidence_url surfaced on the finding. Auth: Detectify uses HMAC-SHA256 signed requests. The operator creates an API key + secret pair in the Detectify console under Team Settings -> API Keys -> New and the dispatcher constructs the canonical request string <METHOD>;<URL>;<API_KEY>;<TIMESTAMP>;<BODY>, computes base64(HMAC-SHA256(base64_decode(DETECTIFY_SECRET), canonical)) and sends X-Detectify-Key + X-Detectify-Timestamp + X-Detectify-Signature headers on every request. The API host defaults to https://api.detectify.com (DETECTIFY_HOST settable for on-prem / federated deployments). Tags: [detectify, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "detectify.py"
+}

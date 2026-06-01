@@ -1,0 +1,33 @@
+{
+    "arguments": {
+        "CLAROTY_SITE_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Server-side Claroty CTD site predicate forwarded as the site_id=<value> query parameter on GET /api/v1/assets and GET /api/v1/alerts. Optional; empty / blank walks the entire appliance's inventory across every site (the operator's token scope still applies). Forwarded verbatim — Claroty accepts both numeric site ids (e.g. site_id=7) and the literal site name depending on appliance configuration. Useful for sharding inventory pulls across multiple discovery profiles so each dispatcher agent only walks one OT site's worth of inventory per run. Whitespace is trimmed."
+        },
+        "CLAROTY_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Faraday severity floor (case-insensitive 'info' / 'low' / 'medium' / 'high' / 'critical'); records whose mapped severity is strictly below the floor are dropped client-side after the fetch. Asset records (no severity of their own) are bucketed from the Claroty criticality field (Critical / High / Medium / Low / Info, or 0..4 numeric); alerts use the published severity field directly (label or 0..10 numeric, falling back to risk_score when severity is missing). Closed / Resolved / Muted / Suppressed / Dismissed alerts are floored to 'info' regardless of the published bucket (preserved via an explicit Claroty-Status pivot). Operator-friendly aliases are accepted ('informational' -> 'info', 'moderate' -> 'medium', 'crit' -> 'critical', 'elevated' -> 'high', 'severe' -> 'critical', 'none' -> 'info'). Blank / missing / unparseable values keep every record (the typical operational mode for first-time imports)."
+        }
+    },
+    "environment_variables": [
+        "CLAROTY_HOST",
+        "CLAROTY_USER",
+        "CLAROTY_PASSWORD"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "claroty",
+    "title": "Claroty Continuous Threat Detection",
+    "website": "https://claroty.com/industrial-cybersecurity/ctd",
+    "description": "Claroty Continuous Threat Detection (CTD) OT / ICS asset and alert importer. Pulls device inventory and security alerts from a Claroty CTD appliance via its v1 REST API and emits Faraday bulk-create JSON. Claroty CTD is a passive OT / ICS network-monitoring appliance — it fingerprints industrial endpoints (PLCs, RTUs, HMIs, historians, jump hosts, IT-side endpoints that touch the OT segment) from mirrored / SPAN traffic and surfaces both the resulting asset inventory and rule-based / anomaly alerts via a REST surface. Endpoints used: (1) GET /api/v1/assets?site_id=<id>&page=N&page_size=M (paginated OT asset inventory; canonical envelope {'objects': [...], 'count': N, 'next': '...', 'previous': '...'} with each record carrying id, name, ip, mac, vendor, model, firmware, os, asset_type, criticality, site_id / site_name, first_seen / last_seen, risk_score 0..100, and an optional cve_list / vulnerabilities list); (2) GET /api/v1/alerts?site_id=<id>&page=N&page_size=M (paginated security alert feed; same envelope shape with each record carrying id, name / title, description, severity (Critical / High / Medium / Low / Info, or 0..10 numeric), category (Configuration Changes / Known Threats / Policy Violations / Anomalies — Claroty's published alert taxonomy), status (Open / Resolved / Muted), created_at / updated_at, site_id / site_name, and related_assets list of asset ids or scalar ip strings the alert is keyed on). Auth: Claroty CTD's v1 surface uses a session-token flow — the dispatcher POSTs {'username': CLAROTY_USER, 'password': CLAROTY_PASSWORD} to /api/v1/auth/login and receives a session token (canonical envelope {'token': '...'}, federated mirrors also expose {'access_token': '...'} and {'key': '...'} — all three tolerated), which is then sent as Authorization: Bearer <token> on every subsequent /api/v1/ request. CLAROTY_HOST is the appliance base URL (Claroty CTD is an on-prem appliance so there is no global default — the executor exits cleanly when missing); whitespace is trimmed and https:// is added when the operator pasted in a bare FQDN. Pagination is one-based via page=N + page_size=M; walks until len(records) < page_size or the env-only CLAROTY_PAGES knob is reached (default 10, clamped to [1, 100]). 401 short-circuits the whole executor (token is wrong); 403 / 429 / 5xx stop pagination on this surface and return what we have. Each Claroty record becomes one Faraday host. Asset records project ip onto host.ip (loopback / 0.0.0.0 / ::1 are skipped, falling back to the 0.0.0.0 sentinel), name onto host.hostnames, mac onto host.mac, and the vendor / model / firmware / os chain joins onto host.os; the asset itself becomes one Faraday vulnerability with the [ASSET-INVENTORY] engine prefix so OT inventory entries land alongside the other CMDB-class feeds (Armis, Axonius, Device42, Fleet, runZero, Jamf Pro). Alert records are keyed on the first related_assets IP (falling back to the alert's own src_ip / dst_ip / ip field, then 0.0.0.0 for policy-shaped alerts not keyed on any single asset); the alert title lands on host.hostnames and the description / severity / category enrichment is embedded in the vulnerability description. Severity bucketing: assets use the criticality field (Critical / High / Medium / Low / Info label or 0..4 numeric, falling back to 0..10 for federated mirrors); alerts use severity directly (label or 0..10 numeric, falling back to risk_score). Closed / Resolved / Muted / Suppressed / Dismissed alerts are floored to 'info' regardless of the published severity (preserved via an explicit Claroty-Status pivot). Unparseable / missing severity defaults to 'info'. Status is always 'open' so the operator's remediation workflow takes over; the closed state is preserved via the info-severity floor + the Claroty-Status pivot. Refs include explicit Claroty-AssetID / Claroty-AlertID / Claroty-Site / Claroty-Type / Claroty-Criticality / Claroty-Vendor / Claroty-Model / Claroty-Firmware / Claroty-Severity / Claroty-Category / Claroty-Status / Claroty-RiskScore / Claroty-FirstSeen / Claroty-LastSeen / Claroty-CreatedAt / Claroty-UpdatedAt pivots, plus the canonical NVD CVE permalink for any CVE ids surfaced in the cve_list / vulnerabilities / description / title fields. Tags: [claroty, ot-security, asset|alert].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "claroty.py"
+}

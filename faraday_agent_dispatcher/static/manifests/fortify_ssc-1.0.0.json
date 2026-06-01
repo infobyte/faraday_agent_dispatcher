@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "FORTIFY_SSC_PROJECT_VERSION_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Fortify SSC project version id (numeric) to scope the import. When set, only that project version's issues are imported via /api/v1/projectVersions/{id} + /api/v1/projectVersions/{id}/issues. Omit to enumerate every project version visible to the token / user and import each one's issues."
+        },
+        "FORTIFY_SSC_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Enforced client-side after severity normalisation (handles Fortify SSC's string friority — Critical/High/Medium/Low — and its 0.0-5.0 numeric severity score: <2.5 low, 2.5-4 medium, 4-5 high, 5 critical). Default: info."
+        }
+    },
+    "environment_variables": [
+        "FORTIFY_SSC_HOST",
+        "FORTIFY_SSC_TOKEN",
+        "FORTIFY_SSC_USER",
+        "FORTIFY_SSC_PASSWORD"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "fortify_ssc",
+    "title": "Fortify Software Security Center",
+    "website": "https://www.opentext.com/products/fortify-software-security-center",
+    "description": "Fortify Software Security Center (SSC) REST API importer. Pulls source-code findings from a Fortify SSC server and emits Faraday bulk-create JSON to stdout. Lists project versions via /api/v1/projectVersions (or fetches a single project version via /api/v1/projectVersions/{id} when FORTIFY_SSC_PROJECT_VERSION_ID is set), then pulls per-project-version issues via /api/v1/projectVersions/{id}/issues (showremoved=true / showsuppressed=true / showhidden=true so analyst-hidden findings and resolved-since-last-scan findings still show up with the correct status). Each issue is enriched with /api/v1/issueDetails/{id} for brief / detail / recommendation / kingdom / subType. Each project version becomes one Faraday host (synthetic 0.0.0.0 because SAST findings live in source repos, not on IPs); per-version issues are attached as Faraday vulnerabilities — one per Fortify issue id with [SAST] engine prefix, analyzer (dataflow / controlflow / semantic / structural / configuration / content), Kingdom + SubType refs, CWE-* refs, FortifyRule-* refs, fullFileName:lineNumber source location, sink file:line and issueInstanceId (similarity-like correlation key) surfacing in the description; recommendations surfaced as Faraday resolution. Severity normalised from Fortify SSC's string friority (Critical/High/Medium/Low, also accepts Informational/Moderate) and its 0.0-5.0 numeric severity score (<2.5 low, 2.5-4 medium, 4-5 high, 5 critical); client-side min-severity floor enforced after normalisation. Status mapped from Fortify SSC's lifecycle flags — removed=true → closed, suppressed/hidden → risk-accepted, primaryTag analysis value 'Not an Issue' / 'Not Exploitable' / 'False Positive' → risk-accepted, everything else stays open. Auth is either FORTIFY_SSC_TOKEN (a Fortify UnifiedLoginToken / CIToken sent as 'Authorization: FortifyToken <token>') or FORTIFY_SSC_USER + FORTIFY_SSC_PASSWORD (HTTP Basic). FORTIFY_SSC_HOST is the SSC base URL — Fortify SSC is typically deployed under the /ssc context path; either with or without the suffix is accepted (the executor appends /ssc when the path is missing).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "fortify_ssc.py"
+}

@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "FCS_CLOUD_PROVIDER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional CrowdStrike Falcon Cloud Security cloud-provider filter (aws | azure | gcp). Forwarded to Falcon as the FQL cloud_provider:'...' filter on /cloud-security/queries/iom so the tenant only paginates IOMs from that provider. Defaults to all providers (no filter). Whitespace and case-insensitive; common synonyms (amazon, microsoft, google, google_cloud, gcp) are normalised."
+        },
+        "FCS_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Forwarded to Falcon as the FQL severity:[...] filter (so the tenant only paginates results that survive the floor) AND enforced client-side after Faraday severity normalisation (handles Falcon's Critical / High / Medium / Low / Informational enum and CVSS base-score fallback). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "FALCON_HOST",
+        "FALCON_CLIENT_ID",
+        "FALCON_CLIENT_SECRET"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Cloud Security",
+    "name": "crowdstrike_cloud",
+    "title": "CrowdStrike Falcon Cloud Security (CNAPP)",
+    "website": "https://www.crowdstrike.com/products/cloud-security/falcon-cloud-security/",
+    "description": "CrowdStrike Falcon Cloud Security (CNAPP / CSPM) REST importer. Pulls Indicators of Misconfiguration (IOMs) from a Falcon Cloud Security tenant via the canonical GET /cloud-security/queries/iom + GET /cloud-security/entities/iom two-step pattern and emits Faraday bulk-create JSON to stdout. The queries endpoint paginates IOM ids via offset+limit with FQL filters (cloud_provider:'aws'+severity:['High','Critical']); the entities endpoint batch-fetches the full IOM payload by id (chunks of 100). Each Falcon cloud account becomes one Faraday host (synthetic 0.0.0.0 ip because CSPM findings live on cloud accounts / resources, not on IPs) with hostnames = {accountName}@{accountId}; per-account IOMs attached as Faraday vulnerabilities — one per Falcon IOM id with [CNAPP] engine prefix, '{policyName} on {resourceType} {resourceName} [{region}]' in the title, policy description / policy_id / policy_type / resource / resource_type / resource_id / cloud_provider / cloud_service / cloud_account_id / cloud_account_name / region / subscription_id / resource_group / status / severity / created / updated / first_seen / last_seen / closed / tags in the description; remediation_summary / remediation / recommendation / resolution / solution / fix ladder surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed), Falcon-Policy: {policyId} pivot label, Falcon-Resource: {resourceId} pivot label, Compliance: {framework} {section} pivots harvested from compliance / compliances / frameworks, policy_url / console_url / cloud_provider_url, and references / links / external_references URL shapes (string + dict with href / url). CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from id / policy_name / rule_name / name / title / description / summary / remediation / remediation_summary (token-scan over free-form strings) + cve / cveId / cve_id / cves / aliases (string + list-of-string + list-of-dict shapes). Severity normalised from Falcon's string enum (Critical / High / Medium / Low / Informational — also accepts Important / Major / Moderate / Minor / Information / None / Unspecified / Trivial / Negligible / Unknown) with CVSS v3 / v2 base-score bucketing as a fallback when only a numeric cvss_score / score / baseScore / risk_score / severity_score / cvss.score / cvss3.baseScore / cvss2.score is given (≤0/>10 → info, <4 low, <7 medium, <9 high, ≥9 critical); FCS_MIN_SEVERITY is both forwarded to Falcon as the FQL severity:[...] filter AND enforced client-side after normalisation. Status mapped from iom.status (Open / New / Active / Reopened / InProgress → open, Closed / Fixed / Resolved / Mitigated / Remediated / Patched → closed, Suppressed / Muted / Ignored / Dismissed / WontFix / RiskAccepted / Excluded / FalsePositive / Expired → risk-accepted). Auth: Falcon Cloud Security uses OAuth2 client_credentials, identical to Falcon Spotlight / Detect / Hosts. A service account ('API client') is created in the Falcon UI, the client id / secret are stored in FALCON_CLIENT_ID / FALCON_CLIENT_SECRET, and the API tenant URL is FALCON_HOST (e.g. https://api.crowdstrike.com, https://api.us-2.crowdstrike.com, https://api.eu-1.crowdstrike.com, https://api.laggar.gcw.crowdstrike.com — the cloud / region segment varies). The token exchange is POST {FALCON_HOST}/oauth2/token with form body client_id=...&client_secret=...&grant_type=client_credentials and returns {access_token, expires_in, token_type}; subsequent REST calls send Authorization: Bearer <access_token>.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "crowdstrike_cloud.py"
+}

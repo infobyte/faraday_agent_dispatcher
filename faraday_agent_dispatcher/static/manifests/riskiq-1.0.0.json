@@ -1,0 +1,33 @@
+{
+    "arguments": {
+        "RISKIQ_QUERY": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Mandatory PassiveTotal enrichment query — the domain (e.g. example.com), IPv4 address (e.g. 192.0.2.1) or hostname (e.g. mail.example.com) you want PassiveTotal to enrich. Forwarded as the query string parameter on GET /v2/enrichment alongside the type hint. PassiveTotal v2 rejects empty queries with HTTP 400 so the executor sys.exits on blank input before the request fires."
+        },
+        "RISKIQ_TYPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional PassiveTotal query type. Accepts the canonical enum (domain | ip | host) plus operator-friendly aliases (fqdn / domains -> domain; ipv4 / ipv6 / ip_address / address -> ip; hostname -> host). Defaults to 'domain' (PassiveTotal's default enrichment surface — most EASM workflows target a registered domain). Garbage values fall back to 'domain' with a log line."
+        }
+    },
+    "environment_variables": [
+        "RISKIQ_HOST",
+        "RISKIQ_USER",
+        "RISKIQ_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "riskiq",
+    "title": "RiskIQ PassiveTotal",
+    "website": "https://www.riskiq.com/",
+    "description": "RiskIQ PassiveTotal EASM importer (now Microsoft Defender EASM after the 2021 acquisition — the v2 PassiveTotal endpoints are still the canonical OEM surface as of this writing). Pulls externally-discovered enrichment data from the PassiveTotal REST API and emits Faraday bulk-create JSON. The single RISKIQ_QUERY (a domain / IP / hostname) becomes one Faraday host (ip = the query itself when RISKIQ_TYPE=ip, or the synthetic 0.0.0.0 sentinel for domain / host queries since PassiveTotal's domain enrichment is not IP-keyed); per-host attack-surface findings (everCompromised, classification, malicious tags) attach as one Faraday vulnerability with the [EASM] engine prefix. Endpoints used: GET /v2/account/sources (the operator's enabled PassiveTotal data sources — Whois, Passive DNS, Malware, OSINT, SSL Certificates, Trackers — surfaced as a log line + per-host description count; failure here is non-fatal), GET /v2/account/quotas (the operator's current quota state — per-source daily / monthly call quotas — surfaced as a log line + per-host description summary; failure here is non-fatal) and GET /v2/enrichment?query=<RISKIQ_QUERY>&type=<RISKIQ_TYPE> (the canonical enrichment surface for a single asset — returns primaryDomain, classification malicious / suspicious / non_malicious / unknown, everCompromised flag, tags with per-tag category, subdomains when type=domain, TLDs registered against the same name, ASNs, and hostingHistory; single-record envelope, no pagination). Classification bucketing: malicious -> high, suspicious -> medium, non_malicious / unknown / benign / clean -> info. Tag bucketing: malware / phishing / fraud / ransomware / c2 / exploit -> high; suspicious / tor -> medium; proxy / vpn -> low; everything else -> info (surfaced in host description only). everCompromised=true emits a high-severity finding with a compromise-window remediation hint. Refs include RiskIQ-Query (community.riskiq.com search deep-link) / RiskIQ-Type / RiskIQ-PrimaryDomain / RiskIQ-Classification / RiskIQ-ASN / RiskIQ-Finding pivots. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from direct cve / cveId / cve_id keys plus vulnerabilities[] / matched_vulnerabilities[] arrays plus free-form description / summary / details / name / label / value token-scans (defensive — PassiveTotal enrichment payloads don't normally carry CVEs but OSINT / malware reference snippets occasionally do). Auth: PassiveTotal uses HTTP Basic with the API user email as the username and the API key as the password — the operator creates a key pair in the PassiveTotal / Defender EASM console (Account -> API) and the dispatcher carries the credentials via requests' auth=(user, key) tuple on every /v2/ call. RISKIQ_HOST defaults to https://api.passivetotal.org and is settable for federated / on-prem Defender EASM deployments. Tags: [riskiq, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "riskiq.py"
+}

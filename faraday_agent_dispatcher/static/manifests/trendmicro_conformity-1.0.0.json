@@ -1,0 +1,35 @@
+{
+    "arguments": {
+        "CONFORMITY_ACCOUNT_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Conformity cloud account id to scope the listing. Forwarded to GET /api/checks as the filter[accountIds] query parameter so the tenant only paginates failing checks for that account; when blank the importer queries every account the API key can see."
+        },
+        "CONFORMITY_REGION": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Conformity regional endpoint selector (us-west-2 | eu-west-1 | ap-southeast-2 | ap-southeast-1 | ca-central-1 | etc.). Accepts friendly aliases (us, eu, apac, singapore, sg, sydney) and a fully-qualified URL (https://...) for custom / on-prem deployments. Maps to https://{region}-api.cloudconformity.com and is also forwarded as filter[regions] so the tenant only paginates checks in that region. Defaults to us-west-2."
+        },
+        "CONFORMITY_MIN_RISK_LEVEL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum Conformity risk-level floor (LOW | MEDIUM | HIGH | VERY_HIGH | EXTREME). Forwarded to Conformity as filter[riskLevels] (so the tenant only paginates results that survive the floor) AND enforced client-side after Faraday severity normalisation (LOW -> low, MEDIUM -> medium, HIGH -> high, VERY_HIGH / EXTREME -> critical). Defaults to LOW (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "CONFORMITY_API_KEY"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Cloud Security",
+    "name": "trendmicro_conformity",
+    "title": "Trend Micro Cloud One Conformity (CNAPP)",
+    "website": "https://www.trendmicro.com/en_us/business/products/hybrid-cloud/cloud-one-conformity.html",
+    "description": "Trend Micro Cloud One Conformity Cloud-Native Application Protection Platform (CNAPP / CSPM) REST importer. Pulls failing cloud-security checks from a Conformity tenant via the canonical GET /api/checks endpoint and emits Faraday bulk-create JSON to stdout. /api/checks is paginated via page[number] + page[size] with JSON:API-style filter[accountIds] / filter[regions] / filter[statuses] / filter[riskLevels] query params; cursor-style links.next is honoured when the tenant returns one. /api/accounts/{id} is optionally consulted (by id) to surface account name / environment / cloud-type / aws-account-id metadata when the check payload is compact (tolerant to 404 / missing). Each Conformity cloud account becomes one Faraday host (synthetic 0.0.0.0 ip because CSPM findings live on cloud accounts / resources, not on IPs) with hostnames = {accountName}@{accountId}; per-account failing checks attached as Faraday vulnerabilities - one per check id with [CNAPP] engine prefix, '{ruleTitle} on {service} {resource} [{region}]' in the title, check description / rule_id / service / resource_type / resource_id / cloud_type / cloud_account_id / cloud_account_name / region / environment / status / risk_level / created / updated / categories / compliance / tags / score / vector in the description; resolution / resolution-page-url / remediation / recommendation / solution / fix surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed, deduped across check + account), Conformity-Rule: {rule-id} pivot label, Compliance: {standard} {section} pivots harvested from the compliance field, Conformity-Category: {category} pivots from categories, Conformity-Resource: {resource} pivot label, resolution-page-url / consoleUrl / knowledge-base-url and references / links / external_references URL shapes from both the check and the resolved account. CVE list harvested from id / rule-id / rule-title / name / title / description / message / summary (CVE-shaped token fallback) + cve / cveId / cve_id / cves / aliases (string + list-of-string + list-of-dict shapes), deduped case-insensitively. Severity normalised from Conformity's native risk-level enum (LOW -> low, MEDIUM -> medium, HIGH -> high, VERY_HIGH -> critical, EXTREME -> critical) with CVSS / score base-score bucketing as a fallback when only a numeric risk-score is given (<=0/>10 -> info, <4 low, <7 medium, <9 high, >=9 critical); CONFORMITY_MIN_RISK_LEVEL both forwarded to Conformity as filter[riskLevels] AND enforced client-side after normalisation. Status mapped from check.status (FAILURE / NOT_SCORED -> open, SUCCESS / PASSED / RESOLVED -> closed, suppressed flag -> risk-accepted; Ignored / Suppressed / Muted / Dismissed / WontFix / RiskAccepted / Accepted / Excluded / FalsePositive / Expired -> risk-accepted); SUCCESS-status checks are dropped at the bucketing stage so only true issues surface as Faraday vulnerabilities. Auth: Conformity uses a single API key tied to a service account (Authorization: ApiKey <CONFORMITY_API_KEY> on every call); a pre-built Bearer <token> or ApiKey <token> value in CONFORMITY_API_KEY short-circuits the scheme so federated / JWT-style credentials still work. Region: Conformity is region-pinned; CONFORMITY_REGION selects the regional SaaS endpoint (us-west-2 default; eu-west-1, ap-southeast-2, ap-southeast-1, ca-central-1, etc.) and is forwarded as filter[regions].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "trendmicro_conformity.py"
+}

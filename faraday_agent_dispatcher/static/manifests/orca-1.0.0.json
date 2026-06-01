@@ -1,0 +1,36 @@
+{
+    "arguments": {
+        "ORCA_GROUP_BY_TYPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional boolean (true/false). When true the importer forwards group_by_type=true to /api/alerts so Orca collapses duplicate alerts of the same type into one record (with an aggregate count); when false (default) the per-alert view is returned. Truthy: 1/true/yes/on/y/t. Falsy: 0/false/no/off/n/f."
+        },
+        "ORCA_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Forwarded to Orca as the severity query parameter (so the tenant only paginates results that survive the floor) AND enforced client-side after Faraday severity normalisation (handles Orca's critical/high/medium/low/informational enum and CVSS / severity_score base-score fallback). Defaults to info (no filtering)."
+        },
+        "ORCA_STATUS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Orca alert state filter (CSV of OPEN | IN_PROGRESS | CLOSED | SNOOZED | DISMISSED). Forwarded to Orca as the state query parameter (lower-cased). Defaults to all states (no filter). Synonyms tolerated: REOPENED/NEW/ACTIVE → OPEN; RESOLVED/FIXED/REMEDIATED/MITIGATED/PATCHED → CLOSED; IGNORED/SUPPRESSED/MUTED/WONT_FIX/RISK_ACCEPTED/ACCEPTED/FALSE_POSITIVE/EXPIRED → DISMISSED. Whitespace and case-insensitive."
+        }
+    },
+    "environment_variables": [
+        "ORCA_HOST",
+        "ORCA_API_TOKEN"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Cloud Security",
+    "name": "orca",
+    "title": "Orca Security (CNAPP)",
+    "website": "https://orca.security/",
+    "description": "Orca Security Cloud-Native Application Protection Platform (CNAPP / CSPM) REST importer. Pulls cloud-security alerts from an Orca tenant via the canonical GET /api/alerts endpoint and emits Faraday bulk-create JSON to stdout. /api/alerts is paginated via start_at_index + limit with state[] and severity[] filters; group_by_type collapses duplicate alerts so each alert_type surfaces once with an aggregate count. /api/assets is optionally consulted (by asset_unique_id) to surface cloud_account / region / cloud_provider metadata when the alert payload is compact (tolerant to 404 / missing). Each Orca asset (asset_unique_id) becomes one Faraday host (synthetic 0.0.0.0 ip because CNAPP findings live on cloud resources, not on IPs) with hostnames = {assetName}@{assetUniqueId}; per-asset alerts attached as Faraday vulnerabilities — one per alert id with [CNAPP] engine prefix, '{alertType} on {assetType} {assetName} [{region}]' in the title, alert description / alert_type / category / asset_unique_id / cloud_provider / cloud_account / region / provider_id / subscription / resource_group / cluster / state / severity_score / count / created / updated / first_seen / closed / snoozed_until / tags / score / vector in the description; recommendation / remediation / resolution / solution / fix surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed, deduped across alert + asset), Orca-Alert-Type: pivot label, alert_url / cloud_provider_url / findings[].url and references / links / external_references URL shapes from both the alert wrapper and the resolved asset. CVE list harvested from alert_id / type / alert_type / title / description / name (CVE-shaped token fallback) + cve / cveId / cve_id / cves / aliases (string + list-of-string + list-of-dict shapes) + findings[].cve / cve_id / name / id (deduped case-insensitively). Severity normalised from Orca's string enum (critical / high / medium / low / informational — also accepts Imminent_Compromise / Hazardous / Important / Major / Moderate / Minor / Information / None / Unspecified / Trivial / Negligible / Unknown) with CVSS v3 / v2 base-score bucketing as a fallback when only a numeric score / severity_score is given (≤0/>10 → info, <4 low, <7 medium, <9 high, ≥9 critical); ORCA_MIN_SEVERITY both forwarded to Orca as the severity query parameter AND enforced client-side after normalisation. Status mapped from alert.state (OPEN / IN_PROGRESS / RE_OPENED / NEW / ACTIVE → open, CLOSED / FIXED / RESOLVED / REMEDIATED / MITIGATED / PATCHED → closed, SNOOZED / DISMISSED / IGNORED / SUPPRESSED / MUTED / WONT_FIX / RISK_ACCEPTED / ACCEPTED / FALSE_POSITIVE / EXPIRED → risk-accepted). Auth: Orca uses a long-lived API token. The token is sent as Authorization: Token <ORCA_API_TOKEN> (Orca's native scheme); a pre-built Bearer <token> value in ORCA_API_TOKEN short-circuits the scheme so SaaS / CSP tenants that mint JWT-style tokens still work.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "orca.py"
+}

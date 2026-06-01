@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "TWISTLOCK_SCOPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional scope selector for which Prisma Cloud Compute (Twistlock) inventory to pull (images | hosts | both). 'images' restricts to /api/v22.01/images (registry / repo / tag / digest with embedded vulnerabilities), 'hosts' restricts to /api/v22.01/hosts (per-host package vulnerabilities), 'both' fans out to both endpoints. Defaults to 'both'."
+        },
+        "TWISTLOCK_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Enforced client-side after Faraday severity normalisation (handles Twistlock's critical / high / medium / low / important / unimportant / negligible enum and CVSS base-score fallback) — the Twistlock /images and /hosts endpoints do not natively floor on severity. Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "TWISTLOCK_HOST",
+        "TWISTLOCK_USER",
+        "TWISTLOCK_PASSWORD"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Container Security",
+    "name": "prisma_cloud_compute",
+    "title": "Prisma Cloud Compute (Twistlock)",
+    "website": "https://www.paloaltonetworks.com/prisma/cloud/cloud-workload-protection-platform",
+    "description": "Prisma Cloud Compute Edition (formerly Twistlock) container / host vulnerability REST importer. Pulls vulnerability findings from a Prisma Cloud Compute console via the canonical GET /api/v22.01/images (container image scan results with embedded vulnerabilities array, paginated via limit + offset), GET /api/v22.01/hosts (host scan results with embedded vulnerabilities array, same pagination shape) and GET /api/v22.01/vulnerabilities (CVE catalogue, optionally consulted for enrichment when the embedded payload is compact — keyed by CVE id) endpoints and emits Faraday bulk-create JSON to stdout. TWISTLOCK_SCOPE (images | hosts | both, default both) gates which listing endpoints fan out. Each Twistlock image bucket (image._id / repoTag) becomes one Faraday host (synthetic 0.0.0.0 ip because image scans live on container layers, not on IPs) with hostname = {registry}/{repo}:{tag}@{image_id}; each Twistlock host bucket (host._id / hostname) becomes one Faraday host (synthetic 0.0.0.0 ip because the API does not surface a host ip and the hostname carries the pivot) with hostname = {hostname}@{_id}; per-bucket vulnerabilities attached as Faraday vulnerabilities — one per Twistlock finding (cve + packageName + parent_label) with [CNAPP] engine prefix, '{cve} in {package}@{version} on {registry}/{repo}:{tag}' (image scope) or '{cve} in {package}@{version} on {hostname}' (host scope) in the title, description / vuln_id / package / image|host / layer / severity / status / vendor / fix_status / fix_date / published / discovered / first_seen / last_seen / risk_factors / score / vector in the description; vendor remediation / status='fixed in <version>' surfaces as Faraday resolution ('Upgrade <package>: fixed in <version>.' when only the status string is available). Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed, deduped across finding + catalogue meta), 'RiskFactor: {factor}' pivot labels harvested from finding.riskFactors (attackComplexityLow / attackVectorNetwork / hasFix / hasExploit / criticalSeverity / mediumSeverity / etc. — only surfaced when truthy), finding.link / url / nvd_url / vendor_url, and references / links / external_references URL shapes. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from finding.cve / CVE / cveId / cves / aliases (string + list-of-string + list-of-dict shapes) + finding.title / description / summary / name (token-scan over free-form strings) + catalogue meta cve / description (token-scan); deduped case-insensitively. Severity normalised from Twistlock's string enum (critical / high / medium / low / important / unimportant / negligible — also accepts Major / Moderate / Minor / Information / None / Unspecified / Trivial / Unknown) with CVSS v3 / v2 base-score bucketing as a fallback when only a numeric cvss / score is given (≤0/>10 → info, <4 low, <7 medium, <9 high, ≥9 critical); TWISTLOCK_MIN_SEVERITY enforced client-side after normalisation (no server-side floor — /images and /hosts do not accept a ?severity= query param). Status mapped from finding.status — Twistlock's status field is free-form: 'open' / 'new' / 'active' / 'detected' / 'needed' → open, 'fixed' / 'fixed in <version>' / 'resolved' / 'closed' / 'patched' / 'remediated' / 'mitigated' → closed (also closed when finding.fixDate is set), 'suppressed' / 'muted' / 'ignored' / 'dismissed' / 'wont_fix' / 'risk_accepted' / 'accepted' / 'acknowledged' / 'false_positive' / 'expired' / 'deferred' → risk-accepted. Auth: Prisma Cloud Compute uses a local-account username / password pair (or a SAML/LDAP-federated identity). The pair is sent as JSON to POST /api/v22.01/authenticate; the response carries a short-lived JWT (~30 min validity, tolerated bare or wrapped under data / data[0]) that is then sent as Authorization: Bearer <token> on subsequent calls. TWISTLOCK_HOST is the console URL of the on-prem / SaaS Prisma Cloud Compute installation (https://<console>:8083 for on-prem, https://<tenant>.cloud.twistlock.com for the SaaS edition).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "prisma_cloud_compute.py"
+}

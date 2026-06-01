@@ -1,0 +1,44 @@
+{
+    "arguments": {
+        "HARDENIZE_ORG": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Mandatory Hardenize organisation slug, copied from the Hardenize / Red Sift console URL (e.g. https://www.hardenize.com/org/<HARDENIZE_ORG>). Scopes every /api/v0/orgs/{org}/ request to the named organisation. The dispatcher sys.exit(1)s when this is missing because the reports/latest endpoint is org-keyed."
+        },
+        "HARDENIZE_HOST_FILTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side hostname filter applied as a case-insensitive substring match against the report's hostname / host / domain / name / target / fqdn fields. Hardenize's reports/latest surface does not have a documented server-side hostname filter so this is applied client-side. Defaults to '' (no narrowing; every host in the org is emitted)."
+        },
+        "HARDENIZE_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional severity floor applied client-side on the findings surface. Accepts the canonical Faraday enum (info / low / medium / high / critical) plus Hardenize-side aliases (pass / warn / fail / Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5). Defaults to '' (no filter; we emit the full findings surface). Garbage values are logged and ignored."
+        },
+        "HARDENIZE_PAGES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional per-surface page-walk cap. Each Hardenize v0 reports/latest page returns up to 100 hits via limit=100; HARDENIZE_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited Hardenize API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (~ 500 reports per run)."
+        }
+    },
+    "environment_variables": [
+        "HARDENIZE_USER",
+        "HARDENIZE_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "hardenize",
+    "title": "Hardenize",
+    "website": "https://www.hardenize.com/",
+    "description": "Hardenize EASM importer. Pulls the latest TLS / email-security assessment reports for an organisation from the Hardenize REST API and emits Faraday bulk-create JSON. Each Hardenize report becomes one Faraday host (ip = the report's first resolved public IP, falling back to synthetic 0.0.0.0 for hostname-only reports — Hardenize is primarily hostname-keyed); per-report TLS / email-security findings (DNS, DNSSEC, MTA-STS, DKIM, SPF, DMARC, TLS-RPT, HTTPS, certificate checks, etc.) attach as one Faraday vulnerability per finding with the [EASM] engine prefix. Endpoint used: GET /api/v0/orgs/{org}/reports/latest (the canonical Hardenize EASM pivot - returns the latest assessment report for every host registered in the organisation, with per-check verdicts across the TLS configuration, certificate validity, email authentication, DNSSEC, MTA-STS and TLS-RPT surfaces). Pagination is offset-based: limit=100 per page, advanced via the response envelope's next_offset cursor (or current_offset + page_size when the envelope is silent), walked page-by-page until the page comes up short or HARDENIZE_PAGES is reached. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to the Hardenize verdict / result / grade fields (fail -> critical, warn -> medium, pass / info -> info) then priority / risk_rating / risk_score then CVSS when nothing else lands; aliases collapse Hardenize-side labels (pass / warn / fail / Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5) onto the canonical Faraday bucket. Status mapping covers new / fail / warn / in_progress / investigating / pending / triaged -> open, pass / resolved / closed / remediated / fixed / mitigated / patched -> closed, and false_positive / risk_accepted / accepted_risk / wont_fix / skipped / n/a -> risk-accepted. Refs include Hardenize-Report / Hardenize-Host / Hardenize-Org / Hardenize-Check / Hardenize-Category pivots plus any url / reference_url / documentation_url / evidence_url surfaced on the finding. Auth: Hardenize uses HTTP Basic with the API user as the username and the API key as the password - the operator creates an API key pair in the Hardenize / Red Sift console (Settings -> API Keys -> New) and the dispatcher carries the credentials in the standard Authorization: Basic <base64(USER:API_KEY)> header on every /api/v0/ call via requests' auth=(user, key) handling. HARDENIZE_HOST defaults to https://www.hardenize.com and is settable for federated deployments. Only attention-worthy findings (non-pass verdicts) become Faraday vulnerabilities so the workspace doesn't drown in pass=info noise. Tags: [hardenize, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "hardenize.py"
+}

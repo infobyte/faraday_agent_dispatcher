@@ -1,0 +1,38 @@
+{
+    "arguments": {
+        "CXONE_PROJECT_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Checkmarx One project id (UUID) to scope the import. When set, only that project's most recent scan is imported via /api/projects/{id} + /api/projects/last-scan?project-ids=<id>. Omit to enumerate every project visible to the OAuth client and import each project's latest scan."
+        },
+        "CXONE_BRANCH": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional branch name to scope last-scan lookup. Forwarded as the 'branch' query parameter on /api/projects/last-scan and /api/scans so the latest scan for that specific branch is selected. Omit to pull the latest scan on the project's default branch."
+        },
+        "CXONE_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. When set above 'info', forwarded to /api/results as a comma-separated CSV in the 'severity' query parameter (e.g. HIGH,CRITICAL) and additionally enforced client-side after severity normalisation (handles Checkmarx One's string severities — CRITICAL/HIGH/MEDIUM/LOW/INFO — and CVSS numeric scores). Default: info."
+        }
+    },
+    "environment_variables": [
+        "CXONE_HOST",
+        "CXONE_TENANT",
+        "CXONE_CLIENT_ID",
+        "CXONE_CLIENT_SECRET"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "checkmarx_one",
+    "title": "Checkmarx One",
+    "website": "https://checkmarx.com/product/application-security-platform/",
+    "description": "Checkmarx One (formerly Checkmarx AST) REST API importer. Pulls SAST / SCA / KICS / API-security findings from a Checkmarx One tenant and emits Faraday bulk-create JSON to stdout. Lists projects via /api/projects (or fetches a single project via /api/projects/{id} when CXONE_PROJECT_ID is set), resolves each project's most recent scan via /api/projects/last-scan (optionally pinned to CXONE_BRANCH, with /api/scans as a fallback), then pulls per-scan findings via /api/results/?scan-id=<id>. Each project becomes one Faraday host (synthetic 0.0.0.0 because findings live in source repos, not on IPs); per-scan results are attached as Faraday vulnerabilities — one per Checkmarx result id with engine type (sast/sca/kics/api-security), CWE / CVE refs, package@version, fixed_in, file:line location and similarityId enrichment. Severity normalised from Checkmarx One's string severities (CRITICAL/HIGH/MEDIUM/LOW/INFO, also accepts informational/moderate) with CVSS v3 fallback when only a numeric score is given; client-side min-severity floor enforced after normalisation. Status mapped from Checkmarx One's lifecycle status (new/recurrent → open, fixed/resolved → closed) combined with analyst state — NOT_EXPLOITABLE and PROPOSED_NOT_EXPLOITABLE become Faraday risk-accepted. Auth is OAuth2 client_credentials against /auth/realms/<CXONE_TENANT>/protocol/openid-connect/token using CXONE_CLIENT_ID + CXONE_CLIENT_SECRET; the access_token is sent as 'Authorization: Bearer <token>' on every API call. CXONE_HOST is the regional Checkmarx One base URL (e.g. https://ast.checkmarx.net, https://eu.ast.checkmarx.net).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "checkmarx_one.py"
+}

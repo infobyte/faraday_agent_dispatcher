@@ -1,0 +1,38 @@
+{
+    "arguments": {
+        "COSMOS_ENGAGEMENT_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Bishop Fox Cosmos engagement identifier forwarded server-side as the engagement_id query param on /api/v1/assets and /api/v1/findings. Service-account API keys with cross-engagement scope may omit it; otherwise set to the Cosmos engagement identifier shown in the console URL. Defaults to '' (no engagement scope; Cosmos returns whatever the key has access to)."
+        },
+        "COSMOS_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional severity floor applied client-side on the findings surface. Accepts the canonical Faraday enum (info / low / medium / high / critical) plus Cosmos-side aliases (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5). Defaults to '' (no filter; we emit the full hits surface). Garbage values are logged and ignored."
+        },
+        "COSMOS_PAGES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional per-surface page-walk cap. Each Cosmos v1 search page returns up to 100 hits via limit=100; COSMOS_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited Cosmos API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (~ 500 hits per surface, 1000 total across assets + findings)."
+        }
+    },
+    "environment_variables": [
+        "COSMOS_HOST",
+        "COSMOS_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "bishopfox_cosmos",
+    "title": "Bishop Fox Cosmos",
+    "website": "https://bishopfox.com/platform/cosmos",
+    "description": "Bishop Fox Cosmos EASM importer. Pulls externally-discovered assets and findings from the Bishop Fox Cosmos (formerly Bishop Fox CAST - Continuous Attack Surface Testing) REST API and emits Faraday bulk-create JSON. Each Cosmos asset becomes one Faraday host (ip = the asset's first public IP, falling back to synthetic 0.0.0.0 for domain-keyed assets); per-asset findings attach as one Faraday vulnerability per finding_id with the [EASM] engine prefix. Endpoints used: GET /api/v1/assets (paginated external-asset inventory; the canonical Cosmos pivot - every finding joins by asset_id) and GET /api/v1/findings (paginated finding inventory with severity + category + cves + remediation guidance; query string also carries the operator-supplied engagement_id so Cosmos narrows server-side). Pagination is offset-based: limit=100 per page, offset advanced via the response envelope's next_offset cursor (or current_offset + page_size when the envelope is silent), walked page-by-page until the page comes up short or COSMOS_PAGES is reached. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to priority / risk_rating / risk_score (Cosmos 0-10 scale) then CVSS when nothing else lands; aliases collapse Cosmos-side labels (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5) onto the canonical Faraday bucket. Status mapping covers new / in_progress / investigating / triaged -> open, resolved / closed / remediated / fixed / mitigated / patched -> closed, and false_positive / risk_accepted / accepted_risk / wont_fix -> risk-accepted. Refs include Cosmos-Asset / Cosmos-AssetName / Cosmos-AssetType / Cosmos-Engagement / Cosmos-Id / Cosmos-Category / Cosmos-Port pivots plus any url / reference_url / evidence_url surfaced on the finding. Auth: Cosmos uses a single long-lived API key created in the Cosmos console under Settings -> API Keys -> New. The dispatcher carries the key on every request as the Authorization: Bearer <COSMOS_API_KEY> header. COSMOS_HOST is the Cosmos tenant host (e.g. api.cosmos.bishopfox.com); service-account keys carry the tenant scope so no workspace param is required. Tags: [bishopfox_cosmos, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "bishopfox_cosmos.py"
+}

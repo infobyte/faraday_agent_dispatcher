@@ -1,0 +1,33 @@
+{
+    "arguments": {
+        "AXONIUS_QUERY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Axonius Query Language (AQL) filter forwarded verbatim to the data.attributes.filter slot on POST /api/V4.0/assets/devices and POST /api/V4.0/assets/users. Free-form AQL — example: (\"specific_data.data.os.type\" == \"Windows\") and (\"specific_data.data.last_seen\" > date(\"NOW - 30d\")). Optional; Axonius v4 interprets an empty filter as 'all assets'. Whitespace is trimmed."
+        },
+        "AXONIUS_FIELDS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Comma-separated list of Axonius dotted field paths forwarded to the data.attributes.fields.{devices|users} slot on each surface. Empty / blank falls back to a curated default field set per entity (hostname, ips, mac, os.os_str, os.distribution, os.type, last_seen, first_seen, adapter_list_length, labels for devices; username, mail, domain, last_seen, is_admin, is_disabled, adapter_list_length, labels for users). Example: specific_data.data.hostname,specific_data.data.network_interfaces.ips,specific_data.data.os.type. Forwarded verbatim — the operator may include tenant-specific adapter fields."
+        }
+    },
+    "environment_variables": [
+        "AXONIUS_HOST",
+        "AXONIUS_API_KEY",
+        "AXONIUS_API_SECRET"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "axonius",
+    "title": "Axonius",
+    "website": "https://www.axonius.com",
+    "description": "Axonius asset-inventory importer. Pulls devices and users that match an Axonius Query Language (AQL) expression from the Axonius v4 REST API and emits Faraday bulk-create JSON. Each Axonius asset becomes one Faraday host — the device's first non-loopback IP maps onto host.ip (users get the 0.0.0.0 sentinel because Axonius user entities are identity-keyed, not IP-keyed), the canonical hostname / adapter_count / last_seen enrichment lands on host.description, and the asset itself becomes one Faraday vulnerability with the [ASSET-INVENTORY] engine prefix so the data lands in the Faraday workspace alongside the other CMDB-class feeds (Device42, Fleet, runZero, Armis, Jamf Pro, Jira Insight). Endpoints used: POST /api/V4.0/assets/devices (paginated device inventory; request body is the canonical Axonius v4 search envelope {\"data\": {\"type\": \"entity_request_schema\", \"attributes\": {\"filter\": \"<AXONIUS_QUERY>\", \"fields\": {\"devices\": [...]}, \"page\": {\"limit\": 100, \"offset\": N}, \"use_cursor\": false}}}; response envelope is JSON-API {\"data\": [{\"type\": \"device\", \"id\": \"...\", \"attributes\": {...}}], \"meta\": {\"page\": {\"total\": N}}}) and POST /api/V4.0/assets/users (same envelope shape, fields block scoped to users). Walked page-by-page until len(data) < limit or AXONIUS_PAGES (env-only override, default 5, clamped to [1, 50]) is reached. Severity is always info because Axonius hits are inventory entries, not vulnerability findings — operators correlate against the EDR / EASM / vuln-scanner agents' findings via the Axonius-Id / Axonius-InternalId refs. Auth: Axonius v4 uses a pair of long-lived credentials (API Key + API Secret) created in the Axonius console under Account -> API Key. The dispatcher carries them on every request as the api-key and api-secret headers — Axonius v4 explicitly does NOT use Authorization: Bearer / Basic. AXONIUS_HOST is the Axonius tenant host (e.g. axonius.mycorp.com); on-prem deployments override it. Tags: [axonius, asset-inventory, device|user].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "axonius.py"
+}

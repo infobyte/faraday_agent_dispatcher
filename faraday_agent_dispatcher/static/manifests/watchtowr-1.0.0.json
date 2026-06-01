@@ -1,0 +1,38 @@
+{
+    "arguments": {
+        "WT_PROJECT_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional watchTowr project identifier forwarded server-side as the project_id query param on /api/v1/asset-inventory and /api/v1/findings. Service-account API keys with cross-project scope may omit it; otherwise set to the watchTowr project identifier shown in the console URL. Defaults to '' (no project scope; watchTowr returns whatever the key has access to)."
+        },
+        "WT_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional severity floor applied client-side on the findings surface. Accepts the canonical Faraday enum (info / low / medium / high / critical) plus watchTowr-side aliases (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5). Defaults to '' (no filter; we emit the full hits surface). Garbage values are logged and ignored."
+        },
+        "WT_PAGES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional per-surface page-walk cap. Each watchTowr v1 search page returns up to 100 hits via limit=100; WT_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited watchTowr API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (~ 500 hits per surface, 1000 total across asset-inventory + findings)."
+        }
+    },
+    "environment_variables": [
+        "WT_HOST",
+        "WT_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "watchtowr",
+    "title": "watchTowr",
+    "website": "https://watchtowr.com/",
+    "description": "watchTowr EASM importer. Pulls externally-discovered assets and findings from the watchTowr REST API and emits Faraday bulk-create JSON. Each watchTowr asset becomes one Faraday host (ip = the asset's first public IP, falling back to synthetic 0.0.0.0 for domain-keyed assets); per-asset findings attach as one Faraday vulnerability per finding_id with the [EASM] engine prefix. Endpoints used: GET /api/v1/asset-inventory (paginated external-asset inventory; the canonical watchTowr pivot - every finding joins by asset_id) and GET /api/v1/findings (paginated finding inventory with severity + category + cves + remediation guidance; query string also carries the operator-supplied project_id so watchTowr narrows server-side). Pagination is offset-based: limit=100 per page, offset advanced via the response envelope's next_offset cursor (or current_offset + page_size when the envelope is silent), walked page-by-page until the page comes up short or WT_PAGES is reached. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to priority / risk_rating / risk_score (watchTowr 0-10 scale) then CVSS when nothing else lands; aliases collapse watchTowr-side labels (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5) onto the canonical Faraday bucket. Status mapping covers new / in_progress / investigating / triaged -> open, resolved / closed / remediated / fixed / mitigated / patched -> closed, and false_positive / risk_accepted / accepted_risk / wont_fix -> risk-accepted. Refs include watchTowr-Asset / watchTowr-AssetName / watchTowr-AssetType / watchTowr-Project / watchTowr-Id / watchTowr-Category / watchTowr-Port pivots plus any url / reference_url / evidence_url surfaced on the finding. Auth: watchTowr uses a single long-lived API key created in the watchTowr console under Settings -> API Keys -> New. The dispatcher carries the key on every request as the Authorization: Bearer <WT_API_KEY> header. WT_HOST is the watchTowr tenant host (e.g. api.watchtowr.com); service-account keys carry the tenant scope so no workspace param is required. Tags: [watchtowr, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "watchtowr.py"
+}

@@ -1,0 +1,39 @@
+{
+    "arguments": {
+        "INTUNE_COMPLIANCE_STATE_FILTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional managed-device compliance state filter. Accepts compliant | nonCompliant | unknown (case- and dash/underscore-insensitive). When set, the executor adds $filter=complianceState eq '...' to the Graph /deviceManagement/managedDevices query so Intune narrows the result server-side. Blank / unset queries every device the service principal can read."
+        },
+        "INTUNE_PLATFORM": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional managed-device operating system filter. Accepts windows | macos | ios | android (plus aliases: win, osx, darwin, iphone, ipad). When set, the executor adds $filter=operatingSystem eq '...' to the Graph /deviceManagement/managedDevices query so Intune narrows the result server-side. Combined with INTUNE_COMPLIANCE_STATE_FILTER via OData and. Blank / unset queries every platform."
+        },
+        "INTUNE_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor. Accepts info | low | medium | high | critical (plus the Intune synonyms: informational, important / major, moderate, minor, none / unspecified / unknown). Intune's Graph surface doesn't expose a server-side severity filter, so the floor is applied after each non-compliance finding has been bucketed (nonCompliant -> high, error -> high, conflict -> medium, inGracePeriod -> low, unknown -> info). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "AZURE_TENANT_ID",
+        "AZURE_CLIENT_ID",
+        "AZURE_CLIENT_SECRET"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "ms_intune",
+    "title": "Microsoft Intune",
+    "website": "https://www.microsoft.com/en-us/security/business/microsoft-intune",
+    "description": "Microsoft Intune (Endpoint Manager) REST importer. Pulls managed devices, device compliance policies, and device configuration assignments from Intune via the Microsoft Graph v1.0 REST surface (GET /deviceManagement/managedDevices, GET /deviceManagement/deviceCompliancePolicies, GET /deviceManagement/deviceConfigurations/{id}/assignments) and emits Faraday bulk-create JSON to stdout. Each managed device becomes one Faraday host (ip = device.ipAddressV4 when present, falling back to synthetic 0.0.0.0 because Intune devices are commonly NAT-ed and only carry private IPs); non-compliance findings attach as Faraday vulnerabilities with engine prefix [EDR]. Severity is bucketed from Intune's complianceState enum (nonCompliant -> high, error -> high, conflict -> medium, inGracePeriod -> low, unknown -> info; compliant devices emit no vulnerability) with CVSS v3 base-score bucketing as a fallback when re-emitted shapes surface a numeric score. Status mapped from complianceState into Faraday's open / closed / risk-accepted scheme. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from additionalData.cve / cves / aliases plus free-form description / displayName scans. Refs include IntuneDevice / IntuneUser / IntuneAgent / IntuneEnroller pivots, IntunePolicy: {displayName} pivots derived from the compliance-policy catalogue (filtered by platform to avoid noise), IntuneAssignment: {displayName} pivots derived from the device-configuration assignment catalogue, remediationUrl / supportUrl / helpUrl surfaces, and CWE-* harvested from additionalData. Auth: Intune lives behind Microsoft Graph and uses Azure AD client_credentials. A service-principal app registration is created in the Azure portal with the DeviceManagementManagedDevices.Read.All and DeviceManagementConfiguration.Read.All application permissions granted at the tenant scope and admin consent applied. Credentials are exposed as AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET. The token exchange is POST https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token with scope=https://graph.microsoft.com/.default. Tags: [ms_intune, edr, endpoint-edr].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "ms_intune.py"
+}

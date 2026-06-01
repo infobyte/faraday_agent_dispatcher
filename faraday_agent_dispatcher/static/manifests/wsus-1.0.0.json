@@ -1,0 +1,33 @@
+{
+    "arguments": {
+        "WSUS_CLASSIFICATIONS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional CSV of WSUS update classifications that scope which missing-update findings are pulled. Accepts the canonical Microsoft.UpdateServices.Administration classification names: 'Critical Updates', 'Security Updates', 'Definition Updates', 'Updates', 'Update Rollups', 'Service Packs', 'Tools', 'Feature Packs', 'Drivers', 'Driver Sets', 'Applications', 'Upgrades'. Case-insensitive; tokens are normalised to canonical Title Case before being passed to the generated PowerShell ``-Classification`` parameter. Malformed tokens are logged + skipped rather than failing the run. Control chars in the raw CSV drop the whole filter (a header-injection attempt can't sneak through). When unset the executor walks every classification the WSUS server can see."
+        },
+        "WSUS_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for WSUS missing-update findings. Accepts info | low | medium | high | critical (plus Microsoft synonyms: severe -> critical, important -> high, moderate / warning -> medium, minor -> low, informational / information / unspecified / none / unknown -> info) plus numeric-string CVSS-style input. Updates below the floor are dropped from the Faraday output after per-update severity normalisation (bucketed from the freeform MsrcSeverity string enum -- Critical / Important / Moderate / Low / Unspecified -- with CVSS 0-10 secondary fallback when an explicit CVSS score has been parsed out of the KB advisory text). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "WSUS_HOST",
+        "WSUS_USER",
+        "WSUS_PASSWORD"
+    ],
+    "check_cmds": [
+        "command -v pwsh || command -v powershell"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Patch Management",
+    "name": "wsus",
+    "title": "Microsoft WSUS",
+    "website": "https://learn.microsoft.com/en-us/windows-server/administration/windows-server-update-services/get-started/windows-server-update-services-wsus",
+    "description": "Microsoft WSUS (Windows Server Update Services) patch-management importer. Pulls the WSUS Server's managed computer catalogue (one Windows host per ComputerTarget -- FullDomainName / IPAddress / OSDescription / OSArchitecture / RequestedTargetGroupNames / LastSyncTime / ClientVersion) and the per-computer missing-update list via a single 'pwsh -NoProfile -NonInteractive -Command -' invocation that drives the Microsoft.UpdateServices.Administration .NET assembly (Get-WsusServer -> $srv.GetComputerTargets() -> $computer.GetUpdateInstallationInfoPerUpdate() -> $srv.GetUpdate($info.UpdateId)). The WSUS SOAP API at /ApiRemoting30/WebService.asmx is the underlying transport but is not documented for external callers; the PowerShell module is the portable, documented integration path. Each WSUS-managed computer becomes one Faraday host (keyed by the WSUS ComputerId GUID) with host.os set to OSDescription -- e.g. 'Windows Server 2019 Standard'. Each missing update attaches as a Faraday vulnerability with the engine prefix [PATCH-MGMT]; updates whose UpdateInstallationState is Installed or NotApplicable are dropped server-side by the generated PowerShell so only NotInstalled / Downloaded / Failed / InstalledPendingReboot updates flow through. Severity is bucketed from the freeform MsrcSeverity string enum (Critical -> critical, Important -> high, Moderate -> medium, Low -> low, Unspecified -> info) with CVSS3 / CVSS2 score as a secondary fallback when an explicit score is parsed out of the KB advisory text. Status mapped from UpdateInstallationState (NotInstalled / Downloaded / Failed / InstalledPendingReboot -> open, Installed / NotApplicable -> closed) with freeform approvalAction fallback (Declined / NotApproved / Uninstall -> risk-accepted). Refs include WSUS-UpdateId / WSUS-Classification / WSUS-MsrcSeverity / WSUS-Product / WSUS-Bulletin / WSUS-CreationDate / WSUS-InstallationState / WSUS-ApprovalAction / WSUS-RebootBehavior / WSUS-Computer pivots plus inline advisory URLs and KB references (numeric Microsoft KB ids harvested from the KnowledgebaseArticles collection plus inline scans of Title / Description / SecurityBulletins -- emitted as KB: KB<num> refs alongside the canonical https://support.microsoft.com/help/<num> Microsoft URL). CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from Title / Description / SecurityBulletins token scans plus optional federated 'CVE' / 'CVEs' columns (stock WSUS Update records do not vend a CVE column -- the inline scan is the canonical source). Auth: WSUS_USER / WSUS_PASSWORD are optional; when set the generated PowerShell wraps the WSUS-querying code in 'Invoke-Command -ComputerName <host> -Credential $cred -ScriptBlock {...}' so the .NET interop runs under the supplied identity; when unset the script calls the WSUS module directly under the executor's current Windows session (the documented deployment shape for an executor running on the WSUS server itself). WSUS_HOST is the WSUS server hostname (FQDN preferred) with optional http(s):// prefix selecting the SSL port (default 8531) and optional :port suffix overriding the default 8530 / 8531; hard-validated client-side as a DNS label, control chars rejected on the raw value before stripping so a typo ending in \\n / \\r can't sneak through. Tags: [microsoft, patch-management, wsus, missing-patch].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "wsus.py"
+}

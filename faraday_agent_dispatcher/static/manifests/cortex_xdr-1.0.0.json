@@ -1,0 +1,33 @@
+{
+    "arguments": {
+        "CXDR_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for Palo Alto Cortex XDR incidents and alerts. Accepts info | low | medium | high | critical (plus Cortex XDR synonyms: informational, important / major, moderate, minor, none / unspecified / unknown) plus the numeric 1..5 enum the Cortex XDR REST surface uses (1=Low, 2=Medium, 3=High, 4=Critical, 5 capped to Critical). Findings below the floor are dropped from the Faraday output after per-finding severity normalisation (incidents bucket from incident_sources / manual_severity / severity numeric+string with CVSS fallback; alerts bucket from severity numeric+string + action enum with CVSS fallback). The same floor also drives the incidents.get_incidents request body filter so Cortex XDR does the bulk of the filtering server-side. Defaults to info (no filtering)."
+        },
+        "CXDR_INCIDENT_STATUS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Cortex XDR incident status filter (CSV of status enum values). Accepts the canonical Cortex XDR status enum (new, under_investigation, resolved_threat_handled, resolved_known_issue, resolved_duplicate, resolved_false_positive, resolved_auto, resolved_other, resolved_security_testing) plus operator-friendly aliases (open -> new + under_investigation, closed -> all resolved_* variants, active -> new + under_investigation). When set, the filter is forwarded server-side via the incidents.get_incidents request body filter so Cortex XDR does the bulk of the filtering server-side. Defaults to None (no filter)."
+        }
+    },
+    "environment_variables": [
+        "CXDR_HOST",
+        "CXDR_API_KEY_ID",
+        "CXDR_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "cortex_xdr",
+    "title": "Palo Alto Cortex XDR",
+    "website": "https://www.paloaltonetworks.com/cortex/cortex-xdr",
+    "description": "Palo Alto Cortex XDR REST importer. Pulls incidents, managed endpoints and multi-event alerts from a Palo Alto Cortex XDR tenant via POST /public_api/v1/incidents/get_incidents/, POST /public_api/v1/endpoints/get_endpoints/ and POST /public_api/v1/alerts/get_alerts_multi_events. Each Cortex XDR endpoint becomes one Faraday host (ip = the first non-loopback entry in the endpoint's ip / ip_v6 arrays, falling back to synthetic 0.0.0.0 because Cortex XDR-managed mobile / VDI endpoints often only carry private addresses); per-endpoint incidents and alerts attach as Faraday vulnerabilities with engine prefix [EDR]. Severity is bucketed from the Cortex XDR numeric severity enum (1=Low, 2=Medium, 3=High, 4=Critical, 5 capped to Critical) plus the string severity / manual_severity field with CVSS bucketing as a fallback; status mapped from incident.status / alert.resolution_status (new / under_investigation -> open, resolved_threat_handled / resolved_known_issue / resolved_other -> closed, resolved_false_positive / resolved_security_testing / resolved_duplicate / resolved_auto -> risk-accepted) with state / status fallbacks. Pagination uses Cortex XDR's canonical search_from / search_to integer cursor pattern (PAGE_SIZE=100 per page capped at MAX_PAGES=200). Refs include CXDR-Incident / CXDR-Alert / CXDR-Category / CXDR-AlertCategory / CXDR-Source / CXDR-AlertSource / CXDR-DetectionModule / CXDR-Action / CXDR-Host / CXDR-User / CXDR-CausalityActor / CXDR-Endpoint / CXDR-EndpointGroup / CXDR-OS pivots, MITRE-Tactic / MITRE-Technique pivots harvested from the incident's alert_categories + mitre_tactics_ids_and_names + mitre_techniques_ids_and_names arrays, plus any inline URL references. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from cve / cves / aliases + description / manual_description / alert_name / alert_description / module_id token scans. Auth: Cortex XDR exposes a Standard API Key auth flow (Settings -> Configurations -> Integrations -> API Keys -> New, with Security Level set to Standard, the recommended posture for read-only data ingestion) where the dispatcher carries Authorization: <API_KEY> + x-xdr-auth-id: <API_KEY_ID> headers on every /public_api/ call. CXDR_HOST is the FQDN-style tenant host shown in the API Key dialog (e.g. api-mytenant.xdr.us.paloaltonetworks.com); CXDR_API_KEY_ID is the integer key id assigned when the API Key was created and CXDR_API_KEY is the matching secret. CXDR_MIN_SEVERITY is an optional client-side severity floor that also drives the incidents.get_incidents server-side filter so Cortex XDR does the bulk of the filtering server-side; CXDR_INCIDENT_STATUS is an optional CSV of incident status enum values forwarded server-side via the same filter pattern. Tags: [cortex_xdr, edr, endpoint-edr].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "cortex_xdr.py"
+}

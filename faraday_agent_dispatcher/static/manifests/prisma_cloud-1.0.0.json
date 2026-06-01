@@ -1,0 +1,37 @@
+{
+    "arguments": {
+        "PRISMA_ACCOUNT_GROUP": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Prisma Cloud account-group name to scope the alert search to (forwarded as the account.group filter in the POST /alert body). Account groups are how Prisma Cloud organises cloud accounts logically (AWS / Azure / GCP / OCI / Alibaba); leaving this blank queries across every group the service account can see."
+        },
+        "PRISMA_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Forwarded to Prisma Cloud as the policy.severity filter inside the POST /alert body (so the tenant only paginates results that survive the floor) AND enforced client-side after Faraday severity normalisation (handles Prisma's critical/high/medium/low/informational enum and CVSS base-score fallback). Defaults to info (no filtering)."
+        },
+        "PRISMA_STATUS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Prisma Cloud alert status filter (CSV of OPEN | RESOLVED | DISMISSED | SNOOZED). Forwarded to Prisma as the alert.status filter (lower-cased). Defaults to all statuses (no filter). Synonyms tolerated: REOPENED/NEW/ACTIVE/IN_PROGRESS → OPEN; CLOSED/FIXED/REMEDIATED/MITIGATED/PATCHED → RESOLVED; IGNORED/SUPPRESSED/MUTED/WONT_FIX/RISK_ACCEPTED/ACCEPTED/FALSE_POSITIVE/EXPIRED → DISMISSED. Whitespace and case-insensitive."
+        }
+    },
+    "environment_variables": [
+        "PRISMA_HOST",
+        "PRISMA_USERNAME",
+        "PRISMA_PASSWORD"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Cloud Security",
+    "name": "prisma_cloud",
+    "title": "Prisma Cloud (CNAPP)",
+    "website": "https://www.paloaltonetworks.com/prisma/cloud",
+    "description": "Prisma Cloud (formerly RedLock / Palo Alto Networks CSPM) Cloud-Native Application Protection Platform (CNAPP / CSPM) REST importer. Pulls cloud-security alerts from a Prisma Cloud tenant via the canonical POST /alert endpoint and emits Faraday bulk-create JSON to stdout. /alert is paginated via offset + limit (with nextPageToken cursor honoured when the stack returns one) and filters on alert.status / policy.severity / account.group; /v2/alert/policy is optionally consulted to enrich the alert payload with the policy catalogue (recommendation / remediationDescription / complianceMetadata) keyed by policyId; /cloud is optionally consulted to surface the friendly cloud-account name when the alert payload only carries the account id. Each Prisma Cloud resource (resource.rrn / resource.id) becomes one Faraday host (synthetic 0.0.0.0 ip because CNAPP findings live on cloud resources, not on IPs) with hostnames = {resourceName}@{rrn|resourceId}; per-resource alerts attached as Faraday vulnerabilities — one per Prisma alert id with [CNAPP] engine prefix, '{policyName} on {resourceType} {resourceName} [{region}]' in the title, policy description / policy_id / policy_type / resource / resource_type / resource_id / cloud_type / cloud_account_id / cloud_account / region / rrn / account_group / status / severity / first_seen / last_seen / alert_time / event_occurred / dismissed_at / resolved_at / snoozed_until / score / vector in the description; policy.recommendation / remediationDescription surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed, deduped across alert + policy + policy_meta), 'Prisma-Policy: {policyId}' pivot label, 'Compliance: {standardName} {sectionId}' pivots harvested from policy.complianceMetadata, 'Prisma-RRN: {rrn}' pivot label, resource.url / cloudProviderUrl / consoleUrl, and references / links / external_references URL shapes. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from alert.id / name / title / description / summary (token-scan over free-form strings) + cve / cveId / cve_id / cves / aliases (string + list-of-string + list-of-dict shapes) + policy.name / description / recommendation / remediationDescription (token-scan); deduped case-insensitively. Severity normalised from Prisma's string enum (critical / high / medium / low / informational — also accepts Important / Major / Moderate / Minor / Information / None / Unspecified / Trivial / Negligible / Unknown) with CVSS v3 / v2 base-score bucketing as a fallback when only a numeric cvss_score / score is given (≤0/>10 → info, <4 low, <7 medium, <9 high, ≥9 critical); PRISMA_MIN_SEVERITY both forwarded to Prisma as the policy.severity filter AND enforced client-side after normalisation. Status mapped from alert.status (OPEN / NEW / ACTIVE / REOPENED / IN_PROGRESS → open, RESOLVED / CLOSED / FIXED / REMEDIATED / MITIGATED / PATCHED → closed, DISMISSED / SNOOZED / SUPPRESSED / MUTED / IGNORED / WONT_FIX / RISK_ACCEPTED / ACCEPTED / FALSE_POSITIVE / EXPIRED → risk-accepted). Auth: Prisma Cloud uses an access-key / secret-key pair tied to a service account. The pair is sent as JSON to POST /login; the response carries a short-lived JWT (~10 min validity, tolerated bare or wrapped under data / data[0]) that is then sent as x-redlock-auth: <token> on subsequent calls. PRISMA_HOST is the API base of the stack the operator's tenant lives on (https://api.prismacloud.io for AWS-NA, https://api2.prismacloud.io for AWS-EU, https://api.eu.prismacloud.io / https://api.anz.prismacloud.io for regional stacks).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "prisma_cloud.py"
+}

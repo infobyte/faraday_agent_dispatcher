@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "GCP_ORGANIZATION_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "GCP organization id (numeric) whose Cloud Asset Inventory surface should be enumerated. Accepts a bare numeric id (e.g. 123456789012) or the fully-qualified organizations/{id} form. Used as the parent string organizations/{org} for AssetServiceClient.list_assets. The service account behind GOOGLE_APPLICATION_CREDENTIALS must hold roles/cloudasset.viewer (or equivalent custom role granting cloudasset.assets.listResource) at the organization scope."
+        },
+        "ASSET_TYPES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional CSV list of GCP asset-type filters in the canonical {service}.googleapis.com/{Type} shape (e.g. compute.googleapis.com/Instance,storage.googleapis.com/Bucket,sqladmin.googleapis.com/Instance). Each entry is whitespace-trimmed; entries that do not match the canonical shape are dropped with a log line. Blank lists every asset type the IAM principal can read."
+        }
+    },
+    "environment_variables": [
+        "GOOGLE_APPLICATION_CREDENTIALS"
+    ],
+    "check_cmds": [
+        "python3 -c 'from google.cloud import asset_v1'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Cloud Security",
+    "name": "gcp_asset_inventory",
+    "title": "Google Cloud Asset Inventory",
+    "website": "https://cloud.google.com/asset-inventory",
+    "description": "Google Cloud Asset Inventory asset importer. Pulls assets from GCP Cloud Asset Inventory via the canonical google-cloud-asset SDK (AssetServiceClient.list_assets) and emits Faraday bulk-create JSON to stdout. Each GCP asset surfaces as one Faraday host — IP-bearing assets (compute Instances / Addresses / ForwardingRules) extract a real IPv4 when the resource payload carries one (networkInterfaces[].accessConfigs[].natIP preferred over networkInterfaces[].networkIP), everything else falls back to the synthetic 0.0.0.0 because most GCP asset types live on resource paths, not on IPs. Hostname is the canonical asset name with provider / type / project / location surfaced from the //{service}.googleapis.com/projects/{proj}/{scope}/{loc}/{type}/{name} parse. OS label is best-effort from the first compute disk license tail (e.g. ubuntu-2004-lts) with a guestOsFeatures fallback. MAC address comes from networkInterfaces[].macAddress when present. The executor is the asset-side companion to gcp_scc; when the two run against the same organization the assets provide the hosts and the SCC findings attach to them via resource_name. Auth: GCP Cloud Asset Inventory uses the standard Google Application Default Credentials chain. A service account with roles/cloudasset.viewer is required; credentials are exposed as a service-account JSON key file whose path is set in GOOGLE_APPLICATION_CREDENTIALS. The SDK picks the file up automatically via ADC; the executor validates that the path exists and is readable before instantiating the client. Tags: assets are emitted as hosts only — no vulnerabilities — so they pair with gcp_scc for findings.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "gcp_asset_inventory.py"
+}

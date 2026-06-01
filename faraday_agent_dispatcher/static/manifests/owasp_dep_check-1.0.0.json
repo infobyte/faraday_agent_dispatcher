@@ -1,0 +1,50 @@
+{
+    "arguments": {
+        "DEPCHECK_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Filesystem path to scan with the OWASP Dependency-Check CLI (forwarded as --scan). When DEPCHECK_GIT_URL is also set, DEPCHECK_TARGET is treated as a subpath inside the shallow clone (e.g. scan only `services/api/`); when DEPCHECK_GIT_URL is unset, DEPCHECK_TARGET is required and points at a directory or single artifact already present on the runner."
+        },
+        "DEPCHECK_SUPPRESSION_FILE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional path to an OWASP Dependency-Check suppressions.xml file. Forwarded verbatim to --suppression. Use to silence known false positives or risk-accepted findings before they reach Faraday."
+        },
+        "DEPCHECK_GIT_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional git URL (https://...) to shallow-clone before scanning. Private repos authenticate with the agent-level GIT_USERNAME / GIT_TOKEN env vars (token injected into the clone URL). When set, DEPCHECK_TARGET — if present — is interpreted as a subpath inside the clone."
+        },
+        "DEPCHECK_GIT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional branch / tag / commit to check out (forwarded to git clone --branch). Only meaningful when DEPCHECK_GIT_URL is set."
+        },
+        "DEPCHECK_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Filters out lower-severity dep-check findings client-side after dep-check's own severity → Faraday severity normalisation (CRITICAL/HIGH/MEDIUM/LOW + UNKNOWN/MODERATE/NEGLIGIBLE/INFORMATIONAL with CVSS v3 / v2 base-score bucketing as a fallback). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "GIT_USERNAME",
+        "GIT_TOKEN"
+    ],
+    "check_cmds": [
+        "dependency-check.sh --version"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Software Composition Analysis",
+    "name": "owasp_dep_check",
+    "title": "OWASP Dependency-Check",
+    "website": "https://owasp.org/www-project-dependency-check/",
+    "description": "OWASP Dependency-Check CLI wrapper. Runs `dependency-check.sh --scan <target> --format JSON --out <out>` against a checked-out source tree or a directly-supplied target path and ingests the resulting JSON report into Faraday. Each scan becomes one Faraday host (synthetic 0.0.0.0 ip because SCA findings live in dependency manifests, not on IPs) named after projectInfo.name; per-dependency vulnerabilities attach as Faraday vulnerabilities — one per (dependency, vulnerability.name) pair with [SCA] engine prefix, `{cve} in {pkg:purl-or-fileName}` in the title, dependency coordinates / hashes / license / source / cvssScore / cvssVector / description in the description. Refs include CWE-* (single + list + list-of-dict shapes with the `CWE-` prefix collapsed, deduped), each vulnerability's references[].url (string + dict.url / dict.href shapes), source-prefixed advisory ids for non-CVE sources (e.g. `RETIRE: RETIRE-2024-0001`), plus a `DepCheck-Package: pkg:...` pivot label. CVEs harvested from `name` (when CVE-shaped), `cve` / `cveId` / `cves` / `aliases` (string + list-of-string + list-of-dict shapes, deduped case-insensitively). Severity normalised from Dependency-Check's enum (CRITICAL / HIGH / MEDIUM / LOW + UNKNOWN / MODERATE / IMPORTANT / NEGLIGIBLE / INFORMATIONAL / NONE) with CVSS v3 / v2 base-score bucketing as a fallback (max across v3 / v2 nestings + top-level baseScore; ≤0/>10 → info, <4 low, <7 medium, <9 high, ≥9 critical); client-side DEPCHECK_MIN_SEVERITY floor enforced after normalisation. Status is always `open` — dep-check filters suppressions out before they reach the report, so any vulnerability that makes it through is actionable. DEPCHECK_GIT_URL triggers a shallow clone via the shared resolve_source_path helper (handles GIT_USERNAME / GIT_TOKEN); DEPCHECK_TARGET points at the on-disk path (or subpath inside the clone). DEPCHECK_SUPPRESSION_FILE is forwarded to --suppression. Place this executor in the `code-sast` group.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "owasp_dep_check.py"
+}

@@ -1,0 +1,35 @@
+{
+    "arguments": {
+        "INSIGHTAPPSEC_SCAN_CONFIG_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Rapid7 InsightAppSec scan configuration id (UUID) to scope the import. When set, only completed scans for that scan config are imported (via POST /ias/v1/scans/search with query scan.scan_config.id='<id>' && scan.status='COMPLETE', with a status-less fallback for older deployments). Omit to enumerate every scan visible to the API key via GET /ias/v1/scans."
+        },
+        "INSIGHTAPPSEC_REGION": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Rapid7 Insight Platform region for the API base URL. Accepts a region code (us, us2, us3, eu, ca, au, ap, jp) which is expanded to https://<region>.api.insight.rapid7.com, or a fully-qualified base URL (https://us.api.insight.rapid7.com) which is used verbatim. Default: us."
+        },
+        "INSIGHTAPPSEC_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Enforced client-side after severity normalisation (handles InsightAppSec's string enum — HIGH/MEDIUM/LOW/INFORMATIONAL/SAFE — and its 0-10 vulnerability_score bucketed via CVSS v3 ranges). Default: info."
+        }
+    },
+    "environment_variables": [
+        "INSIGHTAPPSEC_API_KEY"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Dynamic Application Security Testing",
+    "name": "rapid7_insightappsec",
+    "title": "Rapid7 InsightAppSec",
+    "website": "https://www.rapid7.com/products/insightappsec/",
+    "description": "Rapid7 InsightAppSec REST API importer. Pulls DAST findings from the Rapid7 Insight Platform and emits Faraday bulk-create JSON to stdout. Resolves scans via POST /ias/v1/scans/search (filtered by scan.scan_config.id when INSIGHTAPPSEC_SCAN_CONFIG_ID is set, with a status-less fallback) or GET /ias/v1/scans paginated with index/size; per-scan vulnerabilities are pulled via POST /ias/v1/vulnerabilities/search with query vulnerability.scan.id='<scan_id>'. Each vulnerability is grouped by its root_cause URL hostname into one Faraday host per affected web origin (findings without a URL fall back to the scan's app / target URL, and any that still cannot be tied to a host attach to a synthetic 0.0.0.0 host so the data is still imported). Each Faraday vulnerability carries the [DAST] engine prefix, module / check name, request method + URL, vulnerable parameter (+ parameterType), attack value / payload, original value, vulnerability_score, status, first / last discovered timestamps, insight_id and request / response evidence (response truncated to 500 chars in description, raw request surfaced as Faraday data); refs include CWE-* (single + list + list-of-dict shapes), OWASP, InsightAppSecModule-<id>, InsightAppSecCheck-<name> and InsightAppSecAttack-<type>; remediation / recommendation surface as Faraday resolution. Severity normalised from InsightAppSec's string enum (HIGH/MEDIUM/LOW/INFORMATIONAL/SAFE — also accepts Critical/Important/Moderate/None) and CVSS bucketing of the numeric vulnerability_score (0-10 ladder, falls through to info when out of range). Status mapped from InsightAppSec's status / disposition — UNREVIEWED/VERIFIED/VULNERABLE → open, FALSE_POSITIVE/IGNORED/ACCEPTED_RISK → risk-accepted, REMEDIATED/FIXED/RESOLVED/CLOSED → closed, with isFalsePositive / isIgnored / isFixed boolean fallbacks. Auth: X-Api-Key header carrying the Rapid7 Insight Platform API key (User Preferences → API Keys → Organization or User key). INSIGHTAPPSEC_REGION selects the regional base URL (us / us2 / us3 / eu / ca / au / ap / jp — default us); a fully-qualified URL is also accepted verbatim.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "rapid7_insightappsec.py"
+}

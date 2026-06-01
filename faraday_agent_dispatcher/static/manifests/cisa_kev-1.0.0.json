@@ -1,0 +1,23 @@
+{
+    "arguments": {
+        "KEV_MIN_DATE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side date filter (YYYY-MM-DD). When supplied, KEV catalog entries whose dateAdded is strictly older than the filter are dropped client-side after the catalog is fetched (CISA's KEV JSON feed has no server-side filtering; this knob is purely a 'I only care about KEVs added since X' delta-import lever for operators who run the executor on a schedule). Records with missing / unparseable dateAdded are KEPT (conservative default — we don't want to silently drop entries the executor can't date-stamp). Blank / missing / unparseable input walks the whole catalog (the typical operational mode). Whitespace is trimmed."
+        }
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "cisa_kev",
+    "title": "CISA Known Exploited Vulnerabilities (KEV) Catalog",
+    "website": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+    "description": "CISA Known Exploited Vulnerabilities (KEV) catalog importer. Pulls the public CISA KEV catalog from https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json and emits Faraday bulk-create JSON. The KEV catalog is CISA's authoritative list of CVEs that are actively exploited in the wild — federal civilian agencies are required to remediate every KEV entry by the catalog-published dueDate under BOD 22-01, so the catalog doubles as both a 'this is being exploited right now' feed and a regulatory deadline tracker for any operator who has chosen to align with BOD 22-01. Each KEV record becomes one Faraday vulnerability under a single synthetic 0.0.0.0 host with hostname 'cisa-kev' (KEV entries are CVE-keyed not host-keyed — the operator's other agents emit the host-side findings this feed is correlated against). The vulnerability carries tags: ['cisa-kev'] and surfaces dateAdded / dueDate in both the description and the refs list so the BOD 22-01 remediation deadline is one projection away from the Faraday workspace UI. Endpoint used: GET https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json (returns the canonical KEV envelope {title: '...', catalogVersion: '...', dateReleased: '...', count: N, vulnerabilities: [{cveID, vendorProject, product, vulnerabilityName, dateAdded, shortDescription, requiredAction, dueDate, knownRansomwareCampaignUse?, notes?, cwes?}]}). KEV_MIN_DATE is an optional client-side date filter (YYYY-MM-DD) — when supplied, KEV entries whose dateAdded is strictly older than the filter are dropped client-side; blank / missing / unparseable input walks the whole catalog. Severity is bucketed by how close the BOD 22-01 dueDate is — dueDate in the past -> critical (overdue); dueDate within the next 14 days -> high; dueDate within the next 60 days -> medium; dueDate further out -> low; dueDate missing / unparseable -> high (KEV entries are by definition actively exploited so the floor is high, not info). KEV records flagged knownRansomwareCampaignUse: 'Known' are bumped to critical regardless of the dueDate ladder — active ransomware exploitation overrides the calendar floor. Refs include the canonical NVD CVE permalink (https://nvd.nist.gov/vuln/detail/CVE-...), the CISA KEV catalog search permalink, and Kev-CveID / Kev-DateAdded / Kev-DueDate / Kev-Vendor / Kev-Product / Kev-Ransomware / Kev-CWE / Kev-CatalogVersion / Kev-CatalogReleased pivots so operators can pivot from a Faraday finding back to the catalog field set. Status is always open (a KEV entry cannot be 'fixed' in the catalog — it can only be remediated on the affected hosts). Auth: none — the CISA KEV feed is fully public and unauthenticated. CISA_KEV_HOST may optionally be overridden via env to point at a mirror or an offline cache; defaults to https://www.cisa.gov. The executor does NOT consume any secrets / credentials / tokens. Tags: [cisa-kev].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "cisa_kev.py"
+}

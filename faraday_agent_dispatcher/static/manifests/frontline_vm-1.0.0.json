@@ -1,0 +1,30 @@
+{
+    "arguments": {
+        "FRONTLINE_BUSINESS_GROUP": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Frontline VM business group name to filter the asset inventory (forwarded as the 'business_group' query parameter on /api/v2/assets). Omit to pull every asset visible to the token."
+        },
+        "FRONTLINE_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Forwarded to /api/v2/vulnerabilities as 'severity_gte' and additionally enforced client-side after severity normalisation (handles both Frontline's string severities and CVSS numeric scores). Default: info."
+        }
+    },
+    "environment_variables": [
+        "FRONTLINE_HOST",
+        "FRONTLINE_TOKEN"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "frontline_vm",
+    "title": "Frontline VM",
+    "website": "https://www.digitaldefense.com/platform/frontline-vm/",
+    "description": "Digital Defense Frontline VM (Frontline.Cloud) importer. Lists assets via /api/v2/assets (optionally filtered by business group) and per-asset vulnerabilities via /api/v2/vulnerabilities; emits one Faraday host per Frontline asset. Severity is normalised from Frontline's string severities (informational/low/medium/high/critical) or, when only a CVSS score is provided, bucketed via the CVSS v3 ranges. Auth is token-based — set FRONTLINE_TOKEN (sent as 'Authorization: Token <token>') and FRONTLINE_HOST to the Frontline.Cloud base URL (e.g. https://vm.frontline.cloud).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "frontline_vm.py"
+}

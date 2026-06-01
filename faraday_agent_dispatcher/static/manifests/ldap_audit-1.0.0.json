@@ -1,0 +1,40 @@
+{
+    "arguments": {
+        "LDAP_BASE_DN": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "LDAP search base distinguished name (e.g. 'DC=corp,DC=local', 'OU=Users,DC=corp,DC=local'). Scopes the walk to the subtree rooted at this DN. The executor hard-validates the DN client-side (RDN-safe alphabet: alphanumeric + '=,.+ _-\\:#;' + forward / back slash; control chars rejected on the raw value before whitespace trimming so a header-injection attempt can't slip through; regex anchored with \\A / \\Z not ^ / $). Required."
+        },
+        "LDAP_FILTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "RFC 4515 LDAP search filter. Optional; defaults to '(|(objectCategory=person)(objectCategory=group)(objectCategory=computer))' (users + groups + computers). The executor enforces a balanced-parens check (without trying to be a full LDAP filter parser): a filter that doesn't start with '(' / end with ')' / has unbalanced parens is logged and dropped back to the default rather than fanned out into an unfiltered tree walk. Control chars in the raw value drop the filter back to default."
+        },
+        "LDAP_ATTRIBUTES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "CSV of LDAP attribute names to project onto each returned entry (e.g. 'sAMAccountName,cn,userAccountControl,memberOf'). Optional; defaults to a standard 18-attribute projection covering users / groups / computers (sAMAccountName, cn, distinguishedName, objectClass, userAccountControl, userPrincipalName, memberOf, operatingSystem, operatingSystemVersion, dNSHostName, ipv4Address, whenCreated, whenChanged, lastLogonTimestamp, pwdLastSet, displayName, mail, description). Per-token validation against the RFC 4512 attribute-description ABNF (letter followed by letters / digits / '-' / '_' / ';'); malformed tokens are logged + skipped rather than fanned out into the search projection. 'userAccountControl' is always re-injected since weak-UAC detection requires it."
+        }
+    },
+    "environment_variables": [
+        "LDAP_HOST",
+        "LDAP_USER",
+        "LDAP_PASSWORD",
+        "LDAP_USE_TLS"
+    ],
+    "check_cmds": [
+        "python3 -c 'import ldap3'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "ldap_audit",
+    "title": "LDAP / Active Directory Audit",
+    "website": "https://ldap3.readthedocs.io/",
+    "description": "LDAP / Active Directory weak-userAccountControl auditor. Walks an LDAP / AD tree via the ldap3 Python client (ldap3.Server + Connection.search / paged extend.standard.paged_search) and emits one Faraday host + one Faraday vulnerability for every user / group / computer object whose userAccountControl carries a weakness flag combination: ACCOUNTDISABLE bit clear (i.e. account is enabled) AND (PASSWD_NOTREQD set OR DONT_EXPIRE_PASSWORD set). PASSWD_NOTREQD (0x0020) permits empty-password binds — severe, surfaced as critical. DONT_EXPIRE_PASSWORD (0x10000) lets long-lived credentials sit indefinitely — surfaced as medium. ACCOUNTDISABLE (0x0002) is the gate: accounts with that bit set are silently dropped from the output (we don't surface findings on disabled accounts because they can't be authenticated against in their current state). Two operator-tunable surfaces: LDAP_FILTER (RFC 4515 filter; defaults to '(|(objectCategory=person)(objectCategory=group)(objectCategory=computer))') so the walk can be scoped to a single OU / group / sAMAccountName prefix, and LDAP_ATTRIBUTES (CSV) so the projection covers per-tenant schema additions (custom attribute names like 'employeeNumber' / 'departmentNumber'); 'userAccountControl' is always added to the attribute set because weak-UAC detection requires it. Each emitted Faraday host is shaped by the LDAP object class: computers — keyed on dNSHostName when present, host.os carries the AD operatingSystem + operatingSystemVersion strings (e.g. 'Windows Server 2019 Standard 10.0 (17763)'), IP harvested from ipv4Address when the schema vends it else the 0.0.0.0 sentinel; users / groups — keyed on sAMAccountName / cn (LDAP user / group records aren't IP-keyed), IP is the 0.0.0.0 sentinel. Auth: simple bind via LDAP_USER + LDAP_PASSWORD when both are set (typically 'DOMAIN\\user' or 'user@DOMAIN.local' or the full DN); anonymous bind otherwise. LDAP_HOST accepts a bare hostname / IP, ldap://host[:port], or ldaps://host[:port] — the URL prefix overrides LDAP_USE_TLS when ldaps:// is supplied; default ports (389 plain, 636 SSL) are applied when no :port is supplied. LDAP_USE_TLS is a truthy bool (true / yes / on / 1) that promotes a plain ldap:// connection to ldaps:// for cases where the URL prefix wasn't used. Paginated walk via the ldap3 'paged_search' extended op with paged_size=500 capped at 200 pages (= 100 000 entries hard cap) so a stray wide-open filter can't fan out into millions of records against a large AD forest. Refs include LDAP-DN / LDAP-sAMAccountName / LDAP-UPN / LDAP-Kind (user / group / computer) / LDAP-UAC (the int) / LDAP-Flag (per matching weak flag) pivots. Tags: [ldap, ldap-audit, identity, active-directory, user|group|computer]. Engine prefix: [IDENTITY] (matches the BloodHound Enterprise / identity-graph convention).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "ldap_audit.py"
+}

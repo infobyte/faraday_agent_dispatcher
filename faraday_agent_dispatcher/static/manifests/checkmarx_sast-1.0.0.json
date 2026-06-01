@@ -1,0 +1,37 @@
+{
+    "arguments": {
+        "CXSAST_PROJECT_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional CxSAST project id (numeric) to scope the import. When set, only that project's most recent finished scan is imported via /cxrestapi/projects/{id} + /cxrestapi/sast/scans?projectId=<id>&last=1. Ignored when CXSAST_SCAN_ID is also provided. Omit both to enumerate every project visible to the user and import each project's latest finished scan."
+        },
+        "CXSAST_SCAN_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional CxSAST scan id (numeric) to import directly. When set, the executor skips project enumeration entirely and pulls results via /cxrestapi/sast/results?scanId=<id>; the owning project is looked up via /cxrestapi/sast/scans/{id} for host naming. Takes precedence over CXSAST_PROJECT_ID. Omit to use the last-finished-scan-per-project flow."
+        },
+        "CXSAST_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Enforced client-side after severity normalisation (handles CxSAST's string severities — High/Medium/Low/Information — and its 0-4 numeric severity index, with CVSS v3 fallback when only a numeric score is given). Default: info."
+        }
+    },
+    "environment_variables": [
+        "CXSAST_HOST",
+        "CXSAST_USER",
+        "CXSAST_PASSWORD"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "checkmarx_sast",
+    "title": "Checkmarx SAST",
+    "website": "https://checkmarx.com/cxsast-source-code-scanning/",
+    "description": "Checkmarx SAST (CxSAST 9.x) REST API importer. Pulls source-code findings from a CxSAST manager and emits Faraday bulk-create JSON to stdout. Lists projects via /cxrestapi/projects (or fetches a single project via /cxrestapi/projects/{id} when CXSAST_PROJECT_ID is set), resolves each project's most recent finished scan via /cxrestapi/sast/scans?projectId=<id>&last=1 (skipped when CXSAST_SCAN_ID is set — that scan is imported directly), then pulls per-scan results via /cxrestapi/sast/results?scanId=<id> paginated with offset/limit. Each project becomes one Faraday host (synthetic 0.0.0.0 because SAST findings live in source repos, not on IPs); per-scan results are attached as Faraday vulnerabilities — one per CxSAST result id with [SAST] engine prefix, queryName, CWE-* refs, queryId/CxQuery refs, file:line + sink location and similarityId enrichment in the description. Severity normalised from CxSAST's string severities (Critical/High/Medium/Low/Information, also accepts informational/moderate) and from CxSAST's 0-4 numeric severity index (0=info, 1=low, 2=medium, 3=high, 4=critical), with CVSS v3 fallback when only a numeric score is given; client-side min-severity floor enforced after normalisation. Status mapped from CxSAST's lifecycle status (new/recurrent/active → open, fixed/resolved → closed) combined with analyst state — NOT_EXPLOITABLE and PROPOSED_NOT_EXPLOITABLE (string or numeric codes 1 / 4) become Faraday risk-accepted. Auth: OAuth2 password grant against /cxrestapi/auth/identity/connect/token with the default CxSAST resource_owner_client client_id and the well-known client_secret shipped with the appliance (scope=sast_rest_api); the access_token is sent as 'Authorization: Bearer <token>' on every API call. CXSAST_HOST is the CxSAST manager base URL (e.g. https://cx.corp.example.com).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "checkmarx_sast.py"
+}

@@ -1,0 +1,24 @@
+{
+    "arguments": {
+        "APPSPIDER_SCAN_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Rapid7 AppSpider Enterprise scan id to scope the import. When set, only that scan's vulnerabilities are imported via /api/v1/Scans/{id} + /api/v1/Vulnerabilities?scanId=<id>. Omit to enumerate every scan visible to the token and import each one's vulnerabilities."
+        }
+    },
+    "environment_variables": [
+        "APPSPIDER_HOST",
+        "APPSPIDER_TOKEN"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Dynamic Application Security Testing",
+    "name": "appspider",
+    "title": "Rapid7 AppSpider Enterprise",
+    "website": "https://www.rapid7.com/products/appspider/",
+    "description": "Rapid7 AppSpider Enterprise (formerly NTOSpider / NTObjectives) REST API importer. Pulls DAST findings from an AppSpider Enterprise server and emits Faraday bulk-create JSON to stdout. Lists scans via /api/v1/Scans (or fetches a single scan via /api/v1/Scans/{id} when APPSPIDER_SCAN_ID is set), then pulls per-scan vulnerabilities via /api/v1/Vulnerabilities?scanId=<id> paginated with offset / limit. Each vulnerability is grouped by its request URL hostname into one Faraday host per affected web origin (findings without a URL fall back to the scan's target URL, and any that still cannot be tied to a host attach to a synthetic 0.0.0.0 host so the data is still imported). Each Faraday vulnerability carries the [DAST] engine prefix, check / attack name, request method + URL, vulnerable parameter, attack value, evidence (truncated to 500 chars), certainty, CVSS score, instance id and state in the description; recommendations / remediations surface as Faraday resolution; raw HTTP requests surface as Faraday data. Refs include CWE-* (single + list + list-of-dict shapes, with the CWE- prefix collapsed), WASC-*, OWASP categories (2017 / 2021), CAPEC-*, AppSpiderCheck-<checkId> and AppSpiderAttack-<attackType>. Severity normalised from AppSpider's string enum (Critical / High / Medium / Low / Informational) and its 0-4 numeric ladder (0=Information, 1=Low, 2=Medium, 3=High, 4=Critical), with a CVSS bucketing fallback when only a numeric score is given. Status mapped from AppSpider's Status / State / Disposition field (Active / Open / Pending / NewlyDiscovered → open, Fixed / Resolved / Closed / Patched / Remediated → closed, FalsePositive / AcceptedRisk / Ignored / Suppressed / NotApplicable → risk-accepted) with IsFalsePositive / Ignored / AcceptedRisk / IsFixed boolean fallbacks when the string state is missing; analyst triage wins over lifecycle status. Auth: Authorization: Bearer <APPSPIDER_TOKEN> carrying the AppSpider Enterprise API token (obtained from POST /api/v1/Authentication/Login or the AppSpider Enterprise console); pre-built Bearer / Token / ApiToken prefixes are preserved. APPSPIDER_HOST is the AppSpider Enterprise base URL.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "appspider.py"
+}

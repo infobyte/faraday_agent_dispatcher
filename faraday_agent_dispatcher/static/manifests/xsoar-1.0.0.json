@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "XSOAR_INCIDENT_FILTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Cortex XSOAR Lucene-style incident query forwarded to POST /incidents/search as filter.query (e.g. 'type:\"Phishing\" status:1', 'severity:>=2 -status:2', 'category:Malware'). Omit to pull every incident visible to the API key within the fromDate window."
+        },
+        "XSOAR_FROM_DATE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Earliest incident occurrence timestamp to pull, forwarded to POST /incidents/search as filter.fromDate. Accepts ISO-8601 (e.g. '2026-01-01T00:00:00.000Z') or relative XSOAR expressions like '7 days ago', '30 days ago'. Omit to pull every incident visible to the API key."
+        }
+    },
+    "environment_variables": [
+        "XSOAR_HOST",
+        "XSOAR_API_KEY",
+        "XSOAR_API_KEY_ID"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "xsoar",
+    "title": "Palo Alto Cortex XSOAR",
+    "website": "https://www.paloaltonetworks.com/cortex/cortex-xsoar",
+    "description": "Palo Alto Cortex XSOAR (Demisto) REST API importer. Pulls security incidents from an XSOAR tenant and maps them into Faraday vulnerabilities. Lists incidents via POST /incidents/search (paginated, optionally filtered by XSOAR_INCIDENT_FILTER as filter.query and XSOAR_FROM_DATE as filter.fromDate), then per-incident details via GET /incident/{id} for labels / CustomFields / indicators enrichment. Each incident is mapped to one Faraday host resolved from the incident's labels / CustomFields (IP, hostname, OS, MAC); incidents without a resolvable asset are attached to a synthetic 0.0.0.0 host so the data is still imported. Severity is normalised from XSOAR's numeric scale (0=Unknown, 0.5=Informational, 1=Low, 2=Medium, 3=High, 4=Critical) and tolerates string severities surfaced by individual integrations. Status maps from XSOAR's numeric status (0/1 Pending/Active -> open, 2/3 Done/Archive -> closed) and is forced to closed when closeReason is set. Auth is `Authorization: <XSOAR_API_KEY>` plus `x-xdr-auth-id: <XSOAR_API_KEY_ID>` (required by XSOAR 8 / Cortex platform; harmless on classic XSOAR 6 tenants); XSOAR_HOST is the tenant base URL.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "xsoar.py"
+}

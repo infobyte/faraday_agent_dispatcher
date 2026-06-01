@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "OPSLEVEL_TIER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional OpsLevel service-tier filter forwarded server-side as the tierAlias list-arg on the account.services GraphQL field. Accepts the canonical OpsLevel tier aliases (tier_1 / tier_2 / tier_3 / tier_4) plus common synonyms (1 / tier1 / t1 -> tier_1 etc.) — the executor normalises the input to the canonical tier_N alias shape before composing the GraphQL variables. Found in the OpsLevel console under Service Maturity -> Tiers or via the Tier rubric configuration. The executor hard-validates the alias shape client-side so a typo or control char can't fan out into a malformed GraphQL filter. Blank / missing fans out across all tiers."
+        },
+        "OPSLEVEL_LIFECYCLE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional OpsLevel lifecycle filter forwarded server-side as the lifecycleAlias list-arg on the account.services GraphQL field. Accepts the operator-configured lifecycle aliases (canonical shipped set: pre-alpha / alpha / beta / general_availability / end-of-life) — OpsLevel tenants can rename lifecycle entries via the Service Maturity rubric so the executor only enforces the alphanumeric + ._- alias shape (up to 64 chars) rather than a strict enum. Blank / missing fans out across all lifecycles."
+        }
+    },
+    "environment_variables": [
+        "OPSLEVEL_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "opslevel",
+    "title": "OpsLevel",
+    "website": "https://www.opslevel.com",
+    "description": "OpsLevel developer-portal / service-catalog asset-inventory importer. Pulls Service records (the canonical OpsLevel surface) from an OpsLevel tenant via the GraphQL API at POST <OPSLEVEL_HOST>/graphql using the account.services connection and emits Faraday bulk-create JSON. Each OpsLevel service becomes one Faraday host (synthetic 0.0.0.0 — OpsLevel services are identity-keyed catalog entries in a developer portal, not network endpoints) with host.os carrying the type / tier / lifecycle pivot (e.g. 'OpsLevel http_service tier=tier_1 lifecycle=general_availability') and host.hostnames carrying the name + aliases pivots so Faraday's hostname index still surfaces the entry. The service itself becomes one Faraday vulnerability with the [ASSET-INVENTORY] engine prefix so the data lands alongside the other CMDB-class feeds in `asset-inventory` (Armis / Axonius / Device42 / Fleet / Jamf Pro / Jira Insight / LeanIX / runZero). Severity is always `info` because OpsLevel services are inventory entries, not vulnerability findings — operators correlate against the EDR / EASM / vuln-scanner agents' findings via the OpsLevel-Id / OpsLevel-Alias refs. Pagination uses OpsLevel's Relay-style first + after cursors with the canonical pageInfo {hasNextPage, endCursor} envelope (PAGE_SIZE=100 per page capped at MAX_PAGES=200 = 20k records per scan). Auth: OpsLevel issues per-account API tokens via the OpsLevel console under Account Settings -> API Tokens. The dispatcher carries the token on every /graphql call as Authorization: Bearer <OPSLEVEL_TOKEN>. OPSLEVEL_HOST is optional — defaults to the canonical SaaS host https://app.opslevel.com; EU-region / on-prem deployments override the host (hard-validated client-side as http(s)://host[:port], trailing slash stripped, control chars rejected). Refs include OpsLevel-Id / OpsLevel-Alias / OpsLevel-Tier / OpsLevel-Lifecycle / OpsLevel-Type / OpsLevel-Owner / OpsLevel-Product / OpsLevel-Language / OpsLevel-Framework / OpsLevel-Tags pivots plus the canonical OpsLevel service permalink (htmlUrl when vended by the tenant; falls back to https://<host>/services/<first-alias>) so operators can pivot from the Faraday vuln straight into the OpsLevel console. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from cve / cveId / cves fields plus name / description / product / framework / language token scans (OpsLevel services don't carry CVEs natively but description / framework text sometimes mention CVE refs in deprecation notes). Tags: [opslevel, asset-inventory, opslevel-service, <tier-alias-lower>, <lifecycle-alias-lower>].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "opslevel.py"
+}

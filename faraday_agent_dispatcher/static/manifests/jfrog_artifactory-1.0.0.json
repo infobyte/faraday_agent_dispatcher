@@ -1,0 +1,37 @@
+{
+    "arguments": {
+        "ARTIFACTORY_REPO": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "JFrog Artifactory repository key (e.g. libs-release-local, docker-prod, npm-virtual). Cross-checked against GET /api/repositories so the host description surfaces packageType / rclass / url. The repo must be Xray-indexed for the /api/security/vulnerabilities endpoint to return findings — the importer does not enforce that client-side because Artifactory still answers the endpoint with an empty list when the repo is not indexed, which keeps zero-finding scans idempotent."
+        },
+        "ARTIFACTORY_PATH": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Path within ARTIFACTORY_REPO that identifies the artifact to scan (e.g. org/example/lib/1.0/lib-1.0.jar). Forwarded verbatim as the 'path' query parameter on GET /api/security/vulnerabilities; on 404 the executor falls back to POST /api/xray/scanArtifact with {repo, path} (same per-issue Xray shape on its vulnerabilities[] / artifacts[].issues output)."
+        },
+        "ARTIFACTORY_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum severity floor — issues normalised below this bucket are dropped before they reach Faraday. One of info / low / medium / high / critical (defaults to info, i.e. no floor). Applied after normalising the Xray severity enum (Critical / High / Medium / Low / Information / Unknown / PendingScan) and falling back to CVSS v3 base-score bucketing when the enum is absent."
+        }
+    },
+    "environment_variables": [
+        "ARTIFACTORY_HOST",
+        "ARTIFACTORY_USER",
+        "ARTIFACTORY_API_KEY"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Software Composition Analysis",
+    "name": "jfrog_artifactory",
+    "title": "JFrog Artifactory",
+    "website": "https://jfrog.com/artifactory/",
+    "description": "JFrog Artifactory REST API importer (Xray-enabled). Pulls Xray-side Software Composition Analysis findings via the Artifactory REST surface (as opposed to the standalone Xray API used by the sister jfrog_xray executor). Useful when operators only expose the /artifactory mount of their JFrog platform to scanners — the same Xray findings are reachable via Artifactory's /api/security/vulnerabilities endpoint when the tenant has Xray enabled. Authenticates via HTTP Basic with ARTIFACTORY_USER / ARTIFACTORY_API_KEY — Artifactory accepts a classic API key, an identity / reference token, or a local password on the same Basic surface, so the single ARTIFACTORY_API_KEY env var covers each. A pre-built 'Bearer <token>' value in ARTIFACTORY_API_KEY short-circuits the Basic exchange and is sent verbatim so tenants fronted by an OAuth gateway can pass an externally-minted token. Resolves repository metadata via GET /api/repositories so the host description surfaces packageType / rclass / url. For each ARTIFACTORY_REPO + ARTIFACTORY_PATH pair the importer GETs /api/security/vulnerabilities?repo=<repo>&path=<path> and paginates via page_num / num_of_rows; on 404 / missing endpoint it falls back to POST /api/xray/scanArtifact with {repo, path} (same per-issue Xray shape on vulnerabilities[] / artifacts[].issues). The scanned artifact becomes one Faraday host (synthetic 0.0.0.0 ip because SCA findings live in dependency manifests, not on IPs); per-issue Xray findings attach as Faraday vulnerabilities — one per (issue_id, componentDisplayName) pair with [SCA] engine prefix, '{summary} in {componentDisplayName}' in the title, component coordinates / impact paths, issueType / provider / severity / cvssScore / vector / raw status / repo / path metadata in the description; fix_version / fixed_versions / recommended_version / remediation / recommendation / solution / per-component fixed_versions surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed, deduped across issue + per-CVE attribution), references / external_references / links URLs (string + dict.url + dict.href shapes), advisory_url, and XRAY-* issue ids (issue_id + source_id, excluded from CVE collection). CVE list harvested from cves[] (string + list-of-string + list-of-dict shapes, dedup case-insensitive), aliases, references, plus a CVE-shaped summary fallback. Severity normalised from Xray's severity enum (Critical / High / Medium / Low / Information / Unknown / PendingScan — also accepts Major / Moderate / Minor / Important / Informational / None / Unspecified) with CVSS v3 / v2 base-score bucketing as a fallback (≤0/>10 → info, <4 low, <7 medium, <9 high, ≥9 critical); client-side ARTIFACTORY_MIN_SEVERITY floor enforced after normalisation. Status mapped from issue.status (Open / New / In Progress / Triaged / Reopened → open, Fixed / Resolved / Closed / Remediated / Patched → closed, Ignored / Suppressed / Muted / Not Applicable / False Positive / Risk Accepted / Waived → risk-accepted) combined with analyst-triage flags — ignored / falsePositive / muted / suppressed / notApplicable (wins over lifecycle status), fixed / resolved → closed. ARTIFACTORY_HOST is the JFrog platform base URL (e.g. https://yourco.jfrog.io or https://artifactory.corp.example.com); the executor auto-appends '/artifactory' when the bare platform host is given so the canonical /artifactory/api/... REST surface is reached. Hosts already pointing at .../artifactory are accepted as-is.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "jfrog_artifactory.py"
+}

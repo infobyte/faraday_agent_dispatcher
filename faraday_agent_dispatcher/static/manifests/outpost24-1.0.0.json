@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "OUTPOST24_SCOPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Outpost24 scope filter forwarded as the 'scope' query parameter on /api/2.0/scans and /api/2.0/vulnerabilities. Valid values: appsec (SWAT / web application scanning), netsec (Outscan NX / HIAB network scanning). Case-insensitive. Omit to pull both scopes."
+        },
+        "OUTPOST24_SCAN_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Outpost24 scan ID to import. When set, only that scan is pulled via /api/2.0/scans/{id} and its vulnerabilities via /api/2.0/vulnerabilities?scan_id={id}. When omitted, /api/2.0/scans is enumerated and every visible scan's vulnerabilities are imported."
+        }
+    },
+    "environment_variables": [
+        "OUTPOST24_HOST",
+        "OUTPOST24_USER",
+        "OUTPOST24_PASSWORD"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "outpost24",
+    "title": "Outpost24 (AppSec + NetSec)",
+    "website": "https://outpost24.com/",
+    "description": "Outpost24 REST API importer covering both Application Security (SWAT) and Network Security (Outscan NX / HIAB) scopes. Lists scans via /api/2.0/scans (or /api/2.0/scans/{id} when OUTPOST24_SCAN_ID is set), then per-scan vulnerabilities via /api/2.0/vulnerabilities?scan_id=... filtered by OUTPOST24_SCOPE (appsec|netsec) when set. Vulnerabilities are grouped by their target (URL hostname for AppSec, IP / hostname for NetSec) into one Faraday host per affected asset with the findings attached; vulnerabilities without a resolvable target are attached to a synthetic 0.0.0.0 host so the data is still imported. Severity is normalised from Outpost24's string severities (informational/low/medium/high/critical, also accepts trivial/minor/moderate/important) and falls back to CVSS v3 bucketing on the numeric score when only a CVSS value is available. Auth is HTTP Basic — set OUTPOST24_USER / OUTPOST24_PASSWORD and OUTPOST24_HOST to the appliance / tenant base URL (e.g. https://outscan.outpost24.com or the HIAB hostname).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "outpost24.py"
+}

@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "GROUPIB_FEED_TYPE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Mandatory Group-IB feed selector — one of 'compromised_account' (also 'accounts' / 'credentials' / 'creds' / 'compromised') OR 'phishing' (also 'phish' / 'attack' / 'attacks'). Selects which Group-IB Threat Intelligence feed to walk: 'compromised_account' pages /api/v2/compromised/account (per-record leaked credentials sourced from underground markets + breach dumps + stealer logs); 'phishing' pages /api/v2/attacks/phishing (brand-impersonating phishing infrastructure tied to the operator's domain / brand). Operator-friendly aliases are normalised onto the canonical lowercase name. Anything else is rejected client-side with a hard error so a typo doesn't silently pull the wrong feed."
+        },
+        "GROUPIB_LIMIT": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Optional per-request page size (default 100, clamped to [1, 500]). Group-IB documents a 500-record-per-page ceiling on both /api/v2/compromised/account and /api/v2/attacks/phishing; the executor pages the seqUpdate cursor forward until the result set is exhausted, MAX_RESULTS (5000) is hit, or MAX_PAGES (100) is hit. Values <= 0 / blank / unparseable fall back to the default; values > 500 are clamped to 500."
+        }
+    },
+    "environment_variables": [
+        "GROUPIB_USER",
+        "GROUPIB_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "groupib",
+    "title": "Group-IB Threat Intelligence",
+    "website": "https://www.group-ib.com/products/threat-intelligence/",
+    "description": "Group-IB Threat Intelligence importer. Pulls compromised-credential and phishing-attack records from the Group-IB Threat Intelligence (formerly TAP — Threat Analytics Platform) REST API (https://tap.group-ib.com/api/v2/compromised/account and /api/v2/attacks/phishing) and emits Faraday bulk-create JSON. Group-IB is a commercial threat-intelligence vendor that publishes per-record telemetry covering credential leaks observed in underground markets, exposed account dumps, brand-impersonating phishing kits, and live phishing infrastructure tied to the operator's brand / domain / IP space. The executor exposes two mutually-exclusive operational modes via GROUPIB_FEED_TYPE: (1) 'compromised_account' (with aliases accounts / credentials / creds / compromised) walks /api/v2/compromised/account; (2) 'phishing' (with aliases phish / attack / attacks) walks /api/v2/attacks/phishing. Auth: Group-IB uses HTTP Basic auth — the operator creates an API key in the Group-IB TI console (Profile -> API -> Generate) and pastes the issued user + key values into GROUPIB_USER + GROUPIB_API_KEY. The dispatcher base64-encodes {GROUPIB_USER}:{GROUPIB_API_KEY} and sends 'Authorization: Basic ...' on every request. GROUPIB_HOST is an optional environment override (not in the manifest's declared env vars) and defaults to https://tap.group-ib.com (the canonical Group-IB TI host); regional tenants and self-hosted offline caches are tolerated and https:// is added when the operator pasted in a bare FQDN. GROUPIB_LIMIT (optional, default 100, clamped [1, 500]) is the per-request page size. Pagination walks the seqUpdate cursor forward in page-sized batches until the result set is exhausted, MAX_RESULTS (5000) is hit, or MAX_PAGES (100) is hit; inter-request sleep paces requests at 0.4s. Each record becomes one Faraday vulnerability under a single synthetic 0.0.0.0 host with hostname 'groupib' (Group-IB records are brand-keyed / credential-keyed not host-keyed — the operator's other agents emit the host-side findings this feed is correlated against), tagged exactly ['groupib'] per the playbook spec, with a [GroupIB][Credential] (or [GroupIB][Phishing]) name prefix, the canonical login + service (or URL + brand) in the name, and the Group-IB record id in external_id. Severity bucketing differs by feed: compromised_account defaults to 'high' (a leaked credential is actionable by definition), bumps to 'critical' when the password is plaintext AND tied to an operator asset (client), and floors to 'info' when the credential is mitigated / revoked; phishing maps Group-IB's published Low / Medium / High label, bumps to 'critical' on Active records tied to a target brand, and floors to 'info' on Blocked / TakenDown records. Unscored records default to 'info' — we don't synthesise a ranking Group-IB hasn't published. Status is always 'open' (a Group-IB record can transition to Blocked / TakenDown in the portal but the underlying credential / phishing campaign lives on; Faraday surfaces the finding as open so the operator's remediation workflow takes over). Resolution defaults to a feed-appropriate analyst recommendation: compromised-account -> force-reset the credential, audit the affected service for unauthorised use, notify the impacted user, rotate any reused secrets; phishing -> submit takedown via the Group-IB Anti-Phishing service, block the URL on the operator's egress proxy + endpoint web-filter, sinkhole the impersonating domain. Refs include the canonical Group-IB portal permalink, the record id, login / service / passwordType / client / source / cnc (account mode) or url / domain / ip / targetBrand / kit / screenshot (phishing mode), any CVE ids surfaced in the structured cve list or free-text fields (each with its canonical NVD permalink), and foundTime / updateTime / dateDetected / dateBlocked / dateUpdated timestamps as explicit Groupib-* pivots so operators can pivot from a Faraday finding back to the Group-IB record. Tags: [groupib].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "groupib.py"
+}

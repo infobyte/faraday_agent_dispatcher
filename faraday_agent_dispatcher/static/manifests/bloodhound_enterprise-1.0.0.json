@@ -1,0 +1,33 @@
+{
+    "arguments": {
+        "BHE_DOMAIN_FQDN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Active Directory / Azure AD domain identifier forwarded verbatim to the ?domain= query parameter on GET /api/v2/attack-paths/findings. BHE accepts both an AD domain FQDN (e.g. corp.mycorp.com) and the equivalent Azure tenant id (a UUID) in the same slot. Optional; empty / blank is interpreted as 'all tenants known to this BHE deployment' and the executor walks every domain's findings. Whitespace is trimmed and URL-encoded server-side."
+        },
+        "BHE_ATTACK_PATH_TYPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "BHE attack-path finding slug forwarded verbatim to the ?finding= query parameter on GET /api/v2/attack-paths/findings. BHE finding slugs are short tokens documented in the BHE product UI (e.g. T0AddAllowedToAct, T0ESC1, LargeDefaultGroups). Optional; empty / blank is interpreted as 'all attack-path types' and the executor walks every finding type. Whitespace is trimmed and URL-encoded server-side."
+        }
+    },
+    "environment_variables": [
+        "BHE_HOST",
+        "BHE_TOKEN_ID",
+        "BHE_TOKEN_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "bloodhound_enterprise",
+    "title": "BloodHound Enterprise",
+    "website": "https://specterops.io/bloodhound-enterprise/",
+    "description": "BloodHound Enterprise (BHE) attack-path importer. Pulls asset-group inventory and attack-path findings from a BloodHound Enterprise tenant via the BHE REST API and emits Faraday bulk-create JSON. BHE is the SpecterOps-built attack-path-management product that continuously evaluates Active Directory / Azure AD identity-graph data and surfaces the privilege-escalation paths real adversaries would follow — so this executor is the identity-graph feed Faraday operators correlate the EDR / EASM / vuln-scanner agents' findings against to confirm whether an exposure intersects a known Tier Zero attack path (i.e. a misconfigured workstation that's also two hops from Domain Admin). Each BHE asset group becomes one Faraday host (asset groups aren't IP-keyed since they're logical collections of high-value principals like Tier Zero / Owned; they synthesise onto the 0.0.0.0 sentinel; the name / tag projection lands on host.hostnames; id / member_count / system_group enrichment lands on host.description; the asset group record itself becomes one Faraday vulnerability with the [IDENTITY] engine prefix). Each BHE attack-path finding becomes one Faraday host on the 0.0.0.0 sentinel (attack paths are graph relationships between principals, not network-keyed events) and one Faraday vulnerability with severity mapped from BHE's severity field (low -> low, moderate/medium/med -> med, high -> high, critical -> critical). Endpoints used: GET /api/v2/asset-groups?skip=N&limit=M (paginated asset-group inventory; returns {data: {asset_groups: [...]}}; each record carries id, name, tag, system_group, member_count, created_at, updated_at) and GET /api/v2/attack-paths/findings?domain=<BHE_DOMAIN_FQDN>&finding=<BHE_ATTACK_PATH_TYPE>&skip=N&limit=M (paginated attack-path finding feed; returns {data: [...]}; each record carries id, finding (the attack-path type slug e.g. T0AddAllowedToAct), severity, domain_sid, domain_name, principal_kind, from_principal, to_principal, created_at, deleted_at; BHE_DOMAIN_FQDN narrows the walk to a single AD / Azure tenant; BHE_ATTACK_PATH_TYPE narrows to one attack-path slug). Pagination is offset/limit based via skip + limit query parameters on both surfaces; the executor walks page-by-page until results is empty / the page returns fewer than limit entries or the env-only BHE_PAGES cap is reached (default 5, clamped to [1, 50]); limit is fixed at 100. Auth: BHE uses HMAC-signed requests. Operators create a token pair (token_id + token_key) in the BHE admin console under Administration -> API Tokens -> Create Token. The dispatcher signs every request via the SpecterOps-documented HMAC-SHA256 chain: operation_key = HMAC-SHA256(token_key, METHOD + URI_PATH); date_key = HMAC-SHA256(operation_key, RFC3339_DATE[:13]); signature = HMAC-SHA256(date_key, request_body_bytes). The base64-encoded signature ships on the Signature header, the RFC3339 timestamp ships on the RequestDate header, and the token id ships on Authorization: bhesignature <token_id>. The hour-truncated RFC3339 prefix means a signature is valid for the wall-clock hour it was minted in. BHE_HOST is the operator's BHE tenant host (e.g. mycorp.bloodhoundenterprise.io); https:// is added automatically when the operator pasted in a bare FQDN. Severity for asset groups is always info (they're inventory entries). Severity for findings is mapped from the severity field via SEVERITY_MAP — anything not in the map falls back to info. Tags: [bloodhound_enterprise, identity, attack-path, asset-group|finding].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "bloodhound_enterprise.py"
+}

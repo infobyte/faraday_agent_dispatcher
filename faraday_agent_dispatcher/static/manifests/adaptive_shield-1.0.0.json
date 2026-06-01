@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "AS_APP_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Adaptive Shield application id forwarded verbatim to the ?app_id= query parameter on GET /api/v1/applications and GET /api/v1/findings. Adaptive Shield accepts both numeric ids and SaaS slugs (e.g. salesforce, m365, slack, github) in the same slot. Optional; empty / blank is interpreted as 'all connected apps' on both surfaces. Whitespace is trimmed and URL-encoded server-side."
+        },
+        "AS_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum severity threshold forwarded to the ?min_severity= query parameter on GET /api/v1/findings. Accepts 'info' | 'low' | 'medium' | 'high' | 'critical' (case-insensitive — 'med' is normalised to 'medium'). Adaptive Shield drops below-threshold findings server-side before the response ships, so the executor walks whatever comes back. Optional; empty / blank or unknown values are interpreted as 'no threshold' and Adaptive Shield returns every severity."
+        }
+    },
+    "environment_variables": [
+        "AS_HOST",
+        "AS_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "adaptive_shield",
+    "title": "Adaptive Shield",
+    "website": "https://www.adaptive-shield.com",
+    "description": "Adaptive Shield SSPM importer. Pulls SaaS-application inventory and security-posture findings from an Adaptive Shield SSPM (SaaS Security Posture Management) tenant via the Adaptive Shield REST API and emits Faraday bulk-create JSON. Adaptive Shield monitors the operator's SaaS estate (M365, Salesforce, Google Workspace, Slack, GitHub, Okta, Zoom, ServiceNow, etc.) for misconfigurations, identity-hygiene gaps and integration risks — so this executor is the SaaS-posture feed Faraday operators correlate the IAM / identity / EDR / EASM agents' findings against to confirm whether an identity exposure also lands on a misconfigured app integration. Each Adaptive Shield application becomes one Faraday host (SSPM applications aren't IP-keyed since the integration is logical, not network-anchored; they synthesise onto the 0.0.0.0 sentinel; the name / vendor / instance_name projection lands on host.hostnames; app_id / status / integration_status / connected_at enrichment lands on host.description; the application record itself becomes one Faraday vulnerability with the [IDENTITY] engine prefix). Each Adaptive Shield finding becomes one Faraday host on the 0.0.0.0 sentinel (SSPM findings are configuration-posture observations rather than network-keyed events) and one Faraday vulnerability with severity mapped from the finding's severity field (info -> info, low -> low, medium/med -> med, high -> high, critical -> critical). The app_name / check_name / category projection lands on host.hostnames so the workspace's hostname index pivots on the SaaS app + control name. Endpoints used: GET /api/v1/applications?app_id=<AS_APP_ID>&page=N&page_size=M (paginated connected-application inventory; returns {results: [...], next: <url|null>, count: N}; each record carries id, app_id, name, vendor, instance_name, status, integration_status, connected_at, last_scan_at, tenant_id; when AS_APP_ID is set the dispatcher forwards it as the ?app_id= query parameter so the walk only returns that one SaaS app's integration record) and GET /api/v1/findings?app_id=<AS_APP_ID>&min_severity=<AS_MIN_SEVERITY>&page=N&page_size=M (paginated posture-finding feed; same envelope shape; each record carries id, check_id, check_name, description, severity, category, app_id, app_name, status, created_at, updated_at, remediation, compliance list of frameworks; AS_MIN_SEVERITY maps to Adaptive Shield's documented threshold filter on the same surface info | low | medium | high | critical). Pagination is page-number based via page + page_size query parameters on both surfaces; the executor walks page-by-page until results is empty / next is null or the env-only AS_PAGES cap is reached (default 5, clamped to [1, 50]); page_size is fixed at 100. Auth: Adaptive Shield uses long-lived API keys. Operators create one in the Adaptive Shield admin console under Settings -> Integrations -> REST API -> Generate Key. The dispatcher carries it on every request as the standard Authorization: Bearer <AS_API_KEY> header. AS_HOST is the operator's Adaptive Shield tenant host (e.g. mycorp.adaptive-shield.com or mycorp.us.adaptive-shield.com); https:// is added automatically when the operator pasted in a bare FQDN. Severity for applications is always info (they're inventory entries, not findings). Severity for findings is mapped from the severity field via SEVERITY_MAP — anything not in the map falls back to info. Tags: [adaptive_shield, identity, sspm, application|finding].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "adaptive_shield.py"
+}

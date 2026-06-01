@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "CYBERWATCH_GROUP": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Cyberwatch group name to filter the asset inventory (forwarded as the 'group' query parameter on /api/v3/assets). Omit to pull every asset visible to the API key."
+        },
+        "CYBERWATCH_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Forwarded to /api/v3/vulnerabilities as 'min_severity' and additionally enforced client-side after severity normalisation (handles both Cyberwatch's level_* strings and CVSS numeric scores). Default: info."
+        }
+    },
+    "environment_variables": [
+        "CYBERWATCH_HOST",
+        "CYBERWATCH_API_KEY",
+        "CYBERWATCH_SECRET_KEY"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "cyberwatch",
+    "title": "Cyberwatch",
+    "website": "https://cyberwatch.fr/",
+    "description": "Cyberwatch (Vulnerability Manager / Compliance Manager) importer. Lists assets via /api/v3/assets (optionally filtered by group) and per-asset vulnerabilities via /api/v3/vulnerabilities; emits one Faraday host per Cyberwatch asset. Severity is normalised from Cyberwatch's level_* strings (level_critical/high/medium/low/negligible) or, when only a CVSS score is provided, bucketed via the CVSS v3 ranges. Auth uses the IETF HTTP Signatures draft (HMAC-SHA256 over '(request-target) host date accept') — set CYBERWATCH_API_KEY as the signature keyId, CYBERWATCH_SECRET_KEY as the signing secret, and CYBERWATCH_HOST to the Cyberwatch master base URL.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "cyberwatch.py"
+}

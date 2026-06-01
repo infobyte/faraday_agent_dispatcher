@@ -1,0 +1,37 @@
+{
+    "arguments": {
+        "XRAY_REPO": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "JFrog Artifactory repository key (e.g. libs-release-local, docker-prod, npm-virtual). Must be Xray-indexed — the importer cross-checks against /api/v1/binMgr/{binMgrId}/repositories (default binMgrId = 'default'; override with the XRAY_BIN_MGR_ID env var if your tenant uses a non-default binary manager id) and surfaces the repo's packageType / type in the host description."
+        },
+        "XRAY_PATH": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Path within XRAY_REPO that identifies the artifact to scan (e.g. org/example/lib/1.0/lib-1.0.jar). For build-level imports prefix with 'build:' and supply the build number ('build:my-build:42'); the convenience form 'my-build#42' (no path separator in the left side) is also accepted. Artifact paths route to POST /api/v1/vulnerabilities (with a POST /api/v1/summary/artifact fallback for tenants that only expose the summary endpoint); build paths route to POST /api/v1/summary/build."
+        },
+        "XRAY_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum severity floor — issues normalised below this bucket are dropped before they reach Faraday. One of info / low / medium / high / critical (defaults to info, i.e. no floor). Applied after normalising the Xray severity enum (Critical / High / Medium / Low / Information / Unknown / PendingScan) and falling back to CVSS v3 base-score bucketing when the enum is absent."
+        }
+    },
+    "environment_variables": [
+        "XRAY_HOST",
+        "XRAY_USER",
+        "XRAY_API_KEY"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Software Composition Analysis",
+    "name": "jfrog_xray",
+    "title": "JFrog Xray",
+    "website": "https://jfrog.com/xray/",
+    "description": "JFrog Xray REST API importer. Pulls Software Composition Analysis findings from a JFrog Xray tenant and emits Faraday bulk-create JSON to stdout. Authenticates against Xray via HTTP Basic with XRAY_USER / XRAY_API_KEY — JFrog accepts an API key, an identity / reference token, or a local password on the same Basic surface, so the single XRAY_API_KEY env var covers each. A pre-built 'Bearer <token>' value in XRAY_API_KEY short-circuits the Basic exchange and is sent verbatim so tenants fronted by an OAuth gateway can pass an externally-minted token. Resolves repository metadata via GET /api/v1/binMgr/{binMgrId}/repositories (default binMgrId = 'default'; override with the XRAY_BIN_MGR_ID env var) so the host description surfaces packageType / repo type / indexed status. For artifact-level imports (XRAY_PATH = repo path) the importer POSTs /api/v1/vulnerabilities with a filter body {repo, path, include_ignored: true, page_num, num_of_rows} and paginates via page_num / num_of_rows; on 404 / missing endpoint it falls back to POST /api/v1/summary/artifact with {paths: ['{repo}/{path}']} (same per-issue shape on artifacts[].issues). For build-level imports (XRAY_PATH = 'build:<name>:<number>' or '<name>#<number>') it POSTs /api/v1/summary/build with {build_name, build_number}. Each scanned artifact / build becomes one Faraday host (synthetic 0.0.0.0 ip because SCA findings live in dependency manifests, not on IPs); per-issue Xray findings attach as Faraday vulnerabilities — one per (issue_id, componentDisplayName) pair with [SCA] engine prefix, '{summary} in {componentDisplayName}' in the title, component coordinates / impact paths, issueType / provider / severity / cvssScore / vector / raw status / repo / path / build metadata in the description; fix_version / fixed_versions / recommended_version / remediation / recommendation / solution / per-component fixed_versions surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed, deduped across issue + per-CVE attribution), references / external_references / links URLs (string + dict.url + dict.href shapes), advisory_url, and XRAY-* issue ids (issue_id + source_id, excluded from CVE collection). CVE list harvested from cves[] (string + list-of-string + list-of-dict shapes, dedup case-insensitive), aliases, references, plus a CVE-shaped summary fallback. Severity normalised from Xray's severity enum (Critical / High / Medium / Low / Information / Unknown / PendingScan — also accepts Major / Moderate / Minor / Important / Informational / None / Unspecified) with CVSS v3 / v2 base-score bucketing as a fallback (≤0/>10 → info, <4 low, <7 medium, <9 high, ≥9 critical); client-side XRAY_MIN_SEVERITY floor enforced after normalisation. Status mapped from issue.status (Open / New / In Progress / Triaged / Reopened → open, Fixed / Resolved / Closed / Remediated / Patched → closed, Ignored / Suppressed / Muted / Not Applicable / False Positive / Risk Accepted / Waived → risk-accepted) combined with analyst-triage flags — ignored / falsePositive / muted / suppressed / notApplicable (wins over lifecycle status), fixed / resolved → closed. XRAY_HOST is the JFrog platform base URL (e.g. https://yourco.jfrog.io or https://xray.corp.example.com); the executor auto-appends '/xray' when the bare platform host is given so the canonical /xray/api/v1/... REST surface is reached. Hosts already pointing at .../xray are accepted as-is.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "jfrog_xray.py"
+}

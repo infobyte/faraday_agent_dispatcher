@@ -1,0 +1,43 @@
+{
+    "arguments": {
+        "GCP_ORGANIZATION_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "GCP organization id (numeric) whose Security Command Center surface should be queried. Accepts a bare numeric id (e.g. 123456789012) or the fully-qualified organizations/{id} form. Used as the {org} segment in the SCC v2 parent string organizations/{org}/sources/{src}/locations/{loc}. The service account behind GOOGLE_APPLICATION_CREDENTIALS must hold roles/securitycenter.findingsViewer (or equivalent custom role granting securitycenter.findings.list) at the organization scope."
+        },
+        "GCP_SOURCE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional SCC source id (numeric) to narrow the query to a single Security Command Center source. Accepts a bare numeric id or the sources/{id} form. Blank queries every source the IAM principal can read by using the wildcard sources/- in the parent string."
+        },
+        "SCC_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor. Accepts info | low | medium | high | critical (plus the SCC synonyms: informational, important / major, moderate, minor, none / unspecified / undefined / severity_unspecified). When set to medium or above the floor is also pushed into the server-side filter as severity=\"...\" disjunctions; below that the floor is applied client-side after each finding has been bucketed. Defaults to info (no filtering)."
+        },
+        "SCC_STATE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional SCC state filter (ACTIVE | INACTIVE). Forwarded as state=\"...\" in the SCC filter clause. Synonyms accepted (OPEN -> ACTIVE, CLOSED / RESOLVED -> INACTIVE). Blank returns every state the IAM principal can read."
+        }
+    },
+    "environment_variables": [
+        "GOOGLE_APPLICATION_CREDENTIALS"
+    ],
+    "check_cmds": [
+        "python3 -c 'from google.cloud import securitycenter_v2'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Cloud Security",
+    "name": "gcp_scc",
+    "title": "Google Cloud Security Command Center",
+    "website": "https://cloud.google.com/security-command-center",
+    "description": "Google Cloud Security Command Center v2 vendor-native CSPM importer. Pulls security findings from GCP Security Command Center via the canonical google-cloud-securitycenter SDK (SecurityCenterClient.list_findings) and emits Faraday bulk-create JSON to stdout. Each affected GCP asset (resolved from finding.resourceName — the canonical //{service}.googleapis.com/projects/{proj}/{scope}/{loc}/{type}/{name} shape — or the per-result resource blob returned by SCC v2) becomes one Faraday host (synthetic 0.0.0.0 ip because SCC findings live on GCP assets, not on IPs); per-resource findings attach as Faraday vulnerabilities — one per Finding name with [CNAPP] engine prefix. Severity is normalised from SCC's CRITICAL/HIGH/MEDIUM/LOW/UNDEFINED/SEVERITY_UNSPECIFIED enum with CVSS v3 base-score bucketing (vulnerability.cve.cvssv3.baseScore) as a fallback when only a numeric score is present. Status mapped from finding.state (ACTIVE -> open, INACTIVE -> closed) and finding.mute (MUTED -> risk-accepted). CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from vulnerability.cve.id + cves[].id + vulnerability.cve.references plus free-form title / description / category / sourceProperties token-scan. Refs include CWE-* from vulnerability.cve.cwes, externalUri (SCC console deep-link), SCC-Finding (canonicalName) / SCC-Category / SCC-Class / SCC-Source / SCC-Vuln / SCC-Exploitation / SCC-UpstreamFix pivots, MITRE-Tactic / MITRE-Technique pivots from mitreAttack, and Compliance: {standard} {version} {id} pivots from compliances[]. Resolution is built from finding.nextSteps (SCC's canonical operator-facing guidance) with a sourceProperties.Recommendation / Explanation fallback. Auth: GCP Security Command Center v2 uses the standard Google Application Default Credentials chain. A service account with roles/securitycenter.findingsViewer is required; credentials are exposed as a service-account JSON key file whose path is set in GOOGLE_APPLICATION_CREDENTIALS. The SDK picks the file up automatically via ADC; the executor validates that the path exists and is readable before instantiating the client. Tags: [gcp_scc, cnapp, cloud-native-posture].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "gcp_scc.py"
+}

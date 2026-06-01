@@ -1,0 +1,38 @@
+{
+    "arguments": {
+        "CYLANCE_TENANT_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "BlackBerry Cylance tenant identifier. The value is shown in the Cylance console under Settings -> Integrations -> Custom Application alongside the App Id / App Secret pair created for this importer; Cylance carries it in the JWT auth payload as the `tid` claim. Required because the auth JWT is rejected with HTTP 401 when the tid does not match the tenant the App Id belongs to. Whitespace is trimmed; blank input causes the executor to exit with a clear error."
+        },
+        "CYLANCE_REGION": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "BlackBerry Cylance regional cloud the tenant lives in. Accepts na | euc1 | au | sae1 | jp plus operator-friendly aliases (us -> na, eu -> euc1, apac -> au, sa -> sae1, jpn -> jp). Maps onto the regional API host (na = protectapi.cylance.com, euc1 = protectapi-euc1.cylance.com, au = protectapi-au.cylance.com, sae1 = protectapi-sae1.cylance.com, jp = protectapi-jp.cylance.com). Required because Cylance has region-pinned endpoints — calling the wrong region returns HTTP 404. Defaults to `na` when unset / blank / garbage."
+        },
+        "CYLANCE_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for Cylance threats. Accepts info | low | medium | high | critical (plus Cylance synonyms: informational, important / major, moderate, minor, none / unspecified / unknown). Threats below the floor are dropped from the Faraday output after the per-threat severity normalisation (Cylance's -1.0 .. 1.0 cylance_score and the classification / sub_classification enum both bucket onto the Faraday scale). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "CYLANCE_APP_ID",
+        "CYLANCE_APP_SECRET"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "cylance",
+    "title": "BlackBerry Cylance (CylancePROTECT)",
+    "website": "https://www.blackberry.com/us/en/products/cylance-endpoint-security",
+    "description": "BlackBerry Cylance (CylancePROTECT) REST importer. Pulls managed devices, the threat catalogue, per-device threats and device policies from a BlackBerry Cylance tenant via GET /devices/v2/, GET /devices/v2/{device_id}/threats, GET /threats/v2/ and GET /policies/v2/. Each Cylance device becomes one Faraday host (ip = the first non-loopback entry in ip_addresses, falling back to synthetic 0.0.0.0 because Cylance-managed mobile / VDI endpoints often only carry private addresses); per-device threats attach as Faraday vulnerabilities with engine prefix [EDR]. Severity is bucketed from the Cylance regression score (cylance_score, -1.0 .. 1.0 where >= 0.8 -> critical, >= 0.4 -> high, >= 0.0 -> medium, >= -0.5 -> low, < -0.5 -> info) plus the classification / sub_classification enum (Malware / Ransomware / Trojan / Backdoor -> high or critical; PUP / Adware -> low; Trusted / Safe -> info), with CVSS bucketing as a fallback. Status mapped from file_status (Default / Listed / Active -> open, Quarantined / Blocked -> closed, Waived / Allowed / Whitelisted -> risk-accepted) with state / status fallbacks and quarantined / waived / safelisted boolean flags as a final fallback. Per-device threats are enriched up-front against the global /threats/v2/ catalogue so the per-device shape surfaces the global classification + score + cert_publisher + av_industry data. Refs include Cylance-Threat / Cylance-MD5 / Cylance-Classification / Cylance-SubClassification / Cylance-FileStatus / Cylance-Policy / Cylance-PolicyId / Cylance-CertPublisher / Cylance-AVIndustry / Cylance-Device / Cylance-DetectedBy pivots plus any inline URL references. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from name / classification / sub_classification / av_industry / cert_publisher / file_path scans plus explicit cve / cves / aliases lists. Auth: BlackBerry Cylance uses a per-tenant JWT auth flow. The operator creates a Custom Application in the Cylance console (Settings -> Integrations -> Custom Application -> Create) with the requested scopes (device:read, device:list, threat:read, threat:list, policy:read, policy:list) and receives an App Id + App Secret pair. The dispatcher signs an HS256 JWT locally with the App Secret carrying the App Id (sub) + Tenant Id (tid) + random jti + comma-separated scope (sco), POSTs it to /auth/v2/token and stores the returned bearer token for the rest of the run. Credentials are exposed as CYLANCE_APP_ID + CYLANCE_APP_SECRET; CYLANCE_TENANT_ID is the tenant identifier shown in the Custom Application listing; CYLANCE_REGION selects the regional API endpoint (na | euc1 | au | sae1 | jp — Cylance has region-pinned endpoints, one per cloud). Tags: [cylance, edr, endpoint-edr].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "cylance.py"
+}

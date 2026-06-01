@@ -1,0 +1,38 @@
+{
+    "arguments": {
+        "DSM_POLICY_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Trend Micro Deep Security policy id filter. When set, the computer inventory walk narrows to computers attached to the named policy via the searchCriteria.policyID predicate. Numeric / numeric-string input is coerced to int (the Deep Security API expects an integer policyID); non-numeric input is logged and dropped so the executor still runs against the unfiltered catalogue. Defaults to None (no filter)."
+        },
+        "DSM_HOSTNAME_FILTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side substring filter applied to the Deep Security computer's hostName / displayName. The match is case-insensitive — useful to scope a run to a single business unit (e.g. `prod-` or `corp-`) without changing the API key's role on the manager side. Defaults to None (no filter)."
+        },
+        "DSM_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for Deep Security findings. Accepts info | low | medium | high | critical (plus Deep Security synonyms: informational, important / major, moderate, minor, none / unspecified / unknown) plus the numeric 1..4 enum the DSM IPS rule catalogue uses (1=Low, 2=Medium, 3=High, 4=Critical). Findings below the floor are dropped from the Faraday output after per-finding severity normalisation (anti-malware events bucket off the malwareType enum; IPS rules bucket off the canonical severity integer with CVSS fallback). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "DSM_HOST",
+        "DSM_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "trendmicro_deep_security",
+    "title": "Trend Micro Deep Security",
+    "website": "https://www.trendmicro.com/en_us/business/products/hybrid-cloud/deep-security.html",
+    "description": "Trend Micro Deep Security REST importer. Pulls managed computers, anti-malware events and the IPS rule catalogue from a Trend Micro Deep Security Manager (DSM) instance via POST /api/computers/search, POST /api/searches/eventsantimalware and POST /api/ipsrules/search. Each Deep Security computer becomes one Faraday host (ip = lastIPUsed / ipAddress, falling back to synthetic 0.0.0.0 because Deep Security agents on VDI / mobile / public cloud endpoints sometimes only carry private addresses); per-computer anti-malware events attach as Faraday vulnerabilities with engine prefix [EDR], one per AM event id. Each assigned IPS rule that maps onto a CVE list (Deep Security stamps CVE-* on virtual-patching rules) is also surfaced as a vulnerability under the matching computer so the Faraday workspace mirrors the virtual-patch posture the manager reports. Severity for anti-malware events is bucketed from the Deep Security malwareType enum (Ransomware / Rootkit / Backdoor -> critical; Trojan / Worm / Virus / Spyware / Exploit -> high; PUP / Adware -> low; Cookie / EICAR -> info) with CVSS bucketing as a fallback; severity for IPS rules is bucketed from the numeric 1..4 severity enum (1=Low ... 4=Critical) with CVSS bucketing as a fallback. Status for anti-malware events mapped from scanAction1 / scanAction2 (Cleaned / Quarantined / Deleted / Terminated -> closed, Untouched / Failed / DenyAccess -> open, Allowed / Exception / Whitelisted -> risk-accepted) with state / status fallbacks and quarantined / cleaned / allowed boolean flags as a final fallback; IPS rule findings are always 'open' because the rule indicates the assigned virtual-patching posture. Pagination uses Deep Security's canonical id-cursor pattern (searchCriteria.idValue + idTest=greater-than, maxItems=5000 capped at MAX_PAGES=200). Refs include DSM-Rule / DSM-RuleName / DSM-Malware / DSM-MalwareType / DSM-FileSHA1 / DSM-FileSHA256 / DSM-FilePath / DSM-Policy / DSM-PolicyId / DSM-ScanAction / DSM-ApplicationType pivots plus any inline URL references. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from the IPS rule's CVE / cves / aliases lists + cveDescription + name + description scans, plus the AM event's malwareName / reason / sourceProcessName / filePath token scans. Auth: Deep Security uses an API key header auth flow. The operator creates an API Key in the DSM console (Administration -> User Management -> API Keys -> New) with a Full Access role and pastes the returned secret into DSM_API_KEY. The dispatcher carries that key on every request as api-secret-key: <DSM_API_KEY> plus api-version: v1. DSM_HOST is the manager URL (e.g. https://dsm.example.com:4119 for the default on-prem port or https://workload.deepsecurity.trendmicro.com for the Trend Micro Cloud One Workload Security SaaS endpoint). DSM_POLICY_ID is an optional computer-side filter that narrows the computer inventory walk to a single policy id; DSM_HOSTNAME_FILTER is an optional client-side substring filter applied to hostName / displayName so operators can scope a run to a single business unit without changing the API key's role. Tags: [trendmicro_deep_security, edr, endpoint-edr].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "trendmicro_deep_security.py"
+}

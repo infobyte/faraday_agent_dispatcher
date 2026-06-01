@@ -1,0 +1,39 @@
+{
+    "arguments": {
+        "SATELLITE_ORG_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Red Hat Satellite / Foreman organization id (or short label) that scopes which hosts are walked. Found in the Satellite UI under Administer -> Organizations (the column labelled 'Id') or via GET /api/organizations. Foreman org ids are typically positive integers but the REST API also accepts short string labels; the executor hard-validates the identifier shape client-side (alphanumeric + ._- up to 64 chars) so a typo or control char can't fan out into '/api/organizations/None' calls. Defaults to all organizations the SATELLITE_USER service account can see when unset."
+        },
+        "SATELLITE_HOST_COLLECTION": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Red Hat Satellite host collection name that scopes which managed hosts are walked. Host collections are user-defined groupings of content hosts -- typically friendly names like 'Production Servers' / 'Web Tier' / 'DC-1' (alphanumeric + spaces + ._- up to 128 chars). When set, the executor walks GET /api/hosts?search=host_collection%20%3D%20%22<name>%22 (Foreman search syntax for host-collection membership). Defaults to every host in the org (or in every org the credentials can see) when unset."
+        },
+        "SATELLITE_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for Satellite errata findings. Accepts info | low | medium | high | critical (plus Red Hat synonyms: severe -> critical, important -> high, moderate / warning -> medium, minor -> low, informational / information / unspecified / none -> info) plus numeric-string CVSS-style input bucketed via severity_from_cvss (<4 low, <7 medium, <9 high, >=9 critical). Errata below the floor are dropped from the Faraday output after per-erratum severity normalisation (bucketed from the Red Hat string enum Critical / Important / Moderate / Low / None + numeric cvss_score 0-10 fallback + erratum type fallback for bugfix / enhancement advisories that carry severity='None'). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "SATELLITE_HOST",
+        "SATELLITE_USER",
+        "SATELLITE_PASSWORD"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Patch Management",
+    "name": "redhat_satellite",
+    "title": "Red Hat Satellite",
+    "website": "https://www.redhat.com/en/technologies/management/satellite",
+    "description": "Red Hat Satellite (Foreman / Katello) patch-management REST importer. Pulls the Foreman host catalogue (one Satellite-managed asset per row -- hostname / IP / MAC / OS string / organization / host-collection memberships / errata-status label / last check-in / subscription-status label) and the per-host applicable-errata catalogue (RHSA / RHBA / RHEA advisories with type + severity + cves + packages + bugzilla + reboot-suggested + issued / updated dates + solution) from a Red Hat Satellite console via GET <SATELLITE_HOST>/api/hosts (optionally scoped by SATELLITE_ORG_ID and / or by a host-collection name passed through the Foreman search-query syntax 'host_collection = \"<name>\"') and GET <SATELLITE_HOST>/api/hosts/{host_id}/errata. Each Satellite-managed host becomes one Faraday host (keyed by the Foreman host record) with host.os set to the Foreman operatingsystem.description / operatingsystem_name string (e.g. 'Red Hat Enterprise Linux Server 8.10'). Each applicable erratum attaches as a Faraday vulnerability with the engine prefix [PATCH-MGMT]. Severity is bucketed from the Red Hat string enum (Critical -> critical, Important -> high, Moderate -> medium, Low -> low, None -> info / type-default) with the numeric cvss_score / cvss / score / riskScore 0-10 used as a CVSS-style fallback and the erratum type (security / bugfix / enhancement) used as a tertiary fallback for advisories carrying severity='None'. Status mapped from status / state / errataStatus / applicabilityStatus / installationStatus + Foreman 'installable' bool (applicable / installable / needed / missing / open / pending / new / detected -> open, applied / installed / succeeded / fixed / patched / resolved / mitigated / closed / completed -> closed, ignored / suppressed / deferred / excluded / waived / accepted / acknowledged / risk_accepted / will_not_install / false_positive -> risk-accepted). Pagination uses Foreman's canonical page + per_page cursor (PAGE_SIZE=100 per page capped at MAX_PAGES=200) with subtotal / total exhaustion detection. Refs include Satellite-Errata / Satellite-Type / Satellite-Severity / Satellite-Reboot / Satellite-Issued / Satellite-Updated / Satellite-Package / Satellite-Bug pivots plus inline advisory URLs and the canonical Red Hat advisory link https://access.redhat.com/errata/{errata_id} for RHSA / RHBA / RHEA ids. CVE list harvested from the Foreman 'cves' object list ([{cve_id: 'CVE-...'}]) plus the legacy cveIds / cve_ids fields plus title / summary / description / solution token scans via a strict CVE-\\d{4}-\\d+ regex. Auth: HTTP Basic with the SATELLITE_USER / SATELLITE_PASSWORD credentials (typically a service account scoped to view_hosts + view_errata) carried as 'Authorization: Basic <b64(user:password)>' plus Accept: application/json on every /api/ call. SATELLITE_HOST is the Satellite endpoint URL (http(s)://host[:port], trailing slash stripped client-side, control chars rejected). Tags: [redhat, patch-management, satellite, errata].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "redhat_satellite.py"
+}

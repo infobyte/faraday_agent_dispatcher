@@ -1,0 +1,39 @@
+{
+    "arguments": {
+        "CYCOG_FILTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional JSON filter forwarded verbatim in the POST body of /v1/assets and /v1/issues as the filter field. Accepts a JSON-encoded object or array per CyCognito's filter grammar (e.g. '{\"discovery_source\": \"seed_domain\"}' or '[{\"field\":\"severity\",\"op\":\"in\",\"values\":[\"high\",\"critical\"]}]'). Defaults to '' (no filter; CyCognito returns the full inventory the API token has access to). Garbage / unparseable JSON is logged and ignored."
+        },
+        "CYCOG_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional severity floor applied client-side on the issues surface. Accepts the canonical Faraday enum (info / low / medium / high / critical) plus CyCognito-side aliases (Important / Major / Moderate / Informational / Sev1..Sev5). Defaults to '' (no filter; we emit the full hits surface). Garbage values are logged and ignored. CyCognito's server-side filter grammar lives in CYCOG_FILTER — this arg is the gentle, client-side floor."
+        },
+        "CYCOG_PAGES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional per-surface page-walk cap. Each CyCognito v1 search page returns up to 100 hits via count=100; CYCOG_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited CyCognito API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (≈ 500 hits per surface, 1000 total across assets + issues)."
+        }
+    },
+    "environment_variables": [
+        "CYCOG_HOST",
+        "CYCOG_REALM",
+        "CYCOG_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "cycognito",
+    "title": "CyCognito",
+    "website": "https://www.cycognito.com/",
+    "description": "CyCognito EASM importer. Pulls externally-discovered assets and issues from a CyCognito realm (organisation) and emits Faraday bulk-create JSON. Each CyCognito asset becomes one Faraday host (ip = the asset's first public IP, falling back to synthetic 0.0.0.0 for domain-keyed assets); per-asset issues attach as one Faraday vulnerability per issue_id with the [EASM] engine prefix. Endpoints used: POST /v1/assets (paginated external-asset inventory; the canonical CyCognito pivot — every issue joins by asset_id) and POST /v1/issues (paginated finding inventory with severity + category + cves + remediation guidance). Pagination is offset-based: count=100 per page, offset advanced via the response envelope's next_offset cursor (or current_offset + page_size when the envelope is silent), walked page-by-page until the page comes up short or CYCOG_PAGES is reached. JSON body carries realm (CYCOG_REALM) + filter (CYCOG_FILTER, the operator-supplied free-form JSON filter) + count + offset. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to priority / risk_rating / risk_score (CyCognito 0-10 scale) then CVSS when nothing else lands; aliases collapse CyCognito-side labels (Important / Major / Moderate / Informational / Sev1..Sev5) onto the canonical Faraday bucket. Status mapping covers new / in_progress / investigating -> open, resolved / closed / remediated -> closed, and false_positive / risk_accepted / wont_fix -> risk-accepted. Refs include CyCognito-Asset / CyCognito-AssetName / CyCognito-AssetType / CyCognito-Org / CyCognito-Id / CyCognito-Category / CyCognito-Port pivots plus any url / reference_url / evidence_url surfaced on the issue. Auth: CyCognito uses a single long-lived API token created in the CyCognito console under Settings -> API. The dispatcher carries the token on every request as the Authorization: <CYCOG_TOKEN> header. CYCOG_HOST is the CyCognito tenant host (e.g. api.platform.cycognito.com) and CYCOG_REALM is the organisation identifier scoping the search. Tags: [cycognito, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "cycognito.py"
+}

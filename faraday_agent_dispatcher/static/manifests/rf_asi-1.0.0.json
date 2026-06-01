@@ -1,0 +1,37 @@
+{
+    "arguments": {
+        "RF_ASI_PROJECT_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Recorded Future Attack Surface Intelligence project identifier forwarded server-side as the project_id query param on /v2/attack-surface-intelligence/assets and /v2/attack-surface-intelligence/findings. Service-account tokens with cross-project scope may omit it; otherwise set to the ASI project identifier shown in the Recorded Future console URL. Defaults to '' (no project scope; Recorded Future returns whatever the token has access to)."
+        },
+        "RF_ASI_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional severity floor applied client-side on the findings surface. Accepts the canonical Faraday enum (info / low / medium / high / critical) plus Recorded-Future-side aliases (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5). Defaults to '' (no filter; we emit the full hits surface). Garbage values are logged and ignored."
+        },
+        "RF_ASI_PAGES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional per-surface page-walk cap. Each Recorded Future ASI v2 search page returns up to 100 hits via limit=100; RF_ASI_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited Recorded Future API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (~ 500 hits per surface, 1000 total across assets + findings)."
+        }
+    },
+    "environment_variables": [
+        "RF_ASI_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "rf_asi",
+    "title": "Recorded Future Attack Surface Intelligence",
+    "website": "https://www.recordedfuture.com/platform/attack-surface-intelligence",
+    "description": "Recorded Future Attack Surface Intelligence (ASI) EASM importer. Pulls externally-discovered assets and findings from the Recorded Future ASI REST API and emits Faraday bulk-create JSON. Each ASI asset becomes one Faraday host (ip = the asset's first public IP, falling back to synthetic 0.0.0.0 for domain-keyed assets); per-asset findings attach as one Faraday vulnerability per finding_id with the [EASM] engine prefix. Endpoints used: GET /v2/attack-surface-intelligence/assets (paginated external-asset inventory; the canonical ASI pivot - every finding joins by asset_id) and GET /v2/attack-surface-intelligence/findings (paginated finding inventory with severity + category + cves + remediation guidance; query string also carries the operator-supplied project_id so Recorded Future narrows server-side). Pagination is offset-based: limit=100 per page, offset advanced via the response envelope's next_offset cursor (or current_offset + page_size when the envelope is silent), walked page-by-page until the page comes up short or RF_ASI_PAGES is reached. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to priority / risk_rating / risk_score (Recorded Future 0-99 scale) then CVSS when nothing else lands; aliases collapse Recorded-Future-side labels (Important / Major / Moderate / Informational / Negligible / Sev1..Sev5 / P1..P5) onto the canonical Faraday bucket. Status mapping covers new / in_progress / investigating / triaged -> open, resolved / closed / remediated / fixed / mitigated / patched -> closed, and false_positive / risk_accepted / accepted_risk / wont_fix -> risk-accepted. Refs include RfAsi-Asset / RfAsi-AssetName / RfAsi-AssetType / RfAsi-Project / RfAsi-Id / RfAsi-Category / RfAsi-Port pivots plus any url / reference_url / evidence_url surfaced on the finding. Auth: Recorded Future uses a single long-lived API token created in the Recorded Future console under User Settings -> API Access. The dispatcher carries the token on every request as the X-RFToken: <RF_ASI_TOKEN> header. RF_ASI_HOST defaults to https://api.recordedfuture.com and is settable for federated / on-prem deployments. Tags: [rf_asi, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "rf_asi.py"
+}

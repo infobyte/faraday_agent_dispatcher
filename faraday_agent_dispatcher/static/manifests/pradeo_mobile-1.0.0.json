@@ -1,0 +1,30 @@
+{
+    "arguments": {
+        "PRADEO_APP_BUNDLE_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Pradeo application bundle id (e.g. com.example.app) or Android package name to scope the import. When set, only that application's threats are imported via GET /api/v1/applications?bundle_id=<id> + GET /api/v1/threats?application_id=<aid>. Omit to enumerate every application visible to PRADEO_TOKEN and import each application's threats."
+        },
+        "PRADEO_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Enforced client-side after severity normalisation (handles Pradeo's string severities — Critical/High/Medium/Low/Info — and its 0-4 numeric ladder, with CVSS v3 fallback when only a numeric score is given). Default: info."
+        }
+    },
+    "environment_variables": [
+        "PRADEO_HOST",
+        "PRADEO_TOKEN"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "pradeo_mobile",
+    "title": "Pradeo Mobile Security",
+    "website": "https://www.pradeo.com/",
+    "description": "Pradeo Mobile Security REST API importer. Pulls Mobile Application Security Testing (MAST) findings from a Pradeo Security tenant and emits Faraday bulk-create JSON to stdout. Lists applications via GET /api/v1/applications (or filters by bundle id via GET /api/v1/applications?bundle_id=<id> when PRADEO_APP_BUNDLE_ID is set, with a client-side filter fallback for older deployments), then pulls per-application threats via GET /api/v1/threats?application_id=<aid> paginated with page/per_page. Each application becomes one Faraday host (synthetic 0.0.0.0 because Pradeo findings live in mobile binaries, not on IPs) with hostname = bundle id (falls back to application name); per-application threats attached as Faraday vulnerabilities — one per Pradeo threat id with [MAST] engine prefix, rule name / category / threat class / platform, first/last detected timestamps and status surfacing in the description; remediation / recommendation / mitigation / how-to-fix text surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the 'CWE-' prefix collapsed), OWASP Mobile Top 10 categories, MASVS / MASTG controls, PradeoRule-<rule>, PradeoCategory-<category>, plus any URLs from the references / links list. CVE list harvested from cve / cveId / cves (string + list-of-string + list-of-dict shapes, deduped). Severity normalised from Pradeo's string enum (Critical/High/Medium/Low/Info — also accepts Important/Moderate/Minor/Informational/None/Negligible), its 0-4 numeric ladder (0=info, 1=low, 2=medium, 3=high, 4=critical) and a CVSS v3 fallback when only a numeric score is given; client-side PRADEO_MIN_SEVERITY floor enforced after normalisation. Status mapped from Pradeo's lifecycle status (New/Open/Active/Detected/Pending/Confirmed → open, False Positive / Accepted Risk / Ignored / Suppressed (string forms with _, space or compact separators all accepted) → risk-accepted, Fixed/Resolved/Closed/Remediated/Mitigated/Patched → closed); analyst triage flags (is_false_positive / accepted_risk / ignored booleans) feed risk-accepted when the string status is missing. Auth: 'Authorization: Bearer <PRADEO_TOKEN>' carrying a Pradeo Security Center API token (generated under Settings → API; the token carries the tenant scope). PRADEO_HOST is the Pradeo Security Center base URL (e.g. https://api.pradeo.net or the on-prem manager URL).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "pradeo_mobile.py"
+}

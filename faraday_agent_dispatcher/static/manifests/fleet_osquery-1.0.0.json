@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "FLEET_TEAM_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Server-side team filter forwarded verbatim as a ?team_id=<value> query-string parameter to GET /api/v1/fleet/hosts and GET /api/v1/fleet/queries. Optional; empty / blank walks every team on the Fleet appliance (the dispatcher's token scope still applies). Fleet 4.x accepts both numeric ids (e.g. 3) and the textual 'no-team' / 0 'global' slugs on some surfaces — the value is forwarded verbatim. Useful for sharding inventory pulls across multiple Fleet teams so each dispatcher agent only walks one team's worth of records per run. Whitespace is trimmed."
+        },
+        "FLEET_LABEL_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Server-side label filter forwarded verbatim as a ?label_id=<value> query-string parameter to GET /api/v1/fleet/hosts. Optional; empty / blank walks every label on the appliance. Useful for scoping the host pull to a single Fleet label (e.g. 'macOS Workstations', 'Production Linux'). Note: Fleet does NOT label-key the /queries surface so the executor silently drops this filter on the saved-query walk. Whitespace is trimmed."
+        }
+    },
+    "environment_variables": [
+        "FLEET_HOST",
+        "FLEET_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "fleet_osquery",
+    "title": "Fleet (osquery)",
+    "website": "https://fleetdm.com",
+    "description": "Fleet (osquery) asset-inventory importer. Pulls managed hosts and saved osquery queries from a Fleet (fleetdm.com) appliance via the Fleet v1 REST API and emits Faraday bulk-create JSON. Each Fleet host becomes one Faraday host (the host's primary_ip maps onto host.ip — loopback / 0.0.0.0 / ::1 are explicitly skipped and the executor falls back to nics / network_interfaces then a 0.0.0.0 sentinel when nothing usable is found; the hostname / computer_name / display_name projection lands on host.hostnames; primary_mac with a nics fallback lands on host.mac; and the platform / os_version / hardware_model / hardware_vendor chain joins onto host.os). Each saved osquery query from /api/v1/fleet/queries becomes one synthetic Faraday host with the 0.0.0.0 sentinel (queries aren't IP-keyed — they're operator-defined osquery SQL packs) so the workspace still surfaces the Fleet query inventory alongside the host inventory; the query name lands on host.hostnames and the SQL is embedded in the description. The asset itself becomes one Faraday vulnerability with the [ASSET-INVENTORY] engine prefix so the data lands in the Faraday workspace alongside the other CMDB-class feeds (Axonius, Device42, runZero, Armis, Jamf Pro, Jira Insight). Endpoints used: GET /api/v1/fleet/hosts?per_page=100&page=N(&team_id=...)(&label_id=...) (paginated host inventory; returns {\"hosts\": [...]} with each host record carrying id, hostname, computer_name, display_name, primary_ip, primary_mac, platform, os_version, osquery_version, hardware_vendor, hardware_model, hardware_serial, team_id, team_name, last_seen, seen_time, status, labels, nics, and optionally software inventory; FLEET_TEAM_ID and FLEET_LABEL_ID are forwarded as server-side team_id / label_id filters so the dispatcher only walks one team / label's worth of inventory per agent run), and GET /api/v1/fleet/queries?per_page=100&page=N(&team_id=...) (the saved osquery query inventory; returns {\"queries\": [...]} with each record carrying id, name, description, query (the osquery SQL), platform, interval, team_id, last_executed, created_at, updated_at, observer_can_run; FLEET_LABEL_ID does NOT apply on the queries surface and is silently dropped). Walked page-by-page (page-number based, 0-indexed) until len(records) < per_page or FLEET_PAGES (env-only override, default 5, clamped to [1, 50]) is reached. Severity is always info because Fleet hits are inventory entries, not vulnerability findings — operators correlate against the EDR / EASM / vuln-scanner agents' findings via the Fleet-Id / Fleet-Team / Fleet-Platform / Fleet-Status / Fleet-LastSeen / Fleet-Labels / Fleet-OsqueryVersion / Fleet-Serial refs on host hits, and the Fleet-QueryId / Fleet-QueryPlatform / Fleet-QueryInterval / Fleet-QueryTeam / Fleet-QueryLastExecuted refs on query hits. Auth: Fleet uses long-lived bearer tokens generated either via the Fleet UI (Settings -> My Account -> Get API token) or via fleetctl login --json for service accounts. The dispatcher carries the token on every request as the standard Authorization: Bearer <FLEET_TOKEN> header. FLEET_HOST is the Fleet appliance host (e.g. fleet.mycorp.com or https://fleet.mycorp.local:8080); on-prem deployments are common. Tags: [fleet, asset-inventory, host|query].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "fleet_osquery.py"
+}

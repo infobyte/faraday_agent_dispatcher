@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "COVERITY_STREAM": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Black Duck Coverity Connect stream name to scope the import. Coverity Connect stores merged defects per stream (one stream per build configuration / branch / pipeline), so this scopes the import to a specific stream. The executor resolves /api/v2/streams?name=<COVERITY_STREAM> to recover stream metadata (primaryProjectId, language, description) for the host description, then walks /api/v2/issues?streamId=<id>&streamName=<COVERITY_STREAM> for the defect list."
+        },
+        "COVERITY_CHECKER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional comma-separated list of Coverity checker names (e.g. 'NULL_RETURNS,SIGN_EXTENSION,RESOURCE_LEAK') to limit the import to specific checker rules. Forwarded as the Coverity-side 'checker' query parameter on /api/v2/issues; the same list is also enforced client-side after pagination for older Coverity builds that ignore the parameter. Names are case-sensitive Coverity identifiers; whitespace around commas is tolerated. Omit to import every checker the stream surfaces."
+        }
+    },
+    "environment_variables": [
+        "COVERITY_HOST",
+        "COVERITY_USER",
+        "COVERITY_PASSWORD"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "blackduck_coverity",
+    "title": "Black Duck Coverity (Coverity Connect, stream-scoped)",
+    "website": "https://www.blackduck.com/coverity.html",
+    "description": "Black Duck Coverity Connect (post-spin-off Synopsys / Black Duck Coverity) REST API importer, stream-scoped. Pulls source-code defects from a single Coverity Connect stream and emits Faraday bulk-create JSON to stdout. Resolves /api/v2/streams?name=<COVERITY_STREAM> to recover stream metadata for the host description, then walks /api/v2/issues?streamId=<id>&streamName=<COVERITY_STREAM> for the merged defect list (paginated via offset/pageSize). Each defect is enriched via /api/v2/issues/{cid} for description / events / remediation when the list response is compact. The stream becomes one Faraday host (synthetic 0.0.0.0 because SAST findings live in source repos, not on IPs); per-stream defects are attached as Faraday vulnerabilities — one per Coverity merge key (CID) with [SAST] engine prefix, checker name + subcategory, CWE-* refs, CoverityChecker / CoverityCategory / CoverityKind refs, file:line location, function name, merge key, occurrence count, classification, action, owner, first/last detected timestamps, stream label and event trail in the description. Severity normalised from Coverity's impact field (High/Medium/Low/Audit — also accepts Major/Moderate/Minor/Important/Informational/Information/Unspecified/Unknown) with CVSS v3 fallback when only a numeric score is given (≤0 info, <4 low, <7 medium, <9 high, ≥9 critical). Status mapped from Coverity's lifecycle status (Fixed/Resolved/Dismissed/Absent Dismissed → closed, New/Triaged/Open/Various/Reopened → open) combined with analyst triage — classification 'False Positive' / 'Intentional' (and action 'Ignore') become Faraday risk-accepted regardless of lifecycle status. COVERITY_CHECKER is a CSV of Coverity checker names (case-sensitive) forwarded both as the Coverity-side ?checker= query parameter and as a client-side filter after pagination. This executor is the Black Duck-branded, stream-scoped, REST-only path; the legacy 'coverity' executor still handles multi-project enumeration and SOAP fallback against Coverity Connect 9.x, and SCA-side ingest is in 'blackduck_sca'. Auth: HTTP Basic with COVERITY_USER / COVERITY_PASSWORD. COVERITY_HOST is the Coverity Connect base URL (e.g. https://cov.corp.example.com or https://cov.corp.example.com:8443); bare hostnames are accepted and prefixed with https://.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "blackduck_coverity.py"
+}

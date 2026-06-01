@@ -1,0 +1,42 @@
+{
+    "arguments": {
+        "GH_OWNER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "GitHub owner (user or organisation) that owns the repository — the first path segment after https://github.com/, e.g. faradaysec."
+        },
+        "GH_REPO": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "GitHub repository name (without the owner prefix) whose Advanced Security alerts should be imported — the second path segment after https://github.com/{owner}/, e.g. faraday."
+        },
+        "GH_SCAN_TYPES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional CSV picking which of GitHub's three Advanced Security alert APIs to fan out to — any combination of code (code-scanning / CodeQL alerts), secrets (secret-scanning alerts), dependabot (Dependabot alerts). Defaults to all three. Unknown tokens are logged and skipped without aborting the run."
+        },
+        "GH_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Filters out lower-severity alerts client-side after Faraday severity normalisation. Defaults to info (no filtering). Secret-scanning alerts are normalised to high — they will be filtered out if the floor is above high."
+        }
+    },
+    "environment_variables": [
+        "GH_HOST",
+        "GH_TOKEN"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "github_security",
+    "title": "GitHub Advanced Security",
+    "website": "https://docs.github.com/en/rest/security-advisories",
+    "description": "GitHub Advanced Security REST API importer (fan-out). Pulls findings from one or more of GitHub's three alert APIs (code-scanning, secret-scanning, dependabot) against a single repository and emits Faraday bulk-create JSON to stdout. This executor is a superset of the per-API codeql, github_secrets and dependabot executors — set GH_SCAN_TYPES (CSV of code|secrets|dependabot) to pick a subset; omit it to fan out to all three. The per-API executors are kept for users who only want a single signal; this one exists so a single GitHub PAT can drive every GitHub-side import in a single agent invocation. Endpoints used: GET /repos/{owner}/{repo}/code-scanning/alerts (CodeQL + third-party SARIF alerts), GET /repos/{owner}/{repo}/secret-scanning/alerts (secret-scanning alerts), GET /repos/{owner}/{repo}/dependabot/alerts (Dependabot alerts) — each paginated via page / per_page with the Link header honoured for next-page traversal. Each GitHub repository becomes one Faraday host (synthetic 0.0.0.0 ip because GitHub Advanced Security findings live in source repos and pull-request diffs, not on IPs) with hostnames = {owner}/{repo}; each alert becomes one Faraday vulnerability with an engine prefix matching the alert source ([CODE] / [SECRETS] / [SCA]). Code-scanning vulns surface rule description + most_recent_instance message + file:line location + commit SHA + GitHub blob link + category / tool / rule_id / state / timestamps in the description; CWE-* refs are split from rule.tags and the alert html_url is added to refs; severity is normalised from rule.security_severity_level (critical / high / medium / low) with fallback to the rule.severity enum (error / warning / note collapse to high / medium / low). Secret-scanning vulns surface secret_type + push_protection_bypassed + validity + state + resolution + html_url; severity is fixed at high because GitHub does not assign a severity to secret-scanning alerts; status maps state=open -> open, state=resolved with resolution in (false_positive / wont_fix) -> risk-accepted, state=resolved otherwise -> closed. Dependabot vulns surface package + ecosystem + vulnerable_version_range + first_patched_version + manifest_path + ghsa_id + cvss + state + timestamps + GitHub link; severity normalised from advisory.severity (critical / high / medium / low / moderate) with CVSS v3 base_score fallback; CVE list harvested from advisory.identifiers (type=CVE) and from description text; refs harvested from advisory.identifiers (GHSA-*), advisory.cwes (CWE-* split out separately so they also populate the cwe list), advisory.references URLs, and the alert html_url; cvss3 is populated from advisory.cvss when the vector string starts with CVSS:3, otherwise routed to cvss2. Status across all three APIs: open -> open, fixed / resolved / auto_dismissed -> closed, dismissed -> risk-accepted. GH_MIN_SEVERITY floor enforced after normalisation. Auth: Authorization: Bearer <GH_TOKEN> with a GitHub PAT (classic or fine-grained) or a GitHub App installation token; fine-grained tokens must explicitly grant the security_events (read) repository permission for code-scanning, secret_scanning_alerts (read) for secret-scanning, and Dependabot alerts (read) for dependabot. GH_HOST defaults to https://api.github.com for github.com; set it to your GHES REST root (e.g. https://github.corp.example.com/api/v3) for self-hosted GitHub Enterprise Server.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "github_security.py"
+}

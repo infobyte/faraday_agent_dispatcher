@@ -1,0 +1,33 @@
+{
+    "arguments": {
+        "D42_BUILDING": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Server-side building filter forwarded verbatim as a ?building=<value> query-string parameter to GET /api/1.0/devices/all/. Optional; empty / blank walks every building in the Device42 appliance. Useful for sharding inventory pulls across geographically distinct datacenters so each dispatcher agent only walks one site's worth of records per run. Whitespace is trimmed."
+        },
+        "D42_LIMIT": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Per-page record cap forwarded as the ?limit=<value> query-string parameter on both GET /api/1.0/devices/all/ and GET /api/1.0/ips/. Empty / blank defaults to 100. Accepts int / numeric-string; floats are floored. Clamped to [1, 1000] so a stray operator input can't either ask Device42 for absurd page sizes or flat-line the walk with limit=0."
+        }
+    },
+    "environment_variables": [
+        "D42_HOST",
+        "D42_USER",
+        "D42_PASSWORD"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "device42",
+    "title": "Device42",
+    "website": "https://www.device42.com",
+    "description": "Device42 CMDB asset-inventory importer. Pulls managed devices and tracked IP records from a Device42 CMDB appliance via the Device42 v1 REST API and emits Faraday bulk-create JSON. Each Device42 device becomes one Faraday host (the device's first non-loopback IP from ip_addresses maps onto host.ip, the name / serial_no / fqdn projection lands on host.hostnames, mac_addresses lands on host.mac, and the os / hardware / manufacturer chain joins onto host.os); each tracked IP record from /api/1.0/ips/ that doesn't already pivot off a device id seen in /api/1.0/devices/all/ becomes one synthetic host (the IP maps to host.ip, the label or attached subnet lands on host.hostnames). The asset itself becomes one Faraday vulnerability with the [ASSET-INVENTORY] engine prefix so the data lands in the Faraday workspace alongside the other CMDB-class feeds (Axonius, Fleet, runZero, Armis, Jamf Pro, Jira Insight). Endpoints used: GET /api/1.0/devices/all/?limit=100&offset=N(&building=...) (paginated device inventory; returns {\"Devices\": [...], \"total_count\": N, \"limit\": M, \"offset\": K}; D42_BUILDING is forwarded as a server-side building query-string filter so the dispatcher only walks one location's worth of inventory per agent run), and GET /api/1.0/ips/?limit=100&offset=N (the IP / address-tracking surface; returns {\"ips\": [...], \"total_count\": N, \"limit\": M, \"offset\": K} — IPs that already pivot off a device_id returned by the devices surface are skipped, the remainder become synthetic hosts so the workspace still surfaces loose IP records like reservations, DHCP, VIPs). Walked page-by-page until len(records) < limit or D42_PAGES (env-only override, default 5, clamped to [1, 50]) is reached. Severity is always info because Device42 hits are CMDB inventory entries, not vulnerability findings — operators correlate against the EDR / EASM / vuln-scanner agents' findings via the Device42-Id / Device42-Serial / Device42-Type / Device42-Building / Device42-Customer / Device42-LastUpdated refs. Auth: Device42's v1 REST API uses HTTP Basic Authentication — the dispatcher carries the credentials in the standard Authorization: Basic <base64(D42_USER:D42_PASSWORD)> header on every /api/1.0/ call. D42_HOST is the Device42 appliance host (e.g. cmdb.mycorp.local or https://cmdb.mycorp.com); on-prem self-signed deployments are common. Tags: [device42, asset-inventory, device|ip].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "device42.py"
+}

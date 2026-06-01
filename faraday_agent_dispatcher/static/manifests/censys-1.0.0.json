@@ -1,0 +1,39 @@
+{
+    "arguments": {
+        "CENSYS_QUERY": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Censys Search v2 query string forwarded verbatim to the q= parameter on /api/v2/hosts/search and /api/v2/certificates/search. Free-form Censys query language — example: services.service_name: HTTP and location.country_code: AR. Mandatory; Censys v2 returns HTTP 400 on an empty q."
+        },
+        "CENSYS_VIRTUAL_HOSTS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional virtual-hosts flag forwarded to /api/v2/hosts/search. Accepts the canonical Censys enum (INCLUDE / EXCLUDE / ONLY) plus operator-friendly boolean aliases (true / 1 / yes / on -> INCLUDE, false / 0 / no / off -> EXCLUDE, only -> ONLY). Defaults to EXCLUDE (Censys' own default — virtual hosts are domain-keyed shapes; EXCLUDE keeps the result set IP-keyed which is what most EASM workflows expect). The /api/v2/certificates/search surface ignores this flag."
+        },
+        "CENSYS_PAGES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional per-surface page-walk cap. Each Censys v2 search page returns up to 100 hits via per_page=100; CENSYS_PAGES bounds the cursor walk so a stray operator query can't fan out into 100k+ requests against the rate-limited Censys API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (≈ 500 hits per surface, 1000 total)."
+        }
+    },
+    "environment_variables": [
+        "CENSYS_HOST",
+        "CENSYS_API_ID",
+        "CENSYS_API_SECRET"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "censys",
+    "title": "Censys Search",
+    "website": "https://search.censys.io",
+    "description": "Censys Search v2 EASM importer. Pulls hosts and certificates that match a Censys query from the Censys Search v2 REST API and emits Faraday bulk-create JSON. Each Censys hits[] row becomes one Faraday host — ip (or name for virtual-host shapes) maps onto host.ip, the autonomous-system / OS / location enrichment lands on host.description, and each exposed service / certificate becomes one Faraday vulnerability with the [EASM] engine prefix. Endpoints used: GET /api/v2/hosts/search (paginated host search with q + per_page=100 + virtual_hosts INCLUDE / EXCLUDE / ONLY + cursor) and GET /api/v2/certificates/search (paginated certificate search with q + per_page=100 + cursor); response envelope is {\"result\": {\"hits\": [...], \"links\": {\"next\": \"...\", \"prev\": \"\"}, \"total\": N}} walked page-by-page until links.next empties or CENSYS_PAGES is reached. Severity bucketing is info by default (Censys hits are attack-surface discoveries, not vulnerability findings); bumps to low for legacy / database / admin-plane services (Telnet, FTP, SMB, RDP, MySQL / Postgres / MongoDB / Redis / Elasticsearch / Memcached, Docker / Kubernetes / etcd, IPMI, LDAP, VNC) that carry an outsized risk when exposed; bumps to medium for TLS findings flagged self_signed / expired / browser_trusted=false. Refs include Censys-Host / Censys-VHost / Censys-ASN / Censys-ASOrg / Censys-Port / Censys-Service / Censys-CertSha256 pivots. Auth: Censys uses HTTP Basic with the API ID as the username and the API Secret as the password — the operator creates a key pair in the Censys console (Account -> API) and the dispatcher carries the credentials in the standard Authorization: Basic <base64(API_ID:API_SECRET)> header on every /api/v2/ call. CENSYS_HOST is optional and defaults to https://search.censys.io; on-prem / federated Censys deployments override it. Tags: [censys, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "censys.py"
+}

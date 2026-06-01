@@ -1,0 +1,39 @@
+{
+    "arguments": {
+        "XPANSE_BUSINESS_UNIT": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Cortex Xpanse business-unit filter forwarded to /api/v1/assets, /api/v1/services and /api/v1/issues as the business_unit query parameter. Free-form string match against the asset's business_unit field. Defaults to '' (no filter; Xpanse returns the union of all business units the API key has access to). Useful for multi-tenant MSSP / parent-corp setups that want to scope the import to a single subsidiary."
+        },
+        "XPANSE_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional severity floor forwarded to /api/v1/services and /api/v1/issues as the min_severity query parameter (the /api/v1/assets surface is not severity-keyed and ignores this filter). Accepts the canonical Faraday enum (info / low / medium / high / critical) plus Xpanse-side aliases (Important / Major / Moderate / Informational / Sev1..Sev5). Defaults to '' (no filter; we emit the full hits surface). Garbage values are logged and ignored. The floor is also re-applied client-side after the hit is emitted so an asset's nested services / issues that pre-date the server-side filter are still gated."
+        },
+        "XPANSE_PAGES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional per-surface page-walk cap. Each Xpanse v1 search page returns up to 100 hits via limit=100; XPANSE_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited Xpanse API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (≈ 500 hits per surface, 1500 total across assets + services + issues)."
+        }
+    },
+    "environment_variables": [
+        "XPANSE_HOST",
+        "XPANSE_API_KEY_ID",
+        "XPANSE_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "cortex_xpanse",
+    "title": "Palo Alto Cortex Xpanse",
+    "website": "https://www.paloaltonetworks.com/cortex/xpanse",
+    "description": "Palo Alto Cortex Xpanse Expander EASM importer. Pulls externally-discovered services, assets and issues from a Cortex Xpanse tenant and emits Faraday bulk-create JSON. Each Xpanse asset becomes one Faraday host (ip = the asset's first public IP, falling back to synthetic 0.0.0.0 for domain-keyed assets); per-asset services attach as one Faraday vulnerability per exposed port + protocol, and per-asset issues attach as one Faraday vulnerability per issue_id with the [EASM] engine prefix. Endpoints used: GET /api/v1/assets (paginated external-asset inventory; the canonical Xpanse pivot — every service / issue joins by asset_id), GET /api/v1/services (paginated external-service inventory with port + protocol + service_type + TLS metadata + cloud-provider enrichment) and GET /api/v1/issues (paginated finding inventory with severity + category + cves + remediation guidance). Pagination is offset-based: limit=100 per page, offset advanced via the response envelope's next_offset cursor (or current_offset + page_size when the envelope is silent), walked page-by-page until the page comes up short or XPANSE_PAGES is reached. Severity bucketing walks the string severity field first (Critical / High / Medium / Low / Info) and falls back to CVSS when nothing else lands; aliases collapse Xpanse-side labels (Important / Major / Moderate / Informational / Sev1..Sev5) onto the canonical Faraday bucket. Status mapping covers new / in_progress / investigating -> open, resolved / closed / remediated -> closed, and false_positive / risk_accepted / wont_fix -> risk-accepted. Refs include Xpanse-Asset / Xpanse-AssetName / Xpanse-BusinessUnit / Xpanse-Id / Xpanse-Category / Xpanse-Port pivots plus any url / reference_url surfaced on the issue. Auth: Cortex Xpanse uses the same Standard API Key auth flow as the broader Cortex platform — the operator creates an API Key in the Xpanse console (Settings -> Configurations -> API Keys -> New) with Security Level set to Standard and the dispatcher carries Authorization: <XPANSE_API_KEY> + x-xdr-auth-id: <XPANSE_API_KEY_ID> on every request. XPANSE_HOST is the FQDN-style tenant host shown in the API Key dialog. Tags: [cortex_xpanse, easm].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "cortex_xpanse.py"
+}

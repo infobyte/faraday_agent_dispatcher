@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "INVICTI_SCAN_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Invicti (Acunetix 360 / Netsparker) scan id (GUID) to scope the import. When set, only that scan's vulnerabilities are imported via /api/1.0/scans/{id} + /api/1.0/scans/{id}/vulnerabilities. Omit to enumerate every scan visible to the API user and import each one's vulnerabilities."
+        },
+        "INVICTI_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Enforced client-side after severity normalisation (handles Invicti's string severities — Critical/High/Medium/Low/BestPractice/Information — its 0-4 numeric ladder, and CVSS numeric scores). Default: info."
+        }
+    },
+    "environment_variables": [
+        "INVICTI_HOST",
+        "INVICTI_API_TOKEN",
+        "INVICTI_USER_ID"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Dynamic Application Security Testing",
+    "name": "invicti",
+    "title": "Invicti (Acunetix 360 / Netsparker)",
+    "website": "https://www.invicti.com/",
+    "description": "Invicti (formerly Acunetix 360 / Netsparker) REST API importer. Pulls DAST findings from an Invicti cloud or on-prem server and emits Faraday bulk-create JSON to stdout. Lists scans via /api/1.0/scans (or fetches a single scan via /api/1.0/scans/{id} when INVICTI_SCAN_ID is set), then pulls per-scan vulnerabilities via /api/1.0/scans/{id}/vulnerabilities paginated with page / pageSize. Each vulnerability is grouped by its target URL hostname into one Faraday host per affected web origin (findings without a URL fall back to the scan's target URL, and any that still cannot be tied to a host attach to a synthetic 0.0.0.0 host so the data is still imported). Each Faraday vulnerability carries the [DAST] engine prefix, check / name, request method + URL, vulnerable parameter (+ parameterType), attack pattern, certainty / confidence, extractedCommand, CVSS score, evidence and lookupId in the description; remedy / remediation / recommendation surface as Faraday resolution; raw request bodies surface as Faraday data. Refs include CWE-* (single + list + list-of-dict + nested classification shapes), WASC-*, OWASP (2017 / 2021), CAPEC-*, HIPAA, PCI and InvictiCheck-<type>. Severity normalised from Invicti's string enum (Critical/High/Medium/Low/BestPractice/Information — also accepts Important/Moderate/None) AND its 0-4 numeric ladder; with CVSS v3 bucketing as a final fallback when only a numeric CVSS score is given; client-side INVICTI_MIN_SEVERITY floor enforced after normalisation. Status mapped from Invicti's State / Status field — Fixed/Resolved/Closed/Patched/Mitigated/AnnouncementRevoked → closed, FalsePositive/AcceptedRisk/IgnoredFromScan/Suppressed/NotApplicable → risk-accepted, Confirmed/Pending/NotFixed/Open → open, with isFalsePositive / isIgnored / isAcceptedRisk / isFixed boolean fallbacks. Auth: HTTP Basic with INVICTI_USER_ID as username and INVICTI_API_TOKEN as password (Invicti's documented REST API auth scheme — see https://www.invicti.com/support/api/). INVICTI_HOST is the Invicti server base URL (e.g. https://www.invicti.com, https://online.acunetix360.com, or the on-prem manager URL).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "invicti.py"
+}

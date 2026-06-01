@@ -1,0 +1,39 @@
+{
+    "arguments": {
+        "CB_ORG_KEY": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Carbon Black Cloud organisation key. Carbon Black scopes every API call to a specific org; the key is shown in the CB Cloud console under Settings -> API Access (the 'Org Key' column). Required because both the /api/alerts/v7/orgs/{org_key}/alerts/_search and /appservices/v6/orgs/{org_key}/devices/_search endpoints carry it in the URL path. Whitespace is trimmed; blank input causes the executor to exit with a clear error."
+        },
+        "CB_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side + server-side severity floor. Accepts info | low | medium | high | critical (plus the Carbon Black synonyms: informational, important / major, moderate, minor, none / unspecified / unknown). Bucket maps onto Carbon Black's 1-10 numeric scale (info=1, low=2, medium=3, high=6, critical=8) which is sent as criteria.minimum_severity on the v7 alert search so CB does the bulk of the filtering server-side; the same floor is also re-applied client-side after Faraday severity normalisation so re-emitted shapes still bucket correctly. Defaults to info (no filtering)."
+        },
+        "CB_TIME_RANGE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional rolling-window filter for the v7 alert search. Accepts the canonical Carbon Black token shape (-1h, -1d, -7d, -30d, etc. — `-Nd`/`-Nh`/`-Nw`/`-Nm`/`-Ny`) plus operator-friendly aliases (24h, 7d, 30d, week, month, today, yesterday). When set, the executor passes time_range.range on the POST body so Carbon Black narrows the result server-side. Blank / unset returns every alert the org can read."
+        }
+    },
+    "environment_variables": [
+        "CB_HOST",
+        "CB_API_ID",
+        "CB_API_SECRET"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "carbon_black",
+    "title": "VMware Carbon Black Cloud",
+    "website": "https://www.broadcom.com/products/carbon-black",
+    "description": "Carbon Black Cloud (VMware / Broadcom) REST importer. Pulls alerts and managed sensor devices from Carbon Black Cloud (the SaaS successor to Carbon Black Response / Defense / Threat Hunter) via POST /api/alerts/v7/orgs/{org_key}/alerts/_search (the unified v7 alert envelope that replaces the older /v6 splits across cbanalytics / watchlist / devicecontrol) and POST /appservices/v6/orgs/{org_key}/devices/_search (the sensor inventory). Each managed endpoint becomes one Faraday host (ip = the first non-loopback last_internal_ip_address / last_external_ip_address from the device record, falling back to the alert's device_internal_ip / device_external_ip, then synthetic 0.0.0.0 because CB-managed mobile / VDI endpoints often only carry private addresses); alerts attach as Faraday vulnerabilities with engine prefix [EDR]. Severity is bucketed from Carbon Black's 1-10 numeric scale (1-2 -> low, 3-5 -> medium, 6-7 -> high, 8-10 -> critical) plus the freeform string enum (Critical / High / Medium / Low / Informational) and Faraday-side synonyms, with CVSS v3 base-score bucketing as a fallback when only a numeric score is given. Status mapped from workflow.state (OPEN / IN_PROGRESS -> open, CLOSED -> closed, DISMISSED / SUPPRESSED / FALSE_POSITIVE -> risk-accepted) with state / status / determination fallbacks. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from threat.cve / cves / aliases plus free-form reason / description / threat_indicators / mitre_techniques scans. Refs include CB-Alert / CB-Threat / CB-Process / CB-ParentProcess / CB-ProcessSHA256 / CB-ParentSHA256 / CB-Policy / CB-PolicyName / CB-AlertType / CB-DetectionSource pivots, MITRE-Tactic / MITRE-Technique pivots from CB's mitre_tactics / mitre_techniques arrays, CWE-* harvested from item / threat / additionalData surfaces, and any inline URL references. Auth: Carbon Black Cloud uses a per-API-Key X-Auth-Token header in the form <API_SECRET>/<API_ID>. The Connector API Key is created in the CB Cloud console (Settings -> API Access -> Add API Key) with the access level granted at the org scope (read-only API access for alert + device queries). Credentials are exposed as CB_API_ID + CB_API_SECRET; CB_HOST is the regional API endpoint (e.g. https://defense-prod05.conferdeploy.net for the US-East prod05 region — CB Cloud has region-pinned endpoints). Tags: [carbon_black, edr, endpoint-edr].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "carbon_black.py"
+}

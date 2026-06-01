@@ -1,0 +1,30 @@
+{
+    "arguments": {
+        "OLIGO_CLUSTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Oligo cluster name to scope the import. When set, it is forwarded as the 'cluster' query parameter on /api/v1/assets and /api/v1/runtime/vulnerabilities so only assets and findings from that cluster are returned. Omit to pull every cluster visible to the token."
+        },
+        "OLIGO_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Forwarded to /api/v1/runtime/vulnerabilities as 'severity_gte' and additionally enforced client-side after severity normalisation (handles both Oligo's string severities and CVSS numeric scores). Default: info."
+        }
+    },
+    "environment_variables": [
+        "OLIGO_HOST",
+        "OLIGO_TOKEN"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "oligo",
+    "title": "Oligo Security",
+    "website": "https://www.oligo.security/",
+    "description": "Oligo Security REST API importer. Pulls runtime application detection and response (ADR) findings — vulnerable / actively exploited open-source libraries loaded by live workloads — from the Oligo platform. Lists assets via /api/v1/assets (optionally filtered by OLIGO_CLUSTER) and per-asset findings via /api/v1/runtime/vulnerabilities; emits one Faraday host per Oligo asset (with cluster / namespace / workload / image enrichment) with the runtime vulnerabilities attached. Findings that cannot be tied back to a listed asset are attached to a synthetic 0.0.0.0 host so the data is still imported. Severity is normalised from Oligo's string severities (informational/low/medium/high/critical, also accepts negligible/moderate/important) and falls back to CVSS v3 bucketing when only a numeric score is available. Auth is bearer-token — set OLIGO_TOKEN (sent as 'Authorization: Bearer <token>') and OLIGO_HOST to the Oligo tenant base URL (e.g. https://app.oligo.security).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "oligo.py"
+}

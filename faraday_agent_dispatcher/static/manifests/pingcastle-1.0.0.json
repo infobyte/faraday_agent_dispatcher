@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "PINGCASTLE_SERVER": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Domain controller FQDN or IP that PingCastle should query (forwarded as --server, e.g. dc1.example.local)."
+        },
+        "PINGCASTLE_HEALTHCHECK_LEVEL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "PingCastle healthcheck depth, forwarded as --healthcheck-level. Valid values: Light, Normal, Full. Default: Normal."
+        }
+    },
+    "environment_variables": [
+        "PINGCASTLE_USER",
+        "PINGCASTLE_PASSWORD"
+    ],
+    "check_cmds": [
+        "pingcastle --help"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "pingcastle",
+    "title": "PingCastle",
+    "website": "https://www.pingcastle.com/",
+    "description": "PingCastle Active Directory healthcheck importer. Wraps the PingCastle CLI (`pingcastle --healthcheck --no-enum-limit --server <DC>` plus optional `--healthcheck-level Light|Normal|Full`) against a target domain controller, parses the resulting `ad_hc_<domain>.xml` report and emits one Faraday host for the target DC with every triggered HealthcheckRiskRule attached as a vulnerability. Severity is mapped from the PingCastle rule Maturity level (1=critical, 2=high, 3=medium, 4=low, 5=info) with a fallback to the rule Points score (CVSS-like bucketing) and to the rule Category when no maturity is reported. Auth defaults to Windows integrated authentication (kerberos / the container's machine account); PINGCASTLE_USER and PINGCASTLE_PASSWORD are honoured when set in the environment and forwarded as --user / --password.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "pingcastle.py"
+}

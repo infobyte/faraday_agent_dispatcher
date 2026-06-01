@@ -1,0 +1,43 @@
+{
+    "arguments": {
+        "OCI_COMPARTMENT_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Oracle Cloud Infrastructure compartment OCID that scopes the DataSafe targetDatabases + findings catalogue pulls. Required so the executor can constrain the OCI list endpoints (compartmentId=<id> + compartmentIdInSubtree=true). Format: ocid1.compartment.oc1..<id> (or ocid1.tenancy.oc1..<id> for the root compartment). Found in the OCI console under Identity & Security -> Compartments. The executor hard-validates the OCID shape client-side (ocid1.<type>.<realm>.<region?>.<id>) so a typo or control char can't fan out into ill-formed /20181201/findings calls."
+        },
+        "DATASAFE_TARGET_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Oracle DataSafe target database OCID — when set, scopes both the /20181201/targetDatabases and /20181201/findings pulls to a single registered database (via targetDatabaseId=<id> on targetDatabases and targetId=<id> on findings) so the executor pulls one database without walking the whole compartment subtree. Format: ocid1.datasafetargetdatabase.oc1..<id>. Found in the DataSafe console under Targets -> select the target database (the OCID is visible under Target Information). Blank or missing fans out across every target in the compartment subtree."
+        },
+        "DS_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for DataSafe findings. Accepts info | low | medium | high | critical (plus DataSafe synonyms: severe -> critical, major -> high, moderate / warning / evaluate / review -> medium, minor -> low, informational / information / advisory / pass / deferred -> info) plus numeric-string CVSS-style input bucketed via severity_from_cvss (<4 low, <7 medium, <9 high, >=9 critical). Findings below the floor are dropped from the Faraday output after per-finding severity normalisation (bucketed from the freeform severity string enum HIGH / MEDIUM / LOW / EVALUATE / ADVISORY / PASS / DEFERRED + numeric cvss / riskScore 0-10 fallback). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "OCI_USER_OCID",
+        "OCI_TENANCY_OCID",
+        "OCI_FINGERPRINT",
+        "OCI_PRIVATE_KEY_PATH",
+        "OCI_REGION",
+        "OCI_HOST"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'",
+        "python3 -c 'import cryptography'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "oracle_datasafe",
+    "title": "Oracle DataSafe (Database Security)",
+    "website": "https://www.oracle.com/security/database-security/data-safe/",
+    "description": "Oracle DataSafe (OCI) database-security REST importer. Pulls the target-database catalogue and the security-assessment finding catalogue from an Oracle Cloud Infrastructure DataSafe tenancy via GET <OCI_HOST>/20181201/targetDatabases?compartmentId=<id> and GET <OCI_HOST>/20181201/findings?compartmentId=<id>[&targetId=<tid>]. Each registered DataSafe target database becomes one Faraday host (keyed by the target database OCID — DataSafe's surface is target-scoped so the host record is keyed on the DataSafe target id rather than the underlying database IP, with host.os carrying the Oracle product + release + lifecycle label, e.g. 'Oracle Database 19c Enterprise (DataSafe target=ACTIVE)', so the database stack version is visible alongside the per-finding observations). Each DataSafe finding (one rule observation tied to one target database — USER_ACCOUNTS / PRIVILEGES_AND_ROLES / AUTHORIZATION_CONTROL / DATA_ENCRYPTION / FINE_GRAINED_ACCESS / AUDITING / DATABASE_CONFIGURATION categories from the DataSafe Security Assessment + User Assessment) attaches as a Faraday vulnerability with the engine prefix [DATABASE-SECURITY]. Severity is bucketed from the freeform DataSafe severity string enum (HIGH / MEDIUM / LOW / EVALUATE / ADVISORY / PASS / DEFERRED) with the numeric cvss / riskScore / score 0-10 used as a CVSS-style fallback. Status is derived from the per-finding isRisk boolean (true -> open, false -> closed — the canonical DataSafe risk gate) with freeform status / state / lifecycleState fallback for federated stacks (open / new / active / needs_attention / detected / in_progress / reopened -> open, resolved / fixed / mitigated / inactive / completed -> closed, acknowledged / accepted / deferred / waived / will_not_fix / false_positive / suppressed / dismissed / ignored -> risk-accepted). Pagination uses OCI's canonical opc-next-page response-header cursor (PAGE_SIZE=100 per page capped at MAX_PAGES=200). Refs include DataSafe-Finding / DataSafe-FindingKey / DataSafe-Rule / DataSafe-Category / DataSafe-Reference / DataSafe-Target / DataSafe-Compartment / DataSafe-Assessment / DataSafe-AssessmentType pivots plus CIS-Benchmark / STIG / GDPR labels surfaced by the rule + inline advisory URLs. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from cve / cveId / cves / cve_id fields plus title / summary / description / details / remarks / justification token scans. Auth: OCI Signature v1 (RSA-SHA256-signed HTTP Signatures, draft RFC). The signing string is '(request-target): <method> <path>\\nhost: <host>\\ndate: <RFC1123>' for GET / HEAD / DELETE. The keyId is '<OCI_TENANCY_OCID>/<OCI_USER_OCID>/<OCI_FINGERPRINT>'. The unencrypted PEM RSA private key is loaded from OCI_PRIVATE_KEY_PATH (generated via openssl genrsa -out oci_api_key.pem 2048 then registered against the OCI user under User Settings -> API Keys). OCI_HOST defaults to the canonical regional endpoint pattern 'https://datasafe.<region>.oci.oraclecloud.com' where <region> comes from OCI_REGION (e.g. us-ashburn-1 / eu-frankfurt-1 / ap-tokyo-1); explicit OCI_HOST overrides this for federated / Government Cloud / OC2 / OC3 / OC4 deployments. The executor hard-validates every OCID (alphanumeric + .-_ shape anchored with \\A/\\Z so a trailing newline can't sneak through), the region (lowercase alphanumeric + -), the fingerprint (16 colon-separated hex bytes), and the host (http(s)://host[:port], trailing slash stripped, control chars rejected on the raw value). Tags: [oracle, oracle-datasafe, database-security, oci].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "oracle_datasafe.py"
+}

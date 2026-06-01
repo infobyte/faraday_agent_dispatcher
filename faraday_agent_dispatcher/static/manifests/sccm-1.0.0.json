@@ -1,0 +1,39 @@
+{
+    "arguments": {
+        "SCCM_SITE_CODE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Microsoft SCCM / MECM site code that scopes which Configuration Manager-managed systems are walked. SCCM site codes are canonical 3-character alphanumeric strings (e.g. 'PRI', 'CAS', 'P01') enforced at install time by the SMS Provider. When set, the executor narrows the SMS_R_System query via the OData v4 filter 'SMSAssignedSites/any(s: s eq \\'<site>\\')' so only systems assigned to that site are enumerated. The executor hard-validates the value client-side (3 chars, alphanumeric) and uppercases it to match SCCM's canonical convention so a typo can't fan out into '/AdminService/wmi/SMS_R_System?$filter=SMSAssignedSites/any(s: s eq \\'None\\')' calls. Defaults to all sites the SCCM_USER service account can see when unset."
+        },
+        "SCCM_COLLECTION_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Microsoft SCCM / MECM collection identifier that scopes which managed systems are walked. SCCM collection ids are canonical 8-character alphanumeric strings (first 3 chars are the site code, e.g. 'PRI00014', or 'SMS' for the built-in ones like SMS00001 = 'All Systems'). When set, the executor first walks GET /AdminService/wmi/SMS_FullCollectionMembership?$filter=CollectionID%20eq%20'<id>' to resolve the ResourceID list (the SMS_R_System WMI class does not expose a CollectionID column for direct filtering -- the membership join is the supported pattern) and then narrows the SMS_R_System / SMS_UpdateComplianceStatus queries to that ResourceID set. The executor hard-validates the value client-side (8 chars, alphanumeric) and uppercases it. Defaults to every system in the site (or in every site the credentials can see) when unset."
+        },
+        "SCCM_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for SCCM / MECM missing-update findings. Accepts info | low | medium | high | critical (plus Microsoft synonyms: severe -> critical, important -> high, moderate / warning -> medium, minor -> low, informational / information / unspecified / none / unknown -> info) plus numeric-string input bucketed first via severity_from_sccm_numeric (the SCCM internal 0/2/6/8/10 scale: 0=None, 2=Low, 6=Moderate, 8=Important, 10=Critical) and then via severity_from_cvss as a secondary fallback. Updates below the floor are dropped from the Faraday output after per-update severity normalisation (bucketed from the freeform SeverityName string enum + numeric Severity 0/2/6/8/10 fallback + optional CVSS3Score / CVSS2Score 0-10 secondary fallback). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "SCCM_HOST",
+        "SCCM_USER",
+        "SCCM_PASSWORD"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Patch Management",
+    "name": "sccm",
+    "title": "Microsoft SCCM / MECM",
+    "website": "https://learn.microsoft.com/en-us/mem/configmgr/develop/adminservice/usage",
+    "description": "Microsoft SCCM / MECM (Configuration Manager) patch-management REST importer. Pulls the SMS Provider's managed system catalogue (one Configuration Manager device per row -- Name / NetbiosName / IPAddresses / MACAddresses / OperatingSystemNameandVersion / ResourceDomainORWorkgroup / ClientVersion / SMSAssignedSites / LastLogonTimestamp), the per-resource missing-update compliance state, and the deployed software-update catalogue from an AdminService REST endpoint via GET <SCCM_HOST>/AdminService/wmi/SMS_FullCollectionMembership (used only when SCCM_COLLECTION_ID is set, since SMS_R_System has no CollectionID column for direct filtering -- the membership join is the supported pattern), GET <SCCM_HOST>/AdminService/wmi/SMS_R_System (the system catalogue, optionally narrowed by SCCM_SITE_CODE via the OData v4 filter 'SMSAssignedSites/any(s: s eq \\'<site>\\')' and / or by the collection's ResourceID set via chained 'ResourceID eq A or ResourceID eq B' clauses), GET <SCCM_HOST>/AdminService/wmi/SMS_UpdateComplianceStatus (per-resource missing-update join keyed on 'Status eq 2' = Required / missing), and GET <SCCM_HOST>/AdminService/wmi/SMS_SoftwareUpdate (the deployed + non-expired catalogue, narrowed via CI_ID chained 'eq' clauses to the distinct missing CI_IDs collected from the compliance status walk). Each SCCM-managed system becomes one Faraday host (keyed by the ResourceID) with host.os set to the OperatingSystemNameandVersion string (e.g. 'Microsoft Windows NT Server 10.0'). Each missing update attaches as a Faraday vulnerability with the engine prefix [PATCH-MGMT]. Severity is bucketed from the freeform SeverityName string enum (Critical -> critical, Important -> high, Moderate -> medium, Low -> low, None -> info) with the SCCM internal numeric Severity scale (0/2/6/8/10 -- NOT CVSS 0-10) used as a primary numeric fallback and the standard CVSS3Score / CVSS2Score 0-10 scale used as a secondary fallback. Status mapped from SMS_UpdateComplianceStatus.Status numeric (0=Unknown -> open, 1=NotRequired -> closed, 2=Required -> open, 3=Installed -> closed) plus IsExpired / IsSuperseded bool fallback to closed. Pagination uses the OData v4 $top + $skip cursor (PAGE_SIZE=100 per page capped at MAX_PAGES=200) with @odata.nextLink + @odata.count exhaustion detection. Refs include SCCM-CI / SCCM-Article / SCCM-Bulletin / SCCM-Classification / SCCM-Vendor / SCCM-Product / SCCM-Severity / SCCM-DateRevised / SCCM-Superseded / SCCM-Machine pivots plus inline advisory URLs and KB references (numeric Microsoft KB ids harvested from the ArticleID column plus inline scans of LocalizedDisplayName / LocalizedDescription / BulletinID -- emitted as KB: KB<num> refs alongside the canonical https://support.microsoft.com/help/<num> Microsoft URL). CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from LocalizedDescription / LocalizedDisplayName / summary / description / title token scans plus optional federated 'CVE' / 'CVEs' columns (stock SCCM SMS_SoftwareUpdate does not vend a CVE column -- the inline scan is the canonical source). Auth: SCCM AdminService is typically published behind IIS with Windows authentication. The executor carries 'Authorization: Basic <b64(SCCM_USER:SCCM_PASSWORD)>' on every /AdminService/ call when the IIS site is configured for Basic auth (documented config for non-domain-joined service accounts); when the optional 'requests_ntlm' library is installed in the executor's Python environment, NTLM is preferred and the user is treated as 'DOMAIN\\\\user' or 'user@DOMAIN' so the SMS Provider can resolve the service account. SCCM_HOST is the SMS Provider FQDN URL (http(s)://host[:port], trailing slash stripped client-side, control chars rejected). Tags: [microsoft, patch-management, sccm, mecm, missing-patch].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "sccm.py"
+}

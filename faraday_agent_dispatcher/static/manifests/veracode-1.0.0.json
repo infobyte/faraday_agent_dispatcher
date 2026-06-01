@@ -1,0 +1,37 @@
+{
+    "arguments": {
+        "VERACODE_APP_GUID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Veracode application GUID to scope the import. When set, only that application's findings are imported via /appsec/v2/applications/{app_guid} + /appsec/v2/applications/{app_guid}/findings. Omit to enumerate every application visible to the API credential via /appsec/v2/applications and import each application's findings."
+        },
+        "VERACODE_SANDBOX_GUID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional Veracode sandbox GUID. When set, the findings query is scoped to that sandbox via the `context` query parameter on /appsec/v2/applications/{app_guid}/findings — sandboxes are Veracode's per-branch / per-feature scan contexts inside an application profile. Omit to pull findings from the application's policy scan."
+        },
+        "VERACODE_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. When set above 'info', forwarded to /appsec/v2/applications/{app_guid}/findings as the `severity_gte` numeric query parameter (mapped to Veracode's 0-5 scale: low=2, medium=3, high=4, critical=5) and additionally enforced client-side after normalisation. Handles Veracode's 0-5 numeric severity ladder (0/1=info, 2=low, 3=medium, 4=high, 5=critical) and its string equivalents (Very High/High/Medium/Low/Very Low/Informational). Default: info."
+        }
+    },
+    "environment_variables": [
+        "VERACODE_HOST",
+        "VERACODE_API_KEY_ID",
+        "VERACODE_API_KEY_SECRET"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "veracode",
+    "title": "Veracode Application Security",
+    "website": "https://www.veracode.com/",
+    "description": "Veracode REST API importer. Pulls SAST / DAST / SCA / Manual findings from a Veracode tenant and emits Faraday bulk-create JSON to stdout. Lists applications via /appsec/v2/applications (or fetches a single application via /appsec/v2/applications/{app_guid} when VERACODE_APP_GUID is set), then pulls per-application findings via /appsec/v2/applications/{app_guid}/findings paginated with page/size. Sandbox scope can be applied via VERACODE_SANDBOX_GUID, which is forwarded as the `context` query parameter. Each application becomes one Faraday host (synthetic 0.0.0.0 because Veracode findings live in applications, not on IPs) with hostname = application name (suffixed with `/sandbox:<guid>` when VERACODE_SANDBOX_GUID is set); per-application findings are attached as Faraday vulnerabilities — one per Veracode issue_id with engine prefix from scan_type ([SAST]/[DAST]/[SCA]/[MANUAL]), finding_category / CWE-based name, file_path:file_line_number source location, function_name / module, attack_vector / url / plugin (DAST), package@version and fixed_in (SCA), CVE list and cvss3 score (SCA) surfacing in the description. Severity normalised from Veracode's 0-5 numeric severity ladder (0/1=info, 2=low, 3=medium, 4=high, 5=critical) and string equivalents (Very High/High/Medium/Low/Very Low/Informational); client-side min-severity floor enforced after normalisation. Status mapped from finding_status — status=CLOSED → closed; resolution in (FALSE_POSITIVE / POTENTIAL_FALSE_POSITIVE / BENIGN_FINDING / RISK_ACCEPTED / MITIGATED_BY_DESIGN / MITIGATED_BY_OTHER_INVESTIGATION / OS_ENVIRONMENT / NETWORK_ENVIRONMENT) with resolution_status != REJECTED → risk-accepted; everything else stays open. Auth: HMAC-SHA-256 (\"VERACODE-HMAC-SHA-256\"), Veracode's canonical derived-key signing chain — `k_nonce = HMAC(hex(secret), hex(nonce))`, `k_date = HMAC(k_nonce, ts_ms)`, `k_sig = HMAC(k_date, \"vcode_request_version_1\")`, `sig = HMAC(k_sig, \"id=<id>&host=<h>&url=<p>&method=<M>\")`, sent as `Authorization: VERACODE-HMAC-SHA-256 id=<id>,ts=<ts>,nonce=<nonce>,sig=<sig>` on every API call. VERACODE_HOST defaults to https://api.veracode.com (US commercial region); set to https://api.veracode.eu for the EU region or to the FedRAMP host for government tenants.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "veracode.py"
+}

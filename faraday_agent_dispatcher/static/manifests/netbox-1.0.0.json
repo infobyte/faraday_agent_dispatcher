@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "NETBOX_SITE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Operator-supplied NetBox site slug forwarded into the ?site= query parameter on GET /api/dcim/devices/ and the ?interface__device__site= cross-relation on GET /api/ipam/ip-addresses/. NetBox site filters are slug-based (the URL-safe identifier shown next to the site name in the admin — e.g. 'dc1-east'), not human-readable names. Optional; empty / blank is interpreted as 'no site narrowing' and the dispatcher walks every device / IP the token can read. Whitespace is trimmed and URL-encoded server-side."
+        },
+        "NETBOX_ROLE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Operator-supplied NetBox device-role slug forwarded into the ?role= query parameter on GET /api/dcim/devices/ (NetBox renamed device_role to role in v3.6 but kept the old name as a server-side synonym, so the modern slug works on every supported NetBox version). Role filters are slug-based (e.g. 'access-switch', 'border-router'), not human-readable names. Optional; empty / blank is interpreted as 'no role narrowing'. NOT forwarded into the IPAM surface (the IPAM role enum labels IP semantics like 'loopback' / 'vip', not device roles). Whitespace is trimmed and URL-encoded server-side."
+        }
+    },
+    "environment_variables": [
+        "NETBOX_HOST",
+        "NETBOX_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "netbox",
+    "title": "NetBox",
+    "website": "https://netbox.dev/",
+    "description": "NetBox DCIM + IPAM importer. Pulls managed devices and tracked IP records from a NetBox DCIM / IPAM appliance via the NetBox REST API and emits Faraday bulk-create JSON. NetBox is the open-source source-of-truth for network operations — a single opinionated CMDB that models DCIM (data-center / rack / device inventory), IPAM (subnets, prefixes, IP assignments) and the relationships between them (a device has interfaces, interfaces have IPs, IPs sit in prefixes, prefixes belong to VRFs, etc.) — so this executor is the network-management cross-reference feed Faraday operators correlate the EDR / EASM / vuln-scanner agents' findings against to confirm whether a vulnerable IP is a known managed device on a tracked subnet (and therefore in-scope for the network team) or an unmanaged stray on someone else's range. Each NetBox device becomes one Faraday host (DCIM device records ARE network-keyed since a device with a primary IP configured is anchored to a tracked endpoint; the executor lifts the device's primary_ip / primary_ip4 / primary_ip6 address onto host.ip (stripping the canonical NetBox /<prefix-length> CIDR suffix that NetBox appends to every address it stores) when present, and falls back to the 0.0.0.0 sentinel for racks / chassis / virtual devices that don't carry an assigned IP; the name / display / serial / asset_tag projection lands on host.hostnames; the platform / device_type chain joins onto host.os; id / site / role / status / tenant enrichment lands on host.description; the device record itself becomes one Faraday vulnerability with the [NETWORK] engine prefix). Each NetBox IP record becomes one Faraday host (IPAM records ARE network-keyed since the IP itself IS the host coordinate; address (CIDR-stripped) lands on host.ip; dns_name lands on host.hostnames; vrf / tenant / status / role enrichment lands on host.description; the IP record itself becomes one Faraday vulnerability with the [NETWORK] engine prefix). Endpoints used: GET {NETBOX_HOST}/api/dcim/devices/?limit=N&offset=M[&site=<slug>][&role=<slug>] (canonical NetBox DCIM device inventory; returns the Django-REST-Framework {count, next, previous, results} envelope walked page-by-page via the absolute next URL until the next-link is absent or the env-only NETBOX_PAGES cap is reached, default 5, clamped to [1, 50]; each record carries id, name, display, device_type, role (newer NetBox >= 3.6) or device_role (legacy), platform, serial, asset_tag, site, rack, status {value, label}, primary_ip with address field carrying the CIDR-formatted a.b.c.d/PFX string, primary_ip4, primary_ip6, tenant, cluster, tags, created, last_updated, custom_fields; when NETBOX_SITE is set the dispatcher forwards it as ?site=<slug>; when NETBOX_ROLE is set it forwards as ?role=<slug>), GET {NETBOX_HOST}/api/ipam/ip-addresses/?limit=N&offset=M[&interface__device__site=<slug>] (canonical NetBox IPAM IP-address inventory; same DRF envelope; each record carries id, family, address (CIDR a.b.c.d/PFX), vrf, tenant, status, role (loopback|secondary|anycast|vip|vrrp|hsrp|glbp|carp), assigned_object_type (e.g. dcim.interface), assigned_object_id, assigned_object (nested interface record with nested device), dns_name, description, tags, created, last_updated, custom_fields; when NETBOX_SITE is set the dispatcher forwards it as ?interface__device__site=<slug> cross-relation so the walk only returns IPs whose owning interface belongs to a device in that site; NETBOX_ROLE is NOT forwarded into IPAM since the IPAM role enum labels IP semantics, not device roles). Pagination is offset-based via NetBox's absolute next URL (identical pattern to Microsoft Graph's @odata.nextLink); limit is fixed at 100. Auth: NetBox uses the Authorization: Token <token> scheme (not Bearer). Operators create an API token in the NetBox admin under Admin -> Users -> Tokens (write-access can be toggled off to mint a read-only token, recommended for the dispatcher). NETBOX_HOST is the operator's NetBox appliance host (e.g. netbox.mycorp.com); https:// is added automatically when the operator pasted in a bare FQDN. Severity for devices / IPs is always info (they're network-management inventory entries, not findings — the value is the cross-reference signal, not a vulnerability score). Tags: [netbox, network, ipam, device|ip].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "netbox.py"
+}

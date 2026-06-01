@@ -1,0 +1,38 @@
+{
+    "arguments": {
+        "QRADAR_AQL_QUERY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional AQL (Ariel Query Language) statement the dispatcher runs against the QRadar tenant. Accepts the SQL-like SELECT form ('SELECT logsourcename, sourceip, eventcount FROM events WHERE category=18001 LAST 24 HOURS', 'SELECT * FROM flows WHERE sourceip IN (...)') or DESCRIBE / SHOW statements. Each result row emitted by the search becomes one Faraday vulnerability — keep the AQL scoped (use LAST / START / STOP time windows + per-rule WHERE filters) so the result-row catalogue stays manageable. The executor caps pagination at PAGE_SIZE=100 per page x MAX_PAGES=200 = 20k rows. When blank no AQL search runs; QRADAR_OFFENSE_STATUS may still drive an offense pull. AQL reference: https://www.ibm.com/docs/en/qsip/latest?topic=tools-aql-overview"
+        },
+        "QRADAR_OFFENSE_STATUS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional offense-status filter for the QRadar SIEM offense pull. Accepts OPEN (analyst-actionable, default for most dashboards), HIDDEN (analyst-suppressed but not resolved -> mapped to risk-accepted in Faraday), or CLOSED (resolved with a closing_reason_id). Case-insensitive — garbage values are logged + ignored. When blank no offense pull runs; QRADAR_AQL_QUERY may still drive an Ariel search. Offense lifecycle reference: https://www.ibm.com/docs/en/qsip/latest?topic=offenses-managing-offenses"
+        },
+        "QRADAR_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for QRadar findings (both AQL rows and offenses). Accepts info | low | medium | high | critical (plus QRadar-side synonyms: informational / debug -> info, notice / minor -> low, warning / moderate -> medium, important -> high, fatal / severe -> critical) plus numeric input bucketed via the QRadar 1-10 scale (1-3 low, 4-6 medium, 7-8 high, 9-10 critical). Rows / offenses below the floor are dropped from the Faraday output after per-row severity normalisation. Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "QRADAR_HOST",
+        "QRADAR_SEC_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "qradar",
+    "title": "IBM QRadar",
+    "website": "https://www.ibm.com/products/qradar-siem",
+    "description": "IBM QRadar SIEM importer. Pulls AQL (Ariel Query Language) search results and / or SIEM offenses from a QRadar tenant via the REST API and emits each row as a Faraday vulnerability attached to a synthetic per-search host record (QRadar's surface is search-scoped + correlation-scoped, not asset-scoped, so the host is a synthetic per-query bucket keyed on the QRadar endpoint hostname). Two modes can run together or independently in a single scan: (1) AQL search — POST /api/ariel/searches?query_expression=<AQL> creates the async job (returns search_id), GET /api/ariel/searches/{search_id} polled until status=COMPLETED (or CANCELED / ERROR; POLL_INTERVAL=2s capped at MAX_POLLS=150 = ~5 minutes), then paginated GET /api/ariel/searches/{search_id}/results with HTTP Range: items=M-N (PAGE_SIZE=100 per page capped at MAX_PAGES=200 = 20k rows); (2) Offense pull — paginated GET /api/siem/offenses?filter=status%3D<status> with the same Range pagination. Each row attaches as a Faraday vulnerability with the engine prefix [SIEM]. Severity bucketed from QRadar offense severity / magnitude (1-10 scale: 1-3 low, 4-6 medium, 7-8 high, 9-10 critical) and / or a freeform AQL severity column (informational / low / medium / high / critical) with the numeric fallback applied when the string is missing or unrecognised. Status mapped from offense status (OPEN -> open, HIDDEN -> risk-accepted, CLOSED -> closed). Refs include QRadar-Offense / QRadar-OffenseType / QRadar-Rule / QRadar-Category / QRadar-Domain / QRadar-LogSource pivots plus inline URLs from references / advisory_urls / links fields. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from cve / cveId / cves / cve_ids plus description / rule_name / categories / message / signature token scans. Payload snippet truncated to 2000 chars in description. Auth: SEC: <QRADAR_SEC_TOKEN> header (created in QRadar Web under Admin -> User Management -> Authorized Services -> Add Authorized Service; the resulting service token has a configurable role + security profile). QRADAR_HOST is the QRadar console URL (typically https://<console> on port 443), hard-validated client-side as http(s)://host[:port]. QRADAR_AQL_QUERY is the optional AQL string; QRADAR_OFFENSE_STATUS is the optional offense-status filter (one of OPEN / HIDDEN / CLOSED); QRADAR_MIN_SEVERITY is the optional severity floor. At least one of QRADAR_AQL_QUERY / QRADAR_OFFENSE_STATUS must be set. Tags: [qradar, siem, siem-analytics].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "qradar.py"
+}

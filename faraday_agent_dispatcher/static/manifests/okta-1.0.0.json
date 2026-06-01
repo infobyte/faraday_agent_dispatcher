@@ -1,0 +1,38 @@
+{
+    "arguments": {
+        "OKTA_FILTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Okta filter expression forwarded verbatim to the ?filter= query parameter on GET /api/v1/users and GET /api/v1/logs. Free-form Okta filter syntax — example for users: status eq \"ACTIVE\"; example for logs: eventType eq \"user.session.start\" or severity eq \"WARN\". Optional; empty / blank is interpreted as 'all records' on both surfaces. Whitespace is trimmed and URL-encoded server-side."
+        },
+        "OKTA_LIMIT": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Per-page record cap forwarded to the ?limit= query parameter on GET /api/v1/users and GET /api/v1/logs. Empty / blank defaults to 200 (Okta's documented default for both surfaces). Accepts int / numeric-string; floats are floored. Clamped to [1, 1000] (Okta's documented hard cap). Per-surface pagination is Link-header based (Okta returns a rel=\"next\" entry in the rfc5988 Link header) and walked until the header is absent or OKTA_PAGES (env-only override, default 5, clamped to [1, 50]) is reached."
+        },
+        "OKTA_EVENT_HOOKS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "When set to 'true' (case-insensitive — also accepts '1' / 'yes' / 'on'), the executor additionally pulls GET /api/v1/eventHooks and surfaces each configured event-hook channel as a Faraday host on the 0.0.0.0 sentinel with the [IDENTITY] engine prefix so operators can audit which external systems are wired to the Okta event stream. Default 'false'. Event hooks are not paginated — Okta returns the full list in a single call."
+        }
+    },
+    "environment_variables": [
+        "OKTA_DOMAIN",
+        "OKTA_API_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "okta",
+    "title": "Okta",
+    "website": "https://www.okta.com",
+    "description": "Okta identity-platform importer. Pulls Okta user accounts and System Log events from an Okta tenant and emits Faraday bulk-create JSON. Okta is the identity authority of record for the modern SaaS estate, so this executor is the IAM-class feed Faraday operators correlate the EDR / EASM / vuln-scanner agents' findings against to confirm an identity tied to an exposed host is a known, active principal — and to surface suspicious authentication activity (impossible-travel sign-ins, brute-forced MFA, deactivated-user revivals) onto the workspace as identity-attack-surface vulnerabilities. Each Okta user becomes one Faraday host (Okta users aren't IP-keyed since identities can sign in from anywhere; they synthesise onto the 0.0.0.0 sentinel; the profile.login / profile.email / profile.firstName + profile.lastName projection lands on host.hostnames; the status / lastLogin / passwordChanged enrichment lands on host.description; the user record itself becomes one Faraday vulnerability with the [IDENTITY] engine prefix). Each Okta System Log event becomes one Faraday host keyed on client.ipAddress when present (sign-in events almost always carry the client IP) or the 0.0.0.0 sentinel otherwise; the actor.alternateId / actor.displayName / target[].alternateId projection lands on host.hostnames; the event becomes one Faraday vulnerability with severity mapped from Okta's severity field (DEBUG/INFO -> info, WARN -> med, ERROR -> high). Each Okta event hook (when OKTA_EVENT_HOOKS=true) becomes one Faraday host on the 0.0.0.0 sentinel — hook channels are configuration-class records and surface as info so operators can audit which external systems are wired to the Okta event stream. Endpoints used: GET /api/v1/users?limit=<OKTA_LIMIT>&filter=<OKTA_FILTER> (paginated user inventory; returns [{...user...}] at the envelope root; pagination is Link-header based — each response carries an rfc5988 Link: <url>; rel=\"next\" header that we walk verbatim until either the header is absent or OKTA_PAGES is reached; filter is an Okta filter expression e.g. status eq \"ACTIVE\" forwarded server-side), GET /api/v1/logs?limit=<OKTA_LIMIT>&filter=<OKTA_FILTER> (paginated System Log events; same envelope shape and pagination strategy as the users surface; filter accepts Okta filter expressions e.g. eventType eq \"user.session.start\" forwarded server-side), and GET /api/v1/eventHooks (only when OKTA_EVENT_HOOKS=true; configured event-hook channels; returns [{...hook...}] with status / channel.uri / events enrichment; no pagination — Okta returns the full list in a single call). Auth: Okta uses long-lived API tokens. Operators create one in the Okta admin console under Security -> API -> Tokens -> Create Token. The dispatcher carries it on every request as the non-standard Authorization: SSWS <OKTA_API_TOKEN> header. OKTA_DOMAIN is the operator's Okta tenant host (e.g. mycorp.okta.com or mycorp.oktapreview.com); https:// is added automatically when the operator pasted in a bare FQDN. Severity for users / event hooks is always info (they're identity-inventory entries, not findings). Severity for log events is mapped from Okta's severity field. Tags: [okta, identity, user|log|event-hook].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "okta.py"
+}

@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "NVD_CVE_LIST": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional CSV of CVE ids to fetch (e.g. 'CVE-2024-1234, CVE-2023-5678'). When supplied, the executor walks the list in order and issues one HTTP GET per CVE against /rest/json/cves/2.0?cveId=CVE-... — duplicates are deduped, whitespace is trimmed, and malformed entries (must match CVE-YYYY-N+) are dropped with a warning. When both NVD_CVE_LIST and NVD_LAST_MOD_DAYS are supplied, NVD_CVE_LIST wins (the per-CVE mode is the narrower, more deterministic projection). When neither arg is supplied the executor falls back to the trailing NVD_LAST_MOD_DAYS-day window."
+        },
+        "NVD_LAST_MOD_DAYS": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Trailing-window length (in days) for the NVD lastModStartDate / lastModEndDate query. Defaults to 7. Bounded to 1..120 (the NVD API rejects spans longer than 120 days). Only consulted when NVD_CVE_LIST is empty / not supplied. The executor pages results 2000 at a time via startIndex / resultsPerPage until the entire window is walked. Blank / unparseable input falls back to the 7-day default."
+        }
+    },
+    "environment_variables": [
+        "NVD_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "nist_nvd",
+    "title": "NIST National Vulnerability Database (NVD) 2.0",
+    "website": "https://nvd.nist.gov/developers/vulnerabilities",
+    "description": "NIST National Vulnerability Database (NVD) 2.0 REST API importer. Pulls CVE records from the canonical NIST NVD 2.0 REST surface (https://services.nvd.nist.gov/rest/json/cves/2.0) and emits Faraday bulk-create JSON. Two mutually-exclusive operational modes via the manifest args: (1) NVD_CVE_LIST (CSV of CVE ids) walks the list in order and issues one HTTP GET per CVE via ?cveId=CVE-YYYY-NNNN; invalid-shaped entries are dropped silently. (2) NVD_LAST_MOD_DAYS (integer, default 7) issues a window query via ?lastModStartDate=...&lastModEndDate=...&startIndex=...&resultsPerPage=2000 and pages until the entire window is walked. Spans are bounded to NVD's documented 1..120 day ceiling. When both args are supplied NVD_CVE_LIST wins. Each CVE becomes one Faraday vulnerability under a single synthetic 0.0.0.0 host with hostname 'nist-nvd' (NVD entries are CVE-keyed not host-keyed — the operator's other agents emit the host-side findings this feed is correlated against). The vulnerability carries tags: ['nist-nvd'] and surfaces the CVSS score, vulnStatus, published / lastModified dates, CWE list, and reference URLs in both the description and the refs list. Severity is derived from CVSS preferring v3.1 over v3.0 over v2 — the explicit baseSeverity text (CRITICAL / HIGH / MEDIUM / LOW / NONE) is mapped to Faraday's ladder when present, falling back to a numeric baseScore bucket (>=9.0 critical / >=7.0 high / >=4.0 medium / >0.0 low / 0.0 info). Unscored CVEs (typical for 'Received' / 'Awaiting Analysis' entries NVD has not yet scored) default to 'info'. 'Rejected' CVEs are surfaced as 'info' with a [REJECTED] annotation. Refs include the canonical NVD CVE permalink (https://nvd.nist.gov/vuln/detail/CVE-...), every advisory URL NVD attached (with source vendor + tag set as a suffix), and explicit Nvd-CveID / Nvd-Status / Nvd-Source / Nvd-Published / Nvd-LastModified / Nvd-CvssVersion / Nvd-CvssScore / Nvd-CvssSeverity / Nvd-CvssVector / Nvd-CWE / Nvd-ResponseTimestamp / Nvd-FeedVersion pivots. Status is always open (an NVD entry cannot be 'fixed' in the catalog — it can only be remediated on the affected hosts). Rate limiting: NVD permits 5 requests / 30s without an apiKey and 50 requests / 30s with one — the executor sleeps 6s between requests when no key is set and 0.7s with a key to stay under the ceiling. NVD_API_KEY (optional, free at https://nvd.nist.gov/developers/request-an-api-key) is sent as an apiKey HTTP header on every request when configured. NVD_HOST may optionally be overridden via env to point at a federated mirror or an offline cache; defaults to https://services.nvd.nist.gov. Tags: [nist-nvd].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "nist_nvd.py"
+}

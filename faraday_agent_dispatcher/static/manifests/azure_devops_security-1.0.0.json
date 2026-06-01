@@ -1,0 +1,49 @@
+{
+    "arguments": {
+        "ADO_PROJECT": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Azure DevOps project name (or project id) that owns the target repository — the second path segment after https://dev.azure.com/{org}/, e.g. faraday-platform."
+        },
+        "ADO_REPO": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Azure DevOps repository name (or repository id) whose Advanced Security alerts should be imported — the segment after _git/ in the repo URL, e.g. dispatcher-core."
+        },
+        "ADO_ALERT_TYPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional CSV picking which of ADO's three Advanced Security alert families to fan out to — any combination of code (code-scanning / SAST), secret (secret-scanning), dependency (SCA / dependency-scanning). Defaults to all three. Unknown tokens are logged and skipped without aborting the run."
+        },
+        "ADO_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Filters out lower-severity alerts client-side after Faraday severity normalisation. Defaults to info (no filtering). Secret alerts are normalised to high — they will be filtered out if the floor is above high."
+        },
+        "ADO_INCLUDE_CLOSED": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional boolean (true | false / yes | no / 1 | 0). When true the executor drops the criteria.states=active filter so fixed / dismissed / autoDismissed alerts also flow through (closed records show up in Faraday as status=closed or status=risk-accepted). Defaults to false (active alerts only)."
+        }
+    },
+    "environment_variables": [
+        "ADO_HOST",
+        "ADO_ORG",
+        "ADO_PAT"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Static Application Security Testing",
+    "name": "azure_devops_security",
+    "title": "Azure DevOps Advanced Security",
+    "website": "https://learn.microsoft.com/en-us/rest/api/azure/devops/advancedsecurity/",
+    "description": "Azure DevOps Advanced Security REST API importer (fan-out). Pulls findings from one or more of ADO's three Advanced Security alert families (code-scanning, secret-scanning, dependency-scanning / SCA) against a single repository and emits Faraday bulk-create JSON to stdout. Set ADO_ALERT_TYPE (CSV of code|secret|dependency) to pick a subset; omit it to fan out to all three under a single PAT. Endpoint used: GET {ADO_HOST}/{org}/{project}/_apis/Alert/repositories/{repo}/Alerts?api-version=7.2-preview.1&criteria.alertType={code|secret|dependency}&criteria.states=active&$top=100 — paginated via the x-ms-continuationtoken response header with $skip fallback for older ADO Server installs that don't vend the token. ADO_HOST defaults to https://advsec.dev.azure.com (the canonical Microsoft REST host for ADO Advanced Security since the 7.2-preview API) and can be overridden for self-hosted Azure DevOps Server. Each ADO repository becomes one Faraday host (synthetic 0.0.0.0 ip because Advanced Security findings live in source repos and pull-request diffs, not on IPs) with hostnames = {project}/{repo}; each alert becomes one Faraday vulnerability with an engine prefix matching the alert source ([CODE] / [SECRETS] / [SCA]). Code-scanning vulns surface rule.friendlyName + rule.description + most-specific physicalLocation / SARIF location (file:line:start-end) + tool name + rule id + state + introduced / last-seen / fixed timestamps in the description; CWE-* refs are split from rule.tags and the canonical Azure DevOps alert permalink (https://dev.azure.com/{org}/{project}/_git/{repo}/alerts/{alertId}) is added to refs; severity is normalised from rule.severity / rule.securitySeverityLevel (critical / high / medium / low / note) with cvss numeric fallback. Secret vulns surface secret-type + path / line + state + dismissal_type + dismissal_reason; severity is fixed at high (ADO does not assign severity to secret alerts — exposed credentials are highest-priority by default). Dependency vulns surface package + ecosystem + vulnerable_version_range + first_patched_version + advisory link; severity normalised from the advisory severity with CVSS v3 base_score fallback; CVE list harvested from rule / alert text + dependency relations + description tokens; GHSA-* identifiers extracted from the alert payload and added to refs; refs harvested from rule.helpUri / tool names. Status across all three families: active -> open, fixed / autoDismissed -> closed, dismissed -> risk-accepted. ADO_MIN_SEVERITY floor enforced after normalisation. Auth: HTTP Basic with an empty username + ADO_PAT as the password (canonical Azure DevOps REST pattern) — the executor builds the Basic header itself via base64(\":<PAT>\") so the encoded credentials never leak into log output. Microsoft Entra OAuth bearer tokens are also accepted — a pre-built Bearer <token> value in ADO_PAT is forwarded verbatim. The PAT needs Advanced Security: Read (vso.advsec) scope and Code: Read (vso.code) for the optional per-repo metadata pull (used to enrich the Faraday host description with default branch / repo url / size).",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "azure_devops_security.py"
+}

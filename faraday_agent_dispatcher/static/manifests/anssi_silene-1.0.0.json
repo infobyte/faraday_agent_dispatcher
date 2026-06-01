@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "SILENE_TARGET_HOST": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Target Linux host FQDN or IP that SILENE should audit (forwarded as --target, e.g. host01.example.local). The host must be reachable over SSH from the agent container."
+        },
+        "SILENE_PROFILE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "ANSSI BP-028 hardening profile to evaluate, forwarded as --profile. Valid values: anssi-bp-028-minimal, intermediate, enhanced, high. Default: the tool's built-in default (typically anssi-bp-028-minimal)."
+        }
+    },
+    "environment_variables": [
+        "SILENE_SSH_USER",
+        "SILENE_SSH_KEY"
+    ],
+    "check_cmds": [
+        "silene --help"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "anssi_silene",
+    "title": "ANSSI SILENE",
+    "website": "https://github.com/ANSSI-FR/SILENE",
+    "description": "ANSSI SILENE Linux hardening assessment importer. Wraps the SILENE CLI (`silene --target <host> --profile <profile> --ssh-user <user> --ssh-key <key> --output <tmpdir> --format json`) against a target Linux host over SSH, parses every JSON file produced under the output root and emits one Faraday host for the target with every non-compliant or errored ANSSI BP-028 recommendation attached as a vulnerability. Compliant / skipped recommendations are dropped. Severity is bucketed from the recommendation level: minimal => critical (the bare-minimum baseline is not met), intermediate => high, enhanced => medium, high => low. Errored recommendations are surfaced as info. When the level is missing or unknown, a keyword heuristic on the rule title is used as a last-resort fallback. Auth: SSH key authentication via SILENE_SSH_USER and SILENE_SSH_KEY env vars (SILENE_SSH_KEY is the absolute path to a private key file inside the container); both must be set together or both omitted.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "anssi_silene.py"
+}

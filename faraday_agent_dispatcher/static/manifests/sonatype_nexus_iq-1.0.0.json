@@ -1,0 +1,31 @@
+{
+    "arguments": {
+        "NEXUS_IQ_PUBLIC_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Sonatype Nexus IQ application public id (the operator-readable application identifier shown in the IQ UI, distinct from the internal UUID). Resolves to /api/v2/applications?publicId={publicId} for the host description and is paired with NEXUS_IQ_STAGE to reach /api/v2/applications/{publicId}/reports/{stageId}/policy."
+        },
+        "NEXUS_IQ_STAGE": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Sonatype Nexus IQ scan stage to import. Must be one of build | stage-release | release | operate. Each stage is its own report in IQ — build = CI gate, stage-release = pre-prod, release = production cut, operate = continuously monitored production. Common synonyms (stage / stage_release / production / prod) are accepted and normalised to the canonical kebab-case wire form."
+        }
+    },
+    "environment_variables": [
+        "NEXUS_IQ_HOST",
+        "NEXUS_IQ_USER",
+        "NEXUS_IQ_PASSWORD"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Software Composition Analysis",
+    "name": "sonatype_nexus_iq",
+    "title": "Sonatype Nexus IQ Server",
+    "website": "https://www.sonatype.com/products/open-source-security-dependency-management",
+    "description": "Sonatype Nexus IQ Server REST API importer. Pulls Software Composition Analysis findings from a Nexus IQ application's stage-scoped policy report and emits Faraday bulk-create JSON to stdout. Authenticates against Nexus IQ via HTTP Basic with NEXUS_IQ_USER / NEXUS_IQ_PASSWORD (Nexus IQ accepts local accounts, SAML-mapped accounts and user token ids on the v2 REST API). Resolves application metadata via GET /api/v2/applications?publicId={publicId} (with a fallback walk of GET /api/v2/applications + client-side filter for tenants whose API gateway strips the query parameter), then fetches the policy report via GET /api/v2/applications/{publicId}/reports/{stageId}/policy where stageId is one of build | stage-release | release | operate. Each Nexus IQ application becomes one Faraday host (synthetic 0.0.0.0 ip because SCA findings live in dependency manifests, not on IPs) with hostnames = {applicationName}@{publicId}; per-component security issues attached as Faraday vulnerabilities — one per (componentDisplayName, securityIssue reference) pair with [SCA] engine prefix, '{reference} in {displayName}' in the title, component coordinates (displayName / format / filename / hash / matchState / proprietary / pathnames), securityIssue source / threatCategory / severity / severityScores / cvssVector, raw status, breached policyNames, application / organizationId / stage metadata in the description; recommendedVersion / recommendation / remediation / solution surfaces as Faraday resolution. Refs include CWE-* (single + list + list-of-dict shapes with the CWE- prefix collapsed), securityIssue.url, source-prefixed advisory ids for non-CVE sources (e.g. SONATYPE-2024-0001), plus a NexusIQ-Component label with the displayName so analysts can pivot back to the BOM. CVE list harvested from securityIssue.reference (when source=cve), cve / cveId / cves / aliases / relatedCves (string + list-of-string + list-of-dict shapes, deduped case-insensitively). Severity normalised from the issue's raw CVSS base score (0-10) first, then falls back to threatCategory (critical → critical, severe → high, moderate → medium, low → low, none → info), with a final fallback to the highest SECURITY-category policyThreatLevel on the surrounding component's violations list (8-10 critical / 4-7 high / 2-3 medium / 1 low / 0 info). Status mapped from the issue's status enum (Open / Confirmed / Investigating / Acknowledged → open, Not Applicable / Waived → risk-accepted, Fixed → closed), with per-issue analyst flags (waived / notApplicable / falsePositive / fixed / resolved) overriding the lifecycle status; a SECURITY-category violation marked waived / grandfathered also flips the issue to risk-accepted when the per-issue status is blank. NEXUS_IQ_HOST is the Nexus IQ base URL (e.g. https://nexus-iq.corp.example.com or https://nexus-iq.corp.example.com:8070); bare hostnames are accepted and prefixed with https://.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "sonatype_nexus_iq.py"
+}

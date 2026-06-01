@@ -1,0 +1,32 @@
+{
+    "arguments": {
+        "NETRISE_DEVICE_GROUP": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional NetRise device-group filter (the free-form label assigned to a logical bucket of firmware images in the NetRise console — e.g. edge_routers, industrial_plc, bmc_images, iot_cameras). When set, the filter is forwarded server-side via the devices.list query param (device_group + group sent as alt-keys so federated stacks pick whichever they know) so NetRise does the bulk of the filtering server-side and is also re-applied client-side after the device catalogue is fetched so legacy stacks that ignore the query param still bucket correctly. Defaults to None (no filter — every device the token can read is pulled)."
+        },
+        "NETRISE_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for NetRise firmware findings. Accepts info | low | medium | high | critical (plus NetRise synonyms: informational, important / major, moderate, minor, none / unspecified / unknown) plus numeric-string CVSS-style input bucketed via severity_from_cvss (<4 low, <7 medium, <9 high, >=9 critical). Findings below the floor are dropped from the Faraday output after per-finding severity normalisation (bucketed from the freeform severity string + CVSS fallback). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "NETRISE_HOST",
+        "NETRISE_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "netrise",
+    "title": "NetRise XIoT",
+    "website": "https://www.netrise.io",
+    "description": "NetRise XIoT (firmware / IoT) REST importer. Pulls managed devices and firmware vulnerabilities from a NetRise tenant via GET /api/v1/devices and GET /api/v1/firmware-vulnerabilities. Each NetRise device becomes one Faraday host; firmware vulnerabilities attach as Faraday vulnerabilities with engine prefix [EDR]. Because NetRise targets firmware / embedded / IoT assets (network gear, OT controllers, BMC images, IoT cameras, satellite ground stations, etc.) host.os is set to the firmware vendor / model (e.g. Cisco / ASR-9000 — or 'vendor model version' when a firmware version is available) rather than the operating system, so firmware-targeted vulnerabilities land on a recognisable asset record even when the underlying device has no traditional OS. Severity is bucketed from the freeform severity string enum (Critical / High / Medium / Low / Informational) with CVSS bucketing as a fallback; status mapped from finding.status / state / workflow (new / open / detected / in_progress / investigating -> open, resolved / fixed / remediated / patched / mitigated -> closed, suppressed / dismissed / wontfix / accepted / waived / false_positive -> risk-accepted) with determination as the secondary fallback. Pagination uses NetRise's canonical page / limit cursor pattern (PAGE_SIZE=100 per page capped at MAX_PAGES=200) with meta.total exhaustion detection. Refs include NetRise-Finding / NetRise-Device / NetRise-Firmware / NetRise-Component / NetRise-Package pivots plus inline advisory URLs and CWE-* harvested from cweId / cwe_id / cwe / cwes surfaces. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from cve / cveId / cves / aliases plus title / summary / description token scans. Auth: NetRise uses a static bearer-token header — the operator creates an API token in the NetRise console (Settings -> API Tokens) and the dispatcher carries it as Authorization: Bearer <NETRISE_TOKEN> plus Accept: application/json on every /api/v1/ call. NETRISE_HOST is the NetRise tenant base URL (e.g. https://api.netrise.io or https://<tenant>.netrise.io); NETRISE_TOKEN is the API token. NETRISE_DEVICE_GROUP is an optional device-group filter forwarded server-side via the devices.list query param. Tags: [netrise, edr, endpoint-edr].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "netrise.py"
+}

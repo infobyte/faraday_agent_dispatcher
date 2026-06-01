@@ -1,0 +1,26 @@
+{
+    "arguments": {
+        "QRADAR_SOAR_QUERY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional IBM QRadar SOAR (Resilient) incident filter forwarded to POST /rest/orgs/{id}/incidents/query_paged. Pass a JSON document representing an IncidentsQueryDTO (e.g. {\"filters\": [{\"conditions\": [{\"field_name\": \"plan_status\", \"method\": \"equals\", \"value\": \"A\"}]}]}), a bare filters list ([{\"conditions\": [...]}]), or a single condition object ({\"field_name\": \"severity_code\", \"method\": \"gte\", \"value\": 4}). The executor merges the value into the default payload, which sorts by create_date desc. Omit to pull every incident visible to the API key in the organization."
+        }
+    },
+    "environment_variables": [
+        "QRADAR_SOAR_HOST",
+        "QRADAR_SOAR_ORG_ID",
+        "QRADAR_SOAR_API_KEY_ID",
+        "QRADAR_SOAR_API_KEY_SECRET"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "qradar_soar",
+    "title": "IBM QRadar SOAR (Resilient)",
+    "website": "https://www.ibm.com/products/qradar-soar",
+    "description": "IBM QRadar SOAR (formerly IBM Resilient) REST API importer. Pulls security incidents from a QRadar SOAR organization and maps them into Faraday vulnerabilities. Lists incidents via POST /rest/orgs/{org_id}/incidents/query_paged (paginated with start/length, optionally filtered by QRADAR_SOAR_QUERY as a Resilient IncidentsQueryDTO / filters / single condition document), then per-incident artifacts via GET /rest/orgs/{org_id}/incidents/{id}/artifacts to resolve the affected asset (IP address, DNS name, MAC, OS). Each incident is mapped to one Faraday host derived from those artifacts; incidents without a resolvable asset are attached to a synthetic 0.0.0.0 host so the data is still imported. Severity is normalised from Resilient's severity_code (4=High, 5=Medium, 6=Low default scale) with a fallback to the textual severity field when present and a final fallback to info. Status maps from plan_status (A=Active -> open, C=Closed -> closed) and is forced to closed when resolution_id is set; resolution_summary is surfaced as the Faraday resolution. CVE list is scraped from artifacts of type 'CVE' / 'Vulnerability' and from any custom incident property whose name contains 'cve'. Auth is HTTP Basic with QRADAR_SOAR_API_KEY_ID as username and QRADAR_SOAR_API_KEY_SECRET as password (standard Resilient API key); QRADAR_SOAR_HOST is the SOAR base URL.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "qradar_soar.py"
+}

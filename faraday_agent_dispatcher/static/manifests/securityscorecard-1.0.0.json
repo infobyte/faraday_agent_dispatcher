@@ -1,0 +1,37 @@
+{
+    "arguments": {
+        "SSC_DOMAIN": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "SecurityScorecard primary domain (FQDN or IPv4 literal) identifying the monitored company whose score + factor breakdown + issue catalogue is pulled. This is the company identifier used across the SecurityScorecard REST API — the value visible in the SSC portal under My Scorecard / Portfolio (e.g. 'example.com') or returned as `domain` on GET /portfolios/{id}/companies. The executor hard-validates the FQDN / IPv4 shape client-side so a typo can't fan out into '/companies/None' calls."
+        },
+        "SSC_ISSUE_TYPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional SecurityScorecard issue-type slug to filter the issue catalogue. When set the executor calls GET /companies/{domain}/issues/{type}; when blank it calls GET /companies/{domain}/issues for the full catalogue across every issue type. Documented slugs are lowercase snake_case (e.g. patching_cadence_low, service_open_port, malware_infection, ssl_weak_cipher, exposed_personal_information_info) — see the SecurityScorecard portal under My Scorecard -> Issues for the available slugs on a company. Garbage values are rejected client-side (logged + ignored) rather than fanned out into a 400."
+        },
+        "SSC_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side severity floor for SecurityScorecard issues. Accepts info | low | medium | high | critical (plus SSC synonyms: positive / neutral / informational -> info, moderate -> medium, minor -> low) plus numeric-string CVSS-style input bucketed via severity_from_cvss (<4 low, <7 medium, <9 high, >=9 critical). Issues below the floor are dropped from the Faraday output after per-issue severity normalisation (bucketed from the freeform severity string enum + numeric severity_score 1-10 fallback). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [
+        "SSC_TOKEN"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "securityscorecard",
+    "title": "SecurityScorecard",
+    "website": "https://securityscorecard.com",
+    "description": "SecurityScorecard REST importer. Pulls the company-level rating record (score + grade + per-factor breakdown) and the open issue catalogue from a SecurityScorecard tenant via GET /companies/{domain}, GET /companies/{domain}/factors, and GET /companies/{domain}/issues (or /companies/{domain}/issues/{type} when SSC_ISSUE_TYPE is set). Each monitored company becomes one Faraday host (keyed by the company's primary domain — the SecurityScorecard surface is company/domain-scoped, not asset-scoped, so the host record is a synthetic per-company bucket rather than an IP-keyed asset) with host.os set to the SSC score + grade (e.g. 'SecurityScorecard 87 (B)') so the rating itself is visible alongside the per-factor issue findings. Each SSC open issue (one finding tied to one asset / port / DNS record — patching_cadence_low, service_open_port, malware_infection, ssl_weak_cipher, dns_lame_delegation, hacker_chatter_discussion, leaked_credentials, etc.) attaches as a Faraday vulnerability with the engine prefix [SECURITY-RATING]. Severity is bucketed from the freeform severity string enum (high / medium / low / info / positive) with the numeric severity_score 1-10 used as a CVSS-style fallback; positive (an indicator of good posture, not a finding) is squashed to info. Status mapped from status / issue_status / state (open / new / active / detected / current / in_progress -> open, resolved / fixed / remediated / patched -> closed, risk_accepted / will_not_fix / waived / false_positive / suppressed / dismissed / ignored -> risk-accepted). Pagination uses SSC's canonical page + page_size cursor pattern (PAGE_SIZE=100 per page capped at MAX_PAGES=200) with links.next + total exhaustion detection. Refs include SecurityScorecard-Issue / SecurityScorecard-IssueType / SecurityScorecard-Factor / SecurityScorecard-Group / SecurityScorecard-Target pivots plus inline advisory URLs from the remediations / advisory_urls block. CVE list harvested via a strict CVE-\\d{4}-\\d+ regex from cve / cveId / cves / details.cve plus title / summary / description / evidence / finding_description token scans. Auth: SecurityScorecard expects Authorization: Token <SSC_TOKEN> plus Accept: application/json on every /companies/ call. SSC_TOKEN is the API token created in the SecurityScorecard portal under My Settings -> API (or via POST /users/me/api-tokens). SSC_DOMAIN is the company's primary domain (FQDN or IPv4). SSC_ISSUE_TYPE is the optional lowercase snake_case slug filter; SSC_MIN_SEVERITY is the optional severity floor. Tags: [securityscorecard, security-rating, security-ratings].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "securityscorecard.py"
+}

@@ -1,0 +1,25 @@
+{
+    "arguments": {
+        "BESECURE_SCAN_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional beSecure scan ID to import. When set, only that scan's report (/api/scan/report/{id}) is pulled. When omitted, /api/scan/list is enumerated and every visible scan's report is imported."
+        }
+    },
+    "environment_variables": [
+        "BESECURE_HOST",
+        "BESECURE_USER",
+        "BESECURE_PASSWORD"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "besecure",
+    "title": "Beyond Security beSecure",
+    "website": "https://www.beyondsecurity.com/solutions/besecure",
+    "description": "Beyond Security beSecure (AVDS) importer. Lists scans via /api/scan/list and pulls per-scan reports via /api/scan/report/{id}; emits one Faraday host per scanned target with its vulnerabilities attached. Severity is normalised from beSecure's string severities (informational/low/medium/high/critical), its numeric risk levels (1=info ... 5=critical), or, when only a CVSS score is provided, bucketed via the CVSS v3 ranges. Auth is HTTP Basic — set BESECURE_USER / BESECURE_PASSWORD and BESECURE_HOST to the appliance base URL.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "besecure.py"
+}

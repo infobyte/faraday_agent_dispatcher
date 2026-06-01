@@ -1,0 +1,29 @@
+{
+    "arguments": {
+        "EPSS_CVES": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Mandatory CSV of CVE ids to look up (e.g. 'CVE-2024-1234, CVE-2023-5678'). The executor batches them up to 100 per request (the FIRST EPSS documented limit ceiling) and issues one HTTP GET per batch against /data/v1/epss?cve=CVE-1,CVE-2,... — duplicates are deduped (case-insensitive), whitespace is trimmed, and malformed entries (must match CVE-YYYY-N+) are dropped with a warning. CVEs the operator listed but that the FIRST EPSS catalog has no record of (typical for very recent CVEs the model has not yet scored) are skipped silently; the count is logged so the operator can correlate input vs. output."
+        },
+        "EPSS_MIN_PROBABILITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional client-side probability filter (0.0..1.0 as a string-coerceable float). Records whose EPSS probability is strictly below the filter are dropped client-side after the catalog is fetched (the FIRST EPSS API also supports server-side filtering via epss-gt= but we keep filtering client-side for parity with the rest of the threat-intel executors). Records with missing / unparseable epss are DROPPED when a filter is set (we cannot prove they meet the threshold) but KEPT when the filter is blank (the typical operational mode where the operator wants every scored CVE). Blank / missing / unparseable input keeps every scored record. Values below 0.0 / above 1.0 are clamped."
+        }
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "python3 -c 'import requests'"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "first_epss",
+    "title": "FIRST EPSS (Exploit Prediction Scoring System)",
+    "website": "https://www.first.org/epss/",
+    "description": "FIRST EPSS (Exploit Prediction Scoring System) importer. Pulls per-CVE EPSS scores from the FIRST EPSS REST API (https://api.first.org/data/v1/epss) and emits Faraday bulk-create JSON. EPSS is a stochastic model maintained by the FIRST.org EPSS SIG that estimates the probability a CVE will be exploited in the next 30 days; the catalog is re-scored daily and the data is fully public and unauthenticated. Each requested CVE becomes one Faraday vulnerability under a single synthetic 0.0.0.0 host with hostname 'first-epss' (EPSS entries are CVE-keyed not host-keyed — the operator's other agents emit the host-side findings this feed is correlated against). The vulnerability carries tags: ['first-epss'] and surfaces the EPSS probability + percentile + scoring date in both the description and the refs list. Endpoint used: GET https://api.first.org/data/v1/epss?cve=CVE-1,CVE-2,... (returns the canonical envelope {status, status-code, version, access, total, offset, limit, data: [{cve, epss, percentile, date}]}). EPSS_CVES is a mandatory CSV of CVE ids; the executor batches them up to 100 per request and dedupes case-insensitively while preserving operator order. EPSS_MIN_PROBABILITY is an optional client-side filter (0.0..1.0); blank input keeps every scored record. Severity is bucketed by EPSS probability — prob >= 0.9 -> critical (top ~0.1% by exploitability); prob >= 0.5 -> high; prob >= 0.1 -> medium; prob >= 0.01 -> low; prob < 0.01 -> info. EPSS records returned without a parseable probability are surfaced as info — we don't synthesise a ranking the model hasn't published. Refs include the canonical NVD CVE permalink (https://nvd.nist.gov/vuln/detail/CVE-...), the FIRST EPSS API query URL for the CVE, and Epss-CveID / Epss-Probability / Epss-Percentile / Epss-ScoringDate / Epss-ModelVersion / Epss-Access pivots so operators can pivot from a Faraday finding back to the scoring snapshot. Status is always open (an EPSS score cannot be 'fixed' in the catalog — it can only be remediated on the affected hosts). Auth: none — the FIRST EPSS API is fully public and unauthenticated. EPSS_HOST may optionally be overridden via env to point at a mirror or an offline cache; defaults to https://api.first.org. The executor does NOT consume any secrets / credentials / tokens. Tags: [first-epss].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "first_epss.py"
+}
