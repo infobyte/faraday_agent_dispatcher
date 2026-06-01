@@ -15,7 +15,7 @@
     },
     "environment_variables": [],
     "check_cmds": [
-        "oradad --help"
+        "oradad --help 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network and Vulnerability Scanners",

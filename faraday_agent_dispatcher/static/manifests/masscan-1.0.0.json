@@ -1,18 +1,36 @@
 {
     "arguments": {
-        "MASSCAN_TARGET": {"mandatory": true, "type": "string", "base": "string"},
-        "MASSCAN_PORTS": {"mandatory": true, "type": "string", "base": "string"},
-        "MASSCAN_RATE": {"mandatory": false, "type": "integer", "base": "integer"},
-        "MASSCAN_EXCLUDE": {"mandatory": false, "type": "string", "base": "string"}
+        "MASSCAN_TARGET": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "MASSCAN_PORTS": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "MASSCAN_RATE": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        },
+        "MASSCAN_EXCLUDE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        }
     },
     "environment_variables": [],
-    "check_cmds": ["masscan --version"],
+    "check_cmds": [
+        "masscan --version 2>&1"
+    ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network Tools",
     "name": "masscan",
     "title": "masscan",
     "website": "https://github.com/robertdavidgraham/masscan",
-    "description": "masscan — internet-scale TCP/UDP port scanner that can sweep the entire IPv4 space in minutes at rates above 1M pps. Set MASSCAN_TARGET (single IP, CIDR, or range list), MASSCAN_PORTS (e.g. '22,80,443,8000-8100' or 'U:53,T:1-65535'), and MASSCAN_RATE (packets/sec, default 1000 — bump to 10000+ on a fast link). Use MASSCAN_EXCLUDE to skip sensitive networks. Run from the DigitalOcean droplet; outbound mass port scanning is prohibited from AWS.",
+    "description": "masscan \u2014 internet-scale TCP/UDP port scanner that can sweep the entire IPv4 space in minutes at rates above 1M pps. Set MASSCAN_TARGET (single IP, CIDR, or range list), MASSCAN_PORTS (e.g. '22,80,443,8000-8100' or 'U:53,T:1-65535'), and MASSCAN_RATE (packets/sec, default 1000 \u2014 bump to 10000+ on a fast link). Use MASSCAN_EXCLUDE to skip sensitive networks. Run from the DigitalOcean droplet; outbound mass port scanning is prohibited from AWS.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "masscan.py"

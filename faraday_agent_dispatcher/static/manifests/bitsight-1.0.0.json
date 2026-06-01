@@ -22,7 +22,7 @@
         "BITSIGHT_TOKEN"
     ],
     "check_cmds": [
-        "python3 -c 'import requests'"
+        "python3 -c 'import requests' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "HostsApp Scanners",

@@ -46,7 +46,7 @@
         "GIT_TOKEN"
     ],
     "check_cmds": [
-        "semgrep --version"
+        "semgrep --version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Source Code Analysis",

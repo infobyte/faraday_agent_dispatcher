@@ -62,7 +62,7 @@
         "GIT_TOKEN"
     ],
     "check_cmds": [
-        "snyk --version"
+        "snyk --version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Source Code Analysis",

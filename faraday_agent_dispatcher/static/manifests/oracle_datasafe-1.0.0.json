@@ -58,8 +58,8 @@
         "OCI_HOST"
     ],
     "check_cmds": [
-        "python3 -c 'import requests'",
-        "python3 -c 'import cryptography'"
+        "python3 -c 'import requests' 2>&1",
+        "python3 -c 'import cryptography' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "HostsApp Scanners",

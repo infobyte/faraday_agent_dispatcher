@@ -8,7 +8,7 @@
     },
     "environment_variables": [],
     "check_cmds": [
-        "python3 -c 'from faraday_plugins.plugins.repo.crowdstrike.plugin import Crowdstrike'"
+        "python3 -c 'from faraday_plugins.plugins.repo.crowdstrike.plugin import Crowdstrike' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "HostsApp Scanners",

@@ -77,7 +77,7 @@
         "GOOGLE_APPLICATION_CREDENTIALS"
     ],
     "check_cmds": [
-        "prowler --version"
+        "prowler --version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network and Vulnerability Scanners",

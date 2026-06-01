@@ -18,14 +18,14 @@
     },
     "environment_variables": [],
     "check_cmds": [
-        "kube-bench version"
+        "kube-bench version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network and Vulnerability Scanners",
     "name": "kube_bench",
     "title": "kube-bench",
     "website": "https://github.com/aquasecurity/kube-bench",
-    "description": "CIS Kubernetes Benchmark scanner — runs the master / etcd / controlplane / node / policies checks against the host where the executor runs. KUBEBENCH_BENCHMARK picks the benchmark version — valid values: cis-1.7 | cis-1.8 | eks-1.2.0 | gke-1.6.0 | aks-1.0 | rh-1.0 (see kube-bench docs for the full list). KUBEBENCH_TARGETS is a list of check groups to run (e.g. master, node, etcd, policies, controlplane).",
+    "description": "CIS Kubernetes Benchmark scanner \u2014 runs the master / etcd / controlplane / node / policies checks against the host where the executor runs. KUBEBENCH_BENCHMARK picks the benchmark version \u2014 valid values: cis-1.7 | cis-1.8 | eks-1.2.0 | gke-1.6.0 | aks-1.0 | rh-1.0 (see kube-bench docs for the full list). KUBEBENCH_TARGETS is a list of check groups to run (e.g. master, node, etcd, policies, controlplane).",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "kube_bench.py"

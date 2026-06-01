@@ -46,7 +46,7 @@
         "LDAP_USE_TLS"
     ],
     "check_cmds": [
-        "python3 -c 'import ldap3'"
+        "python3 -c 'import ldap3' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network and Vulnerability Scanners",

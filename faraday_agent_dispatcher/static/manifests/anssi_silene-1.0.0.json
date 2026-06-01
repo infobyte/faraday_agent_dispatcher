@@ -28,7 +28,7 @@
         "SILENE_SSH_KEY"
     ],
     "check_cmds": [
-        "silene --help"
+        "silene --help 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network and Vulnerability Scanners",

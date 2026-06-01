@@ -150,7 +150,7 @@
         "BAGRE_PASSWORD_SPRAY_DRY_RUN"
     ],
     "check_cmds": [
-        "python3 -c 'import bagre'"
+        "python3 -c 'import bagre' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network Tools",

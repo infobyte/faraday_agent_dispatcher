@@ -34,7 +34,7 @@
         "FALCON_HOST"
     ],
     "check_cmds": [
-        "python3 -c 'import requests'"
+        "python3 -c 'import requests' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network and Vulnerability Scanners",

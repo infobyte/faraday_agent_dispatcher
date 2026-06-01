@@ -33,7 +33,7 @@
     },
     "environment_variables": [],
     "check_cmds": [
-        "naabu -version"
+        "naabu -version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network Tools",

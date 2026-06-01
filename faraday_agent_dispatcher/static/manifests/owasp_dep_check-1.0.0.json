@@ -46,7 +46,7 @@
         "GIT_TOKEN"
     ],
     "check_cmds": [
-        "dependency-check.sh --version"
+        "dependency-check.sh --version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Software Composition Analysis",

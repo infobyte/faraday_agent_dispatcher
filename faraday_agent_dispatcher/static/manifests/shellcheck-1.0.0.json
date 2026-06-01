@@ -41,7 +41,7 @@
         "GIT_TOKEN"
     ],
     "check_cmds": [
-        "shellcheck --version"
+        "shellcheck --version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Source Code Analysis",

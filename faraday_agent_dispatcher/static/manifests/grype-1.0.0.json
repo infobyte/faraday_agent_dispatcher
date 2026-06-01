@@ -23,14 +23,14 @@
     },
     "environment_variables": [],
     "check_cmds": [
-        "grype version"
+        "grype version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network and Vulnerability Scanners",
     "name": "grype",
     "title": "Grype",
     "website": "https://github.com/anchore/grype",
-    "description": "Anchore Grype vulnerability scanner for container images, filesystems, and SBOMs. GRYPE_TARGET is the image name (e.g. alpine:3.10), a directory, or a path to an SBOM. GRYPE_FAIL_ON sets the severity threshold above which the scan is marked failed — valid values: negligible | low | medium | high | critical. GRYPE_SCOPE controls layer coverage — valid values: squashed (default, scans the merged image) | all-layers (scans every layer separately). GRYPE_ONLY_FIXED=true hides vulnerabilities that have no upstream fix.",
+    "description": "Anchore Grype vulnerability scanner for container images, filesystems, and SBOMs. GRYPE_TARGET is the image name (e.g. alpine:3.10), a directory, or a path to an SBOM. GRYPE_FAIL_ON sets the severity threshold above which the scan is marked failed \u2014 valid values: negligible | low | medium | high | critical. GRYPE_SCOPE controls layer coverage \u2014 valid values: squashed (default, scans the merged image) | all-layers (scans every layer separately). GRYPE_ONLY_FIXED=true hides vulnerabilities that have no upstream fix.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "grype.py"

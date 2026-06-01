@@ -41,7 +41,7 @@
         "GIT_TOKEN"
     ],
     "check_cmds": [
-        "tfsec --version"
+        "tfsec --version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Source Code Analysis",

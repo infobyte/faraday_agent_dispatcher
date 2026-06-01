@@ -1,18 +1,36 @@
 {
     "arguments": {
-        "THEHARVESTER_DOMAIN": {"mandatory": true, "type": "string", "base": "string"},
-        "THEHARVESTER_SOURCES": {"mandatory": false, "type": "list", "base": "list"},
-        "THEHARVESTER_LIMIT": {"mandatory": false, "type": "integer", "base": "integer"},
-        "THEHARVESTER_START": {"mandatory": false, "type": "integer", "base": "integer"}
+        "THEHARVESTER_DOMAIN": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "THEHARVESTER_SOURCES": {
+            "mandatory": false,
+            "type": "list",
+            "base": "list"
+        },
+        "THEHARVESTER_LIMIT": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        },
+        "THEHARVESTER_START": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        }
     },
     "environment_variables": [],
-    "check_cmds": ["theHarvester --help"],
+    "check_cmds": [
+        "theHarvester --help 2>&1"
+    ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network Tools",
     "name": "theharvester",
     "title": "theHarvester",
     "website": "https://github.com/laramies/theHarvester",
-    "description": "theHarvester — OSINT email / subdomain / IP / employee harvesting from public sources. Set THEHARVESTER_DOMAIN to the target organisation's apex domain. THEHARVESTER_SOURCES is a list of providers to query (e.g. anubis, crtsh, duckduckgo, hackertarget, baidu, bing, virustotal, shodan, securityTrails). THEHARVESTER_LIMIT caps results per source.",
+    "description": "theHarvester \u2014 OSINT email / subdomain / IP / employee harvesting from public sources. Set THEHARVESTER_DOMAIN to the target organisation's apex domain. THEHARVESTER_SOURCES is a list of providers to query (e.g. anubis, crtsh, duckduckgo, hackertarget, baidu, bing, virustotal, shodan, securityTrails). THEHARVESTER_LIMIT caps results per source.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "theharvester.py"

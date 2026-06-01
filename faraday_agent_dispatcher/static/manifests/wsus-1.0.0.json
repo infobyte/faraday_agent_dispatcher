@@ -34,7 +34,7 @@
         "WSUS_PASSWORD"
     ],
     "check_cmds": [
-        "command -v pwsh || command -v powershell"
+        "command -v pwsh || command -v powershell 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Patch Management",

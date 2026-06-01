@@ -34,7 +34,7 @@
         "GOOGLE_APPLICATION_CREDENTIALS"
     ],
     "check_cmds": [
-        "python3 -c 'from google.cloud import securitycenter_v2'"
+        "python3 -c 'from google.cloud import securitycenter_v2' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Cloud Security",
