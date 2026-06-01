@@ -88,7 +88,6 @@ def main():
 
     # ATTENTION: SonarQube API requires an empty password when auth method is via token
     session.auth = (token, "")
-    print(token, file=sys.stderr)
 
     # Issues api config
     page = 1
@@ -117,10 +116,10 @@ def main():
             response_json = response.json()
         except ValueError:
             print(
-                f"Invalid JSON in response for issue search. " f"Component key {component_key}: {response.text}",
+                f"Invalid JSON in response for issue search. Component key {component_key}: {response.text}",
                 file=sys.stderr,
             )
-            continue
+            break
 
         issues = response_json.get("issues", [])
         vulnerabilities.extend(issues)
@@ -131,9 +130,10 @@ def main():
 
     response_json["issues"] = vulnerabilities
     # The faraday_plugins parser dereferences json_data['components'] without
-    # a default; if the API call failed and we never populated it the parser
-    # raises KeyError. Make sure the key exists before handing it off.
-    response_json.setdefault("components", {})
+    # a default and iterates it as a list of dicts; if the API call failed and
+    # we never populated it the parser raises KeyError. Make sure the key
+    # exists as an empty list before handing it off.
+    response_json.setdefault("components", [])
     if get_hotspot:
         hotspots_ids = get_hotspots_ids(session, sonar_qube_url, component_key)
         if hotspots_ids:
