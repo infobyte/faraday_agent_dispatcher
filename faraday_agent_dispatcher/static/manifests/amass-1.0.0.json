@@ -6,7 +6,7 @@
         "AMASS_RESOLVERS": {"mandatory": false, "type": "list", "base": "list"}
     },
     "environment_variables": [],
-    "check_cmds": ["amass -version"],
+    "check_cmds": ["amass -version 2>&1"],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network Tools",
     "name": "amass",

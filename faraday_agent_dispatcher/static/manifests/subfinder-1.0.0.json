@@ -28,7 +28,7 @@
     },
     "environment_variables": [],
     "check_cmds": [
-        "subfinder -version"
+        "subfinder -version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network Tools",

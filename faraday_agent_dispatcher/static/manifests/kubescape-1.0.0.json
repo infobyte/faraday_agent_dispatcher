@@ -28,7 +28,7 @@
     },
     "environment_variables": [],
     "check_cmds": [
-        "kubescape version"
+        "kubescape version 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Network and Vulnerability Scanners",
