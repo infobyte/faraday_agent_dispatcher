@@ -25,12 +25,12 @@
             "description": "Optional per-surface page-walk cap. Each Detectify v3 search page returns up to 100 hits via limit=100; DETECTIFY_PAGES bounds the marker walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited Detectify API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (\u2248 500 hits per surface, 1000 total across domains + findings)."
         },
         "DETECTIFY_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "DETECTIFY_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

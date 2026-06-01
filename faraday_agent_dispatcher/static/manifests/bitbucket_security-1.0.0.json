@@ -36,12 +36,12 @@
             "base": "string"
         },
         "BB_USER": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "BB_APP_PASSWORD": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

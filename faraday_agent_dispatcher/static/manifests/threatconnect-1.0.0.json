@@ -23,7 +23,7 @@
             "base": "string"
         },
         "TC_SECRET_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

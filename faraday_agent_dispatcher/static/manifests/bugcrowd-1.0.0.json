@@ -19,7 +19,7 @@
             "description": "Optional Bugcrowd priority floor (integer 1..5, where 1 is most critical and 5 is least); submissions whose priority is numerically greater than the floor (less severe) are dropped client-side after the fetch. Bugcrowd's priority ladder maps to Faraday severities as P1 -> 'critical', P2 -> 'high', P3 -> 'medium', P4 -> 'low', P5 -> 'info'. Accepts integer / float / 'P<N>' scalar inputs ('P1' / '1' / '1.0' all parse the same). Closed / Resolved / Duplicate / Not-Reproducible / Not-Applicable / Out-Of-Scope / Informational / Spam submissions are floored to 'info' severity regardless of the published priority (preserved via an explicit BC-State pivot). Blank / missing / unparseable values keep every record (the typical operational mode for first-time imports)."
         },
         "BC_API_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

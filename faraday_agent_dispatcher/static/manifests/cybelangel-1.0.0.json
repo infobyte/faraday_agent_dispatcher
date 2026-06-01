@@ -19,12 +19,12 @@
             "description": "Optional per-surface page-walk cap. Each CybelAngel v2.0 search page returns up to 100 hits via limit=100; CYBELANGEL_PAGES bounds the offset walk so a stray operator filter can't fan out into 100k+ requests against the rate-limited CybelAngel API. Numeric / numeric-string input accepted; floats are floored. Clamped to [1, 50]. Defaults to 5 (\u2248 500 hits per surface, 1000 total across assets + threats)."
         },
         "CYBELANGEL_CLIENT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "CYBELANGEL_CLIENT_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

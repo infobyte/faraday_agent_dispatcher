@@ -24,12 +24,12 @@
             "base": "string"
         },
         "XPANSE_API_KEY_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "XPANSE_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

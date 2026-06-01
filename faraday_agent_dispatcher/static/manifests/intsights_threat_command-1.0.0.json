@@ -18,7 +18,7 @@
             "base": "string"
         },
         "TC_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

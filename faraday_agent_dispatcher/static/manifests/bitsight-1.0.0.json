@@ -13,7 +13,7 @@
             "description": "Optional client-side severity floor for BitSight findings. Accepts info | low | medium | high | critical (plus BitSight synonyms: severe -> critical, material -> high, moderate -> medium, minor -> low, neutral / informational -> info) plus numeric-string CVSS-style input bucketed via severity_from_cvss (<4 low, <7 medium, <9 high, >=9 critical). Findings below the floor are dropped from the Faraday output after per-finding severity normalisation (bucketed from the freeform severity_category string + numeric severity 0-10 fallback). Defaults to info (no filtering)."
         },
         "BITSIGHT_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

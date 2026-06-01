@@ -12,7 +12,7 @@
             "base": "string"
         },
         "CERTIST_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

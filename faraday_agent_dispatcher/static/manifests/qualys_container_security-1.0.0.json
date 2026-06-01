@@ -24,12 +24,12 @@
             "base": "string"
         },
         "QUALYS_USER": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "QUALYS_PASSWORD": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

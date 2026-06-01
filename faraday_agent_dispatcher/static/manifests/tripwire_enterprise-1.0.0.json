@@ -24,12 +24,12 @@
             "base": "string"
         },
         "TRIPWIRE_USER": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "TRIPWIRE_PASSWORD": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

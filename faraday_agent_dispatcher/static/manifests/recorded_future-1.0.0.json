@@ -13,7 +13,7 @@
             "description": "Optional client-side risk-score filter (0..99 \u2014 Recorded Future's proprietary risk scale where higher = more malicious). When supplied, records whose RF risk score is strictly below the filter are dropped after the response is fetched; records RF has not yet scored are also dropped when this filter is set (we cannot prove an unscored record meets the threshold). Blank / missing / unparseable input keeps every record (the typical operational mode). Values below 0 are clamped to 0; values above 99 are clamped to 99. When the search-mode (no RF_CVE_LIST) is in effect, the same threshold is forwarded server-side via riskScore_gte so we don't pay for records that will be dropped client-side."
         },
         "RF_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

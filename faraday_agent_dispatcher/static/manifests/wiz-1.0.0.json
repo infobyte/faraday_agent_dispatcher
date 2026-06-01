@@ -29,12 +29,12 @@
             "base": "string"
         },
         "WIZ_CLIENT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "WIZ_CLIENT_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

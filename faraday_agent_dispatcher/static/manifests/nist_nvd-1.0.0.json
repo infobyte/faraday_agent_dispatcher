@@ -13,7 +13,7 @@
             "description": "Trailing-window length (in days) for the NVD lastModStartDate / lastModEndDate query. Defaults to 7. Bounded to 1..120 (the NVD API rejects spans longer than 120 days). Only consulted when NVD_CVE_LIST is empty / not supplied. The executor pages results 2000 at a time via startIndex / resultsPerPage until the entire window is walked. Blank / unparseable input falls back to the 7-day default."
         },
         "NVD_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

@@ -18,12 +18,12 @@
             "base": "string"
         },
         "AXONIUS_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "AXONIUS_API_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

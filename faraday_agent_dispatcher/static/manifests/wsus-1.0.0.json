@@ -18,12 +18,12 @@
             "base": "string"
         },
         "WSUS_USER": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "WSUS_PASSWORD": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

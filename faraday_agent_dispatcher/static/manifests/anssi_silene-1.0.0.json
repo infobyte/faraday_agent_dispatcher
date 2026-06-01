@@ -13,12 +13,12 @@
             "description": "ANSSI BP-028 hardening profile to evaluate, forwarded as --profile. Valid values: anssi-bp-028-minimal, intermediate, enhanced, high. Default: the tool's built-in default (typically anssi-bp-028-minimal)."
         },
         "SILENE_SSH_USER": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "SILENE_SSH_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

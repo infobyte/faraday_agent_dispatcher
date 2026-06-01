@@ -13,12 +13,12 @@
             "description": "Optional CSV of typed indicators to fetch via the Mandiant Indicators-of-Compromise v4 surface (e.g. 'md5:abcd1234..., ip:198.51.100.1, fqdn:malicious.example.com, sha256:..., url:https://malicious.example.com/path'). Each entry must be 'type:value'; accepted types are md5, sha1, sha256, ip (alias for ipv4), ipv4, ipv6, fqdn (alias for domain), domain, url. Duplicates are deduped case-insensitively against the canonical type + raw value pair, whitespace is trimmed, and malformed / blank / unknown-type entries are dropped with a warning so a single typo doesn't abort the run. The executor walks the list in order and issues one HTTP GET per indicator against /v4/indicator/{type}/{value} \u2014 URL encoding is applied automatically so URL indicators round-trip cleanly."
         },
         "MANDIANT_KEY_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "MANDIANT_KEY_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

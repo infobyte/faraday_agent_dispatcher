@@ -19,7 +19,7 @@
             "description": "Optional client-side severity floor for SecurityScorecard issues. Accepts info | low | medium | high | critical (plus SSC synonyms: positive / neutral / informational -> info, moderate -> medium, minor -> low) plus numeric-string CVSS-style input bucketed via severity_from_cvss (<4 low, <7 medium, <9 high, >=9 critical). Issues below the floor are dropped from the Faraday output after per-issue severity normalisation (bucketed from the freeform severity string enum + numeric severity_score 1-10 fallback). Defaults to info (no filtering)."
         },
         "SSC_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

@@ -18,12 +18,12 @@
             "base": "string"
         },
         "TWISTLOCK_USER": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "TWISTLOCK_PASSWORD": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

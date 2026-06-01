@@ -17,12 +17,12 @@
             "base": "string"
         },
         "QRADAR_SOAR_API_KEY_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "QRADAR_SOAR_API_KEY_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

@@ -26,12 +26,12 @@
             "base": "string"
         },
         "GIT_USERNAME": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "GIT_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

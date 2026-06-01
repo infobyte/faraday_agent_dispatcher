@@ -29,7 +29,7 @@
             "base": "string"
         },
         "CENSYS_API_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

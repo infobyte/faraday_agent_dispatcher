@@ -13,7 +13,7 @@
             "description": "Server-side Intigriti submission-status filter (CSV: 'open' / 'new' / 'triage' / 'triaged' / 'accepted' / 'pending-review' / 'resolved' / 'closed' / 'duplicate' / 'out-of-scope' / 'spam' / 'informative' / 'wont-fix'). Forwarded as repeated statusId=<status> query entries so the operator can compose a multi-status filter (Intigriti accepts either the canonical label or the integer id; the dispatcher forwards the canonical label so a future Intigriti id renumbering does not silently warp the filter). Operator-friendly aliases are normalised ('new' -> 'open', 'open' -> 'open', 'triaging' / 'in-triage' -> 'triage', 'in-progress' -> 'triaged', 'fixed' -> 'resolved', 'pending' -> 'pending-review', 'oos' / 'out_of_scope' / 'outofscope' -> 'out-of-scope', 'dup' -> 'duplicate', 'na' / 'not_applicable' / 'notapplicable' -> 'out-of-scope', 'info' / 'informational' -> 'informative', 'wontfix' / \"won't-fix\" / 'wont_fix' -> 'wont-fix'). Blank / missing walks every status (the typical operational mode for first-time imports). Unknown / unparseable entries are dropped silently rather than crashing the run."
         },
         "INTIG_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

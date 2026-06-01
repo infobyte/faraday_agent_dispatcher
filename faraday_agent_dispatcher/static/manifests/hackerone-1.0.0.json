@@ -19,12 +19,12 @@
             "description": "Optional Faraday severity floor (case-insensitive 'info' / 'low' / 'medium' / 'high' / 'critical'); reports whose mapped severity is strictly below the floor are dropped client-side after the fetch. HackerOne's severity field is the program-set CVSS rating (critical / high / medium / low / none \u2014 'none' maps to Faraday's 'info' bucket so the report is still visible). The nested {'rating': '...', 'score': 0..10} shape used on newer programs is tolerated \u2014 the rating is preferred and the 0..10 score is used as a fallback. Closed / Resolved / Informative / Not-Applicable / Duplicate / Spam reports are floored to 'info' regardless of the published rating (preserved via an explicit H1-State pivot). Operator-friendly aliases are accepted ('informational' -> 'info', 'moderate' -> 'medium', 'crit' -> 'critical', 'elevated' -> 'high', 'severe' -> 'critical', 'none' -> 'info'). Blank / missing / unparseable values keep every record (the typical operational mode for first-time imports)."
         },
         "H1_USER": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "H1_API_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

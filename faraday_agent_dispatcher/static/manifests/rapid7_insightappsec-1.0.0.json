@@ -19,7 +19,7 @@
             "description": "Minimum Faraday severity bucket to import. Valid values: info, low, medium, high, critical. Enforced client-side after severity normalisation (handles InsightAppSec's string enum \u2014 HIGH/MEDIUM/LOW/INFORMATIONAL/SAFE \u2014 and its 0-10 vulnerability_score bucketed via CVSS v3 ranges). Default: info."
         },
         "INSIGHTAPPSEC_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

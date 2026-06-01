@@ -1,7 +1,7 @@
 {
     "arguments": {
         "TAEGIS_TENANT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string",
             "description": "The Secureworks Taegis tenant id scoped on every GraphQL request. Taegis is a tenant-keyed managed-detection-and-response SaaS so the tenant id is mandatory \u2014 it is forwarded as the 'x-tenant-context: <TAEGIS_TENANT_ID>' HTTP header on every subsequent GraphQL POST and surfaced as a Taegis-TenantID pivot in both the description and the refs list so operators can pivot from a Faraday finding back to the exact Taegis tenant. Whitespace is trimmed. The executor exits cleanly when the tenant id is missing."
@@ -13,12 +13,12 @@
             "description": "Optional Faraday severity floor (case-insensitive 'info' / 'low' / 'medium' / 'high' / 'critical'); records whose mapped severity is strictly below the floor are dropped client-side after the GraphQL fetch. Blank / missing / unparseable values keep every record (the typical operational mode for first-time imports). Operator-friendly aliases are accepted ('informational' -> 'info', 'moderate' -> 'medium', 'crit' -> 'critical'). Useful for scheduled runs that only want to surface the high-priority Taegis output in Faraday and let the long-tail low/info records stay in the Taegis console."
         },
         "TAEGIS_CLIENT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "TAEGIS_CLIENT_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

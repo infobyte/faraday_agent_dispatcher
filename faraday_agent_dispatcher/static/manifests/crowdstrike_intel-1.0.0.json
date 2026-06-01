@@ -13,12 +13,12 @@
             "description": "Optional upper bound on the total number of indicator records to accumulate (default 500). The executor pages /intel/combined/indicators/v1 in 500-record pages via offset/limit until either INTEL_MAX_RESULTS is reached, the Falcon result set is exhausted (offset >= meta.pagination.total), or the result set goes empty. Sort is last_updated.desc so the newest indicators are at the head of the result set \u2014 the typical 'give me the last N indicators of type X' operational mode. Values <= 0 are clamped to the default (the operator most likely fat-fingered a sign / forgot a digit); values above 10000 are clamped to 10000 to keep the dispatcher responsive on chatty tenants. Blank / missing / unparseable input falls back to the default."
         },
         "FALCON_CLIENT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "FALCON_CLIENT_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },

@@ -19,17 +19,17 @@
             "description": "Optional CSV of Inspector v2 severities (INFORMATIONAL | LOW | MEDIUM | HIGH | CRITICAL). Faraday-style synonyms (info | low | medium | high | critical) accepted. Forwarded as one filterCriteria.severity EQUALS entry per token. Blank returns every severity."
         },
         "AWS_ACCESS_KEY_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "AWS_SECRET_ACCESS_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "AWS_SESSION_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

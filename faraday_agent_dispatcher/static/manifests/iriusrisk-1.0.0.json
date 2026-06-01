@@ -12,7 +12,7 @@
             "base": "string"
         },
         "IRIUS_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

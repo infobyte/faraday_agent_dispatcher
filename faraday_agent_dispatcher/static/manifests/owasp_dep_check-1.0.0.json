@@ -31,12 +31,12 @@
             "description": "Optional minimum severity floor (info | low | medium | high | critical). Filters out lower-severity dep-check findings client-side after dep-check's own severity \u2192 Faraday severity normalisation (CRITICAL/HIGH/MEDIUM/LOW + UNKNOWN/MODERATE/NEGLIGIBLE/INFORMATIONAL with CVSS v3 / v2 base-score bucketing as a fallback). Defaults to info (no filtering)."
         },
         "GIT_USERNAME": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "GIT_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

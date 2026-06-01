@@ -25,12 +25,12 @@
             "description": "Maximum vulnerabilities to retrieve per query. Default 100; pagination stops once this many entries have been collected."
         },
         "VULNDB_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "VULNDB_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

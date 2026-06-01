@@ -18,12 +18,12 @@
             "base": "string"
         },
         "NEXUS_IQ_USER": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "NEXUS_IQ_PASSWORD": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

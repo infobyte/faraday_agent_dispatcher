@@ -23,12 +23,12 @@
             "base": "string"
         },
         "UPTYCS_API_KEY_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "UPTYCS_API_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

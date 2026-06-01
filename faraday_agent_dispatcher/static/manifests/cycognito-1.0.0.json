@@ -29,7 +29,7 @@
             "base": "string"
         },
         "CYCOG_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

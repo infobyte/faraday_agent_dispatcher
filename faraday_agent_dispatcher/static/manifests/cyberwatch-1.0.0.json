@@ -18,12 +18,12 @@
             "base": "string"
         },
         "CYBERWATCH_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "CYBERWATCH_SECRET_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

@@ -26,17 +26,17 @@
             "base": "string"
         },
         "AWS_ACCESS_KEY_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "AWS_SECRET_ACCESS_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "AWS_SESSION_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
@@ -46,17 +46,17 @@
             "base": "string"
         },
         "AZURE_TENANT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "AZURE_CLIENT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "AZURE_CLIENT_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },

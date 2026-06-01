@@ -1,7 +1,7 @@
 {
     "arguments": {
         "CYLANCE_TENANT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string",
             "description": "BlackBerry Cylance tenant identifier. The value is shown in the Cylance console under Settings -> Integrations -> Custom Application alongside the App Id / App Secret pair created for this importer; Cylance carries it in the JWT auth payload as the `tid` claim. Required because the auth JWT is rejected with HTTP 401 when the tid does not match the tenant the App Id belongs to. Whitespace is trimmed; blank input causes the executor to exit with a clear error."
@@ -24,7 +24,7 @@
             "base": "string"
         },
         "CYLANCE_APP_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

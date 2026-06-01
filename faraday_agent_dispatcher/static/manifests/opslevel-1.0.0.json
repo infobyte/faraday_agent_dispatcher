@@ -13,7 +13,7 @@
             "description": "Optional OpsLevel lifecycle filter forwarded server-side as the lifecycleAlias list-arg on the account.services GraphQL field. Accepts the operator-configured lifecycle aliases (canonical shipped set: pre-alpha / alpha / beta / general_availability / end-of-life) \u2014 OpsLevel tenants can rename lifecycle entries via the Service Maturity rubric so the executor only enforces the alphanumeric + ._- alias shape (up to 64 chars) rather than a strict enum. Blank / missing fans out across all lifecycles."
         },
         "OPSLEVEL_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

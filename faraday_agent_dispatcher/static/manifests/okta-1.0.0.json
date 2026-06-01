@@ -24,7 +24,7 @@
             "base": "string"
         },
         "OKTA_API_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

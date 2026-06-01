@@ -28,12 +28,12 @@
             "base": "string"
         },
         "CONTRAST_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "CONTRAST_SERVICE_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

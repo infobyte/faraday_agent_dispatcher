@@ -13,7 +13,7 @@
             "description": "Optional LeanIX factSheet type filter forwarded server-side as the factSheetType query param on GET /services/pathfinder/v1/factSheets. Accepts PascalCase alphanumeric type names \u2014 Application / BusinessCapability / ITComponent / Project / DataObject / Interface / TechnicalStack / Provider / UserGroup / etc. The executor hard-validates the type-name shape client-side (PascalCase alphanumeric up to 64 chars) so a typo or control char can't fan out into a 400. Blank / missing fans out across all factSheet types in the workspace."
         },
         "LEANIX_API_TOKEN": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

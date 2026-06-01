@@ -25,12 +25,12 @@
             "description": "Optional minimum severity floor (info | low | medium | high | critical). Forwarded to Aqua SaaS as the severity query parameter on GET /api/v2/risks/vulnerabilities (so the tenant only paginates results that survive the floor) AND enforced client-side after Faraday severity normalisation (handles Aqua's critical/high/medium/low/negligible enum and CVSS base-score fallback). Defaults to info (no filtering)."
         },
         "AQUA_USER": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "AQUA_PASSWORD": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

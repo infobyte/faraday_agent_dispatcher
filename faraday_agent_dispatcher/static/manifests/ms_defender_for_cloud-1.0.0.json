@@ -19,17 +19,17 @@
             "description": "Optional client-side severity floor. Accepts info | low | medium | high | critical (plus the Defender synonyms: informational, important / major, moderate, minor, none / unspecified / unknown). Defender for Cloud's list APIs don't expose a server-side severity filter, so the floor is applied after each finding has been bucketed. Defaults to info (no filtering)."
         },
         "AZURE_TENANT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "AZURE_CLIENT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string"
         },
         "AZURE_CLIENT_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

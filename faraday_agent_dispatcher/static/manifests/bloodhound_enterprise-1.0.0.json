@@ -18,12 +18,12 @@
             "base": "string"
         },
         "BHE_TOKEN_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         },
         "BHE_TOKEN_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }

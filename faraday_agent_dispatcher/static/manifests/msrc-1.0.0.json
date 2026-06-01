@@ -13,7 +13,7 @@
             "description": "Optional case-insensitive substring filter applied to the affected-product set after the CVRF document is fetched. A CVE is kept when any of its affected ProductID -> FullProductName mappings contain the filter substring; otherwise it is dropped. Blank / missing input keeps every CVE in the release (the typical operational mode where the operator wants the whole Patch Tuesday rollup). Vulns with no resolvable products are DROPPED when a filter is set (we cannot prove they match the filter) but KEPT when no filter is supplied."
         },
         "MSRC_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string"
         }
