@@ -267,7 +267,6 @@ AGENT_GROUPS = {
             "naabu",
             "nmap",
             "shodan2",
-            "sublist3r",
             "amass",
             "masscan",
             "dnstwist",
@@ -277,7 +276,7 @@ AGENT_GROUPS = {
         ],
         "description": (
             "Passive reconnaissance, active host discovery and brand-protection signals. "
-            "Subdomain / DNS enum: subfinder, amass (heavier-duty, more sources), sublist3r "
+            "Subdomain / DNS enum: subfinder, amass (heavier-duty, more sources), "
             "and theharvester (also pulls emails / employees / breaches). Active port "
             "scanning: naabu (fast SYN/CONNECT), nmap (with NSE scripting) and masscan "
             "(internet-scale, >1M pps). Passive Internet-wide intel: shodan2 (needs "

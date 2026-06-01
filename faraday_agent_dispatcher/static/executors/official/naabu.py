@@ -23,6 +23,21 @@ def build_command(output_path: Path):
     rate = os.environ.get("EXECUTOR_CONFIG_NAABU_RATE")
     threads = os.environ.get("EXECUTOR_CONFIG_NAABU_THREADS")
 
+    # naabu's -top-ports only accepts a fixed tier set. Reject anything else
+    # up front with a clear message so the run doesn't die deep in the binary
+    # with "Could not create runner: invalid top ports option".
+    VALID_TOP_PORTS = {"100", "1000", "full"}
+    if top_ports and str(top_ports).strip() not in VALID_TOP_PORTS:
+        print(
+            f"NAABU_TOP_PORTS={top_ports!r} is not supported. Valid values: 100 | 1000 | full. "
+            "Use NAABU_PORTS for arbitrary port lists / ranges (e.g. '22,80,443,8000-8100').",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if ports and top_ports:
+        print("NAABU_PORTS and NAABU_TOP_PORTS are mutually exclusive; pass only one.", file=sys.stderr)
+        sys.exit(1)
+
     cmd = ["naabu", "-json", "-o", str(output_path), "-silent"]
 
     if host_list:
