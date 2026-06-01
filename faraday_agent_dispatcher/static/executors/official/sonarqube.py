@@ -75,14 +75,14 @@ def main():
     # ['EXECUTOR_CONFIG_TOKEN', 'EXECUTOR_CONFIG_URL', 'EXECUTOR_CONFIG_PROJECT']
     agent_config = get_common_parameters()
 
-    try:
-        sonar_qube_url = os.environ["SONAR_URL"]
-        token = os.environ["EXECUTOR_CONFIG_TOKEN"]
-        component_key = os.environ.get("EXECUTOR_CONFIG_COMPONENT_KEY", None)
-        get_hotspot = os.environ.get("EXECUTOR_CONFIG_GET_HOTSPOT", "false").lower() == "true"
-    except KeyError:
-        print("Environment variable not found", file=sys.stderr)
-        sys.exit()
+    # Per-scan EXECUTOR_CONFIG_SONAR_URL arg wins (Faraday UI); bare env-var is the fallback.
+    sonar_qube_url = os.environ.get("EXECUTOR_CONFIG_SONAR_URL") or os.environ.get("SONAR_URL")
+    token = os.environ.get("EXECUTOR_CONFIG_TOKEN")
+    if not sonar_qube_url or not token:
+        print("SONAR_URL and TOKEN are required", file=sys.stderr)
+        sys.exit(1)
+    component_key = os.environ.get("EXECUTOR_CONFIG_COMPONENT_KEY", None)
+    get_hotspot = os.environ.get("EXECUTOR_CONFIG_GET_HOTSPOT", "false").lower() == "true"
 
     session = requests.Session()
 
@@ -130,6 +130,10 @@ def main():
         page += 1
 
     response_json["issues"] = vulnerabilities
+    # The faraday_plugins parser dereferences json_data['components'] without
+    # a default; if the API call failed and we never populated it the parser
+    # raises KeyError. Make sure the key exists before handing it off.
+    response_json.setdefault("components", {})
     if get_hotspot:
         hotspots_ids = get_hotspots_ids(session, sonar_qube_url, component_key)
         if hotspots_ids:
