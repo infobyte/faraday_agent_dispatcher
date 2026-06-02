@@ -44,6 +44,11 @@ def _resolve_base_and_token():
     return base.rstrip("/"), token
 
 
+class VRxAPIError(RuntimeError):
+    """Raised when a vRx API call fails irrecoverably. Caught per-mode in
+    main() so one bad endpoint can't drop the whole multi-mode run."""
+
+
 def _api_page(path, query):
     base, token = _resolve_base_and_token()
     if not base or not token:
@@ -66,13 +71,11 @@ def _api_page(path, query):
                 )
                 time.sleep(RETRY_429_SLEEP_SECONDS)
                 continue
-            print(f"vRx HTTP {exc.code} on {path}: {exc.reason}", file=sys.stderr)
-            sys.exit(1)
+            raise VRxAPIError(f"vRx HTTP {exc.code} on {path}: {exc.reason}") from exc
 
     rr = data.get("serverResponseResult", {})
     if rr.get("serverResponseResultCode") != "SUCCESS":
-        print(f"vRx API error: {rr}", file=sys.stderr)
-        sys.exit(1)
+        raise VRxAPIError(f"vRx API error on {path}: {rr}")
     return data.get("serverResponseObject", []) or []
 
 
@@ -341,21 +344,25 @@ def run_software():
     return list(hosts.values())
 
 
+RELEVANT_INCIDENT_TYPES = {"MitigatedVulnerability", "DetectedVulnerability"}
+
+
 def run_incidents():
     """Vulnerability incident events (Detected / Mitigated).
 
     Emits one finding per event. MitigatedVulnerability events arrive with
     status='closed' so they can supplement the cves mode (auto-close vulns
-    that vRx has remediated). Filters server-side to just the two relevant
-    event types.
+    that vRx has remediated). The /incidentEvent/filter endpoint doesn't
+    accept a server-side q-filter, so we walk every event and drop anything
+    that isn't a Detected/Mitigated vulnerability event (NewEndpoint,
+    EndpointEventInformation, etc.).
     """
-    items = _api_all(
-        "/incidentEvent/search",
-        {"q": "incidentEventIncidentEventType=in=(MitigatedVulnerability,DetectedVulnerability)"},
-    )
+    items = _api_all("/incidentEvent/filter", {})
     hosts = {}
     for it in items:
         event_type = _pick(it, "incidentEventIncidentEventType", default="")
+        if event_type not in RELEVANT_INCIDENT_TYPES:
+            continue
         endpoint = it.get("incidentEventEndpoint") or {}
         endpoint_name = endpoint.get("endpointName") or "unknown"
         endpoint_id = endpoint.get("endpointId")
@@ -423,8 +430,17 @@ def main():
 
     start = datetime.now(timezone.utc)
     merged: dict = {}
+    failed_modes = []
     for mode in modes:
-        _merge(merged, MODE_RUNNERS[mode]())
+        try:
+            _merge(merged, MODE_RUNNERS[mode]())
+        except VRxAPIError as exc:
+            failed_modes.append(mode)
+            print(f"vRx mode '{mode}' failed: {exc}. Continuing with other modes.", file=sys.stderr)
+    if failed_modes and len(failed_modes) == len(modes):
+        # Every mode failed — surface as a hard error so the dispatcher logs it.
+        print("All vRx modes failed; nothing to upload.", file=sys.stderr)
+        sys.exit(1)
     duration_ms = int((datetime.now(timezone.utc) - start).total_seconds() * 1000)
 
     output = {
