@@ -20,7 +20,7 @@ SAST-bandit:
     - echo $FARADAY_URL
     - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
     - apt update
-    - apt-get install -y lsb-release
+    - apt-get install -y lsb-release libcap2-bin
     - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
     - apt update
     - apt install vault -y

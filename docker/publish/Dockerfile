@@ -72,11 +72,13 @@ ARG AMASS_VERSION=4.2.0
 USER root
 
 # System packages: shellcheck (SAST shell), node/npm (snyk), pipx (isolated py CLIs),
-# plus libpcap for naabu and the usual download tooling.
+# libpcap for naabu, masscan (folded in here rather than as a later layer because
+# the runner's disk fills up across the cumulative pipx-install layers below) and
+# the usual download tooling.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl ca-certificates git unzip tar xz-utils jq \
-        shellcheck nodejs npm pipx libpcap0.8 \
-    && rm -rf /var/lib/apt/lists/*
+        shellcheck nodejs npm pipx libpcap0.8 masscan \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Python CLI tools in isolated pipx envs (avoids clashing with the dispatcher venv).
 # prowler is pinned to v3.x: the faraday_plugins ProwlerPlugin parses Prowler v3
@@ -92,13 +94,12 @@ RUN pipx install bandit
 RUN pipx install checkov
 RUN pipx install 'prowler<4'
 # Round-3 discovery-osint additions:
-# dnstwist for typo-squat detection, theHarvester for OSINT, masscan via apt.
+# dnstwist for typo-squat detection, theHarvester for OSINT. (masscan is
+# installed in the system-packages layer above to keep disk available.)
 RUN pipx install dnstwist
 # theHarvester's PyPI release ships no CLI entry point — install from the
 # upstream git repo where setup.py declares console_scripts properly.
 RUN pipx install "git+https://github.com/laramies/theHarvester.git"
-RUN apt-get clean && apt-get update && apt-get install -y --no-install-recommends masscan \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Snyk CLI (Node).
 RUN npm config set fetch-retries 5 && npm install -g snyk && npm cache clean --force
