@@ -113,7 +113,7 @@ Trying to connect to: https://vicarius.apps.faradaysec.com:443
 
 **Offensive Checks (20):** `bandit`, `semgrep`, `shellcheck`, `snyk`, `gitleaks`, `trufflehog`, `checkov`, `prowler`, `tfsec`, `kics`, `trivy`, `grype`, `kubescape`, `kube-bench`, `subfinder`, `naabu`, `ffuf`, `crowdstrike`, `sentinelone`, `wazuh`.
 
-The offensive-check manifests are vendored into the image (`offensive_checks/manifests/`, copied into `faraday_agent_parameters_types/static/manifests/` at build time), their tool binaries are installed in the final image, and two `faraday_plugins` parser fixes (Trivy `Code: null`, CrowdStrike missing `severity`) are applied via `offensive_checks/patches/faraday_plugins_offensive_fixes.patch`. No package release is required.
+The offensive-check manifests are vendored into the image (`offensive_checks/manifests/`, copied into `faraday_agent_parameters_types/static/manifests/` at build time), their tool binaries are installed in the final image, and the temporary `faraday_plugins` parser fixes are applied inline during the image build. No package release is required.
 
 ## Capability-Grouped Agents
 

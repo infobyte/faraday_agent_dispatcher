@@ -11,13 +11,14 @@ FROM checkmarx/kics:v${KICS_VERSION} AS kics
 #### Dispatcher builder ####
 FROM python:3.13.7-slim AS dispatcher-build
 ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
 
 WORKDIR /app/
 
 RUN python -m venv /opt/dispatcher_venv
 ENV PATH="/opt/dispatcher_venv/bin:$PATH"
 COPY . .
-RUN pip install .
+RUN pip install --no-cache-dir .
 
 # --- Offensive Checks: vendored bagre threat-intel package ---
 # Installs the bagre subpackage (clickhouse + intelx sources, credential
@@ -25,15 +26,62 @@ RUN pip install .
 # bagre / bagre_spray executors under static/executors/official can do
 # `from bagre.config import load_config` etc. Pulls clickhouse-driver,
 # tldextract, paramiko, smbprotocol as transitive deps.
-RUN pip install /app/offensive_checks/bagre_pkg
+RUN pip install --no-cache-dir /app/offensive_checks/bagre_pkg
 
 # --- Offensive Checks: patch bundled faraday_plugins parsers ---
-# We patch two plugin parsers here until the fixes are released upstream
-# (Trivy Code:null, CrowdStrike missing severity).
-RUN apt-get update && apt-get install -y --no-install-recommends patch \
-    && PLUGINS_DIR="$(python -c 'import os, faraday_plugins; print(os.path.dirname(faraday_plugins.__file__))')" \
-    && patch -p2 -d "$PLUGINS_DIR" < /app/offensive_checks/patches/faraday_plugins_offensive_fixes.patch \
-    && rm -rf /var/lib/apt/lists/*
+# Apply the compatibility fixes in-place with Python instead of installing the
+# system `patch` package in the builder. This keeps the build deterministic
+# while reducing storage pressure on the shell runner's Docker daemon.
+RUN python - <<'PY'
+import os
+from pathlib import Path
+
+import faraday_plugins
+
+plugins_dir = Path(os.path.dirname(faraday_plugins.__file__))
+replacements = {
+    plugins_dir / "plugins" / "repo" / "crowdstrike" / "plugin.py": [
+        (
+            "            severity = site.get('severity').lower()\n",
+            "            # Defensive: severity may be missing from Spotlight rows.\n"
+            "            severity = (site.get('severity') or 'unclassified').lower()\n",
+        )
+    ],
+    plugins_dir / "plugins" / "repo" / "trivy_json" / "DTO.py": [
+        (
+            "        if self.node.get(\"Lines\"):\n"
+            "            return [Line(i) for i in self.node.get(\"Lines\")]\n"
+            "        else:\n"
+            "            return None\n",
+            "        # Defensive: Trivy may emit Code: null for some misconfigurations.\n"
+            "        if self.node and self.node.get(\"Lines\"):\n"
+            "            return [Line(i) for i in self.node.get(\"Lines\")]\n"
+            "        return None\n",
+        )
+    ],
+    plugins_dir / "plugins" / "repo" / "sarif" / "plugin.py": [
+        (
+            "                    desc = rule.get(\"fullDescription\").get(\"text\") if rule.get(\"fullDescription\", {}).get(\"text\") \\\n"
+            "                        else markdown2text(rule.get(\"fullDescription\").get(\"markdown\", \"\"))\n",
+            "                    full_description = rule.get(\"fullDescription\") or {}\n"
+            "                    desc = full_description.get(\"text\") if full_description.get(\"text\") \\\n"
+            "                        else markdown2text(full_description.get(\"markdown\", \"\"))\n",
+        )
+    ],
+}
+
+for path, snippets in replacements.items():
+    text = path.read_text(encoding="utf-8")
+    original = text
+    for old, new in snippets:
+        if old not in text:
+            raise SystemExit(f"expected snippet not found in {path}")
+        text = text.replace(old, new, 1)
+    if text == original:
+        raise SystemExit(f"no replacements applied in {path}")
+    path.write_text(text, encoding="utf-8")
+    print(f"patched {path}")
+PY
 
 # --- Offensive Checks: surface our manifests to faraday_agent_parameters_types ---
 # The dispatcher's on_connect (dispatcher_io.py:657) reads executor categories
@@ -89,6 +137,7 @@ ENV PIPX_HOME=/opt/pipx
 ENV PIPX_BIN_DIR=/usr/local/bin
 ENV PIP_DEFAULT_TIMEOUT=120
 ENV PIP_RETRIES=10
+ENV PIP_NO_CACHE_DIR=1
 RUN pipx install semgrep
 RUN pipx install bandit
 RUN pipx install checkov
