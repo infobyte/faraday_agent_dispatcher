@@ -6,10 +6,10 @@ Faraday bulk-create JSON to stdout.
 
 Modes:
   assets    -> /endpoint/search
-  cves      -> /aggregation/searchGroup (OrganizationEndpointVulnerabilities)
+  cves      -> /organizationEndpointVulnerabilities/search
   patches   -> /organizationEndpointExternalReferenceExternalReferences/search
   software  -> /organizationEndpointPublisherProductVersions/search
-  incidents -> /incidentEvent/search (Detected/MitigatedVulnerability)
+  incidents -> /incidentEvent/filter (Detected/MitigatedVulnerability)
 
 VICARIUS_API_URL + VICARIUS_TOKEN can be provided as per-scan args or as agent
 varenvs; per-scan values take precedence.
@@ -238,69 +238,104 @@ def run_assets():
 
 
 def run_cves():
-    items = _api_all(
-        "/aggregation/searchGroup",
-        {
-            "objectName": "OrganizationEndpointVulnerabilities",
-            "group": "vulnerabilityId",
-            "includeOriginalDoc": "true",
-            "q": "",
-            "assetCount": "true",
-            "sort": "aggregationId",
-            "sumLastSubAggregationBuckets": "1",
-        },
-        start_from=1,
-    )
+    """Active vulnerabilities per endpoint via the flat /organizationEndpointVulnerabilities/search.
+
+    Each record is a (endpoint, vulnerability) tuple. Earlier this used
+    /aggregation/searchGroup but that grouped by vRx's internal vulnerabilityId
+    (the 'aggregationId') and only exposed the actual CVE deep in
+    aggregationModelAbs — leading to findings named '458144' instead of the
+    CVE string. The flat endpoint has the CVE and severity inline.
+    """
+    items = _api_all("/organizationEndpointVulnerabilities/search", {})
     hosts = {}
-    for agg in items:
-        cve = _pick(agg, "aggregationId", "vulnerabilityId", default="")
+    for it in items:
+        ep = it.get("organizationEndpointVulnerabilitiesEndpoint") or {}
+        vuln = it.get("organizationEndpointVulnerabilitiesVulnerability") or {}
+        ext_ref = vuln.get("vulnerabilityExternalReference") or {}
+        sens = vuln.get("vulnerabilitySensitivityLevel") or {}
+        product = it.get("organizationEndpointVulnerabilitiesProduct") or {}
+        publisher = it.get("organizationEndpointVulnerabilitiesPublisher") or {}
+
+        cve = ext_ref.get("externalReferenceExternalId") or ""
         if not cve:
             continue
-        orig = agg.get("originalDoc") or {}
-        sev = _severity(_pick(orig, "severity", "cvssScore", "cvss", default=_pick(agg, "severity")))
-        desc = _pick(orig, "description", "title", default=cve)
-        affected = agg.get("subAggregations") or agg.get("assets") or orig.get("assets") or []
-        if not affected:
-            affected = [{"assetName": "unknown", "ipAddress": "0.0.0.0"}]
-        for a in affected:
-            ip = _pick(a, "ipAddress", "ip", default="") or _pick(a, "assetName", default="unknown")
-            host = hosts.setdefault(ip, _host_from_asset(a))
-            host["vulnerabilities"].append(
-                _new_vuln(
-                    name=cve,
-                    desc=desc,
-                    severity=sev,
-                    external_id=cve,
-                    cve_list=[cve] if cve.upper().startswith("CVE-") else [],
-                    refs=(
-                        [{"name": f"https://nvd.nist.gov/vuln/detail/{cve}", "type": "other"}]
-                        if cve.upper().startswith("CVE-")
-                        else []
-                    ),
-                )
+        endpoint_name = ep.get("endpointName") or "unknown"
+        endpoint_id = ep.get("endpointId")
+        cvss_v3 = vuln.get("vulnerabilityV3BaseScore")
+        cvss_v2 = vuln.get("vulnerabilityV2BaseScore")
+        severity = _severity(sens.get("sensitivityLevelName") or cvss_v3 or cvss_v2)
+        summary = vuln.get("vulnerabilitySummary") or ""
+        prod_label = (
+            f"{publisher.get('publisherName') or ''} {product.get('productName') or ''}".strip() or "unknown product"
+        )
+
+        host = hosts.setdefault(endpoint_name, _shell_host(endpoint_name, endpoint_id=endpoint_id))
+        host["vulnerabilities"].append(
+            _new_vuln(
+                name=cve,
+                desc=(summary or f"vRx-reported vulnerability {cve} affecting {prod_label}"),
+                severity=severity,
+                external_id=f"vrx-vuln:{cve}:{endpoint_id or endpoint_name}",
+                cve_list=[cve] if cve.upper().startswith("CVE-") else [],
+                refs=(
+                    [{"name": f"https://nvd.nist.gov/vuln/detail/{cve}", "type": "other"}]
+                    if cve.upper().startswith("CVE-")
+                    else []
+                ),
+                tags=(
+                    [f"vrx:product:{(product.get('productName') or '').lower()}"] if product.get("productName") else []
+                ),
             )
+        )
     return list(hosts.values())
 
 
 def run_patches():
+    """Missing-patch entries from /organizationEndpointExternalReferenceExternalReferences/search.
+
+    Each record is an installed-CPE → fixed-CPE pair carrying an embedded
+    patch list under organizationEndpointExternalReferenceExternalReferencesPatches.
+    The earlier implementation read top-level fields that don't exist on
+    this endpoint, so every finding fell through to the literal default
+    'missing-patch'.
+    """
     items = _api_all("/organizationEndpointExternalReferenceExternalReferences/search", {})
     hosts = {}
     for it in items:
-        ip = _pick(it, "ipAddress", "ip", default="") or _pick(it, "assetName", "hostName", default="unknown")
-        host = hosts.setdefault(ip, _host_from_asset(it))
-        patch = _pick(it, "patchName", "kbId", "externalReferenceName", "name", default="missing-patch")
-        product = _pick(it, "productName", "applicationName", default="")
-        sev = _severity(_pick(it, "severity", default="high"))
-        host["vulnerabilities"].append(
-            _new_vuln(
-                name=f"Missing patch: {patch}" + (f" ({product})" if product else ""),
-                desc=f"vRx reports missing patch {patch} on this endpoint.",
-                severity=sev,
-                external_id=patch,
-                resolution="Apply the patch via Vicarius vRx.",
-                tags=["missing-patch"],
+        ep = it.get("organizationEndpointExternalReferenceExternalReferencesEndpoint") or {}
+        installed_ref = it.get("organizationEndpointExternalReferenceExternalReferencesExternalReference") or {}
+        fixed_ref = it.get("organizationEndpointExternalReferenceExternalReferencesExternalReferenceSource") or {}
+        patches = it.get("organizationEndpointExternalReferenceExternalReferencesPatches") or []
+
+        endpoint_name = ep.get("endpointName") or "unknown"
+        endpoint_id = ep.get("endpointId")
+        installed_cpe = installed_ref.get("externalReferenceExternalId") or ""
+        fixed_cpe = fixed_ref.get("externalReferenceExternalId") or ""
+
+        host = hosts.setdefault(endpoint_name, _shell_host(endpoint_name, endpoint_id=endpoint_id))
+        # One record can carry multiple patch candidates; emit each so the user
+        # sees every fix vRx considers applicable.
+        for p in patches or [{}]:
+            patch_name = p.get("patchName") or "unknown patch"
+            patch_desc = p.get("patchDescription") or ""
+            patch_id = p.get("patchId")
+            patch_file = p.get("patchFileName") or ""
+            cpe_context = f" (installed: {installed_cpe} → fixed: {fixed_cpe})" if installed_cpe and fixed_cpe else ""
+            host["vulnerabilities"].append(
+                _new_vuln(
+                    name=f"Missing patch: {patch_name}" + (f" — {patch_desc}" if patch_desc else ""),
+                    desc=(
+                        f"vRx reports missing patch '{patch_name}' on {endpoint_name}"
+                        + (f" ({patch_desc})" if patch_desc else "")
+                        + cpe_context
+                        + (f" — installer: {patch_file}" if patch_file else "")
+                    ),
+                    severity="high",
+                    external_id=f"vrx-patch:{patch_id or patch_name}:{endpoint_id or endpoint_name}",
+                    resolution="Apply the patch via Vicarius vRx.",
+                    tags=["missing-patch", f"vrx:patch:{patch_name.lower()}" if patch_name else "missing-patch"],
+                )
             )
-        )
     return list(hosts.values())
 
 
