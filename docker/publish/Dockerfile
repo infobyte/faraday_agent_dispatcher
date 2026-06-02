@@ -97,8 +97,8 @@ RUN pipx install dnstwist
 # theHarvester's PyPI release ships no CLI entry point — install from the
 # upstream git repo where setup.py declares console_scripts properly.
 RUN pipx install "git+https://github.com/laramies/theHarvester.git"
-RUN apt-get update && apt-get install -y --no-install-recommends masscan \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get clean && apt-get update && apt-get install -y --no-install-recommends masscan \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Snyk CLI (Node).
 RUN npm config set fetch-retries 5 && npm install -g snyk && npm cache clean --force
