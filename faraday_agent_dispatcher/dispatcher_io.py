@@ -582,17 +582,10 @@ class Dispatcher:
         await asyncio.sleep(0.25)
 
     async def check_connection(self):
-        # Faraday c-5.20+ tightened /_api/config: only anonymous or user-session
-        # requests get a 200; agent-token requests get a 404 (no agent_role_allowed
-        # flag on that route). /_api/v3/info is the canonical liveness endpoint —
-        # returns {"Faraday Server": "Running", "Version": "..."} and is part of
-        # the GROUP_ALL/UNIT_INFO route set the dispatcher's HTTP session can
-        # actually reach. It also lives under /v3/ which matches the registration
-        # endpoint, keeping the precheck self-consistent.
         server_url = api_url(
             self.host,
             self.api_port,
-            postfix="/_api/v3/info",
+            postfix="/_api/config",
             secure=self.api_ssl_enabled,
         )
         logger.debug(f"Validating server connection with {server_url}")
