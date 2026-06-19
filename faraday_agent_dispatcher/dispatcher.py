@@ -564,10 +564,14 @@ class Dispatcher:
         await asyncio.sleep(0.25)
 
     async def check_connection(self):
+        # Faraday c-5.20+ tightened /_api/config: agent-token requests get a 404
+        # because that route only allow-lists anonymous / user-session callers.
+        # /_api/v3/info is the canonical liveness endpoint (GROUP_ALL/UNIT_INFO)
+        # the dispatcher's HTTP session can actually reach.
         server_url = api_url(
             self.host,
             self.api_port,
-            postfix="/_api/config",
+            postfix="/_api/v3/info",
             secure=self.api_ssl_enabled,
         )
         logger.debug(f"Validating server connection with {server_url}")
