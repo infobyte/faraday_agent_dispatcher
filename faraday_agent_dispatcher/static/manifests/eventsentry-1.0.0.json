@@ -1,0 +1,74 @@
+{
+    "arguments": {
+        "EVENTSENTRY_HOST": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "EventSentry Web Reports base URL, e.g. https://eventsentry.example.com. The trailing /api/events path is appended by EVENTSENTRY_EVENTS_PATH."
+        },
+        "EVENTSENTRY_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string",
+            "description": "Vendor API key. Default header is 'X-API-Key' (configurable via EVENTSENTRY_HEADER_NAME)."
+        },
+        "EVENTSENTRY_EVENTS_PATH": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Events endpoint path. Default '/api/events'. PROVISIONAL — adjust once the production API surface is confirmed."
+        },
+        "EVENTSENTRY_HEADER_NAME": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "HTTP header that carries the API key. Default 'X-API-Key'. If your EventSentry tenant uses 'Authorization: Bearer …', set this to 'Authorization' and prefix the EVENTSENTRY_API_KEY value with 'Bearer '."
+        },
+        "EVENTSENTRY_DAYS_BACK": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Time window in days. Default 1. Forwarded as 'since=<ISO-8601>'. Increase for backfills (mind the page count)."
+        },
+        "EVENTSENTRY_SOURCE_FILTER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Restrict pull to a single computer / hostname. Forwarded as 'computer=<value>' query param."
+        },
+        "EVENTSENTRY_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Client-side severity floor — valid values: critical | error | warning | information | audit_failure | audit_success (EventSentry buckets) OR info | low | medium | high | critical (Faraday buckets). Default: warning (= Faraday 'medium')."
+        },
+        "EVENTSENTRY_PAGE_SIZE": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Records per page. Default 500."
+        },
+        "EVENTSENTRY_MAX_PAGES": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Hard cap on pages fetched per scan. Default 50 (= 25k events with the default page size)."
+        }
+    },
+    "environment_variables": [
+        "EVENTSENTRY_HOST",
+        "EVENTSENTRY_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests' 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "SIEM",
+    "name": "eventsentry",
+    "title": "EventSentry",
+    "website": "https://www.eventsentry.com/",
+    "description": "EventSentry SIEM / log-management import. Pulls events from EventSentry Web Reports via the REST API and emits Faraday bulk-create JSON to stdout. Each distinct computer / source-host becomes one Faraday host (synthetic 0.0.0.0; hostnames = computer name); each event above the EVENTSENTRY_MIN_SEVERITY floor becomes one Faraday vulnerability tagged '[SIEM]'. Severity is normalised from EventSentry's Windows-event enum (Critical / Error / Warning / Information / Audit Success / Audit Failure) into Faraday's five-bucket scheme; CVE refs are harvested from the event message via /CVE-\\\\d{4}-\\\\d+/i, and EventSentry-EventID / EventSentry-Source refs are added for cross-pivot. Auth: vendor API key in a header (default 'X-API-Key'); override via EVENTSENTRY_HEADER_NAME for Bearer-style tenants. PROVISIONAL: API endpoint paths and JSON field names are best-guess defaults; the demo at demo.eventsentry.io is auth-walled, and EventSentry's REST API is not publicly documented. Once an instance with API access is available, confirm /api/events path + response shape (we try 'events' / 'items' / 'records' / 'data' / 'result' keys) and adjust EVENTSENTRY_EVENTS_PATH / parse_event() accordingly. Tags: [eventsentry, siem, log-management, provisional].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "eventsentry.py"
+}

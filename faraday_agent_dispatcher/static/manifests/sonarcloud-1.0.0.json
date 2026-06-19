@@ -1,0 +1,47 @@
+{
+    "arguments": {
+        "SONAR_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "SonarCloud base URL. Defaults to https://sonarcloud.io if left blank. Override for SonarQube Cloud regional hosts (e.g. https://sonarqube.com or a tenant-specific endpoint)."
+        },
+        "SONAR_ORGANIZATION": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "SonarCloud organization key (visible in the SonarCloud UI under My Account → Organizations, e.g. 'acme-corp'). Forwarded as the 'organization' query param on /api/issues/search and /api/hotspots/search; required for every SonarCloud API call. Ignored by self-hosted SonarQube — use the sonarqube manifest there."
+        },
+        "TOKEN": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string",
+            "description": "SonarCloud user token (My Account → Security → Generate Tokens). Sent as HTTP Basic auth with an empty password — SonarCloud's documented token-auth scheme."
+        },
+        "COMPONENT_KEY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Project key as shown in SonarCloud (e.g. 'acme-corp_my-service'). Scopes /api/issues/search to that project; blank pulls every project the token can read across the organization."
+        },
+        "GET_HOTSPOT": {
+            "mandatory": false,
+            "type": "boolean",
+            "base": "boolean",
+            "description": "When true (default false), also pulls security hotspots (TO_REVIEW status) via /api/hotspots/search and enriches each with /api/hotspots/show. Hotspots are surfaced as Faraday vulnerabilities alongside issues."
+        }
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "python3 -c 'import requests' 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Code Analysis",
+    "name": "sonarcloud",
+    "title": "SonarCloud",
+    "website": "https://sonarcloud.io",
+    "description": "SonarCloud (SaaS) SAST + code-quality integration — pulls security-impact issues and (optionally) security hotspots via the SonarCloud REST API and emits Faraday bulk-create JSON. SonarCloud shares the SonarQube REST contract (/api/issues/search, /api/hotspots/search, /api/hotspots/show) but additionally requires the 'organization' query param on every call; provide it via SONAR_ORGANIZATION. SONAR_URL defaults to https://sonarcloud.io; override only for regional endpoints. Auth: SonarCloud token (My Account → Security → Generate Tokens), sent as HTTP Basic with the token as username and an empty password (per SonarCloud docs). COMPONENT_KEY scopes the pull to one project; leave blank to ingest every project the token has access to in the organization. GET_HOTSPOT=true additionally enriches results with security hotspots (TO_REVIEW). Issues are filtered server-side to impactSoftwareQualities=SECURITY (we drop maintainability / reliability noise). The reuse of sonarqube.py is intentional — SonarCloud and SonarQube share enough of the API that one executor covers both; behaviour diverges only on the 'organization' param. Tags: [sonarcloud, sast, code-quality, saas].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "sonarqube.py"
+}

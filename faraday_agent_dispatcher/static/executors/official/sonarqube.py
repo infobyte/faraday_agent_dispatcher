@@ -11,10 +11,12 @@ ISSUE_IMPACT = "SECURITY"
 PAGE_SIZE = 500
 
 
-def get_hotspots_info(session, sonar_qube_url, hotspot_ids):
+def get_hotspots_info(session, sonar_qube_url, hotspot_ids, organization=None):
     hotspots_data = []
     for hotspot_id in hotspot_ids:
         params = {"hotspot": hotspot_id}
+        if organization:
+            params["organization"] = organization
         try:
             response = session.get(f"{sonar_qube_url}/api/hotspots/show", params=params, timeout=30)
         except requests.RequestException as e:
@@ -35,10 +37,12 @@ def get_hotspots_info(session, sonar_qube_url, hotspot_ids):
     return hotspots_data
 
 
-def get_hotspots_ids(session, sonar_qube_url, component_key):
+def get_hotspots_ids(session, sonar_qube_url, component_key, organization=None):
     has_more_hotspots = True
     hotspots_ids = []
     params = {"p": 1, "ps": PAGE_SIZE, "sinceLeakPeriod": False, "status": "TO_REVIEW", "projectKey": component_key}
+    if organization:
+        params["organization"] = organization
 
     while has_more_hotspots:
         try:
@@ -83,6 +87,10 @@ def main():
         sys.exit(1)
     component_key = os.environ.get("EXECUTOR_CONFIG_COMPONENT_KEY", None)
     get_hotspot = os.environ.get("EXECUTOR_CONFIG_GET_HOTSPOT", "false").lower() == "true"
+    # SonarCloud requires the `organization` query param on /api/issues/search and
+    # /api/hotspots/search. SonarQube (self-hosted) ignores it. The sonarcloud
+    # manifest surfaces it as a mandatory arg; sonarqube manifest leaves it unset.
+    organization = os.environ.get("EXECUTOR_CONFIG_SONAR_ORGANIZATION") or os.environ.get("SONAR_ORGANIZATION")
 
     session = requests.Session()
 
@@ -100,6 +108,8 @@ def main():
         params = {"impactSoftwareQualities": ISSUE_IMPACT, "p": page, "ps": PAGE_SIZE}
         if component_key:
             params["componentKeys"] = component_key
+        if organization:
+            params["organization"] = organization
         try:
             response = session.get(url=f"{sonar_qube_url}/api/issues/search", params=params, timeout=30)
         except requests.RequestException as e:
@@ -135,9 +145,11 @@ def main():
     # exists as an empty list before handing it off.
     response_json.setdefault("components", [])
     if get_hotspot:
-        hotspots_ids = get_hotspots_ids(session, sonar_qube_url, component_key)
+        hotspots_ids = get_hotspots_ids(session, sonar_qube_url, component_key, organization=organization)
         if hotspots_ids:
-            response_json["hotspots"] = get_hotspots_info(session, sonar_qube_url, hotspots_ids)
+            response_json["hotspots"] = get_hotspots_info(
+                session, sonar_qube_url, hotspots_ids, organization=organization
+            )
 
     sonar = SonarQubeAPIPlugin(**agent_config.to_plugin_kwargs())
     sonar.parseOutputString(json.dumps(response_json))

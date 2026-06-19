@@ -1,0 +1,60 @@
+{
+    "arguments": {
+        "NPM_AUDIT_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Absolute path inside the agent container of a node project directory containing package.json + package-lock.json (or npm-shrinkwrap.json). Either NPM_AUDIT_TARGET or NPM_AUDIT_GIT_URL is required. When both are set, TARGET is treated as a subpath inside the clone (e.g. apps/frontend/)."
+        },
+        "NPM_AUDIT_GIT_URL": {
+            "mandatory": false,
+            "type": "url",
+            "base": "string",
+            "description": "https(s) git URL of a node project to shallow-clone before scanning. Pair with GIT_USERNAME / GIT_TOKEN for private repos. Cleaned up at process exit."
+        },
+        "NPM_AUDIT_GIT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Branch / tag to check out (default: repo HEAD)."
+        },
+        "NPM_AUDIT_PRODUCTION_ONLY": {
+            "mandatory": false,
+            "type": "boolean",
+            "base": "boolean",
+            "description": "When true, runs 'npm audit --omit=dev' so devDependencies (test runners, bundlers, lint) are excluded. Default: false (audit every dependency tree, prod + dev)."
+        },
+        "NPM_AUDIT_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Client-side severity floor — valid values: info | low | medium | high | critical. npm advisories are normalised (critical/high/moderate→medium/low/info) and anything below the floor is dropped from the report. Default: info (keep everything)."
+        },
+        "GIT_USERNAME": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "GIT_TOKEN": {
+            "mandatory": false,
+            "type": "password",
+            "base": "string"
+        }
+    },
+    "environment_variables": [
+        "GIT_USERNAME",
+        "GIT_TOKEN"
+    ],
+    "check_cmds": [
+        "npm --version 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Code Analysis",
+    "name": "npm_audit",
+    "title": "npm audit",
+    "website": "https://docs.npmjs.com/cli/v10/commands/npm-audit",
+    "description": "Runs 'npm audit --json' against a node project (or shallow-clones one first via NPM_AUDIT_GIT_URL) and turns each advisory into a Faraday vulnerability. Supports both the modern shape (npm ≥ 7, 'vulnerabilities' map keyed by package) and the legacy shape (npm ≤ 6, 'advisories' map keyed by GHSA id). Each advisory yields one vuln tagged with '[npm-audit]', enriched with package name, vulnerable range, fixed-in version (from 'fixAvailable'), advisory URL and CWE / CVE refs (CWEs from advisory.cwe, CVEs harvested from advisory.cves + via.source + free-form title/overview via /CVE-\\\\d{4}-\\\\d+/i). The whole project becomes one Faraday host (synthetic 0.0.0.0; hostname = package.json name or directory basename). Severity is normalised from npm's enum (critical/high/moderate/low/info) into Faraday's five-bucket scheme; NPM_AUDIT_MIN_SEVERITY enforces a client-side floor. NPM_AUDIT_PRODUCTION_ONLY=true passes --omit=dev to ignore devDependencies. Auth: none (local scan). The agent image must ship a recent npm — the SCA-supply-chain agent already has Node/npm installed for the Snyk CLI, so npm audit reuses it. Tags: [npm_audit, sca, node, supply-chain].",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "npm_audit.py"
+}

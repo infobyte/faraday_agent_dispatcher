@@ -39,6 +39,7 @@ AGENT_GROUPS = {
             "github_secrets",
             "github_security",
             "sonarqube",
+            "sonarcloud",
             "appscan",
             "checkmarx_one",
             "checkmarx_sast",
@@ -107,6 +108,7 @@ AGENT_GROUPS = {
             "endoflife_date",
             "owasp_dep_check",
             "whitehat_sentinel",
+            "npm_audit",
         ],
         "description": (
             "Software Composition Analysis and supply-chain risk scanners — pulls open-source "
@@ -1855,6 +1857,7 @@ AGENT_GROUPS = {
             "splunk",
             "qradar",
             "uptycs",
+            "eventsentry",
         ],
         "description": (
             "SIEM / security analytics platforms — pulls saved-search results and "
