@@ -478,6 +478,19 @@ def main():
         sys.exit(1)
     duration_ms = int((datetime.now(timezone.utc) - start).total_seconds() * 1000)
 
+    # Faraday c-5.21.x bulk_create silently drops the entire vulnerabilities
+    # array (returning 201, no warning) when any host has duplicate external_id
+    # values across its vulns. vRx's /organizationEndpointVulnerabilities/search
+    # returns the same (endpoint, CVE) pair once per affected product on the
+    # endpoint, so a CVE affecting several products produces N entries with
+    # identical external_ids. Last-write-wins so the surviving entry carries
+    # the most specific product tag.
+    for host in merged.values():
+        deduped: dict = {}
+        for v in host.get("vulnerabilities") or []:
+            deduped[v.get("external_id")] = v
+        host["vulnerabilities"] = list(deduped.values())
+
     output = {
         "hosts": list(merged.values()),
         "command": {
