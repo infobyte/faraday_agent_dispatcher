@@ -104,7 +104,7 @@
         "python3 -c 'import bagre' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
-    "category": "Network Tools",
+    "category": "Threat Intelligence",
     "name": "bagre",
     "title": "Bagre Threat Intelligence",
     "website": "https://intelx.io/",
