@@ -6,6 +6,15 @@ RUN go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 #### main tools ####
 FROM kalilinux/kali-rolling AS final
 
+# Kali-rolling systemd >=260 postinst calls systemctl enable + machine-id-setup,
+# which abort in an unprivileged Docker build with "Protocol driver not attached"
+# and break the apt-get layer below. Pre-stage a machine-id, a /run/systemd/system
+# dir, and a policy-rc.d that short-circuits service starts during dpkg configure.
+RUN printf '0123456789abcdef0123456789abcdef\n' > /etc/machine-id \
+ && mkdir -p /run/systemd/system \
+ && printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d \
+ && chmod +x /usr/sbin/policy-rc.d
+
 RUN apt-get update -y && apt-get install --yes --no-install-recommends \
         build-essential git \
         python3 python3-pip python3-venv python3-setuptools \
