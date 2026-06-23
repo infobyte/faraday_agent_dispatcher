@@ -1,5 +1,10 @@
 .docker-build-base:
   stage: build
+  variables:
+    # docker/publish/Dockerfile uses BuildKit heredoc syntax (RUN python - <<'PY')
+    # introduced in 85fea30. The shell runner's classic builder rejects it with
+    # "unknown instruction: IMPORT"; enabling BuildKit makes the heredoc parse.
+    DOCKER_BUILDKIT: "1"
   script:
     - echo "Building image with tag $IMAGE_TAG and base image ${BASE_IMAGE:-$BASE_IMAGE_TAG}"
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
