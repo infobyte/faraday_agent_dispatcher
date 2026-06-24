@@ -1,3 +1,8 @@
+# syntax=docker/dockerfile:1.6
+# Pin the BuildKit frontend so the `RUN python - <<'PY' ... PY` heredoc on
+# line ~36 parses. The bundled v0 frontend (which BuildKit defaults to
+# without this directive) rejects heredoc bodies as Dockerfile instructions
+# and dies with `unknown instruction: IMPORT`.
 ARG TAG=""
 ARG REGISTRY="registry.gitlab.com/faradaysec/cloud"
 # Final-stage base. Defaults to the private cloud registry image (REGISTRY+TAG).
