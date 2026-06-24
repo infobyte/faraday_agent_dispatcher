@@ -4,14 +4,25 @@ WORKDIR /app
 RUN go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 
 #### main tools ####
-# Pinned to kali-last-release (latest quarterly snapshot) instead of kali-rolling
-# to dodge upstream Kali regressions like systemd 260.1-1, whose postinst aborts
-# inside an unprivileged Docker build with "Protocol driver not attached" on
-# open(/etc/machine-id, O_RDWR|O_NOFOLLOW) — even with /etc/machine-id stubbed
-# and policy-rc.d=101 in place, the shell runner's overlayfs/seccomp rejects
-# the open with EUNATCH (49). The last-release tag freezes the package set at
-# the most recent quarterly cut, so rolling-base footguns no longer break CI.
+# kali-last-release is a less-volatile tag than kali-rolling (snapshot of the
+# latest periodic cut), but its apt suite still tracks rolling and ships
+# systemd 260.1-1, whose postinst aborts inside an unprivileged Docker build.
+# We therefore neuter both halves of the failing postinst before apt-get install:
+#   1. policy-rc.d=101 makes the postinst's systemctl-enable calls a no-op
+#      during dpkg configure (kills the "Failed to enable units" path).
+#   2. dpkg-divert + /bin/true stub for systemd-machine-id-setup makes the
+#      postinst's open('/etc/machine-id', O_RDWR|O_NOFOLLOW) call never happen,
+#      sidestepping the EUNATCH (49) "Protocol driver not attached" error that
+#      the shell runner's overlayfs/seccomp returns on that specific syscall.
+# dpkg-divert uses --no-rename because the file does not exist yet — the divert
+# is registered up-front so when systemd unpacks, dpkg writes the real binary
+# to .distrib and the postinst's call resolves to our /bin/true stub instead.
 FROM kalilinux/kali-last-release AS final
+
+RUN printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d \
+ && chmod +x /usr/sbin/policy-rc.d \
+ && dpkg-divert --local --no-rename --add /usr/sbin/systemd-machine-id-setup \
+ && ln -s /bin/true /usr/sbin/systemd-machine-id-setup
 
 RUN apt-get update -y && apt-get install --yes --no-install-recommends \
         build-essential git \
