@@ -81,7 +81,7 @@
         "python3 -c 'import requests' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
-    "category": "Network and Vulnerability Scanners",
+    "category": "HostsApp Scanners",
     "name": "eventsentry",
     "title": "EventSentry",
     "website": "https://www.eventsentry.com/",
