@@ -204,18 +204,22 @@ def parse_event(event):
     }
 
 
-def fetch_events(base, path, headers, date_range, search_query, page_size, max_pages):
+def fetch_events(base, path, headers, date_range, search_query, page_size, max_pages, search_type=""):
     url = f"{base.rstrip('/')}/{path.lstrip('/')}"
     out = []
     for page in range(1, max_pages + 1):
         params = {
-            "search.type": "detailed",
             "search.dateRange": date_range,
             "search.order": "recorddate",
             "search.sort": "desc",
             "search.page": page,
             "search.limit": page_size,
         }
+        # EventSentry's `search.type=detailed` filter empties /events/json and
+        # /logons/json on some installs (observed on v6.x against a Win2019
+        # collector) — only set it when the user explicitly asks for it.
+        if search_type:
+            params["search.type"] = search_type
         if search_query:
             params["search.query"] = search_query
         try:
@@ -262,9 +266,12 @@ def main():
     page_size = safe_int(os.environ.get("EXECUTOR_CONFIG_EVENTSENTRY_PAGE_SIZE"), 500)
     max_pages = safe_int(os.environ.get("EXECUTOR_CONFIG_EVENTSENTRY_MAX_PAGES"), 50)
     min_severity = validate_min_severity(os.environ.get("EXECUTOR_CONFIG_EVENTSENTRY_MIN_SEVERITY"))
+    search_type = os.environ.get("EXECUTOR_CONFIG_EVENTSENTRY_SEARCH_TYPE") or ""
 
     headers = {header_name: f"{header_prefix}{api_key}", "Accept": "application/json"}
-    raw_events = fetch_events(base, events_path, headers, date_range, search_query, page_size, max_pages)
+    raw_events = fetch_events(
+        base, events_path, headers, date_range, search_query, page_size, max_pages, search_type=search_type
+    )
     log(f"EventSentry: fetched {len(raw_events)} raw rows (range={date_range!r}, query={search_query!r}).")
 
     floor = SEVERITY_ORDER.get(min_severity, 2)

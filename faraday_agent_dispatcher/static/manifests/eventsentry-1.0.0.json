@@ -71,6 +71,12 @@
             "type": "integer",
             "base": "integer",
             "description": "Hard cap on pages fetched per scan. Default 50 (= 25k rows at the default page size)."
+        },
+        "EVENTSENTRY_SEARCH_TYPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Value for EventSentry's 'search.type' query param. Default empty (omit it). Set to 'detailed' to opt into the verbose row layout — but note that on some v6.x installs detailed mode silently empties /events/json and /logons/json; leave blank unless you know your collector returns rows with it."
         }
     },
     "environment_variables": [
