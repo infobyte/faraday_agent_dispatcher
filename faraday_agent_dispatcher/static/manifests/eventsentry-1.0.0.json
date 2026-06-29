@@ -77,6 +77,18 @@
             "type": "string",
             "base": "string",
             "description": "Value for EventSentry's 'search.type' query param. Default empty (omit it). Set to 'detailed' to opt into the verbose row layout — but note that on some v6.x installs detailed mode silently empties /events/json and /logons/json; leave blank unless you know your collector returns rows with it."
+        },
+        "EVENTSENTRY_SEARCH_ORDER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Value for 'search.order'. Default empty (omit it; some v6.x collectors silently return zero rows when set to 'recorddate'). Common values are 'recorddate', 'time', 'computer'."
+        },
+        "EVENTSENTRY_SEARCH_SORT": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Value for 'search.sort'. Default empty (omit it; on some installs setting it to 'desc' returns zero rows even when ordering is otherwise valid). Common values are 'asc', 'desc'."
         }
     },
     "environment_variables": [

@@ -204,22 +204,37 @@ def parse_event(event):
     }
 
 
-def fetch_events(base, path, headers, date_range, search_query, page_size, max_pages, search_type=""):
+def fetch_events(
+    base,
+    path,
+    headers,
+    date_range,
+    search_query,
+    page_size,
+    max_pages,
+    search_type="",
+    search_order="",
+    search_sort="",
+):
     url = f"{base.rstrip('/')}/{path.lstrip('/')}"
     out = []
     for page in range(1, max_pages + 1):
         params = {
             "search.dateRange": date_range,
-            "search.order": "recorddate",
-            "search.sort": "desc",
             "search.page": page,
             "search.limit": page_size,
         }
-        # EventSentry's `search.type=detailed` filter empties /events/json and
-        # /logons/json on some installs (observed on v6.x against a Win2019
-        # collector) — only set it when the user explicitly asks for it.
+        # EventSentry's `search.type=detailed`, `search.order=recorddate`, and
+        # `search.sort=desc` filters silently empty /events/json and /logons/json
+        # on some v6.x installs (observed on a Win2019 collector). The
+        # 'overview' table the UI calls uses none of these. Only send each one
+        # when the operator explicitly opts in.
         if search_type:
             params["search.type"] = search_type
+        if search_order:
+            params["search.order"] = search_order
+        if search_sort:
+            params["search.sort"] = search_sort
         if search_query:
             params["search.query"] = search_query
         try:
@@ -267,10 +282,21 @@ def main():
     max_pages = safe_int(os.environ.get("EXECUTOR_CONFIG_EVENTSENTRY_MAX_PAGES"), 50)
     min_severity = validate_min_severity(os.environ.get("EXECUTOR_CONFIG_EVENTSENTRY_MIN_SEVERITY"))
     search_type = os.environ.get("EXECUTOR_CONFIG_EVENTSENTRY_SEARCH_TYPE") or ""
+    search_order = os.environ.get("EXECUTOR_CONFIG_EVENTSENTRY_SEARCH_ORDER") or ""
+    search_sort = os.environ.get("EXECUTOR_CONFIG_EVENTSENTRY_SEARCH_SORT") or ""
 
     headers = {header_name: f"{header_prefix}{api_key}", "Accept": "application/json"}
     raw_events = fetch_events(
-        base, events_path, headers, date_range, search_query, page_size, max_pages, search_type=search_type
+        base,
+        events_path,
+        headers,
+        date_range,
+        search_query,
+        page_size,
+        max_pages,
+        search_type=search_type,
+        search_order=search_order,
+        search_sort=search_sort,
     )
     log(f"EventSentry: fetched {len(raw_events)} raw rows (range={date_range!r}, query={search_query!r}).")
 
