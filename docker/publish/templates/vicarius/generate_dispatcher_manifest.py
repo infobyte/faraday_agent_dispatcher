@@ -1890,6 +1890,20 @@ AGENT_GROUPS = {
             "transport-bypass attempts) from SAP-specialised security platforms into Faraday."
         ),
     },
+    "governance-compliance": {
+        "agent_name": "governance-compliance-agent",
+        "executors": [
+            "vanta",
+            "drata",
+            "sprinto",
+        ],
+        "description": (
+            "GRC / continuous-compliance platforms — pulls failing controls, evidence gaps and "
+            "monitored assets from Vanta / Drata / Sprinto into Faraday so SOC 2 / ISO 27001 / "
+            "HIPAA-relevant control failures show up alongside scanner findings. Each failing "
+            "test becomes one Faraday vulnerability tagged '[GRC]' on the affected asset."
+        ),
+    },
     "database-security": {
         "agent_name": "database-security-agent",
         "executors": [

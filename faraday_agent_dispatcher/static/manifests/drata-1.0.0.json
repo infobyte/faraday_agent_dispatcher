@@ -1,0 +1,61 @@
+{
+    "arguments": {
+        "DRATA_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string",
+            "description": "Drata API key. Minted at Drata admin -> Company Settings -> API. Sent as 'Authorization: Bearer <token>'. Scoped to the issuing workspace so no workspace ID is required."
+        },
+        "DRATA_API_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Drata API base URL. Default 'https://public-api.drata.com'. Override only for EU / dedicated tenants."
+        },
+        "DRATA_MODE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Comma-separated list of what to import. Default 'tests'. Valid: tests (failing/needs-attention tests -> vulns), assets (monitored assets -> hosts), personnel (workforce inventory -> synthetic hosts)."
+        },
+        "DRATA_FRAMEWORK": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Restrict tests to a Drata framework id or key (e.g. 'soc2', 'iso27001', 'hipaa', 'pci_dss'). Omit for all frameworks."
+        },
+        "DRATA_PAGE_SIZE": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Rows per API page. Default 100 (Drata max)."
+        },
+        "DRATA_MAX_PAGES": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Hard cap on pages fetched per mode. Default 50 (= 5k rows at the default page size)."
+        },
+        "DRATA_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Client-side severity floor for failing tests. Valid: info | low | medium | high | critical. Default 'medium'."
+        }
+    },
+    "environment_variables": [
+        "DRATA_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests' 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "drata",
+    "title": "Drata",
+    "website": "https://drata.com/",
+    "description": "Drata continuous-compliance import. Bearer API key, walks the public REST API (default https://public-api.drata.com/public/): failing / needs-attention tests become Faraday vulnerabilities tagged '[GRC]' on the affected assets (or a synthetic 'grc:drata:global' host if the test isn't scoped to one), monitored assets become Faraday hosts tagged 'grc:drata:asset-inventory', and personnel become synthetic workforce hosts. Set DRATA_FRAMEWORK=soc2|iso27001|hipaa|pci_dss to scope tests. Severity is normalised from Drata's enum into Faraday's info/low/medium/high/critical scheme; DRATA_MIN_SEVERITY drops rows below the floor. External IDs are stable so re-runs are idempotent. Pagination via page/limit; backs off 30s on HTTP 429.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "drata.py"
+}
