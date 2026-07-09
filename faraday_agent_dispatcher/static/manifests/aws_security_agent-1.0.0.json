@@ -1,16 +1,16 @@
 {
     "arguments": {
         "AWS_ACCESS_KEY_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "AWS IAM access key with securityagent:List* / Get* permission. Sent via SigV4-signed headers."
+            "description": "AWS IAM access key with securityagent:List* / Get* permission. Sent via SigV4-signed headers. Normally pre-configured on the dispatcher as a varenv \u2014 leave blank in the Run form to use the agent-side value."
         },
         "AWS_SECRET_ACCESS_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string",
-            "description": "AWS IAM secret key paired with AWS_ACCESS_KEY_ID."
+            "description": "AWS IAM secret key paired with AWS_ACCESS_KEY_ID. Normally pre-configured on the dispatcher as a varenv \u2014 leave blank in the Run form to use the agent-side value."
         },
         "AWS_SESSION_TOKEN": {
             "mandatory": false,

@@ -1,16 +1,16 @@
 {
     "arguments": {
         "VANTA_CLIENT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Vanta OAuth2 client ID minted at Vanta admin -> Settings -> API Access."
+            "description": "Vanta OAuth2 client ID minted at Vanta admin -> Settings -> API Access. Normally pre-configured on the dispatcher as a varenv \u2014 leave blank in the Run form to use the agent-side value."
         },
         "VANTA_CLIENT_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string",
-            "description": "Vanta OAuth2 client secret paired with VANTA_CLIENT_ID. Exchanged for a short-lived Bearer at /oauth/token on each run."
+            "description": "Vanta OAuth2 client secret paired with VANTA_CLIENT_ID. Exchanged for a short-lived Bearer at /oauth/token on each run. Normally pre-configured on the dispatcher as a varenv \u2014 leave blank in the Run form to use the agent-side value."
         },
         "VANTA_API_URL": {
             "mandatory": false,

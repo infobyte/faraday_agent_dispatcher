@@ -1,10 +1,10 @@
 {
     "arguments": {
         "DRATA_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string",
-            "description": "Drata API key. Minted at Drata admin -> Company Settings -> API. Sent as 'Authorization: Bearer <token>'. Scoped to the issuing workspace so no workspace ID is required."
+            "description": "Drata API key. Minted at Drata admin -> Company Settings -> API. Sent as 'Authorization: Bearer <token>'. Scoped to the issuing workspace so no workspace ID is required. Normally pre-configured on the dispatcher as a varenv \u2014 leave blank in the Run form to use the agent-side value."
         },
         "DRATA_API_URL": {
             "mandatory": false,

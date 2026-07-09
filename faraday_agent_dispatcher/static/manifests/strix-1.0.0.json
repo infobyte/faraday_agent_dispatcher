@@ -7,16 +7,16 @@
             "description": "Target for the Strix.ai agent to test. Accepts a URL (https://your-app.com), a git repository (https://github.com/org/repo), or a local path inside the dispatcher container. One target only per scan."
         },
         "STRIX_LLM": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "LLM identifier the Strix agent should drive. Examples: 'openai/gpt-5.4', 'anthropic/claude-opus-4-6', 'openai/gpt-5.2'. Must match a provider supported by the strix CLI."
+            "description": "LLM identifier the Strix agent should drive. Examples: 'openai/gpt-5.4', 'anthropic/claude-opus-4-6', 'openai/gpt-5.2'. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value."
         },
         "STRIX_LLM_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string",
-            "description": "API key for the LLM provider selected by STRIX_LLM. Sent to the strix CLI as the LLM_API_KEY env var. Do not confuse this with the strix_pat_... token from Strix Cloud — that token is for the dashboard, not the local CLI."
+            "description": "API key for the LLM provider selected by STRIX_LLM. Sent to the strix CLI as the LLM_API_KEY env var. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value. Do not confuse this with the strix_pat_... token from Strix Cloud — that token is for the dashboard, not the local CLI."
         },
         "STRIX_SCAN_MODE": {
             "mandatory": false,

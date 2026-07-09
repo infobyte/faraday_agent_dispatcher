@@ -1,16 +1,16 @@
 {
     "arguments": {
         "AIKIDO_CLIENT_ID": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Aikido OAuth2 client id prefixed 'AIK_CLIENT_'. Minted at Aikido admin -> Settings -> API Keys."
+            "description": "Aikido OAuth2 client id prefixed 'AIK_CLIENT_'. Minted at Aikido admin -> Settings -> API Keys. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value."
         },
         "AIKIDO_CLIENT_SECRET": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string",
-            "description": "Aikido OAuth2 client secret prefixed 'AIK_SECRET_' paired with AIKIDO_CLIENT_ID. Exchanged at /api/oauth/token for a short-lived Bearer on each run."
+            "description": "Aikido OAuth2 client secret prefixed 'AIK_SECRET_' paired with AIKIDO_CLIENT_ID. Exchanged at /api/oauth/token for a short-lived Bearer on each run. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value."
         },
         "AIKIDO_API_URL": {
             "mandatory": false,

@@ -1,10 +1,10 @@
 {
     "arguments": {
         "SPRINTO_API_KEY": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "password",
             "base": "string",
-            "description": "Sprinto API key. Minted at Sprinto admin -> API Access. Sent as 'Authorization: Bearer <token>'."
+            "description": "Sprinto API key. Minted at Sprinto admin -> API Access. Sent as 'Authorization: Bearer <token>'. Normally pre-configured on the dispatcher as a varenv \u2014 leave blank in the Run form to use the agent-side value."
         },
         "SPRINTO_API_URL": {
             "mandatory": false,
