@@ -16,7 +16,7 @@
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Aikido API base URL. Default 'https://api.aikido.dev'."
+            "description": "Aikido API base URL. Default 'https://app.aikido.dev'."
         },
         "AIKIDO_MODE": {
             "mandatory": false,
@@ -61,7 +61,7 @@
     "name": "aikido",
     "title": "Aikido",
     "website": "https://aikido.dev/",
-    "description": "Aikido continuous AppSec / cloud posture import. OAuth2 client credentials (AIK_CLIENT_ + AIK_SECRET_), walks the public REST API (default https://api.aikido.dev/): open issues become Faraday vulnerabilities tagged '[AGENT]' on the affected repository (or synthetic 'agent:aikido:global' host if unscoped), code and container/cloud repos become Faraday hosts tagged 'agent:aikido:*-inventory'. Set AIKIDO_ISSUE_TYPE=sast|iac|secret|open_source|cloud|container|mobile|dast to scope findings. Severity is normalised from Aikido's mixed enum/CVSS-score inputs into Faraday's info/low/medium/high/critical scheme; AIKIDO_SEVERITY_MIN drops rows below the floor. External IDs are stable so re-runs are idempotent. Pagination via page/per_page; backs off 30s on HTTP 429.",
+    "description": "Aikido continuous AppSec / cloud posture import. OAuth2 client credentials (AIK_CLIENT_ + AIK_SECRET_), walks the public REST API (default https://app.aikido.dev/): open issues become Faraday vulnerabilities tagged '[AGENT]' on the affected repository (or synthetic 'agent:aikido:global' host if unscoped), code and container/cloud repos become Faraday hosts tagged 'agent:aikido:*-inventory'. Set AIKIDO_ISSUE_TYPE=sast|iac|secret|open_source|cloud|container|mobile|dast to scope findings. Severity is normalised from Aikido's mixed enum/CVSS-score inputs into Faraday's info/low/medium/high/critical scheme; AIKIDO_SEVERITY_MIN drops rows below the floor. External IDs are stable so re-runs are idempotent. Pagination via page/per_page; backs off 30s on HTTP 429.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "aikido.py"

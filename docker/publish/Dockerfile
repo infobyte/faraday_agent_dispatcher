@@ -155,6 +155,13 @@ RUN pipx install dnstwist
 # upstream git repo where setup.py declares console_scripts properly.
 RUN pipx install "git+https://github.com/laramies/theHarvester.git"
 
+# Strix.ai autonomous AI-pentester CLI. Package name on PyPI is
+# `strix-agent` (not `strix`), CLI entry point is `strix`. Requires
+# Docker to be reachable at runtime (the strix CLI spawns a nested
+# Docker sandbox); the compose service mounts /var/run/docker.sock
+# read-write into oc-agentic-security so this works out of the box.
+RUN pipx install strix-agent
+
 # Snyk CLI (Node).
 RUN npm config set fetch-retries 5 && npm install -g snyk && npm cache clean --force
 

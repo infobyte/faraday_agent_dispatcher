@@ -1,38 +1,52 @@
 #!/usr/bin/env python
-"""Strix.ai — autonomous AI-pentester import.
+"""Strix.ai — autonomous AI-pentester CLI wrapper.
 
-Pulls findings, scans and target inventory from Strix.ai's public REST API
-(https://api.strix.ai/v1/) and emits Faraday bulk-create JSON to stdout.
+Runs the strix-agent CLI against a target (URL / repo / local path) and
+emits Faraday bulk-create JSON to stdout. Unlike the vendor's cloud
+dashboard (which uses WorkOS SSO), the CLI is fully offline once
+installed and drives an internal LLM sandbox.
 
-Auth: Bearer PAT (`strix_pat_<...>`). Minted at Strix.ai dashboard ->
-Settings -> API Keys. Docs: https://docs.strix.ai/.
-
-Modes (STRIX_MODE, comma-separated; default 'findings'):
-  findings  -> /v1/findings   AI-agent-discovered vulns  -> Faraday vulns
-  scans     -> /v1/scans      last N scan runs           -> summary vulns
-  targets   -> /v1/targets    assets registered in Strix -> Faraday hosts
+Runtime prerequisites baked into the dispatcher image:
+  - `strix` binary on PATH (installed via `pipx install strix-agent`)
+  - Docker socket mounted read-write into the container (strix launches
+    a nested Docker sandbox to isolate the AI agent)
+  - An LLM API key (STRIX_LLM chooses the provider, LLM_API_KEY carries
+    the token — e.g. STRIX_LLM=openai/gpt-5.4 + OPENAI-shaped key)
 
 Env / args:
-  STRIX_API_KEY      (mandatory) — PAT prefixed 'strix_pat_'
-  STRIX_API_URL      (optional)  — default https://api.strix.ai
-  STRIX_MODE         (optional)  — default 'findings'
-  STRIX_TARGET       (optional)  — restrict findings to one target id
-  STRIX_STATE        (optional)  — filter, default 'open'; also 'confirmed', 'triaged', 'all'
-  STRIX_PAGE_SIZE    (optional)  — default 100
-  STRIX_MAX_PAGES    (optional)  — default 50
-  STRIX_MIN_SEVERITY (optional)  — default 'medium'
+  STRIX_TARGET         (mandatory) — URL, repo URL, or local path
+  STRIX_LLM            (mandatory) — LLM identifier per Strix docs
+                                     (e.g. openai/gpt-5.4, anthropic/claude-opus-4-6)
+  STRIX_LLM_API_KEY    (mandatory) — API key for the chosen provider
+  STRIX_SCAN_MODE      (optional)  — quick | standard | deep (default quick;
+                                     the executor caps to quick to keep LLM
+                                     spend predictable — override to deep
+                                     for a full audit)
+  STRIX_MAX_BUDGET_USD (optional)  — hard cap on LLM spend (default 5)
+  STRIX_INSTRUCTION    (optional)  — free-text guidance for the agent
+                                     (credentials, focus areas)
+  STRIX_TIMEOUT_SEC    (optional)  — subprocess timeout in seconds (default 1800)
+  STRIX_MIN_SEVERITY   (optional)  — default 'medium'
+  STRIX_RUNS_DIR       (optional)  — where strix writes strix_runs/ (default /tmp)
+
+Exit-code contract from strix:
+  0 = no vulns found       (emit hosts=[] host-inventory)
+  1 = execution error      (surface as fatal; nothing emitted)
+  2 = vulnerabilities found (parse strix_runs/<run>/ and emit them)
 """
 
 from __future__ import annotations
 
 import json
 import os
+import pathlib
+import re
+import shutil
+import subprocess
 import sys
 import time
 
-import requests
-
-VALID_MODES = {"findings", "scans", "targets"}
+VALID_MODES = ("quick", "standard", "deep")
 VALID_MIN_SEVERITY = ("info", "low", "medium", "high", "critical")
 SEVERITY_ORDER = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 
@@ -46,11 +60,6 @@ STRIX_SEVERITY_TO_FARADAY = {
     "note": "info",
 }
 
-DEFAULT_PAGE_SIZE = 100
-DEFAULT_MAX_PAGES = 50
-RETRY_429_SLEEP = 30
-MAX_429_RETRIES = 3
-
 
 def log(msg):
     print(msg, file=sys.stderr)
@@ -63,6 +72,13 @@ def _cfg(name, default=""):
 def _safe_int(value, default):
     try:
         return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_float(value, default):
+    try:
+        return float(value)
     except (TypeError, ValueError):
         return default
 
@@ -82,78 +98,102 @@ def _severity(strix_value, default="medium"):
     return STRIX_SEVERITY_TO_FARADAY.get(text, default)
 
 
-def _fetch(base, token, path, params, page_size, max_pages):
-    url = f"{base.rstrip('/')}{path}"
-    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
-    cursor = None
-    page = 1
-    for _ in range(max_pages):
-        q = dict(params)
-        q["limit"] = page_size
-        # Strix docs suggest either cursor-based or page-based; we set both and
-        # the server ignores whichever it doesn't understand.
-        if cursor:
-            q["cursor"] = cursor
-        else:
-            q["page"] = page
-        for attempt in range(MAX_429_RETRIES + 1):
-            r = requests.get(url, headers=headers, params=q, timeout=60)
-            if r.status_code == 429 and attempt < MAX_429_RETRIES:
-                log(f"Strix 429 on {path}; sleeping {RETRY_429_SLEEP}s")
-                time.sleep(RETRY_429_SLEEP)
-                continue
-            break
-        if r.status_code != 200:
-            log(f"Strix {path} HTTP {r.status_code}: {r.text[:300]}")
-            return
-        try:
-            body = r.json()
-        except ValueError:
-            log(f"Strix {path} returned non-JSON: {r.text[:200]!r}")
-            return
-        rows = body.get("data") or body.get("results") or body.get("items") or []
-        if not rows:
-            return
-        for row in rows:
-            yield row
-        cursor = body.get("next_cursor") or body.get("nextCursor") or (body.get("pagination") or {}).get("next_cursor")
-        if not cursor and len(rows) < page_size:
-            return
-        page += 1
-
-
-def _host_key(target):
-    if not isinstance(target, dict):
-        return None, None
-    ip = target.get("ipAddress") or target.get("ip") or "0.0.0.0"
-    hostname = (
-        target.get("hostname")
-        or target.get("host")
-        or target.get("name")
-        or target.get("url")
-        or target.get("id")
-        or "unknown-strix-target"
+def _run_strix(target, llm, api_key, scan_mode, max_budget, instruction, runs_dir, timeout):
+    """Invoke the strix CLI. Returns (exit_code, run_dir | None)."""
+    strix_bin = shutil.which("strix")
+    if not strix_bin:
+        log("strix binary not found on PATH. Install via `pipx install strix-agent` in the image.")
+        sys.exit(1)
+    cmd = [
+        strix_bin,
+        "-n",
+        "--target",
+        target,
+        "--scan-mode",
+        scan_mode,
+    ]
+    if max_budget:
+        cmd.extend(["--max-budget-usd", str(max_budget)])
+    if instruction:
+        cmd.extend(["--instruction", instruction])
+    env = dict(os.environ)
+    env["STRIX_LLM"] = llm
+    env["LLM_API_KEY"] = api_key
+    env["HOME"] = runs_dir  # strix writes to $HOME/strix_runs/ by default
+    pathlib.Path(runs_dir).mkdir(parents=True, exist_ok=True)
+    log(f"Strix: exec {' '.join(cmd)} (runs_dir={runs_dir}, timeout={timeout}s)")
+    try:
+        proc = subprocess.run(cmd, env=env, cwd=runs_dir, timeout=timeout, capture_output=True, text=True)
+    except subprocess.TimeoutExpired:
+        log(f"Strix: subprocess timed out after {timeout}s")
+        return 124, None
+    except FileNotFoundError as exc:
+        log(f"Strix: cannot exec {strix_bin}: {exc}")
+        return 1, None
+    if proc.stdout:
+        log(f"Strix stdout tail:\n{proc.stdout[-2000:]}")
+    if proc.stderr:
+        log(f"Strix stderr tail:\n{proc.stderr[-2000:]}")
+    # Newest strix_runs/<run>/ directory is the one we just produced.
+    runs_root = pathlib.Path(runs_dir) / "strix_runs"
+    if not runs_root.exists():
+        return proc.returncode, None
+    run_dirs = sorted(
+        (p for p in runs_root.iterdir() if p.is_dir()),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
     )
-    return ip, hostname
+    latest = run_dirs[0] if run_dirs else None
+    return proc.returncode, latest
 
 
-def _empty_host(ip, hostname, description):
-    return {
-        "ip": ip,
-        "description": description,
-        "hostnames": [hostname] if hostname else [],
-        "vulnerabilities": [],
-    }
+def _parse_run_dir(run_dir):
+    """Read a strix_runs/<name>/ directory and yield (title, severity, desc,
+    refs, external_id) for each finding.
 
-
-def _add_vuln(hosts, ip, hostname, description, vuln):
-    entry = hosts.get(ip)
-    if entry is None:
-        entry = _empty_host(ip, hostname, description)
-        hosts[ip] = entry
-    elif hostname and hostname not in entry["hostnames"]:
-        entry["hostnames"].append(hostname)
-    entry["vulnerabilities"].append(vuln)
+    Strix's on-disk layout isn't fully documented at write time. This parser
+    walks the directory for common shapes:
+      - <run>/findings.json (a list)
+      - <run>/results/*.json (per-finding files)
+      - <run>/report.md      (markdown fallback if no JSON present)
+    """
+    if run_dir is None or not run_dir.exists():
+        return
+    seen = set()
+    # (a) findings.json at the run root
+    for candidate in [run_dir / "findings.json", run_dir / "results.json", run_dir / "report.json"]:
+        if candidate.exists():
+            try:
+                data = json.loads(candidate.read_text())
+            except (OSError, json.JSONDecodeError) as exc:
+                log(f"Strix: failed to parse {candidate}: {exc}")
+                continue
+            rows = data.get("findings") if isinstance(data, dict) else data
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                fid = str(row.get("id") or row.get("finding_id") or "")
+                if fid in seen:
+                    continue
+                seen.add(fid)
+                yield row
+    # (b) per-finding files under results/
+    results_dir = run_dir / "results"
+    if results_dir.exists() and results_dir.is_dir():
+        for p in sorted(results_dir.glob("*.json")):
+            try:
+                row = json.loads(p.read_text())
+            except (OSError, json.JSONDecodeError):
+                continue
+            if not isinstance(row, dict):
+                continue
+            fid = str(row.get("id") or p.stem)
+            if fid in seen:
+                continue
+            seen.add(fid)
+            yield row
 
 
 def _make_vuln(name, desc, severity, refs, external_id, tags=None):
@@ -170,163 +210,108 @@ def _make_vuln(name, desc, severity, refs, external_id, tags=None):
     }
 
 
-def _fetch_findings(base, token, target, state, page_size, max_pages, min_severity, hosts):
-    params = {}
-    if target:
-        params["target_id"] = target
-    if state and state != "all":
-        params["state"] = state
-    floor = SEVERITY_ORDER[min_severity]
-    kept = 0
-    for row in _fetch(base, token, "/v1/findings", params, page_size, max_pages):
-        if not isinstance(row, dict):
-            continue
-        severity = _severity(row.get("severity") or row.get("risk"))
-        if SEVERITY_ORDER[severity] < floor:
-            continue
-        finding_id = row.get("id") or row.get("findingId") or ""
-        title = row.get("title") or row.get("name") or f"Strix finding {finding_id}"
-        desc_parts = []
-        if row.get("description"):
-            desc_parts.append(row["description"])
-        if row.get("proof_of_concept") or row.get("poc"):
-            desc_parts.append("PoC: " + str(row.get("proof_of_concept") or row.get("poc")))
-        if row.get("remediation") or row.get("mitigation"):
-            desc_parts.append("Remediation: " + str(row.get("remediation") or row.get("mitigation")))
-        if row.get("agent"):
-            desc_parts.append(f"Agent: {row.get('agent')}")
-        if row.get("scan_id"):
-            desc_parts.append(f"Scan: {row.get('scan_id')}")
-        refs = []
-        for cve in row.get("cves") or row.get("cve") or []:
-            if isinstance(cve, str) and cve.upper().startswith("CVE-"):
-                refs.append({"name": cve.upper(), "type": "cve"})
-        for cwe in row.get("cwes") or row.get("cwe") or []:
-            refs.append({"name": f"CWE-{cwe}", "type": "other"})
-        for url_ref in row.get("references") or []:
-            if isinstance(url_ref, str):
-                refs.append({"name": url_ref, "type": "url"})
-        vuln = _make_vuln(
-            name=f"[AGENT] {title}",
-            desc="\n".join(desc_parts) or "Strix.ai finding (no description).",
-            severity=severity,
-            refs=refs,
-            external_id=f"strix:finding:{finding_id}" if finding_id else "",
-            tags=["agent:strix"],
-        )
-        target_obj = row.get("target") or row.get("asset") or {}
-        ip, hostname = _host_key(target_obj)
-        if not target_obj:
-            _add_vuln(
-                hosts,
-                "agent:strix:global",
-                "agent-strix",
-                "Strix findings not scoped to a single asset",
-                vuln,
-            )
-        else:
-            _add_vuln(hosts, ip, hostname, f"Strix.ai-tested asset: {hostname}", vuln)
-        kept += 1
-    log(f"Strix: kept {kept} findings above floor='{min_severity}'.")
-
-
-def _fetch_scans(base, token, page_size, max_pages, hosts):
-    seen = 0
-    for row in _fetch(base, token, "/v1/scans", {}, page_size, max_pages):
-        if not isinstance(row, dict):
-            continue
-        scan_id = row.get("id") or ""
-        status = row.get("status") or row.get("state") or ""
-        target_obj = row.get("target") or row.get("asset") or {}
-        ip, hostname = _host_key(target_obj)
-        if not target_obj:
-            ip, hostname = "agent:strix:scans", "strix-scans"
-        _add_vuln(
-            hosts,
-            ip,
-            hostname,
-            f"Strix.ai scan against {hostname}",
-            _make_vuln(
-                name=f"[AGENT] Strix.ai scan {scan_id} ({status})",
-                desc=(
-                    f"Scan id: {scan_id}\n"
-                    f"Status: {status}\n"
-                    f"Started: {row.get('started_at', '')}\n"
-                    f"Finished: {row.get('finished_at', '')}\n"
-                    f"Findings: {row.get('finding_count', row.get('findings_count', ''))}"
-                ),
-                severity="info",
-                refs=[],
-                external_id=f"strix:scan:{scan_id}",
-                tags=["agent:strix:scan"],
-            ),
-        )
-        seen += 1
-    log(f"Strix: registered {seen} scans.")
-
-
-def _fetch_targets(base, token, page_size, max_pages, hosts):
-    seen = 0
-    for row in _fetch(base, token, "/v1/targets", {}, page_size, max_pages):
-        if not isinstance(row, dict):
-            continue
-        ip, hostname = _host_key(row)
-        _add_vuln(
-            hosts,
-            ip,
-            hostname,
-            f"Strix.ai target ({row.get('type', 'asset')})",
-            _make_vuln(
-                name="[AGENT] Strix.ai-monitored target",
-                desc=(
-                    f"Type: {row.get('type', '')}\n" f"URL: {row.get('url', '')}\n" f"Owner: {row.get('owner', '')}"
-                ),
-                severity="info",
-                refs=[],
-                external_id=f"strix:target:{row.get('id', '')}",
-                tags=["agent:strix:target-inventory"],
-            ),
-        )
-        seen += 1
-    log(f"Strix: registered {seen} targets.")
+def _host_from_target(target):
+    """Turn --target into an (ip, hostname) pair for Faraday grouping."""
+    m = re.match(r"^https?://([^/]+)", target)
+    if m:
+        return "0.0.0.0", m.group(1)
+    if target.startswith("git+") or "github.com" in target or "gitlab.com" in target:
+        return "0.0.0.0", target
+    # local path -> use basename
+    return "0.0.0.0", os.path.basename(target.rstrip("/")) or target
 
 
 def main():
-    token = _cfg("STRIX_API_KEY")
-    if not token:
-        log("STRIX_API_KEY is required (PAT prefixed 'strix_pat_').")
-        sys.exit(1)
-
-    base = _cfg("STRIX_API_URL", "https://api.strix.ai").rstrip("/")
-    modes_raw = _cfg("STRIX_MODE", "findings")
-    modes = [m.strip().lower() for m in modes_raw.split(",") if m.strip()]
-    invalid = [m for m in modes if m not in VALID_MODES]
-    if invalid:
-        log(f"Invalid STRIX_MODE value(s): {invalid}. Use any of: {sorted(VALID_MODES)}")
-        sys.exit(1)
-
     target = _cfg("STRIX_TARGET")
-    state = _cfg("STRIX_STATE", "open")
-    page_size = _safe_int(_cfg("STRIX_PAGE_SIZE"), DEFAULT_PAGE_SIZE)
-    max_pages = _safe_int(_cfg("STRIX_MAX_PAGES"), DEFAULT_MAX_PAGES)
+    llm = _cfg("STRIX_LLM")
+    api_key = _cfg("STRIX_LLM_API_KEY") or _cfg("LLM_API_KEY")
+    if not target:
+        log("STRIX_TARGET is required.")
+        sys.exit(1)
+    if not llm or not api_key:
+        log("STRIX_LLM and STRIX_LLM_API_KEY are required (e.g. openai/gpt-5.4 + your OpenAI key).")
+        sys.exit(1)
+
+    scan_mode = _cfg("STRIX_SCAN_MODE", "quick")
+    if scan_mode not in VALID_MODES:
+        log(f"Invalid STRIX_SCAN_MODE '{scan_mode}'. Use one of: {VALID_MODES}")
+        sys.exit(1)
+    max_budget = _safe_float(_cfg("STRIX_MAX_BUDGET_USD"), 5.0)
+    instruction = _cfg("STRIX_INSTRUCTION")
+    timeout = _safe_int(_cfg("STRIX_TIMEOUT_SEC"), 1800)
+    runs_dir = _cfg("STRIX_RUNS_DIR", "/tmp")
     min_severity = _validate_min_severity(_cfg("STRIX_MIN_SEVERITY"))
 
-    hosts: dict = {}
-    if "findings" in modes:
-        _fetch_findings(base, token, target, state, page_size, max_pages, min_severity, hosts)
-    if "scans" in modes:
-        _fetch_scans(base, token, page_size, max_pages, hosts)
-    if "targets" in modes:
-        _fetch_targets(base, token, page_size, max_pages, hosts)
+    start_ts = time.time()
+    exit_code, run_dir = _run_strix(target, llm, api_key, scan_mode, max_budget, instruction, runs_dir, timeout)
+    duration_s = round(time.time() - start_ts, 1)
+    log(f"Strix: exit={exit_code} run_dir={run_dir} duration={duration_s}s")
 
-    for host in hosts.values():
-        deduped: dict = {}
-        for v in host.get("vulnerabilities") or []:
-            deduped[v.get("external_id") or json.dumps(v, sort_keys=True)] = v
-        host["vulnerabilities"] = list(deduped.values())
+    if exit_code == 1:
+        log("Strix: execution error; nothing to emit.")
+        sys.exit(1)
 
-    log(f"Strix: emitting {len(hosts)} hosts total.")
-    print(json.dumps({"hosts": list(hosts.values())}))
+    ip, hostname = _host_from_target(target)
+    host = {
+        "ip": ip,
+        "description": f"Strix.ai scan target ({scan_mode})",
+        "hostnames": [hostname],
+        "vulnerabilities": [],
+    }
+
+    floor = SEVERITY_ORDER[min_severity]
+    kept = 0
+    for row in _parse_run_dir(run_dir):
+        severity = _severity(row.get("severity") or row.get("risk"))
+        if SEVERITY_ORDER[severity] < floor:
+            continue
+        fid = str(row.get("id") or row.get("finding_id") or "")
+        title = row.get("title") or row.get("name") or f"Strix finding {fid}"
+        desc_parts = []
+        if row.get("description"):
+            desc_parts.append(row["description"])
+        if row.get("proof_of_concept") or row.get("poc") or row.get("reproduction"):
+            desc_parts.append("PoC: " + str(row.get("proof_of_concept") or row.get("poc") or row.get("reproduction")))
+        if row.get("remediation") or row.get("mitigation"):
+            desc_parts.append("Remediation: " + str(row.get("remediation") or row.get("mitigation")))
+        refs = []
+        for cve in row.get("cves") or ([row["cve"]] if row.get("cve") else []):
+            if isinstance(cve, str) and cve.upper().startswith("CVE-"):
+                refs.append({"name": cve.upper(), "type": "cve"})
+        for cwe in row.get("cwes") or []:
+            refs.append({"name": f"CWE-{cwe}", "type": "other"})
+        host["vulnerabilities"].append(
+            _make_vuln(
+                name=f"[AGENT] {title}",
+                desc="\n".join(desc_parts) or "Strix.ai finding (no description).",
+                severity=severity,
+                refs=refs,
+                external_id=f"strix:finding:{fid}" if fid else "",
+                tags=["agent:strix", f"agent:strix:scan-mode:{scan_mode}"],
+            )
+        )
+        kept += 1
+    # Also emit a summary vuln so an empty scan still lands one asset record
+    # in Faraday (proves the scan ran and cost $).
+    host["vulnerabilities"].append(
+        _make_vuln(
+            name=f"[AGENT] Strix.ai scan summary ({scan_mode})",
+            desc=(
+                f"Target: {target}\n"
+                f"Scan mode: {scan_mode}\n"
+                f"Findings kept above floor '{min_severity}': {kept}\n"
+                f"Duration: {duration_s}s\n"
+                f"Exit code: {exit_code}"
+            ),
+            severity="info",
+            refs=[],
+            external_id=f"strix:scan:{int(start_ts)}",
+            tags=["agent:strix:scan"],
+        )
+    )
+
+    log(f"Strix: emitting 1 host ({hostname}) with {len(host['vulnerabilities'])} vulns.")
+    print(json.dumps({"hosts": [host]}))
 
 
 if __name__ == "__main__":

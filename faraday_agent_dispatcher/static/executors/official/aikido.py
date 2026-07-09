@@ -2,10 +2,11 @@
 """Aikido — continuous AppSec / cloud posture import.
 
 Pulls open issues, monitored repositories and cloud resources from Aikido's
-public REST API (https://api.aikido.dev/) and emits Faraday bulk-create
+public REST API (https://app.aikido.dev/api/) and emits Faraday bulk-create
 JSON to stdout.
 
-Auth: OAuth2 client credentials (AIK_CLIENT_/AIK_SECRET_ prefixed pair).
+Auth: OAuth2 client credentials (AIK_CLIENT_/AIK_SECRET_ prefixed pair)
+sent as HTTP Basic auth, plus grant_type=client_credentials in the body.
 Exchanged at /api/oauth/token for a short-lived Bearer, reused across
 calls in the same run. Docs: https://apidocs.aikido.dev/.
 
@@ -17,7 +18,7 @@ Modes (AIKIDO_MODE, comma-separated; default 'issues'):
 Env / args:
   AIKIDO_CLIENT_ID     (mandatory) — AIK_CLIENT_...
   AIKIDO_CLIENT_SECRET (mandatory) — AIK_SECRET_...
-  AIKIDO_API_URL       (optional)  — default https://api.aikido.dev
+  AIKIDO_API_URL       (optional)  — default https://app.aikido.dev
   AIKIDO_MODE          (optional)  — default 'issues'
   AIKIDO_SEVERITY_MIN  (optional)  — default 'medium'
   AIKIDO_PAGE_SIZE     (optional)  — default 100 (Aikido max)
@@ -108,16 +109,18 @@ def _severity(row, default="medium"):
 
 
 def _get_token(base, client_id, client_secret):
-    """OAuth2 client-credentials at /api/oauth/token. Aikido accepts either
-    Basic auth of client:secret with grant_type in the body, or client_id/
-    client_secret in the body. We use the body-only form."""
+    """OAuth2 client-credentials at /api/oauth/token. Aikido REQUIRES HTTP
+    Basic auth of client:secret and grant_type=client_credentials in the
+    body — the body-only form returns 401 'invalid_client — missing
+    Authorization header'. Verified live against app.aikido.dev on
+    2026-07-09."""
     url = f"{base.rstrip('/')}/api/oauth/token"
-    payload = {
-        "grant_type": "client_credentials",
-        "client_id": client_id,
-        "client_secret": client_secret,
-    }
-    r = requests.post(url, data=payload, timeout=30)
+    r = requests.post(
+        url,
+        auth=(client_id, client_secret),
+        data={"grant_type": "client_credentials"},
+        timeout=30,
+    )
     if r.status_code != 200:
         log(f"Aikido oauth/token HTTP {r.status_code}: {r.text[:300]}")
         sys.exit(1)
@@ -214,69 +217,64 @@ def _fetch_issues(base, token, issue_type, page_size, max_pages, min_severity, h
         params["filter_status"] = "open"
     floor = SEVERITY_ORDER[min_severity]
     kept = 0
-    for row in _fetch(base, token, "/public/v1/open_issues", params, page_size, max_pages):
+    # Real endpoint: /api/public/v1/open-issue-groups (dashes, not
+    # underscores). Verified live 2026-07-09. Response is a flat list of
+    # {id, type, title, description, severity_score, severity, group_status,
+    # locations: [{id, name, type}]}.
+    for row in _fetch(base, token, "/api/public/v1/open-issue-groups", params, page_size, max_pages):
         if not isinstance(row, dict):
             continue
         severity = _severity(row)
         if SEVERITY_ORDER[severity] < floor:
             continue
-        issue_id = row.get("id") or row.get("issue_id") or ""
-        title = (
-            row.get("attack_surface_display_name")
-            or row.get("title")
-            or row.get("rule_name")
-            or row.get("cve")
-            or f"Aikido issue {issue_id}"
-        )
+        issue_id = row.get("id") or ""
+        title = row.get("title") or f"Aikido issue {issue_id}"
         desc_parts = []
         if row.get("description"):
             desc_parts.append(row["description"])
-        if row.get("rule_name"):
-            desc_parts.append(f"Rule: {row['rule_name']}")
-        if row.get("file_path"):
-            loc = row["file_path"]
-            if row.get("start_line"):
-                loc += f":{row['start_line']}"
-            desc_parts.append(f"Location: {loc}")
-        if row.get("group"):
-            desc_parts.append(f"Group: {row['group']}")
-        if row.get("first_detected_at"):
-            desc_parts.append(f"First detected: {row['first_detected_at']}")
+        if row.get("how_to_fix"):
+            desc_parts.append(f"Fix: {row['how_to_fix']}")
+        if row.get("type"):
+            desc_parts.append(f"Type: {row['type']}")
+        if row.get("group_status"):
+            desc_parts.append(f"Status: {row['group_status']}")
+        if row.get("time_to_fix_minutes"):
+            desc_parts.append(f"TTF: {row['time_to_fix_minutes']}min")
         refs = []
-        for cve in row.get("cves") or ([row["cve"]] if row.get("cve") else []):
+        for cve in row.get("related_cve_ids") or []:
             if isinstance(cve, str) and cve.upper().startswith("CVE-"):
                 refs.append({"name": cve.upper(), "type": "cve"})
-        for cwe in row.get("cwes") or []:
-            refs.append({"name": f"CWE-{cwe}", "type": "other"})
-        if row.get("rule_id"):
-            refs.append({"name": f"Aikido-Rule-{row['rule_id']}", "type": "other"})
         vuln = _make_vuln(
             name=f"[AGENT] {title}",
             desc="\n".join(desc_parts) or "Aikido open issue (no description).",
             severity=severity,
             refs=refs,
-            external_id=f"aikido:issue:{issue_id}" if issue_id else "",
-            tags=[f"agent:aikido:{row.get('group', 'unknown')}"],
+            external_id=f"aikido:issue-group:{issue_id}" if issue_id else "",
+            tags=[f"agent:aikido:{row.get('type', 'unknown')}"],
         )
-        repo = row.get("repository") or row.get("code_repo") or row.get("container_repo") or {}
-        ip, hostname = _host_key_from_repo(repo)
-        if not repo:
+        # Aikido returns a `locations` list; one issue can affect multiple
+        # repositories. Emit one vuln per affected location so Faraday can
+        # pivot back to the right host.
+        locations = row.get("locations") or []
+        if locations:
+            for loc in locations:
+                ip, hostname = _host_key_from_repo(loc)
+                _add_vuln(hosts, ip, hostname, f"Aikido-monitored: {hostname}", dict(vuln))
+        else:
             _add_vuln(
                 hosts,
                 "agent:aikido:global",
                 "agent-aikido",
-                "Aikido issues not scoped to a single repository",
+                "Aikido issues not scoped to a single asset",
                 vuln,
             )
-        else:
-            _add_vuln(hosts, ip, hostname, f"Aikido-monitored repository: {hostname}", vuln)
         kept += 1
     log(f"Aikido: kept {kept} open issues above floor='{min_severity}'.")
 
 
 def _fetch_code_repos(base, token, page_size, max_pages, hosts):
     seen = 0
-    for row in _fetch(base, token, "/public/v1/repositories/code", {}, page_size, max_pages):
+    for row in _fetch(base, token, "/api/public/v1/repositories/code", {}, page_size, max_pages):
         if not isinstance(row, dict):
             continue
         ip, hostname = _host_key_from_repo(row)
@@ -303,8 +301,11 @@ def _fetch_code_repos(base, token, page_size, max_pages, hosts):
 
 
 def _fetch_container_repos(base, token, page_size, max_pages, hosts):
+    """Aikido's public API doesn't expose /repositories/container; the closest
+    equivalent is /clouds (AWS/GCP/Azure connections). Import those as hosts
+    so Faraday can see the cloud-account inventory. Verified live 2026-07-09."""
     seen = 0
-    for row in _fetch(base, token, "/public/v1/repositories/container", {}, page_size, max_pages):
+    for row in _fetch(base, token, "/api/public/v1/clouds", {}, page_size, max_pages):
         if not isinstance(row, dict):
             continue
         ip, hostname = _host_key_from_repo(row)
@@ -312,22 +313,22 @@ def _fetch_container_repos(base, token, page_size, max_pages, hosts):
             hosts,
             ip,
             hostname,
-            f"Aikido-monitored container/cloud repo ({row.get('provider', 'container')})",
+            f"Aikido-monitored cloud ({row.get('provider', 'cloud')})",
             _make_vuln(
-                name="[AGENT] Aikido-monitored container/cloud repository",
+                name="[AGENT] Aikido-monitored cloud account",
                 desc=(
                     f"Provider: {row.get('provider', '')}\n"
-                    f"Registry: {row.get('registry', '')}\n"
-                    f"Image: {row.get('image', '')}"
+                    f"Account: {row.get('account_id', row.get('external_id', ''))}\n"
+                    f"Region: {row.get('region', '')}"
                 ),
                 severity="info",
                 refs=[],
-                external_id=f"aikido:container:{row.get('id', '')}",
-                tags=["agent:aikido:container-inventory"],
+                external_id=f"aikido:cloud:{row.get('id', '')}",
+                tags=["agent:aikido:cloud-inventory"],
             ),
         )
         seen += 1
-    log(f"Aikido: registered {seen} container/cloud repos.")
+    log(f"Aikido: registered {seen} cloud accounts.")
 
 
 def main():
@@ -337,7 +338,7 @@ def main():
         log("AIKIDO_CLIENT_ID and AIKIDO_CLIENT_SECRET are required.")
         sys.exit(1)
 
-    base = _cfg("AIKIDO_API_URL", "https://api.aikido.dev").rstrip("/")
+    base = _cfg("AIKIDO_API_URL", "https://app.aikido.dev").rstrip("/")
     modes_raw = _cfg("AIKIDO_MODE", "issues")
     modes = [m.strip().lower() for m in modes_raw.split(",") if m.strip()]
     invalid = [m for m in modes if m not in VALID_MODES]
