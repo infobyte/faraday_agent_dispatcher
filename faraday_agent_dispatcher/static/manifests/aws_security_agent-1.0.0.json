@@ -1,0 +1,86 @@
+{
+    "arguments": {
+        "AWS_ACCESS_KEY_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "AWS IAM access key with securityagent:List* / Get* permission. Sent via SigV4-signed headers."
+        },
+        "AWS_SECRET_ACCESS_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string",
+            "description": "AWS IAM secret key paired with AWS_ACCESS_KEY_ID."
+        },
+        "AWS_SESSION_TOKEN": {
+            "mandatory": false,
+            "type": "password",
+            "base": "string",
+            "description": "STS session token when using AssumeRole credentials. Omit for long-lived IAM users."
+        },
+        "AWS_REGION": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "AWS region hosting the Security Agent service. Default 'us-east-1'."
+        },
+        "AWS_SECURITY_AGENT_HOST": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Full API host override. Default 'securityagent.<region>.amazonaws.com'. Override when AWS ships GA under a different endpoint."
+        },
+        "AWS_SECURITY_AGENT_FINDINGS_PATH": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Path (with leading slash) for the findings endpoint. Default '/findings'. Override if AWS Security Agent's API path differs at your account's rollout."
+        },
+        "AWS_SECURITY_AGENT_AGENTS_PATH": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Path for the agent-inventory endpoint. Default '/agents'."
+        },
+        "AWS_SECURITY_AGENT_MODE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Comma-separated list of what to import. Default 'findings'. Valid: findings (agent-discovered vulns -> vulns), agents (deployed agents -> hosts)."
+        },
+        "AWS_SECURITY_AGENT_PAGE_SIZE": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "MaxResults per API call. Default 100."
+        },
+        "AWS_SECURITY_AGENT_MAX_PAGES": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Hard cap on pages fetched per mode. Default 50 (= 5k rows at the default page size)."
+        },
+        "AWS_SECURITY_AGENT_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Client-side severity floor for findings. Valid: info | low | medium | high | critical. Default 'medium'."
+        }
+    },
+    "environment_variables": [
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests, hashlib, hmac' 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Cloud Security",
+    "name": "aws_security_agent",
+    "title": "AWS Security Agent",
+    "website": "https://us-east-1.console.aws.amazon.com/securityagent/agents",
+    "description": "AWS Security Agent findings import. IAM key + secret signed via SigV4 (no boto3 dependency), walks the Security Agent HTTP API (default securityagent.<region>.amazonaws.com/findings + /agents). Modes: findings (agent-discovered vulns become Faraday vulns tagged '[AGENT]' on the affected AWS resource, with Remediation + Types folded into the description and resource ARNs as refs), agents (registered Security Agents become Faraday hosts tagged 'agent:aws-security-agent:agent-inventory'). AWS severity is normalised into Faraday's info/low/medium/high/critical scheme; MIN_SEVERITY drops rows below the floor. Endpoint host + paths are configurable per install because AWS Security Agent was still in preview at write time. External IDs are stable so re-runs are idempotent. NextToken pagination; backs off 30s on HTTP 429.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "aws_security_agent.py"
+}

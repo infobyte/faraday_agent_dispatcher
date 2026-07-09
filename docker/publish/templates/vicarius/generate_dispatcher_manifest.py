@@ -1904,6 +1904,23 @@ AGENT_GROUPS = {
             "test becomes one Faraday vulnerability tagged '[GRC]' on the affected asset."
         ),
     },
+    "agentic-security": {
+        "agent_name": "agentic-security-agent",
+        "executors": [
+            "strix",
+            "aikido",
+            "xbow",
+            "aws_security_agent",
+        ],
+        "description": (
+            "Agentic / autonomous security platforms — pulls findings from AI-driven pentest "
+            "agents (XBOW, Strix.ai) and continuously-monitored AppSec/cloud platforms "
+            "(Aikido, AWS Security Agent) into Faraday. Each surfaced issue becomes one "
+            "Faraday vulnerability tagged '[AGENT]' on the affected asset. Since these tools "
+            "self-triage, findings arrive already scored and are mapped 1:1 into Faraday's "
+            "severity buckets."
+        ),
+    },
     "database-security": {
         "agent_name": "database-security-agent",
         "executors": [

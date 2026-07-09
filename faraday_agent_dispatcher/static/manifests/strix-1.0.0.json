@@ -1,0 +1,67 @@
+{
+    "arguments": {
+        "STRIX_API_KEY": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string",
+            "description": "Strix.ai PAT prefixed 'strix_pat_'. Minted at Strix.ai dashboard -> Settings -> API Keys. Sent as 'Authorization: Bearer <token>'."
+        },
+        "STRIX_API_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Strix.ai API base URL. Default 'https://api.strix.ai'."
+        },
+        "STRIX_MODE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Comma-separated list of what to import. Default 'findings'. Valid: findings (AI-agent-discovered vulns -> Faraday vulns), scans (last N scan runs summarised), targets (registered assets -> Faraday hosts)."
+        },
+        "STRIX_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Restrict findings to a single target_id. Omit for all targets."
+        },
+        "STRIX_STATE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Finding state filter. Default 'open'. Valid: open | confirmed | triaged | all."
+        },
+        "STRIX_PAGE_SIZE": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Rows per API page. Default 100."
+        },
+        "STRIX_MAX_PAGES": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Hard cap on pages fetched per mode. Default 50 (= 5k rows at the default page size)."
+        },
+        "STRIX_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Client-side severity floor for findings. Valid: info | low | medium | high | critical. Default 'medium'."
+        }
+    },
+    "environment_variables": [
+        "STRIX_API_KEY"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests' 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "strix",
+    "title": "Strix.ai",
+    "website": "https://strix.ai/",
+    "description": "Strix.ai autonomous AI-pentester import. Bearer PAT (strix_pat_...) against the public REST API (default https://api.strix.ai/v1/). Modes: findings (AI-agent-discovered vulns become Faraday vulns tagged '[AGENT]' on the affected asset, with PoC + remediation folded into the description and CVE/CWE cross-refs), scans (last N scan runs summarised as info-level records so you can see when the last run happened per target), targets (registered assets become Faraday hosts tagged 'agent:strix:target-inventory'). Severity is normalised from Strix's enum into Faraday's info/low/medium/high/critical scheme; STRIX_MIN_SEVERITY drops rows below the floor. External IDs are stable so re-runs are idempotent. Cursor + page-based pagination; backs off 30s on HTTP 429.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "strix.py"
+}

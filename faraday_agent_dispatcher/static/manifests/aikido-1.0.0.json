@@ -1,0 +1,68 @@
+{
+    "arguments": {
+        "AIKIDO_CLIENT_ID": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "Aikido OAuth2 client id prefixed 'AIK_CLIENT_'. Minted at Aikido admin -> Settings -> API Keys."
+        },
+        "AIKIDO_CLIENT_SECRET": {
+            "mandatory": true,
+            "type": "password",
+            "base": "string",
+            "description": "Aikido OAuth2 client secret prefixed 'AIK_SECRET_' paired with AIKIDO_CLIENT_ID. Exchanged at /api/oauth/token for a short-lived Bearer on each run."
+        },
+        "AIKIDO_API_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Aikido API base URL. Default 'https://api.aikido.dev'."
+        },
+        "AIKIDO_MODE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Comma-separated list of what to import. Default 'issues'. Valid: issues (open findings -> vulns), repositories (monitored code repos -> hosts), cloud (container/cloud repos -> hosts)."
+        },
+        "AIKIDO_ISSUE_TYPE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Restrict issues to one group. Valid: sast | iac | secret | open_source | cloud | container | mobile | dast. Omit for all groups."
+        },
+        "AIKIDO_PAGE_SIZE": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Rows per API page. Default 100."
+        },
+        "AIKIDO_MAX_PAGES": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Hard cap on pages fetched per mode. Default 50 (= 5k rows at the default page size)."
+        },
+        "AIKIDO_SEVERITY_MIN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Client-side severity floor for open issues. Valid: info | low | medium | high | critical. Default 'medium'."
+        }
+    },
+    "environment_variables": [
+        "AIKIDO_CLIENT_ID",
+        "AIKIDO_CLIENT_SECRET"
+    ],
+    "check_cmds": [
+        "python3 -c 'import requests' 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "aikido",
+    "title": "Aikido",
+    "website": "https://aikido.dev/",
+    "description": "Aikido continuous AppSec / cloud posture import. OAuth2 client credentials (AIK_CLIENT_ + AIK_SECRET_), walks the public REST API (default https://api.aikido.dev/): open issues become Faraday vulnerabilities tagged '[AGENT]' on the affected repository (or synthetic 'agent:aikido:global' host if unscoped), code and container/cloud repos become Faraday hosts tagged 'agent:aikido:*-inventory'. Set AIKIDO_ISSUE_TYPE=sast|iac|secret|open_source|cloud|container|mobile|dast to scope findings. Severity is normalised from Aikido's mixed enum/CVSS-score inputs into Faraday's info/low/medium/high/critical scheme; AIKIDO_SEVERITY_MIN drops rows below the floor. External IDs are stable so re-runs are idempotent. Pagination via page/per_page; backs off 30s on HTTP 429.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "aikido.py"
+}
