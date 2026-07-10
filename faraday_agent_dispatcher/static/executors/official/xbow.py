@@ -194,12 +194,12 @@ def _fetch_findings(base, token, findings_path, page_size, max_pages, min_severi
         refs = []
         for cve in row.get("cves") or ([row["cve"]] if row.get("cve") else []):
             if isinstance(cve, str) and cve.upper().startswith("CVE-"):
-                refs.append({"name": cve.upper(), "type": "cve"})
+                refs.append({"name": cve.upper(), "type": "other"})
         for cwe in row.get("cwes") or []:
             refs.append({"name": f"CWE-{cwe}", "type": "other"})
         for u in row.get("references") or []:
             if isinstance(u, str):
-                refs.append({"name": u, "type": "url"})
+                refs.append({"name": u, "type": "other"})
         vuln = _make_vuln(
             name=f"[AGENT] {title}",
             desc="\n".join(desc_parts) or "XBOW finding (no description).",

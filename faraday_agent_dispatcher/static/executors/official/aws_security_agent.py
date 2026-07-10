@@ -307,7 +307,7 @@ def _fetch_findings(host, region, path, page_size, max_pages, min_severity, host
                 refs.append({"name": res["Id"], "type": "other"})
         for cve in row.get("Vulnerabilities") or []:
             if isinstance(cve, dict) and cve.get("Id"):
-                refs.append({"name": cve["Id"], "type": "cve"})
+                refs.append({"name": cve["Id"], "type": "other"})
         vuln = _make_vuln(
             name=f"[AGENT] {title}",
             desc="\n".join(desc_parts) or "AWS Security Agent finding (no description).",

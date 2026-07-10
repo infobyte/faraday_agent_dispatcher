@@ -277,7 +277,7 @@ def main():
         refs = []
         for cve in row.get("cves") or ([row["cve"]] if row.get("cve") else []):
             if isinstance(cve, str) and cve.upper().startswith("CVE-"):
-                refs.append({"name": cve.upper(), "type": "cve"})
+                refs.append({"name": cve.upper(), "type": "other"})
         for cwe in row.get("cwes") or []:
             refs.append({"name": f"CWE-{cwe}", "type": "other"})
         host["vulnerabilities"].append(

@@ -185,10 +185,15 @@ def _empty_host(ip, hostname, description):
 
 
 def _add_vuln(hosts, ip, hostname, description, vuln):
-    entry = hosts.get(ip)
+    """Aikido assets all share ip=0.0.0.0 (no L3 pointers), so keying the
+    hosts dict by ip would collapse every domain/repo/cloud into a single
+    Faraday host. Bucket by hostname instead so each asset lands as its own
+    Faraday host (or by ip if it's a synthetic 'agent:aikido:*' key)."""
+    key = hostname if hostname and ip == "0.0.0.0" else ip
+    entry = hosts.get(key)
     if entry is None:
         entry = _empty_host(ip, hostname, description)
-        hosts[ip] = entry
+        hosts[key] = entry
     elif hostname and hostname not in entry["hostnames"]:
         entry["hostnames"].append(hostname)
     entry["vulnerabilities"].append(vuln)
@@ -303,7 +308,8 @@ def _fetch_issues(base, token, issue_type, page_size, max_pages, min_severity, h
                 pass
         refs = []
         if row.get("cve_id"):
-            refs.append({"name": row["cve_id"], "type": "cve"})
+            # Faraday only accepts ref type: exploit | patch | other
+            refs.append({"name": row["cve_id"], "type": "other"})
         for cwe in row.get("cwe_classes") or []:
             if isinstance(cwe, str) and cwe.upper().startswith("CWE-"):
                 refs.append({"name": cwe.upper(), "type": "other"})
@@ -420,7 +426,8 @@ def _fetch_domains(base, token, page_size, max_pages, hosts):
                 severity="info",
                 refs=(
                     [
-                        {"name": f"https://app.aikido.dev/domain/{did}", "type": "url"},
+                        # Faraday only accepts ref type: exploit | patch | other
+                        {"name": f"https://app.aikido.dev/domain/{did}", "type": "other"},
                     ]
                     if did
                     else []
