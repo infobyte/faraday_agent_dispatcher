@@ -35,7 +35,7 @@ import time
 
 import requests
 
-VALID_MODES = {"issues", "repositories", "cloud"}
+VALID_MODES = {"issues", "repositories", "cloud", "domains"}
 VALID_MIN_SEVERITY = ("info", "low", "medium", "high", "critical")
 SEVERITY_ORDER = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 
@@ -208,66 +208,124 @@ def _make_vuln(name, desc, severity, refs, external_id, tags=None):
     }
 
 
+def _host_key_from_issue(row):
+    """Pick the right host for an issue based on which asset field is set.
+
+    Priority: code_repo > container_repo > cloud > domain > virtual_machine >
+    pentest_project. Falls back to a synthetic 'agent:aikido:global' host so
+    control-level findings still surface.
+    """
+    if row.get("code_repo_name"):
+        return "0.0.0.0", str(row["code_repo_name"]), "code_repo"
+    if row.get("container_repo_name"):
+        return "0.0.0.0", str(row["container_repo_name"]), "container"
+    if row.get("cloud_name"):
+        return "0.0.0.0", str(row["cloud_name"]), "cloud"
+    if row.get("domain_name"):
+        # domain_name can include a scheme (e.g. https://faradaysec.com); strip
+        # it so the Faraday host matches other executors that see the bare host.
+        raw = str(row["domain_name"])
+        host = raw.split("://", 1)[-1].split("/", 1)[0]
+        return "0.0.0.0", host or raw, "domain"
+    if row.get("virtual_machine_name"):
+        return "0.0.0.0", str(row["virtual_machine_name"]), "vm"
+    return "agent:aikido:global", "agent-aikido", "global"
+
+
 def _fetch_issues(base, token, issue_type, page_size, max_pages, min_severity, hosts):
-    params = {}
+    """Pull per-issue detail from /issues/export.
+
+    Unlike /open-issue-groups (which returns one grouped row per rule with
+    only the repo name), /issues/export returns one row per (rule, file, line)
+    triple — so we get affected_file, start_line, end_line, cve_id, cwe_classes
+    and the concrete asset the issue lives on (code_repo_name / domain_name /
+    cloud_name / ...). Verified live against api.public/v1 2026-07-09.
+    """
+    params = {"format": "json", "filter_status": "open"}
     if issue_type:
-        params["filter_status"] = "open"
-        params["filter_group"] = issue_type
-    else:
-        params["filter_status"] = "open"
+        # /issues/export takes filter_type = sast | iac | secret | open_source |
+        # cloud | container | mobile | dast | surface_monitoring | ...
+        params["filter_type"] = issue_type
     floor = SEVERITY_ORDER[min_severity]
     kept = 0
-    # Real endpoint: /api/public/v1/open-issue-groups (dashes, not
-    # underscores). Verified live 2026-07-09. Response is a flat list of
-    # {id, type, title, description, severity_score, severity, group_status,
-    # locations: [{id, name, type}]}.
-    for row in _fetch(base, token, "/api/public/v1/open-issue-groups", params, page_size, max_pages):
+    for row in _fetch(base, token, "/api/public/v1/issues/export", params, page_size, max_pages):
         if not isinstance(row, dict):
             continue
         severity = _severity(row)
         if SEVERITY_ORDER[severity] < floor:
             continue
         issue_id = row.get("id") or ""
-        title = row.get("title") or f"Aikido issue {issue_id}"
+        group_id = row.get("group_id") or ""
+        rule = row.get("rule") or row.get("rule_id") or f"Aikido issue {issue_id}"
+        affected_file = row.get("affected_file") or ""
+        # Build a title that surfaces the file/line — this is what the user
+        # asked for so SAST findings are directly clickable.
+        if affected_file:
+            loc = affected_file
+            if row.get("start_line"):
+                loc += f":{row['start_line']}"
+                if row.get("end_line") and row["end_line"] != row["start_line"]:
+                    loc += f"-{row['end_line']}"
+            title = f"{rule} — {loc}"
+        elif row.get("affected_package"):
+            v = row.get("installed_version")
+            title = f"{rule} — {row['affected_package']}" + (f"@{v}" if v else "")
+        elif row.get("domain_name"):
+            title = f"{rule} — {row['domain_name']}"
+        else:
+            title = rule
         desc_parts = []
-        if row.get("description"):
-            desc_parts.append(row["description"])
-        if row.get("how_to_fix"):
-            desc_parts.append(f"Fix: {row['how_to_fix']}")
+        if affected_file:
+            desc_parts.append(f"File: {affected_file}")
+            if row.get("start_line"):
+                desc_parts.append(f"Line: {row['start_line']}-{row.get('end_line') or row['start_line']}")
+        if row.get("affected_package"):
+            desc_parts.append(f"Package: {row['affected_package']}")
+        if row.get("installed_version"):
+            desc_parts.append(f"Installed version: {row['installed_version']}")
+        if row.get("patched_versions"):
+            desc_parts.append(f"Patched in: {', '.join(row['patched_versions'])}")
+        if row.get("attack_surface"):
+            desc_parts.append(f"Attack surface: {row['attack_surface']}")
         if row.get("type"):
             desc_parts.append(f"Type: {row['type']}")
-        if row.get("group_status"):
-            desc_parts.append(f"Status: {row['group_status']}")
-        if row.get("time_to_fix_minutes"):
-            desc_parts.append(f"TTF: {row['time_to_fix_minutes']}min")
+        if row.get("programming_language"):
+            desc_parts.append(f"Language: {row['programming_language']}")
+        if row.get("exploitability"):
+            desc_parts.append(f"Exploitability: {row['exploitability']}")
+        if row.get("sla_days"):
+            desc_parts.append(f"SLA: {row['sla_days']}d")
+        if row.get("first_detected_at"):
+            try:
+                dt = time.strftime("%Y-%m-%d", time.gmtime(int(row["first_detected_at"])))
+                desc_parts.append(f"First detected: {dt}")
+            except (TypeError, ValueError):
+                pass
         refs = []
-        for cve in row.get("related_cve_ids") or []:
-            if isinstance(cve, str) and cve.upper().startswith("CVE-"):
-                refs.append({"name": cve.upper(), "type": "cve"})
+        if row.get("cve_id"):
+            refs.append({"name": row["cve_id"], "type": "cve"})
+        for cwe in row.get("cwe_classes") or []:
+            if isinstance(cwe, str) and cwe.upper().startswith("CWE-"):
+                refs.append({"name": cwe.upper(), "type": "other"})
+            elif isinstance(cwe, (int, str)):
+                refs.append({"name": f"CWE-{cwe}", "type": "other"})
+        if row.get("rule_id"):
+            refs.append({"name": f"Aikido-Rule-{row['rule_id']}", "type": "other"})
+        if group_id:
+            refs.append({"name": f"Aikido-Group-{group_id}", "type": "other"})
         vuln = _make_vuln(
             name=f"[AGENT] {title}",
             desc="\n".join(desc_parts) or "Aikido open issue (no description).",
             severity=severity,
             refs=refs,
-            external_id=f"aikido:issue-group:{issue_id}" if issue_id else "",
-            tags=[f"agent:aikido:{row.get('type', 'unknown')}"],
+            external_id=f"aikido:issue:{issue_id}" if issue_id else "",
+            tags=[
+                f"agent:aikido:{row.get('type', 'unknown')}",
+                f"agent:aikido:surface:{row.get('attack_surface', 'unknown')}",
+            ],
         )
-        # Aikido returns a `locations` list; one issue can affect multiple
-        # repositories. Emit one vuln per affected location so Faraday can
-        # pivot back to the right host.
-        locations = row.get("locations") or []
-        if locations:
-            for loc in locations:
-                ip, hostname = _host_key_from_repo(loc)
-                _add_vuln(hosts, ip, hostname, f"Aikido-monitored: {hostname}", dict(vuln))
-        else:
-            _add_vuln(
-                hosts,
-                "agent:aikido:global",
-                "agent-aikido",
-                "Aikido issues not scoped to a single asset",
-                vuln,
-            )
+        ip, hostname, host_kind = _host_key_from_issue(row)
+        _add_vuln(hosts, ip, hostname, f"Aikido-monitored {host_kind}: {hostname}", vuln)
         kept += 1
     log(f"Aikido: kept {kept} open issues above floor='{min_severity}'.")
 
@@ -331,6 +389,84 @@ def _fetch_container_repos(base, token, page_size, max_pages, hosts):
     log(f"Aikido: registered {seen} cloud accounts.")
 
 
+def _fetch_domains(base, token, page_size, max_pages, hosts):
+    """Import Aikido attack-surface domains (and their subdomains) as Faraday
+    hosts. Response shape: [{id, domain, kind, is_auth_configured,
+    last_scanned_at, linked_resource}]. `kind` is 'front_end' or
+    'infra_pentest'. This is where you see faradaysec.com etc. show up in the
+    Aikido UI under Attack Surface -> Domains."""
+    seen_domains = 0
+    for row in _fetch(base, token, "/api/public/v1/domains", {}, page_size, max_pages):
+        if not isinstance(row, dict):
+            continue
+        raw = str(row.get("domain") or row.get("id") or "unknown-aikido-domain")
+        hostname = raw.split("://", 1)[-1].split("/", 1)[0] or raw
+        did = row.get("id") or ""
+        # Inventory record so the host exists even if it has no findings.
+        _add_vuln(
+            hosts,
+            "0.0.0.0",
+            hostname,
+            f"Aikido attack-surface domain ({row.get('kind', 'domain')})",
+            _make_vuln(
+                name="[AGENT] Aikido attack-surface domain",
+                desc=(
+                    f"Domain: {raw}\n"
+                    f"Kind: {row.get('kind', '')}\n"
+                    f"Auth configured: {row.get('is_auth_configured', '')}\n"
+                    f"Last scanned: {row.get('last_scanned_at', '')}\n"
+                    f"Aikido link: https://app.aikido.dev/domain/{did}"
+                ),
+                severity="info",
+                refs=(
+                    [
+                        {"name": f"https://app.aikido.dev/domain/{did}", "type": "url"},
+                    ]
+                    if did
+                    else []
+                ),
+                external_id=f"aikido:domain:{did}",
+                tags=[
+                    "agent:aikido:domain-inventory",
+                    f"agent:aikido:domain-kind:{row.get('kind', 'unknown')}",
+                ],
+            ),
+        )
+        seen_domains += 1
+        # Pull subdomains too (Aikido tracks discovered subdomains per attack
+        # surface domain). Cheap enough to inline.
+        if did:
+            for sub in _fetch(base, token, f"/api/public/v1/domains/{did}/subdomains", {}, page_size, max_pages):
+                if not isinstance(sub, dict):
+                    continue
+                sub_raw = str(sub.get("subdomain") or sub.get("domain") or "")
+                if not sub_raw:
+                    continue
+                sub_hostname = sub_raw.split("://", 1)[-1].split("/", 1)[0]
+                _add_vuln(
+                    hosts,
+                    "0.0.0.0",
+                    sub_hostname,
+                    f"Aikido discovered subdomain of {hostname}",
+                    _make_vuln(
+                        name="[AGENT] Aikido attack-surface subdomain",
+                        desc=(
+                            f"Subdomain: {sub_raw}\n"
+                            f"Parent domain: {raw}\n"
+                            f"Aikido link: https://app.aikido.dev/domain/{did}"
+                        ),
+                        severity="info",
+                        refs=[],
+                        external_id=f"aikido:subdomain:{did}:{sub_hostname}",
+                        tags=[
+                            "agent:aikido:subdomain-inventory",
+                            f"agent:aikido:parent:{hostname}",
+                        ],
+                    ),
+                )
+    log(f"Aikido: registered {seen_domains} attack-surface domains (plus subdomains).")
+
+
 def main():
     client_id = _cfg("AIKIDO_CLIENT_ID")
     client_secret = _cfg("AIKIDO_CLIENT_SECRET")
@@ -360,6 +496,8 @@ def main():
         _fetch_code_repos(base, token, page_size, max_pages, hosts)
     if "cloud" in modes:
         _fetch_container_repos(base, token, page_size, max_pages, hosts)
+    if "domains" in modes:
+        _fetch_domains(base, token, page_size, max_pages, hosts)
 
     for host in hosts.values():
         deduped: dict = {}

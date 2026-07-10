@@ -22,13 +22,13 @@
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Comma-separated list of what to import. Default 'issues'. Valid: issues (open findings -> vulns), repositories (monitored code repos -> hosts), cloud (container/cloud repos -> hosts)."
+            "description": "Comma-separated list of what to import. Default 'issues,domains'. Valid: issues (per-file/per-line findings -> vulns tagged with affected_file + CVE + CWE), repositories (monitored code repos -> hosts), cloud (cloud accounts -> hosts), domains (Aikido attack-surface domains + subdomains -> hosts, includes each domain's app.aikido.dev link as a URL ref)."
         },
         "AIKIDO_ISSUE_TYPE": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Restrict issues to one group. Valid: sast | iac | secret | open_source | cloud | container | mobile | dast. Omit for all groups."
+            "description": "Restrict issues to one type. Valid: sast | iac | secret | open_source | cloud | container | mobile | dast | surface_monitoring | scm_security | leaked_secret. Omit for all types."
         },
         "AIKIDO_PAGE_SIZE": {
             "mandatory": false,
@@ -61,7 +61,7 @@
     "name": "aikido",
     "title": "Aikido",
     "website": "https://aikido.dev/",
-    "description": "Aikido continuous AppSec / cloud posture import. OAuth2 client credentials (AIK_CLIENT_ + AIK_SECRET_), walks the public REST API (default https://app.aikido.dev/): open issues become Faraday vulnerabilities tagged '[AGENT]' on the affected repository (or synthetic 'agent:aikido:global' host if unscoped), code and container/cloud repos become Faraday hosts tagged 'agent:aikido:*-inventory'. Set AIKIDO_ISSUE_TYPE=sast|iac|secret|open_source|cloud|container|mobile|dast to scope findings. Severity is normalised from Aikido's mixed enum/CVSS-score inputs into Faraday's info/low/medium/high/critical scheme; AIKIDO_SEVERITY_MIN drops rows below the floor. External IDs are stable so re-runs are idempotent. Pagination via page/per_page; backs off 30s on HTTP 429.",
+    "description": "Aikido continuous AppSec / cloud posture / attack surface import. OAuth2 client credentials (AIK_CLIENT_ + AIK_SECRET_) sent as HTTP Basic to /api/oauth/token, walks the public REST API (default https://app.aikido.dev/api/public/v1/): issues (via /issues/export — per-file, per-line, one row per affected occurrence) become Faraday vulnerabilities tagged '[AGENT]' with the affected file + line surfaced in the title, CVE + CWE cross-refs, and bucketed under the right asset (code_repo_name / domain_name / cloud_name / container_repo_name); code repos, cloud accounts, and attack-surface domains + subdomains become Faraday hosts tagged 'agent:aikido:*-inventory'. Domains mode includes the app.aikido.dev/domain/<id> deep link as a URL ref so operators can jump back to the Aikido UI. Set AIKIDO_ISSUE_TYPE=sast|iac|secret|open_source|cloud|container|mobile|dast|surface_monitoring|scm_security|leaked_secret to scope findings. Severity is normalised from Aikido's mixed enum/CVSS-score inputs into Faraday's info/low/medium/high/critical scheme; AIKIDO_SEVERITY_MIN drops rows below the floor. External IDs are stable so re-runs are idempotent. Pagination via page/per_page; backs off 30s on HTTP 429.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "aikido.py"
