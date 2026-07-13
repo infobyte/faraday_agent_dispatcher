@@ -4,49 +4,73 @@
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "AWS IAM access key with securityagent:List* / Get* permission. Sent via SigV4-signed headers. Normally pre-configured on the dispatcher as a varenv \u2014 leave blank in the Run form to use the agent-side value."
+            "description": "AWS IAM/STS access key with securityagent:List* / BatchGet* permissions. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value or the container's IAM role."
         },
         "AWS_SECRET_ACCESS_KEY": {
             "mandatory": false,
             "type": "password",
             "base": "string",
-            "description": "AWS IAM secret key paired with AWS_ACCESS_KEY_ID. Normally pre-configured on the dispatcher as a varenv \u2014 leave blank in the Run form to use the agent-side value."
+            "description": "AWS IAM/STS secret paired with AWS_ACCESS_KEY_ID. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form."
         },
         "AWS_SESSION_TOKEN": {
             "mandatory": false,
             "type": "password",
             "base": "string",
-            "description": "STS session token when using AssumeRole credentials. Omit for long-lived IAM users."
+            "description": "STS session token when using AssumeRole / SSO credentials (keys prefixed 'ASIA...'). Omit for long-lived IAM users."
         },
         "AWS_REGION": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "AWS region hosting the Security Agent service. Default 'us-east-1'."
+            "description": "AWS region for the securityagent client. Default 'us-east-1'."
         },
-        "AWS_SECURITY_AGENT_HOST": {
+        "AWS_SECURITY_AGENT_AGENT_SPACE": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Full API host override. Default 'securityagent.<region>.amazonaws.com'. Override when AWS ships GA under a different endpoint."
+            "description": "Restrict the walk to a single agent space id (as-<uuid>). Omit to iterate every agent space in the account."
         },
-        "AWS_SECURITY_AGENT_FINDINGS_PATH": {
+        "AWS_SECURITY_AGENT_PENTEST_ID": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Path (with leading slash) for the findings endpoint. Default '/findings'. Override if AWS Security Agent's API path differs at your account's rollout."
+            "description": "Restrict the walk to a single pentest id (pt-<uuid>). Omit to iterate every pentest in each agent space."
         },
-        "AWS_SECURITY_AGENT_AGENTS_PATH": {
+        "AWS_SECURITY_AGENT_JOB_ID": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Path for the agent-inventory endpoint. Default '/agents'."
+            "description": "Restrict the walk to a single pentest job id (pj-<uuid>). Omit to iterate every completed job."
         },
         "AWS_SECURITY_AGENT_MODE": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Comma-separated list of what to import. Default 'findings'. Valid: findings (agent-discovered vulns -> vulns), agents (deployed agents -> hosts)."
+            "description": "Comma-separated list of what to import. Default 'findings,endpoints'. Valid: findings (BatchGetFindings -> Faraday vulns), endpoints (ListDiscoveredEndpoints -> info-level records), jobs (BatchGetPentestJobs overview -> info-level record)."
+        },
+        "AWS_SECURITY_AGENT_MAX_SPACES": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Hard cap on agent spaces iterated. Default 20."
+        },
+        "AWS_SECURITY_AGENT_MAX_PENTESTS": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Per-space cap on pentests iterated. Default 20."
+        },
+        "AWS_SECURITY_AGENT_MAX_JOBS": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Per-pentest cap on pentest jobs iterated. Default 20."
+        },
+        "AWS_SECURITY_AGENT_MAX_PAGES": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Per-list-op nextToken pagination cap. Default 20."
         },
         "AWS_SECURITY_AGENT_PAGE_SIZE": {
             "mandatory": false,
@@ -54,17 +78,17 @@
             "base": "integer",
             "description": "MaxResults per API call. Default 100."
         },
-        "AWS_SECURITY_AGENT_MAX_PAGES": {
-            "mandatory": false,
-            "type": "integer",
-            "base": "integer",
-            "description": "Hard cap on pages fetched per mode. Default 50 (= 5k rows at the default page size)."
-        },
         "AWS_SECURITY_AGENT_MIN_SEVERITY": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Client-side severity floor for findings. Valid: info | low | medium | high | critical. Default 'medium'."
+            "description": "Client-side severity floor. Valid: info | low | medium | high | critical. Default 'info' (keep everything). securityagent's UNKNOWN + INFORMATIONAL risk levels both map to 'info'."
+        },
+        "AWS_SECURITY_AGENT_ONLY_COMPLETED": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Skip pentest jobs whose status is not COMPLETED. Default 'true'. Set to 'false' to include IN_PROGRESS / FAILED / CANCELED jobs."
         }
     },
     "environment_variables": [
@@ -72,14 +96,14 @@
         "AWS_SECRET_ACCESS_KEY"
     ],
     "check_cmds": [
-        "python3 -c 'import requests, hashlib, hmac' 2>&1"
+        "python3 -c 'import boto3; boto3.client(\"securityagent\", region_name=\"us-east-1\")' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Cloud Security",
     "name": "aws_security_agent",
     "title": "AWS Security Agent",
-    "website": "https://us-east-1.console.aws.amazon.com/securityagent/agents",
-    "description": "AWS Security Agent findings import. IAM key + secret signed via SigV4 (no boto3 dependency), walks the Security Agent HTTP API (default securityagent.<region>.amazonaws.com/findings + /agents). Modes: findings (agent-discovered vulns become Faraday vulns tagged '[AGENT]' on the affected AWS resource, with Remediation + Types folded into the description and resource ARNs as refs), agents (registered Security Agents become Faraday hosts tagged 'agent:aws-security-agent:agent-inventory'). AWS severity is normalised into Faraday's info/low/medium/high/critical scheme; MIN_SEVERITY drops rows below the floor. Endpoint host + paths are configurable per install because AWS Security Agent was still in preview at write time. External IDs are stable so re-runs are idempotent. NextToken pagination; backs off 30s on HTTP 429.",
+    "website": "https://securityagent.global.app.aws/",
+    "description": "AWS Security Agent (GA, boto3 securityagent client, api version 2025-09-06) pentest findings + discovered endpoints import. Walks ListAgentSpaces -> ListPentests -> ListPentestJobsForPentest (COMPLETED by default) -> BatchGetPentestJobs (target endpoint + overview) -> ListFindings + BatchGetFindings (rich detail) -> ListDiscoveredEndpoints. Each finding becomes a Faraday vuln on the pentest's target host (parsed from the job's endpoints[0].uri, e.g. 'corp-dev-4.apps-dev.faradaysec.com'), with description + attackScript folded into the desc, evidence/impact/poc into data, remediation/recommendation into resolution, and CVSS/riskType/confidence + agent-space/pentest/job ids as refs. Discovered endpoints (URI + operation + evidence + description) become info-level records on the same host. Auth uses the standard AWS credential chain: AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY (+ optional AWS_SESSION_TOKEN for STS/SSO), the IAM role attached to the dispatcher container, or the IMDS if unset. Filter with AWS_SECURITY_AGENT_AGENT_SPACE / _PENTEST_ID / _JOB_ID to pin to one target. External IDs are stable so re-runs are idempotent.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "aws_security_agent.py"

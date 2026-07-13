@@ -33,6 +33,13 @@ RUN pip install --no-cache-dir .
 # tldextract, paramiko, smbprotocol as transitive deps.
 RUN pip install --no-cache-dir /app/offensive_checks/bagre_pkg
 
+# --- Offensive Checks: boto3 for aws_security_agent executor ---
+# The aws_security_agent connector talks to the real AWS Security Agent
+# service (boto3 client 'securityagent', service model in botocore 1.43+).
+# Pinned to 1.43+ so the 2025-09-06 API version with ListPentests /
+# ListFindings / BatchGetFindings / ListDiscoveredEndpoints is available.
+RUN pip install --no-cache-dir 'boto3>=1.43'
+
 # --- Offensive Checks: patch bundled faraday_plugins parsers ---
 # Apply the compatibility fixes in-place with Python instead of installing the
 # system `patch` package in the builder. This keeps the build deterministic
