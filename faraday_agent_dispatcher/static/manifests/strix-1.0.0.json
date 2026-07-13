@@ -1,73 +1,72 @@
 {
     "arguments": {
-        "STRIX_TARGET": {
-            "mandatory": true,
-            "type": "string",
-            "base": "string",
-            "description": "Target for the Strix.ai agent to test. Accepts a URL (https://your-app.com), a git repository (https://github.com/org/repo), or a local path inside the dispatcher container. One target only per scan."
-        },
-        "STRIX_LLM": {
-            "mandatory": false,
-            "type": "string",
-            "base": "string",
-            "description": "LLM identifier the Strix agent should drive. Examples: 'openai/gpt-5.4', 'anthropic/claude-opus-4-6', 'openai/gpt-5.2'. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value."
-        },
-        "STRIX_LLM_API_KEY": {
+        "STRIX_API_KEY": {
             "mandatory": false,
             "type": "password",
             "base": "string",
-            "description": "API key for the LLM provider selected by STRIX_LLM. Sent to the strix CLI as the LLM_API_KEY env var. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value. Do not confuse this with the strix_pat_... token from Strix Cloud — that token is for the dashboard, not the local CLI."
+            "description": "Strix Cloud PAT prefixed 'strix_pat_'. Minted at https://app.strix.ai/settings -> API keys. Sent as 'Authorization: Bearer <token>'. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value."
         },
-        "STRIX_SCAN_MODE": {
+        "STRIX_API_URL": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Scan depth. Default 'quick'. Valid: quick | standard | deep. Deeper modes burn more LLM $ — cap with STRIX_MAX_BUDGET_USD."
+            "description": "Strix Cloud API base URL. Default 'https://app.strix.ai'. Only override for a dedicated / on-prem tenant."
         },
-        "STRIX_MAX_BUDGET_USD": {
+        "STRIX_MODE": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Hard cap on total LLM spend for the scan (passed to strix --max-budget-usd). Default 5. Once the cap is hit strix terminates cleanly with a 'stopped' status; findings up to that point are still emitted."
+            "description": "Comma-separated list of what to import. Default 'scans,domains,repositories'. Valid: scans (per-scan validated vulnerabilities become Faraday vulns), domains (attack-surface domains -> hosts), repositories (monitored repos -> hosts)."
         },
-        "STRIX_INSTRUCTION": {
+        "STRIX_SCAN_ID": {
             "mandatory": false,
             "type": "string",
             "base": "string",
-            "description": "Free-text guidance for the agent — credentials, focus areas, out-of-scope caveats. Passed to strix --instruction."
+            "description": "Restrict scans mode to a single scan id. Omit to walk /api/v1/scans and pull the last STRIX_MAX_SCANS."
         },
-        "STRIX_TIMEOUT_SEC": {
+        "STRIX_MAX_SCANS": {
             "mandatory": false,
             "type": "integer",
             "base": "integer",
-            "description": "Subprocess wall-clock timeout in seconds. Default 1800 (30 min)."
+            "description": "Hard cap on how many scans to iterate when walking /api/v1/scans. Default 20."
         },
-        "STRIX_RUNS_DIR": {
+        "STRIX_PAGE_SIZE": {
             "mandatory": false,
-            "type": "string",
-            "base": "string",
-            "description": "Directory strix writes strix_runs/<run>/ into. Default '/tmp'. Override if you want the run artefacts persisted on a mounted volume."
+            "type": "integer",
+            "base": "integer",
+            "description": "Rows per API page. Default 20."
+        },
+        "STRIX_MAX_PAGES": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Hard cap on pages walked per list endpoint. Default 20."
         },
         "STRIX_MIN_SEVERITY": {
             "mandatory": false,
             "type": "string",
             "base": "string",
             "description": "Client-side severity floor for findings. Valid: info | low | medium | high | critical. Default 'medium'."
+        },
+        "STRIX_STATUS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Vuln status filter. Default 'open'. Set to 'all' to include closed / snoozed / triaged vulns."
         }
     },
     "environment_variables": [
-        "STRIX_LLM",
-        "STRIX_LLM_API_KEY"
+        "STRIX_API_KEY"
     ],
     "check_cmds": [
-        "which strix >/dev/null 2>&1 || echo 'strix CLI not installed — pipx install strix-agent'"
+        "python3 -c 'import requests' 2>&1"
     ],
     "cmd": "{EXECUTOR_FILE_PATH}",
     "category": "Web App Scanners",
     "name": "strix",
     "title": "Strix.ai",
     "website": "https://strix.ai/",
-    "description": "Strix.ai autonomous AI-pentester — CLI wrapper (not a REST importer). Invokes the `strix -n --target <T> --scan-mode <quick|standard|deep>` command against a URL/repo/path, drives an internal LLM sandbox (STRIX_LLM + STRIX_LLM_API_KEY), then parses strix_runs/<run>/{findings.json,results/*.json} for the produced vulns and emits Faraday bulk-create. Each finding lands as one Faraday vulnerability tagged '[AGENT]' on the scan target, with PoC + remediation folded into the description and CVE/CWE cross-refs. A synthetic 'scan summary' vuln is always emitted so an empty scan still records the run in Faraday. Runtime prereqs baked into the dispatcher image: `strix` binary on PATH (installed via pipx install strix-agent) and Docker socket mounted read-write (strix launches a nested Docker sandbox). Scan cost is capped with STRIX_MAX_BUDGET_USD. Exit codes: 0=no vulns, 1=exec error, 2=vulns found.",
+    "description": "Strix.ai Cloud REST client (NOT the local strix-agent CLI). Bearer PAT (strix_pat_...) against https://app.strix.ai/api/v1/. Modes: scans (per-scan validated vulnerabilities become Faraday vulns tagged '[AGENT]' with title carrying the endpoint or file, and CVSS + endpoint + method + impact + PoC description + evidence folded into the description, PoC script + code_before + code_after stashed in `data`, remediation_steps + code_diff in `resolution`, CWE/CVE + deep-links to https://app.strix.ai/scans/<sid>/vulnerabilities/<vid> as refs, scan summary emitted as info-level record with executive_summary + report_url); domains (Strix-monitored attack-surface domains -> Faraday hosts tagged 'agent:strix:domain-inventory' with app.strix.ai/domains/<id> deep link); repositories (monitored repos -> Faraday hosts tagged 'agent:strix:repo-inventory'). Vulns are bucketed under the right Faraday host by inspecting each vuln's target/endpoint/code_file. STRIX_MIN_SEVERITY floor + STRIX_STATUS filter default to 'medium' + 'open'. External IDs are stable so re-runs are idempotent. Offset-based pagination; backs off 30s on HTTP 429.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "strix.py"
