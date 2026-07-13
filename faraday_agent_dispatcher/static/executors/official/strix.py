@@ -179,13 +179,19 @@ def _empty_host(ip, hostname, description):
 
 
 def _add_vuln(hosts, ip, hostname, description, vuln):
-    """Bucket by hostname when ip is a placeholder — Faraday keys hosts by ip
-    server-side, so multiple logical assets sharing ip=0.0.0.0 would collapse
-    into one host without this fix."""
-    key = hostname if hostname and ip == "0.0.0.0" else ip
+    """Bucket by hostname when ip is a placeholder. Faraday keys hosts by ip
+    server-side, so if we leave every asset at ip=0.0.0.0 they all collapse
+    into a single Faraday host row. Promote the hostname into the ip field
+    so each Strix asset (vpn.app.faradaysec.com, infobyte/faraday, etc.)
+    becomes its own row in the Faraday hosts view."""
+    if ip in ("0.0.0.0", "", None) and hostname:
+        effective_ip = hostname
+    else:
+        effective_ip = ip
+    key = effective_ip
     entry = hosts.get(key)
     if entry is None:
-        entry = _empty_host(ip, hostname, description)
+        entry = _empty_host(effective_ip, hostname, description)
         hosts[key] = entry
     elif hostname and hostname not in entry["hostnames"]:
         entry["hostnames"].append(hostname)
@@ -211,27 +217,85 @@ def _make_vuln(name, desc, severity, refs, external_id, tags=None, data="", reso
     return v
 
 
+def _repo_slug(value):
+    """Reduce a repo pointer (dict / URL / bare slug) to 'owner/name'."""
+    if isinstance(value, dict):
+        for k in ("full_name", "slug", "path_with_namespace", "name", "url", "id"):
+            if value.get(k):
+                value = value[k]
+                break
+        else:
+            return ""
+    text = str(value or "").strip()
+    for prefix in (
+        "https://github.com/",
+        "http://github.com/",
+        "git@github.com:",
+        "https://gitlab.com/",
+        "https://bitbucket.org/",
+    ):
+        if text.startswith(prefix):
+            text = text[len(prefix):]
+            break
+    return text.rstrip("/").removesuffix(".git")
+
+
+def _first_url(raw):
+    """Pick the first URL/host from a comma/space/newline-joined string."""
+    for sep in (",", "\n", " "):
+        if sep in raw:
+            raw = raw.split(sep, 1)[0]
+    return raw.strip().rstrip(",;.")
+
+
+def _host_from_url(raw):
+    """Extract 'host.example.com' from a URL, or 'owner/name' from a git URL.
+
+    Strix `target` values come in three flavours:
+      - Full URLs: 'https://vpn.app.faradaysec.com'
+      - Git-forge URLs: 'https://github.com/infobyte/faraday/blob/...'
+      - Bare repo slugs: 'infobyte/faraday'
+    For git-forge URLs we keep the first two path segments; for bare slugs
+    (no scheme) we return the value verbatim so 'infobyte/faraday' does NOT
+    collapse to just 'infobyte'."""
+    raw = _first_url(str(raw))
+    if not raw:
+        return ""
+    if "://" not in raw:
+        return raw
+    host_plus_path = raw.split("://", 1)[-1]
+    parts = host_plus_path.split("/")
+    host = parts[0]
+    if host in ("github.com", "gitlab.com", "bitbucket.org") and len(parts) >= 3:
+        slug = f"{parts[1]}/{parts[2]}"
+        return slug.removesuffix(".git")
+    return host or raw
+
+
 def _target_from_vuln(vuln, scan):
     """Pick the right Faraday host for a Strix vuln.
 
     Strix vulns carry `target` (a URL/host), `endpoint` (a URL path), and
-    `code_file` (a source path). Prefer target -> host; if target is a URL
-    strip the scheme, otherwise fall back to the scan's repositories or urls.
+    `code_file` (a source path). Prefer target -> host; for URL targets,
+    strip the scheme and pick the host; for git URLs, keep 'owner/name'.
+    Fall back to the scan's repositories or urls when target is unset.
     Returns (ip, hostname, target_kind)."""
     target = vuln.get("target") or ""
     if target:
-        raw = str(target)
-        host = raw.split("://", 1)[-1].split("/", 1)[0]
-        return "0.0.0.0", host or raw, "target"
-    if vuln.get("code_file"):
-        # Bucket code findings under the scan's repos when target isn't set.
+        host = _host_from_url(target)
+        if host:
+            return "0.0.0.0", host, "target"
+    if vuln.get("code_file") or vuln.get("code_files") or vuln.get("locations"):
         repos = scan.get("repositories") or []
         if repos:
-            return "0.0.0.0", str(repos[0]).replace("https://github.com/", "").rstrip("/"), "code_repo"
+            slug = _repo_slug(repos[0])
+            if slug:
+                return "0.0.0.0", slug, "code_repo"
     urls = scan.get("urls") or []
     if urls:
-        host = str(urls[0]).split("://", 1)[-1].split("/", 1)[0]
-        return "0.0.0.0", host or str(urls[0]), "scan_url"
+        host = _host_from_url(urls[0])
+        if host:
+            return "0.0.0.0", host, "scan_url"
     return "agent:strix:global", "agent-strix", "global"
 
 
@@ -277,17 +341,48 @@ def _fetch_scans(base, token, scan_id, max_scans, page_size, max_pages, min_seve
                 continue
             vid = v.get("id") or ""
             vtitle = v.get("title") or f"Strix finding {vid}"
-            endpoint = v.get("endpoint") or ""
-            code_file = v.get("code_file") or ""
-            if endpoint:
-                vtitle_display = f"{vtitle} — {endpoint}"
-            elif code_file:
-                vtitle_display = f"{vtitle} — {code_file}"
+
+            def _stringify(value):
+                if isinstance(value, list):
+                    return ", ".join(str(x) for x in value if x is not None)
+                return str(value) if value is not None else ""
+
+            endpoint = _stringify(v.get("endpoint") or v.get("endpoints"))
+            method = _stringify(v.get("method") or v.get("methods"))
+            code_file = _stringify(v.get("code_file") or v.get("code_files"))
+            locations = v.get("locations") or v.get("code_locations") or []
+            if isinstance(locations, str):
+                locations = [locations]
+            first_endpoint = endpoint.split(",", 1)[0].strip() if endpoint else ""
+            first_code = code_file.split(",", 1)[0].strip() if code_file else ""
+            if first_endpoint:
+                vtitle_display = f"{vtitle} — {first_endpoint}"
+            elif first_code:
+                vtitle_display = f"{vtitle} — {first_code}"
             else:
                 vtitle_display = vtitle
             desc_parts = []
             if v.get("description"):
                 desc_parts.append(v["description"])
+            if endpoint:
+                desc_parts.append(f"Endpoint: {endpoint}")
+            if method:
+                desc_parts.append(f"Method: {method}")
+            if code_file:
+                desc_parts.append(f"Code file: {code_file}")
+            if locations:
+                loc_lines = []
+                for loc in locations:
+                    if isinstance(loc, dict):
+                        file_ = loc.get("file") or loc.get("path") or ""
+                        line = loc.get("end_line") or loc.get("line") or loc.get("start_line") or ""
+                        label = loc.get("label") or ""
+                        head = f"{file_}:{line}" if file_ and line else (file_ or str(loc))
+                        loc_lines.append(f"  - {head}" + (f" — {label}" if label else ""))
+                    elif loc:
+                        loc_lines.append(f"  - {loc}")
+                if loc_lines:
+                    desc_parts.append("Locations:\n" + "\n".join(loc_lines))
             if v.get("impact"):
                 desc_parts.append(f"Impact: {v['impact']}")
             if v.get("technical_analysis"):
@@ -359,7 +454,7 @@ def _fetch_scans(base, token, scan_id, max_scans, page_size, max_pages, min_seve
             # Bucket into the right host.
             ip, hostname, host_kind = _target_from_vuln(v, scan)
             faraday_vuln = _make_vuln(
-                name=f"[AGENT] {vtitle_display}",
+                name=vtitle_display,
                 desc="\n\n".join(desc_parts) or "Strix.ai finding (no description).",
                 severity=severity,
                 refs=refs,
@@ -386,7 +481,7 @@ def _fetch_scans(base, token, scan_id, max_scans, page_size, max_pages, min_seve
             host_from_summary,
             f"Strix.ai scan target: {host_from_summary}",
             _make_vuln(
-                name=f"[AGENT] Strix.ai scan: {title}",
+                name=f"Strix.ai scan: {title}",
                 desc=(
                     (scan.get("executive_summary") or "")[:3000]
                     + ("\n\nReport: " + scan["report_url"] if scan.get("report_url") else "")
@@ -421,7 +516,7 @@ def _fetch_domains(base, token, page_size, max_pages, hosts):
             hostname,
             f"Strix.ai-monitored domain: {hostname}",
             _make_vuln(
-                name="[AGENT] Strix.ai-monitored domain",
+                name="Strix.ai-monitored domain",
                 desc=(
                     f"Domain: {raw}\n"
                     f"Kind: {row.get('kind', '')}\n"
@@ -452,7 +547,7 @@ def _fetch_repositories(base, token, page_size, max_pages, hosts):
             hostname,
             f"Strix.ai-monitored repo: {hostname}",
             _make_vuln(
-                name="[AGENT] Strix.ai-monitored repository",
+                name="Strix.ai-monitored repository",
                 desc=(
                     f"Repo: {raw}\n"
                     f"Provider: {row.get('provider', '')}\n"
