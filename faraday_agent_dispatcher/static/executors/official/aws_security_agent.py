@@ -337,7 +337,7 @@ def _walk_job(sa, space_id, pentest_id, job, modes, page_size, max_pages, min_fl
             if row.get("findingId")
         ]
         for i in range(0, len(finding_ids), 25):
-            batch = finding_ids[i:i + 25]
+            batch = finding_ids[i : i + 25]
             try:
                 detail = sa.batch_get_findings(agentSpaceId=space_id, findingIds=batch)
             except (BotoCoreError, ClientError) as e:
@@ -442,7 +442,7 @@ def main():
                 log(f"  pentest {pid}: no eligible jobs.")
                 continue
             for i in range(0, len(job_ids), 25):
-                batch = job_ids[i:i + 25]
+                batch = job_ids[i : i + 25]
                 try:
                     resp = sa.batch_get_pentest_jobs(agentSpaceId=space_id, pentestJobIds=batch)
                 except (BotoCoreError, ClientError) as e:

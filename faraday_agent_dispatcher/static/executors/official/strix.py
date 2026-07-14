@@ -235,7 +235,7 @@ def _repo_slug(value):
         "https://bitbucket.org/",
     ):
         if text.startswith(prefix):
-            text = text[len(prefix):]
+            text = text[len(prefix) :]
             break
     return text.rstrip("/").removesuffix(".git")
 
