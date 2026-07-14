@@ -55,12 +55,19 @@ import os
 import sys
 from urllib.parse import urlparse
 
+# Defer the boto3 hard-fail to main() so this module stays importable in
+# test environments that don't have boto3 installed (the executor is only
+# actually invoked with boto3 present in the dispatcher container).
 try:
-    import boto3  # noqa: F401
+    import boto3
     from botocore.exceptions import BotoCoreError, ClientError
-except ImportError:
-    print("boto3 is required for aws_security_agent (pip install boto3).", file=sys.stderr)
-    sys.exit(1)
+
+    _BOTO3_IMPORT_ERROR = None
+except ImportError as _e:
+    boto3 = None
+    BotoCoreError = Exception
+    ClientError = Exception
+    _BOTO3_IMPORT_ERROR = _e
 
 
 VALID_MODES = {"findings", "endpoints", "jobs"}
@@ -365,6 +372,9 @@ def _walk_job(sa, space_id, pentest_id, job, modes, page_size, max_pages, min_fl
 
 
 def main():
+    if _BOTO3_IMPORT_ERROR is not None:
+        log(f"boto3 is required for aws_security_agent (pip install boto3): {_BOTO3_IMPORT_ERROR}")
+        sys.exit(1)
     region = _cfg("AWS_REGION", "us-east-1") or "us-east-1"
     access_key = _cfg("AWS_ACCESS_KEY_ID")
     secret_key = _cfg("AWS_SECRET_ACCESS_KEY")
