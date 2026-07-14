@@ -1,22 +1,25 @@
-# Vicarius Dispatcher Deployment
+# Offensive Checks Dispatcher Deployment
 
-This documents the production deployment made for `vicarius.apps.faradaysec.com` and keeps a reusable, secret-free template in the repository.
+Reusable, secret-free template that ships a Faraday dispatcher pre-loaded with
+every official executor plus the vendored offensive-check tools. Use it as a
+starting point for any Kubernetes deployment — replace the placeholders in the
+snippets below with your own namespace, agent name, and image tag.
 
-## What Was Deployed
+## What Gets Deployed
 
-- Namespace: `client-vicarius`
-- Deployment: `vicarius-agent-dispatcher`
-- Config Secret: `vicarius-agent-dispatcher-config`
-- Image: `faradaysec/faraday_agent_dispatcher:3.9.1`
-- Faraday agent name: `vicariusAllToolsDispatcher`
-- AWS profile/context used: `AWS_PROFILE=faraday_prod`, `kubectl --context faraday-prod`
-- Registered executor count: `27`
+- Namespace: `<your-namespace>`
+- Deployment: `offensive-checks-agent-dispatcher`
+- Config Secret: `offensive-checks-agent-dispatcher-config`
+- Image: `faradaysec/faraday_agent_dispatcher:<tag>`
+- Faraday agent name: `<your-agent-name>` (e.g. `offensive-checks-dispatcher`)
+- Registered executor count depends on the manifests bundled with the image
 
-The actual deployment config contains a Faraday agent token in the Kubernetes Secret. That token is intentionally not stored here.
+The generated Secret contains the Faraday agent token. **Do not commit the
+generated output** — regenerate it at deploy time.
 
-## How The Tools Were Added
+## How The Tools Are Registered
 
-The tools were not typed by hand. The deployment config is generated from the dispatcher package manifests:
+The dispatcher config is generated from the packaged executor manifests — nothing is typed by hand:
 
 ```python
 from faraday_agent_dispatcher import __version__
@@ -35,12 +38,12 @@ For each manifest, the generator adds an executor with:
 
 ## Reproduce
 
-Create/register a Faraday agent token from inside the Faraday pod. This uses the pod's existing `ADMIN_USER` and `ADMIN_PASS` env vars and only prints the new 64-character dispatcher token.
+Register a Faraday agent token from inside the Faraday pod. This uses the pod's `ADMIN_USER` / `ADMIN_PASS` env vars and only prints the new 64-character dispatcher token.
 
 ```bash
-NAMESPACE="client-vicarius"
-AGENT_NAME="vicariusAllToolsDispatcher"
-AGENT_TOKEN=$(AWS_PROFILE=faraday_prod kubectl --context faraday-prod -n "$NAMESPACE" exec -i deploy/vicarius-faraday -- env AGENT_NAME="$AGENT_NAME" python - <<'PY'
+NAMESPACE="<your-namespace>"
+AGENT_NAME="offensive-checks-dispatcher"
+AGENT_TOKEN=$(kubectl -n "$NAMESPACE" exec -i deploy/faraday -- env AGENT_NAME="$AGENT_NAME" python - <<'PY'
 import base64
 import json
 import os
@@ -58,7 +61,7 @@ with urllib.request.urlopen(token_request, timeout=15) as response:
 payload = json.dumps({
     "token": registration_token,
     "name": os.environ["AGENT_NAME"],
-    "description": "Demo dispatcher with all official Faraday executors for Vicarius partnership evaluation",
+    "description": "Offensive Checks dispatcher with all official Faraday executors",
 }).encode()
 agent_request = urllib.request.Request(
     f"{base_url}/agents",
@@ -75,36 +78,36 @@ PY
 Generate and apply the Kubernetes Secret plus Deployment:
 
 ```bash
-./.venv/bin/python docker/publish/templates/vicarius/generate_dispatcher_manifest.py \
+./.venv/bin/python docker/publish/templates/offensive-checks/generate_dispatcher_manifest.py \
   --agent-token "$AGENT_TOKEN" \
-  | AWS_PROFILE=faraday_prod kubectl --context faraday-prod apply -f -
+  | kubectl -n "$NAMESPACE" apply -f -
 
-AWS_PROFILE=faraday_prod kubectl --context faraday-prod -n client-vicarius \
-  rollout status deployment/vicarius-agent-dispatcher --timeout=240s
+kubectl -n "$NAMESPACE" \
+  rollout status deployment/offensive-checks-agent-dispatcher --timeout=240s
 ```
 
 If only the Secret changes, restart the deployment so the mounted config is reloaded:
 
 ```bash
-AWS_PROFILE=faraday_prod kubectl --context faraday-prod -n client-vicarius \
-  rollout restart deployment/vicarius-agent-dispatcher
+kubectl -n "$NAMESPACE" \
+  rollout restart deployment/offensive-checks-agent-dispatcher
 ```
 
 ## Verify
 
 ```bash
-AWS_PROFILE=faraday_prod kubectl --context faraday-prod -n client-vicarius \
-  get deployment vicarius-agent-dispatcher -o wide
+kubectl -n "$NAMESPACE" \
+  get deployment offensive-checks-agent-dispatcher -o wide
 
-AWS_PROFILE=faraday_prod kubectl --context faraday-prod -n client-vicarius \
-  logs deployment/vicarius-agent-dispatcher --since=10m
+kubectl -n "$NAMESPACE" \
+  logs deployment/offensive-checks-agent-dispatcher --since=10m
 ```
 
 Expected log lines include:
 
 ```text
 Registered successfully
-Trying to connect to: https://vicarius.apps.faradaysec.com:443
+Trying to connect to: https://<your-faraday-host>:443
 ```
 
 ## Registered Executors
@@ -117,7 +120,7 @@ The offensive-check manifests are vendored into the image (`offensive_checks/man
 
 ## Capability-Grouped Agents
 
-Instead of one all-tools agent, the offensive-check executors can be deployed as separate agents per capability group. Pass `--group` to the generator; each group produces its own Secret + Deployment (`vicarius-<group>-dispatcher`) and agent name:
+Instead of one all-tools agent, the offensive-check executors can be deployed as separate agents per capability group. Pass `--group` to the generator; each group produces its own Secret + Deployment (`offensive-checks-<group>-dispatcher`) and agent name:
 
 | `--group` | agent name | executors |
 |-----------|-----------|-----------|
@@ -134,13 +137,13 @@ Each group needs its own agent token (one `POST /_api/v3/agents` per group). Exa
 ```bash
 for group in code-sast secrets iac-cloud container-k8s discovery-osint web-dast endpoint-edr; do
   TOKEN=$(...mint a token as above, with AGENT_NAME=${group}-agent...)
-  ./.venv/bin/python docker/publish/templates/vicarius/generate_dispatcher_manifest.py \
+  ./.venv/bin/python docker/publish/templates/offensive-checks/generate_dispatcher_manifest.py \
     --group "$group" --agent-token "$TOKEN" \
-    | AWS_PROFILE=faraday_prod kubectl --context faraday-prod apply -f -
+    | kubectl -n "$NAMESPACE" apply -f -
 done
 ```
 
-Omitting `--group` keeps the original behavior: a single `vicariusAllToolsDispatcher` with all 47 executors.
+Omitting `--group` keeps the original behavior: a single `offensive-checks-dispatcher` with all 47 executors.
 
 ## Credential And Runtime Gaps
 

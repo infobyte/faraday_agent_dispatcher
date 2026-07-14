@@ -1937,13 +1937,13 @@ AGENT_GROUPS = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate a Vicarius dispatcher manifest with all official Faraday executors."
+        description="Generate an Offensive Checks dispatcher manifest with all official Faraday executors."
     )
     parser.add_argument("--agent-token", required=True, help="64-character token returned by POST /_api/v3/agents")
-    parser.add_argument("--namespace", default="client-vicarius")
-    parser.add_argument("--deployment", default="vicarius-agent-dispatcher")
-    parser.add_argument("--agent-name", default="vicariusAllToolsDispatcher")
-    parser.add_argument("--host", default="vicarius.apps.faradaysec.com")
+    parser.add_argument("--namespace", default="offensive-checks")
+    parser.add_argument("--deployment", default="offensive-checks-agent-dispatcher")
+    parser.add_argument("--agent-name", default="offensive-checks-dispatcher")
+    parser.add_argument("--host", required=True, help="Faraday server hostname (e.g. faraday.example.com)")
     parser.add_argument("--image", default="faradaysec/faraday_agent_dispatcher:3.9.1")
     parser.add_argument("--node-group", default="corporate")
     parser.add_argument(
@@ -1999,14 +1999,14 @@ def resolve_group(args: argparse.Namespace):
     if args.group:
         group = AGENT_GROUPS[args.group]
         agent_name = group["agent_name"]
-        deployment = f"vicarius-{args.group}-dispatcher"
-        description = group.get("description") or f"Offensive Checks {args.group} agent for Vicarius"
+        deployment = f"offensive-checks-{args.group}-dispatcher"
+        description = group.get("description") or f"Offensive Checks {args.group} agent"
         return agent_name, deployment, group["executors"], description
     return (
         args.agent_name,
         args.deployment,
         None,
-        "Demo dispatcher with all Faraday executors for Vicarius partnership evaluation",
+        "Offensive Checks dispatcher with all official Faraday executors",
     )
 
 
@@ -2033,7 +2033,7 @@ def build_dispatcher_config(args: argparse.Namespace) -> dict[str, Any]:
 def labels(group: str | None = None) -> dict[str, str]:
     base = {
         "app.kubernetes.io/name": "faraday-agent-dispatcher",
-        "app.kubernetes.io/instance": "vicarius",
+        "app.kubernetes.io/instance": "offensive-checks",
         "app.kubernetes.io/component": "agent-dispatcher",
     }
     if group:
