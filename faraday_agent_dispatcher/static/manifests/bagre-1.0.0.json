@@ -3,87 +3,104 @@
         "TARGET_DOMAIN": {
             "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Apex domain to search for leaked credentials, e.g. 'faradaysec.com'. At least one of TARGET_DOMAIN / TARGET_SUBDOMAIN / MAIL_DOMAIN / URI_PATH must be set per scan."
         },
         "TARGET_SUBDOMAIN": {
             "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Narrow search to a specific subdomain (LIKE wildcards allowed for the ClickHouse backend, e.g. '%.apps.faradaysec.com')."
         },
         "MAIL_DOMAIN": {
             "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Narrow to leaks whose email address is on this domain (e.g. 'faradaysec.com' catches john@faradaysec.com)."
         },
         "URI_PATH": {
             "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Narrow to leaks referencing a specific URI path (e.g. '/admin')."
         },
         "LIMIT": {
             "mandatory": false,
             "type": "integer",
-            "base": "integer"
+            "base": "integer",
+            "description": "Cap the number of leak records fetched. Default: unlimited (source-dependent)."
         },
         "BAGRE_SOURCE": {
             "mandatory": true,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Leak-source backend. Valid: 'intelx' (Intelligence X public API), 'intelx_leaks' (IntelX Leaks-only bucket subset), 'clickhouse' (on-prem leak-DB). Default 'intelx'."
         },
         "INTELX_API_KEY": {
             "mandatory": false,
             "type": "password",
-            "base": "string"
+            "base": "string",
+            "description": "Intelligence X API key (register at https://intelx.io). Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value."
         },
         "INTELX_BASE_URL": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "url",
-            "base": "string"
+            "base": "string",
+            "description": "Intelligence X API base URL. Default 'https://free.intelx.io' (free tier). Paid tenants set 'https://2.intelx.io'."
         },
         "INTELX_BUCKETS": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Comma-separated IntelX bucket names to search. Default 'leaks.public.general,leaks.private.general'. See https://intelx.io/tools?tab=buckets for the full list."
         },
         "INTELX_MAX_FILES": {
-            "mandatory": true,
-            "type": "string",
-            "base": "string"
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Cap on files pulled per bucket. Default 100."
         },
         "INTELX_MAX_FILE_SIZE": {
-            "mandatory": true,
-            "type": "string",
-            "base": "string"
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Skip individual files larger than this (bytes). Default 52428800 (50 MB)."
         },
         "INTELX_TIMEOUT_S": {
-            "mandatory": true,
-            "type": "string",
-            "base": "string"
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "HTTP timeout for IntelX API calls (seconds). Default 60."
         },
         "CLICKHOUSE_HOST": {
-            "mandatory": true,
-            "type": "url",
-            "base": "string"
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "ClickHouse host for the on-prem leak-DB backend (BAGRE_SOURCE=clickhouse). Bare hostname or IP — no scheme. Ignored when BAGRE_SOURCE is intelx / intelx_leaks."
         },
         "CLICKHOUSE_PORT": {
-            "mandatory": true,
-            "type": "string",
-            "base": "string"
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "ClickHouse TCP port. Default 9000."
         },
         "CLICKHOUSE_DATABASE": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "ClickHouse database name for the leak tables."
         },
         "CLICKHOUSE_USER": {
             "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "ClickHouse username. Normally pre-configured on the dispatcher as a varenv."
         },
         "CLICKHOUSE_PASSWORD": {
             "mandatory": false,
             "type": "password",
-            "base": "string"
+            "base": "string",
+            "description": "ClickHouse password. Normally pre-configured on the dispatcher as a varenv."
         }
     },
     "environment_variables": [
@@ -108,7 +125,7 @@
     "name": "bagre",
     "title": "Bagre Threat Intelligence",
     "website": "https://intelx.io/",
-    "description": "Queries Bagre threat-intelligence sources for compromised credentials tied to a target domain. Default source is Intelligence X (intelx.io) \u2014 set INTELX_API_KEY as an agent env var; ClickHouse is an optional backend (BAGRE_SOURCE=clickhouse with CLICKHOUSE_* creds). Per-scan, set TARGET_DOMAIN (e.g. 'faradaysec') and optionally narrow with TARGET_SUBDOMAIN (LIKE wildcards), MAIL_DOMAIN, or URI_PATH. Emits one Faraday host per affected IP with the leaked credential as a vulnerability + linked credential record.",
+    "description": "Queries Bagre threat-intelligence sources for compromised credentials tied to a target domain. Default source is Intelligence X (intelx.io) — set INTELX_API_KEY as an agent env var; ClickHouse is an optional backend (BAGRE_SOURCE=clickhouse with CLICKHOUSE_* creds). Per-scan, set TARGET_DOMAIN (e.g. 'faradaysec') and optionally narrow with TARGET_SUBDOMAIN (LIKE wildcards), MAIL_DOMAIN, or URI_PATH. Emits one Faraday host per affected IP with the leaked credential as a vulnerability + linked credential record.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "bagre.py"

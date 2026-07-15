@@ -3,127 +3,152 @@
         "TARGET_DOMAIN": {
             "mandatory": true,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Apex domain whose leaked credentials will be sprayed against assets in the Faraday workspace, e.g. 'faradaysec.com'."
         },
         "TARGET_SUBDOMAIN": {
             "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Narrow the credential source to a specific subdomain (LIKE wildcards allowed for the ClickHouse backend, e.g. '%.corp.faradaysec.com')."
         },
         "PROTOCOLS": {
             "mandatory": false,
             "type": "list",
-            "base": "list"
+            "base": "list",
+            "description": "Protocols to try. Default: ssh, http, https, ftp, smb, smtp, imap, pop3. Comma-separated in the WebUI Run form."
         },
         "LIMIT": {
             "mandatory": false,
             "type": "integer",
-            "base": "integer"
+            "base": "integer",
+            "description": "Cap the number of leaked credentials fetched from the source before spraying. Default: unlimited (source-dependent)."
         },
         "BAGRE_SOURCE": {
             "mandatory": true,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Leak-source backend. Valid: 'intelx' (Intelligence X public API), 'intelx_leaks' (IntelX Leaks-only bucket subset), 'clickhouse' (on-prem leak-DB). Default 'intelx'."
         },
         "INTELX_API_KEY": {
             "mandatory": false,
             "type": "password",
-            "base": "string"
+            "base": "string",
+            "description": "Intelligence X API key. Normally pre-configured on the dispatcher as a varenv — leave blank in the Run form to use the agent-side value."
         },
         "INTELX_BASE_URL": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "url",
-            "base": "string"
+            "base": "string",
+            "description": "Intelligence X API base URL. Default 'https://free.intelx.io' (free tier). Paid tenants set 'https://2.intelx.io'."
         },
         "INTELX_BUCKETS": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Comma-separated IntelX bucket names. Default 'leaks.public.general,leaks.private.general'."
         },
         "INTELX_MAX_FILES": {
-            "mandatory": true,
-            "type": "string",
-            "base": "string"
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "Cap on files pulled per bucket. Default 100."
         },
         "CLICKHOUSE_HOST": {
-            "mandatory": true,
-            "type": "url",
-            "base": "string"
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "ClickHouse host for the on-prem leak-DB backend (BAGRE_SOURCE=clickhouse). Bare hostname or IP — no scheme. Ignored when BAGRE_SOURCE is intelx / intelx_leaks."
         },
         "CLICKHOUSE_PORT": {
-            "mandatory": true,
-            "type": "string",
-            "base": "string"
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer",
+            "description": "ClickHouse TCP port. Default 9000."
         },
         "CLICKHOUSE_DATABASE": {
-            "mandatory": true,
+            "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "ClickHouse database name for the leak tables."
         },
         "CLICKHOUSE_USER": {
             "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "ClickHouse username. Normally pre-configured on the dispatcher as a varenv."
         },
         "CLICKHOUSE_PASSWORD": {
             "mandatory": false,
             "type": "password",
-            "base": "string"
+            "base": "string",
+            "description": "ClickHouse password. Normally pre-configured on the dispatcher as a varenv."
         },
         "FARADAY_URL": {
             "mandatory": true,
             "type": "url",
-            "base": "string"
+            "base": "string",
+            "description": "Faraday server base URL used to enumerate spray targets from the workspace (e.g. 'https://faraday.example.com')."
         },
         "FARADAY_USER": {
             "mandatory": false,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Faraday admin username. Normally pre-configured on the dispatcher as a varenv."
         },
         "FARADAY_PASSWORD": {
             "mandatory": false,
             "type": "password",
-            "base": "string"
+            "base": "string",
+            "description": "Faraday admin password. Normally pre-configured on the dispatcher as a varenv."
         },
         "FARADAY_WORKSPACE": {
             "mandatory": true,
             "type": "string",
-            "base": "string"
+            "base": "string",
+            "description": "Faraday workspace name to enumerate targets from (hosts, services, credentials)."
         },
         "BAGRE_PASSWORD_SPRAY_MAX_ATTEMPTS_PER_USER": {
             "mandatory": false,
-            "type": "password",
-            "base": "string"
+            "type": "integer",
+            "base": "integer",
+            "description": "Per-user lockout guardrail. Default 3. Set lower (e.g. 2) for accounts with tight lockout policies."
         },
         "BAGRE_PASSWORD_SPRAY_DELAY_MS": {
             "mandatory": false,
-            "type": "password",
-            "base": "string"
+            "type": "integer",
+            "base": "integer",
+            "description": "Delay between individual authentication attempts (ms). Default 1000. Increase to blend into normal auth traffic."
         },
         "BAGRE_PASSWORD_SPRAY_TIMEOUT_S": {
             "mandatory": false,
-            "type": "password",
-            "base": "string"
+            "type": "integer",
+            "base": "integer",
+            "description": "Per-attempt network timeout (seconds). Default 10."
         },
         "BAGRE_PASSWORD_SPRAY_MAX_TOTAL_ATTEMPTS": {
             "mandatory": false,
-            "type": "password",
-            "base": "string"
+            "type": "integer",
+            "base": "integer",
+            "description": "Absolute cap on authentication attempts per run. Default 1000 — protects against runaway sprays if the leak set is huge."
         },
         "BAGRE_PASSWORD_SPRAY_CONCURRENCY": {
             "mandatory": false,
-            "type": "password",
-            "base": "string"
+            "type": "integer",
+            "base": "integer",
+            "description": "Number of concurrent workers. Default 5. Higher values raise IDS/lockout risk."
         },
         "BAGRE_PASSWORD_SPRAY_EXCLUDE_USERS": {
             "mandatory": false,
-            "type": "password",
-            "base": "string"
+            "type": "string",
+            "base": "string",
+            "description": "Comma-separated usernames to skip entirely. Default 'admin,administrator,root' — the accounts most likely to trigger security alerts on failed auth."
         },
         "BAGRE_PASSWORD_SPRAY_DRY_RUN": {
             "mandatory": false,
-            "type": "password",
-            "base": "string"
+            "type": "string",
+            "base": "string",
+            "description": "Set 'true' to log every planned auth attempt without actually authenticating. Use for a safety check before the first live run. Default 'false'."
         }
     },
     "environment_variables": [
@@ -157,7 +182,7 @@
     "name": "bagre_spray",
     "title": "Bagre Password Spray",
     "website": "https://intelx.io/",
-    "description": "Validates leaked credentials from Bagre by spraying them against assets and services discovered in the Faraday workspace. Pulls credentials from the configured source (IntelX default \u2014 needs INTELX_API_KEY), enumerates targets via the Faraday REST API (FARADAY_URL / USER / PASSWORD / WORKSPACE), and authenticates over ssh/http/https/ftp/smb/smtp/imap/pop3. Lockout guardrails are on by default (max 3 attempts per user, 1000 total per run, 1s inter-attempt delay, excludes admin/administrator/root). Set BAGRE_PASSWORD_SPRAY_DRY_RUN=true to log planned attempts without authenticating. Run only against authorised targets.",
+    "description": "Validates leaked credentials from Bagre by spraying them against assets and services discovered in the Faraday workspace. Pulls credentials from the configured source (IntelX default — needs INTELX_API_KEY), enumerates targets via the Faraday REST API (FARADAY_URL / USER / PASSWORD / WORKSPACE), and authenticates over ssh/http/https/ftp/smb/smtp/imap/pop3. Lockout guardrails are on by default (max 3 attempts per user, 1000 total per run, 1s inter-attempt delay, excludes admin/administrator/root). Set BAGRE_PASSWORD_SPRAY_DRY_RUN=true to log planned attempts without authenticating. Run only against authorised targets.",
     "image": null,
     "manifest_version": "1.0.0",
     "repo_executor": "bagre_spray.py"
