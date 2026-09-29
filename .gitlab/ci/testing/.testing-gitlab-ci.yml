@@ -71,7 +71,7 @@ unit_test 3.9:
 
 unit_test 3.10:
     extends: .latest_unit_test_base
-    image: python:3.10-rc
+    image: python:3.10
     allow_failure: true
 
 .alpha_unit_test 3.8:

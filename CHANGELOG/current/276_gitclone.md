@@ -1,0 +1,1 @@
+[ADD] Source-scanning executors (bandit, semgrep, shellcheck, snyk, gitleaks, trufflehog, checkov, tfsec, kics) accept a `*_GIT_URL` (+ optional `*_GIT_REF`) and shallow-clone the repo to a temp dir at scan time, authenticating private GitHub/GitLab repos with `GIT_USERNAME`/`GIT_TOKEN`. #276

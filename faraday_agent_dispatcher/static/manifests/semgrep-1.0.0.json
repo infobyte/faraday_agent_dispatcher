@@ -1,0 +1,60 @@
+{
+    "arguments": {
+        "SEMGREP_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SEMGREP_CONFIG": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SEMGREP_EXCLUDE": {
+            "mandatory": false,
+            "type": "list",
+            "base": "list"
+        },
+        "SEMGREP_TIMEOUT": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        },
+        "SEMGREP_GIT_URL": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SEMGREP_GIT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "GIT_USERNAME": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "GIT_TOKEN": {
+            "mandatory": false,
+            "type": "password",
+            "base": "string"
+        }
+    },
+    "environment_variables": [
+        "GIT_USERNAME",
+        "GIT_TOKEN"
+    ],
+    "check_cmds": [
+        "semgrep --version 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Source Code Analysis",
+    "name": "semgrep",
+    "title": "Semgrep",
+    "website": "https://semgrep.dev/",
+    "description": "Multi-language SAST powered by Semgrep's community rule packs (1000+ rules). Set SEMGREP_TARGET to a path (or subpath inside a clone) and optionally SEMGREP_CONFIG to a rule pack like 'auto' (default), 'p/owasp-top-ten', 'p/security-audit', or a rules path. SEMGREP_EXCLUDE skips globs and SEMGREP_TIMEOUT caps per-rule runtime. Supports clone-at-scan via SEMGREP_GIT_URL + GIT_USERNAME / GIT_TOKEN.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "semgrep.py"
+}

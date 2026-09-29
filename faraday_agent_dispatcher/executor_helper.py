@@ -108,6 +108,14 @@ class StdOutLineProcessor(FileLineProcessor):
             for workspace, execution_id in zip(self.workspaces, self.execution_ids):
                 loaded_json["execution_id"] = execution_id
                 loaded_json["command"] = self.command_json
+                # Faraday Corp c-5.21.x tightened the bulk_create schema:
+                # command.start_date and per-host description are mandatory.
+                # Vendored plugin parsers / older executors don't set them,
+                # so we backfill here to keep the POST from being silently
+                # 400'd (executor returns success, server stored nothing).
+                loaded_json["command"].setdefault("start_date", self.start_date.isoformat())
+                for host in loaded_json.get("hosts") or []:
+                    host.setdefault("description", "")
 
                 res = await self.__session.post(
                     self.post_url(workspace),
@@ -145,6 +153,7 @@ class StdOutLineProcessor(FileLineProcessor):
             loaded_json["command"]["duration"] = (
                 datetime.utcnow() - self.start_date
             ).total_seconds() * 1000000  # microsecs
+            loaded_json["command"].setdefault("start_date", self.start_date.isoformat())
 
             res = await self.__session.post(
                 self.post_url(workspace),

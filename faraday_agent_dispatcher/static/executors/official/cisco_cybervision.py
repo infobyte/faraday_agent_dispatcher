@@ -193,14 +193,19 @@ def cybervision_report_composer(
     print(json.dumps(data))
 
 
+def env_flag(name):
+    return str(os.getenv(name, "")).strip().lower() in ("1", "true", "yes")
+
+
 def main():
     params_cybervision_token = os.getenv("CYBERVISION_TOKEN")
     params_cybervision_url = os.getenv("CYBERVISION_HTTPS_URL")
 
     fetch_specific_presets = os.getenv("EXECUTOR_CONFIG_SPECIFIC_PRESETS")
     fetch_presets_containing = os.getenv("EXECUTOR_CONFIG_PRESETS_CONTAINING", None)
-    fetch_my_presets = bool(os.getenv("EXECUTOR_CONFIG_MY_PRESETS", False))
-    only_refresh_presets = bool(os.getenv("EXECUTOR_CONFIG_REFRESH_PRESETS", False))
+    # bool() of any non-empty string is True, so "false" used to enable these.
+    fetch_my_presets = env_flag("EXECUTOR_CONFIG_MY_PRESETS")
+    only_refresh_presets = env_flag("EXECUTOR_CONFIG_REFRESH_PRESETS")
 
     params_fetch_specific_presets_list = []
     if fetch_specific_presets:

@@ -1,0 +1,22 @@
+{
+    "arguments": {
+        "CROWDSTRIKE_REPORT": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        }
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "python3 -c 'from faraday_plugins.plugins.repo.crowdstrike.plugin import Crowdstrike' 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "HostsApp Scanners",
+    "name": "crowdstrike",
+    "title": "CrowdStrike Falcon",
+    "website": "https://www.crowdstrike.com/",
+    "description": "Imports CrowdStrike Falcon Spotlight detections from a JSON export located inside the container \u2014 set CROWDSTRIKE_REPORT to the file path. This executor does NOT call the Falcon API; pre-export the Spotlight JSON from the Falcon console or with the falconpy SDK, then drop it where the container can read it.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "crowdstrike.py"
+}

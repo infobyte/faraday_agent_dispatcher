@@ -1,0 +1,91 @@
+{
+    "arguments": {
+        "PROWLER_PROVIDER": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "PROWLER_CHECKS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "PROWLER_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "PROWLER_SERVICES": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "PROWLER_REGIONS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "AWS_ACCESS_KEY_ID": {
+            "mandatory": false,
+            "type": "password",
+            "base": "string"
+        },
+        "AWS_SECRET_ACCESS_KEY": {
+            "mandatory": false,
+            "type": "password",
+            "base": "string"
+        },
+        "AWS_SESSION_TOKEN": {
+            "mandatory": false,
+            "type": "password",
+            "base": "string"
+        },
+        "AWS_DEFAULT_REGION": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        },
+        "AZURE_TENANT_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "AZURE_CLIENT_ID": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "AZURE_CLIENT_SECRET": {
+            "mandatory": false,
+            "type": "password",
+            "base": "string"
+        },
+        "GOOGLE_APPLICATION_CREDENTIALS": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string"
+        }
+    },
+    "environment_variables": [
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_SESSION_TOKEN",
+        "AWS_DEFAULT_REGION",
+        "AZURE_TENANT_ID",
+        "AZURE_CLIENT_ID",
+        "AZURE_CLIENT_SECRET",
+        "GOOGLE_APPLICATION_CREDENTIALS"
+    ],
+    "check_cmds": [
+        "prowler --version 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network and Vulnerability Scanners",
+    "name": "prowler",
+    "title": "Prowler",
+    "website": "https://github.com/prowler-cloud/prowler",
+    "description": "Cloud Security Posture Management (CSPM) for AWS, Azure, GCP, and Kubernetes. Set PROWLER_PROVIDER and supply the matching cloud credentials as agent env vars (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY for AWS; AZURE_TENANT_ID/AZURE_CLIENT_ID/AZURE_CLIENT_SECRET for Azure; GOOGLE_APPLICATION_CREDENTIALS pointing at a service-account JSON for GCP). Use PROWLER_CHECKS / PROWLER_SERVICES / PROWLER_REGIONS to scope the run.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "prowler.py"
+}

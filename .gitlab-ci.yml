@@ -39,9 +39,6 @@ stages:
     - publish
     - deploy
 
-services:
-    - postgres:latest
-
 include:
   - local: docs/.gitlab-ci.yml
 

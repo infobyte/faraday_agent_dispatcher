@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 from pathlib import Path
 from typing import Union
@@ -8,6 +9,34 @@ from faraday_agent_parameters_types.utils import get_manifests
 from faraday_agent_dispatcher import __version__ as current_version
 
 logger = logging.get_logger()
+
+# Manifests for executors bundled with the dispatcher but not released in the
+# faraday_agent_parameters_types package (the offensive-check executors). They
+# ship with the package so tests, runtime metadata lookups and the deployment
+# generator resolve them without a separate parameters-types release.
+LOCAL_MANIFESTS_DIR = Path(__file__).parent.parent / "static" / "manifests"
+
+
+def local_manifests() -> dict:
+    manifests = {}
+    if LOCAL_MANIFESTS_DIR.is_dir():
+        for path in LOCAL_MANIFESTS_DIR.glob("*.json"):
+            try:
+                data = json.loads(path.read_text())
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.error(f"Could not load bundled manifest {path}: {exc}")
+                continue
+            manifests[data["name"]] = data
+    return manifests
+
+
+def all_manifests() -> dict:
+    """Released parameters-types manifests merged with bundled local ones."""
+    merged = dict(get_manifests(current_version))
+    for name, data in local_manifests().items():
+        merged.setdefault(name, data)
+    return merged
+
 
 MANDATORY_METADATA_KEYS = [
     "cmd",
@@ -35,7 +64,10 @@ def executor_folder() -> Union[Path, str]:
 
 
 def executor_metadata(executor_name: str) -> dict:
-    return get_manifests(current_version).get(executor_name)
+    metadata = get_manifests(current_version).get(executor_name)
+    if metadata is None:
+        metadata = local_manifests().get(executor_name)
+    return metadata
 
 
 def check_metadata(metadata) -> bool:

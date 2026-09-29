@@ -73,7 +73,9 @@ def make_report(json_response, repo_owner, repo_name, extra_vuln_tags, extra_hos
                     if cvss_vector_string.startswith("CVSS:3"):
                         vulnerability.update({"cvss3": {"vector_string": cvss_vector_string}})
                     else:
-                        vulnerability.update({"cvss2": {"vector_string": cvss_vector_string.strip("CVSS:")[-1]}})
+                        # str.strip() removes a character set and [-1] kept a single char; keep the vector.
+                        vector = re.sub(r"^CVSS:2(\.\d)?/", "", cvss_vector_string)
+                        vulnerability.update({"cvss2": {"vector_string": vector}})
 
                 host_vulns.append(vulnerability)
         repo_url = f"https://github.com/{repo_owner}/{repo_name}"
