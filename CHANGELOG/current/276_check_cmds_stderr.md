@@ -1,0 +1,1 @@
+[FIX] Applied `2>&1` to every manifest `check_cmds` entry and folded stderr into stdout for the version-probe path on tools whose `--version` output goes to stderr (git, grype, some node CLIs). Prior behavior misreported those tools as missing during the dispatcher's startup readiness check even when they were installed. #276

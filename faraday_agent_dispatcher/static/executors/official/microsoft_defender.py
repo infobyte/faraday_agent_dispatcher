@@ -85,35 +85,42 @@ def token_gen(tenant_id, client_id, client_secret):
 
 def get_machines(token):
     headers = {"Authorization": f"Bearer {token}"}
-    resp = session.get("https://api.security.microsoft.com/api/machines", headers=headers).json()
-    if "error" in resp.keys():
-        log(f"Error at retrieving machines: {resp['error']['code']}")
-        log(resp["error"]["message"])
-        exit(1)
-    return resp["value"]
+    machines = []
+    url = "https://api.security.microsoft.com/api/machines"
+    # Large tenants are paged; follow @odata.nextLink until the last page.
+    while url:
+        resp = session.get(url, headers=headers).json()
+        if "error" in resp.keys():
+            log(f"Error at retrieving machines: {resp['error']['code']}")
+            log(resp["error"]["message"])
+            exit(1)
+        machines.extend(resp["value"])
+        url = resp.get("@odata.nextLink")
+    return machines
 
 
 def get_machine_vulns(token, machine_id):
     headers = {"Authorization": f"Bearer {token}"}
-    resp = session.get(
-        f"https://api.security.microsoft.com/api/machines/{machine_id}/vulnerabilities", headers=headers
-    ).json()
-    if "error" in resp.keys():
-        log(f"Error at retrieving machine vulns: {resp['error']['code']}")
-        log(resp["error"]["message"])
-        # In case limiter is not suffice. We'll try a second time after SECONDS_AFTER_TOO_MANY_REQUESTS seconds.
-        if resp["error"]["code"] == "TooManyRequests":
-            log(f"Waiting for {SECONDS_AFTER_TOO_MANY_REQUESTS} seconds")
-            time.sleep(SECONDS_AFTER_TOO_MANY_REQUESTS)
-            resp = session.get(
-                f"https://api.security.microsoft.com/api/machines/{machine_id}/vulnerabilities", headers=headers
-            ).json()
-            if "error" in resp.keys():
-                log(f"Second error at retrieving machine vulns: {resp['error']['code']}. Exiting...")
+    vulns = []
+    url = f"https://api.security.microsoft.com/api/machines/{machine_id}/vulnerabilities"
+    while url:
+        resp = session.get(url, headers=headers).json()
+        if "error" in resp.keys():
+            log(f"Error at retrieving machine vulns: {resp['error']['code']}")
+            log(resp["error"]["message"])
+            # In case limiter is not suffice. We'll try a second time after SECONDS_AFTER_TOO_MANY_REQUESTS seconds.
+            if resp["error"]["code"] == "TooManyRequests":
+                log(f"Waiting for {SECONDS_AFTER_TOO_MANY_REQUESTS} seconds")
+                time.sleep(SECONDS_AFTER_TOO_MANY_REQUESTS)
+                resp = session.get(url, headers=headers).json()
+                if "error" in resp.keys():
+                    log(f"Second error at retrieving machine vulns: {resp['error']['code']}. Exiting...")
+                    exit(1)
+            else:
                 exit(1)
-        else:
-            exit(1)
-    return resp["value"]
+        vulns.extend(resp["value"])
+        url = resp.get("@odata.nextLink")
+    return vulns
 
 
 def generate_report(token, vuln_tags, host_tags, days_old):

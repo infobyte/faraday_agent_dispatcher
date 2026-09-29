@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+import sys
+import tempfile
+import subprocess
+from pathlib import Path
+
+from faraday_plugins.plugins.repo.sarif.plugin import SarifPlugin
+
+from faraday_agent_dispatcher.utils import arg_helpers
+from faraday_agent_dispatcher.utils.agent_configuration import get_common_parameters
+from faraday_agent_dispatcher.utils.source_target import resolve_source_path
+
+
+def build_command(output_dir: Path):
+    target = resolve_source_path("KICS")
+
+    types = arg_helpers.csv("EXECUTOR_CONFIG_KICS_TYPE")  # e.g. Dockerfile,Kubernetes,Terraform
+    exclude_severities = arg_helpers.csv("EXECUTOR_CONFIG_KICS_EXCLUDE_SEVERITIES")
+
+    cmd = [
+        "kics",
+        "scan",
+        "--path",
+        target,
+        "--output-path",
+        str(output_dir),
+        "--output-name",
+        "kics",
+        "--report-formats",
+        "sarif",
+        "--no-color",
+        "--no-progress",
+    ]
+
+    if types:
+        cmd += ["--type", types]
+    if exclude_severities:
+        cmd += ["--exclude-severities", exclude_severities]
+
+    return cmd
+
+
+def main():
+    agent_config = get_common_parameters()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out_dir = Path(tmp)
+        cmd = build_command(out_dir)
+
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if proc.stderr:
+            print(proc.stderr, file=sys.stderr)
+
+        sarif_files = list(out_dir.glob("*.sarif")) + list(out_dir.glob("kics.sarif"))
+        if not sarif_files:
+            print("KICS produced no SARIF report", file=sys.stderr)
+            sys.exit(proc.returncode or 1)
+
+        raw = sarif_files[0].read_text()
+
+    plugin = SarifPlugin(**agent_config.to_plugin_kwargs())
+    plugin.parseOutputString(raw)
+    print(plugin.get_json())
+
+
+if __name__ == "__main__":
+    main()

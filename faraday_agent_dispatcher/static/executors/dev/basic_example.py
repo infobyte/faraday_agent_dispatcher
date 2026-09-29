@@ -57,7 +57,7 @@ credential_data = {
     "name": "test credential",
     "description": "test",
     "username": "admin",
-    "password": "12345",
+    "password": "12345",  # nosec B105
 }
 
 if __name__ == "__main__":

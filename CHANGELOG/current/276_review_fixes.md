@@ -1,0 +1,2 @@
+[FIX] SentinelOne and Wazuh executors now fail the run on API errors instead of reporting a successful partial scan; source-scanner `TARGET` subpaths must stay inside the cloned repository. #276
+[FIX] Vicarius executor only accepts http(s) API URLs; bandit runs clean (B104 skipped: executors use `0.0.0.0` as a placeholder host IP, not a bind address); unit_test 3.10 moves off the stale `python:3.10-rc` image.

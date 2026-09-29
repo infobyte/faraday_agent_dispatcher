@@ -1,0 +1,1 @@
+[ADD] `sonarcloud` executor (SonarCloud Cloud SaaS wrapper around the sonarqube plugin, distinct from the on-prem `sonarqube` executor) and `npm_audit` executor (Node.js dependency-vulnerability scanner emitting one Faraday vuln per package/version/CVE tuple). #276

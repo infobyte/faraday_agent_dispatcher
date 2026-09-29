@@ -1,0 +1,33 @@
+{
+    "arguments": {
+        "PRODUCTS": {
+            "mandatory": true,
+            "type": "string",
+            "base": "string",
+            "description": "CSV of product slugs to query against endoflife.date (e.g. 'nodejs,python,debian'). Each slug becomes one GET /api/{product}.json — the slug must match endoflife.date's canonical lowercase / hyphen-separated form. Common aliases are normalised (node → nodejs, golang → go, python3 → python, debian-linux → debian, ubuntu-linux → ubuntu, openjdk → java)."
+        },
+        "INSTALLED_VERSIONS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "CSV of product=version pairs (e.g. 'nodejs=18.0.0,python=3.8.0,debian=10') naming the version actually deployed for each product. The executor matches each installed version against the product's cycle list (exact cycle match → progressive .-prefix match → latest match) and emits a vulnerability when the matched cycle's eol date is in the past. Products without an INSTALLED_VERSIONS entry are recorded as hosts but produce no vulnerabilities (logged as informational)."
+        },
+        "EOL_MIN_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string",
+            "description": "Optional minimum severity floor (info | low | medium | high | critical). Filters out lower-severity EOL findings client-side after age-based severity bucketing (EOL <30d → low, <365d → medium, <730d → high, ≥730d → critical; eol: true without a date → high). Defaults to info (no filtering)."
+        }
+    },
+    "environment_variables": [],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Software Composition Analysis",
+    "name": "endoflife_date",
+    "title": "endoflife.date (Public Release-Cycle Catalogue)",
+    "website": "https://endoflife.date",
+    "description": "endoflife.date public REST API importer. Pulls per-product release-cycle metadata from the community-maintained endoflife.date service (https://endoflife.date) and flags every currently-deployed product version whose release cycle is already past its End-Of-Life date. PRODUCTS controls which product catalogues are queried (one HTTP GET /api/{product}.json per product, no auth required); INSTALLED_VERSIONS pairs each product with the version actually deployed so the executor can pick the matching cycle out of the catalogue. Each product becomes one Faraday host (synthetic 0.0.0.0 ip because EOL findings live in software-version metadata, not on IPs) with hostnames = {product}@{installedVersion}; per-product EOL findings attach as Faraday vulnerabilities — one per EOL cycle the installed version maps onto with [SCA] engine prefix, cycle / installed_version / eol date / days-since-eol / latest / latestReleaseDate / releaseDate / support / lts / discontinued / extendedSupport metadata in the description. Refs include the canonical https://endoflife.date/{product} permalink and the cycle's optional link. Severity is bucketed by how long ago the cycle EOL'd (EOL <30d → low, <365d → medium, <730d → high, ≥730d → critical; eol: true without a date → high); client-side EOL_MIN_SEVERITY floor enforced after bucketing. Status is always open (an EOL'd release line cannot be 'fixed' in place — it must be upgraded). Cycle matching tries exact cycle equality first, then progressive .-separated prefix matches (3.11.4 → 3.11 → 3), then exact match against the cycle's latest field, then a permissive prefix match for vendor-shaped cycles like 24.04 against cycle 24. Aliases for common product slugs are normalised (node → nodejs, golang → go, python3 → python, debian-linux → debian, ubuntu-linux → ubuntu, openjdk → java). No env vars required — the endoflife.date API is unauthenticated. ENDOFLIFE_HOST may optionally be overridden to point at a mirror or an offline cache; defaults to https://endoflife.date.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "endoflife_date.py"
+}

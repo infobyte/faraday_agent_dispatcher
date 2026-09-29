@@ -1,0 +1,1 @@
+[ADD] discovery-osint round 3: `amass` (subdomain + DNS recon), `masscan` (internet-scale port scan), `dnstwist` (typo-squat / lookalike domain detection), and `theharvester` (OSINT email / subdomain harvest). New executor scripts + manifests, Dockerfile installs (apt masscan, pipx dnstwist + theHarvester, amass v4.2.0 release binary), and AGENT_GROUPS wiring. #276

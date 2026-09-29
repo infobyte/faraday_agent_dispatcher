@@ -1,0 +1,47 @@
+{
+    "arguments": {
+        "NAABU_HOST": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "NAABU_HOST_LIST": {
+            "mandatory": false,
+            "type": "list",
+            "base": "list"
+        },
+        "NAABU_PORTS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "NAABU_TOP_PORTS": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "NAABU_RATE": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        },
+        "NAABU_THREADS": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        }
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "naabu -version 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network Tools",
+    "name": "naabu",
+    "title": "Naabu",
+    "website": "https://github.com/projectdiscovery/naabu",
+    "description": "Fast SYN/CONNECT port scanner from ProjectDiscovery. Set NAABU_HOST (or NAABU_HOST_LIST) and either NAABU_PORTS (explicit list/ranges, e.g. '22,80,443,8000-8100') OR NAABU_TOP_PORTS \u2014 valid values: 100 | 1000 | full. NAABU_PORTS and NAABU_TOP_PORTS are mutually exclusive; pass only one. Use NAABU_RATE (packets/sec) and NAABU_THREADS to tune speed. Network scanning is prohibited on the AWS-hosted agent \u2014 only run naabu on the DigitalOcean droplet.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "naabu.py"
+}

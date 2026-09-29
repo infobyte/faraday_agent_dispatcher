@@ -1,0 +1,48 @@
+{
+    "arguments": {
+        "VICARIUS_API_URL": {
+            "mandatory": false,
+            "type": "url",
+            "base": "string"
+        },
+        "VICARIUS_TOKEN": {
+            "mandatory": false,
+            "type": "password",
+            "base": "string"
+        },
+        "VICARIUS_MODE": {
+            "mandatory": false,
+            "type": "list",
+            "base": "list"
+        },
+        "VICARIUS_FROM": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        },
+        "VICARIUS_SIZE": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        },
+        "VICARIUS_MAX_PAGES": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        }
+    },
+    "environment_variables": [
+        "VICARIUS_API_URL",
+        "VICARIUS_TOKEN"
+    ],
+    "check_cmds": [],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Endpoint Remediation",
+    "name": "vicarius",
+    "title": "Vicarius vRx",
+    "website": "https://www.vicarius.io",
+    "description": "Imports remediation status from Vicarius vRx via the External Data API. VICARIUS_MODE is a list of views to fan out (defaults to 'cves') — valid values: assets (asset inventory and OS/endpoint metadata) | cves (active vulnerabilities grouped by vulnerabilityId, each emitted as a Faraday vuln on every affected host) | patches (missing patches per endpoint) | software (installed publisher/product/version inventory, emitted as severity-info findings tagged 'software-inventory') | incidents (DetectedVulnerability / MitigatedVulnerability events — mitigated events arrive with status='closed' so this mode supplements cves by auto-closing vulns vRx has remediated). VICARIUS_API_URL and VICARIUS_TOKEN can be set per-scan (the token is sent as the 'Vicarius-Token' header) or as agent env vars for shared defaults — the per-scan value wins. Pagination is automatic; tune with VICARIUS_FROM (starting cursor), VICARIUS_SIZE (page size, default 500), VICARIUS_MAX_PAGES (hard cap, default 100 = 50k rows per mode). Rate-limit aware: backs off 60s on HTTP 429 up to 3 retries per page. Read-only today — patch execution and external-findings ingest are not exposed by the vRx PAT scope.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "vicarius.py"
+}

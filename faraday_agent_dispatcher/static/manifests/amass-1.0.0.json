@@ -1,0 +1,19 @@
+{
+    "arguments": {
+        "AMASS_DOMAIN": {"mandatory": true, "type": "string", "base": "string"},
+        "AMASS_PASSIVE": {"mandatory": false, "type": "boolean", "base": "boolean"},
+        "AMASS_TIMEOUT": {"mandatory": false, "type": "integer", "base": "integer"},
+        "AMASS_RESOLVERS": {"mandatory": false, "type": "list", "base": "list"}
+    },
+    "environment_variables": [],
+    "check_cmds": ["amass -version 2>&1"],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network Tools",
+    "name": "amass",
+    "title": "OWASP Amass",
+    "website": "https://owasp.org/www-project-amass/",
+    "description": "OWASP Amass — comprehensive subdomain enumeration and DNS reconnaissance. Set AMASS_DOMAIN to the apex domain (no scheme, e.g. faradaysec.com). AMASS_PASSIVE=true restricts to non-touching sources for stealth. AMASS_TIMEOUT caps the run in minutes. AMASS_RESOLVERS is a list of DNS resolvers (e.g. 1.1.1.1, 8.8.8.8, 9.9.9.9). Emits one Faraday host per unique IP with all subdomains pointing at it as hostnames.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "amass.py"
+}
