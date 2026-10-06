@@ -1,0 +1,48 @@
+diff --git a/faraday_plugins/plugins/repo/crowdstrike/plugin.py b/faraday_plugins/plugins/repo/crowdstrike/plugin.py
+index 5b66ec02..3920d0c8 100644
+--- a/faraday_plugins/plugins/repo/crowdstrike/plugin.py
++++ b/faraday_plugins/plugins/repo/crowdstrike/plugin.py
+@@ -48,7 +48,8 @@ class Crowdstrike(PluginJsonFormat):
+                 tags=host_tags
+             )
+             cve = site.get('cve_id')
+-            severity = site.get('severity').lower()
++            # Defensive: severity may be missing from Spotlight rows.
++            severity = (site.get('severity') or 'unclassified').lower()
+             cvss_vector = site.get('vector')
+             references = [site.get('references')]
+             vuln = site.get('cve_description')
+diff --git a/faraday_plugins/plugins/repo/trivy_json/DTO.py b/faraday_plugins/plugins/repo/trivy_json/DTO.py
+index f8c32179..4f347acb 100644
+--- a/faraday_plugins/plugins/repo/trivy_json/DTO.py
++++ b/faraday_plugins/plugins/repo/trivy_json/DTO.py
+@@ -36,10 +36,10 @@ class Code(Base):
+
+     @property
+     def lines(self):
+-        if self.node.get("Lines"):
++        # Defensive: Trivy may emit Code: null for some misconfigurations.
++        if self.node and self.node.get("Lines"):
+             return [Line(i) for i in self.node.get("Lines")]
+-        else:
+-            return None
++        return None
+
+
+ class CauseMetadata(Base):
+diff --git a/faraday_plugins/plugins/repo/sarif/plugin.py b/faraday_plugins/plugins/repo/sarif/plugin.py
+index 234fb3b8..c74c0cd4 100644
+--- a/faraday_plugins/plugins/repo/sarif/plugin.py
++++ b/faraday_plugins/plugins/repo/sarif/plugin.py
+@@ -67,8 +67,9 @@ class SarifPlugin(PluginJsonFormat):
+                     short_description = rule.get("shortDescription").get("text") if \
+                         rule.get("shortDescription", {}).get("text") else \
+                         markdown2text(rule.get("shortDescription", {}).get("markdown", ""))
+-                    desc = rule.get("fullDescription").get("text") if rule.get("fullDescription", {}).get("text") \
+-                        else markdown2text(rule.get("fullDescription").get("markdown", ""))
++                    full_description = rule.get("fullDescription") or {}
++                    desc = full_description.get("text") if full_description.get("text") \
++                        else markdown2text(full_description.get("markdown", ""))
+                     help = rule.get("help",{}).get("text") if rule.get("help",{}).get("text") \
+                         else markdown2text(rule.get("help",{}).get("markdown", ""))
+                     tags_to_check = rule.get("properties",{}).get("tags", [])

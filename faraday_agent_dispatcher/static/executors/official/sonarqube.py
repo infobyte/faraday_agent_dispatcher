@@ -11,10 +11,12 @@ ISSUE_IMPACT = "SECURITY"
 PAGE_SIZE = 500
 
 
-def get_hotspots_info(session, sonar_qube_url, hotspot_ids):
+def get_hotspots_info(session, sonar_qube_url, hotspot_ids, organization=None):
     hotspots_data = []
     for hotspot_id in hotspot_ids:
         params = {"hotspot": hotspot_id}
+        if organization:
+            params["organization"] = organization
         try:
             response = session.get(f"{sonar_qube_url}/api/hotspots/show", params=params, timeout=30)
         except requests.RequestException as e:
@@ -35,10 +37,12 @@ def get_hotspots_info(session, sonar_qube_url, hotspot_ids):
     return hotspots_data
 
 
-def get_hotspots_ids(session, sonar_qube_url, component_key):
+def get_hotspots_ids(session, sonar_qube_url, component_key, organization=None):
     has_more_hotspots = True
     hotspots_ids = []
     params = {"p": 1, "ps": PAGE_SIZE, "sinceLeakPeriod": False, "status": "TO_REVIEW", "projectKey": component_key}
+    if organization:
+        params["organization"] = organization
 
     while has_more_hotspots:
         try:
@@ -75,20 +79,23 @@ def main():
     # ['EXECUTOR_CONFIG_TOKEN', 'EXECUTOR_CONFIG_URL', 'EXECUTOR_CONFIG_PROJECT']
     agent_config = get_common_parameters()
 
-    try:
-        sonar_qube_url = os.environ["SONAR_URL"]
-        token = os.environ["EXECUTOR_CONFIG_TOKEN"]
-        component_key = os.environ.get("EXECUTOR_CONFIG_COMPONENT_KEY", None)
-        get_hotspot = os.environ.get("EXECUTOR_CONFIG_GET_HOTSPOT", "false").lower() == "true"
-    except KeyError:
-        print("Environment variable not found", file=sys.stderr)
-        sys.exit()
+    # Per-scan EXECUTOR_CONFIG_SONAR_URL arg wins (Faraday UI); bare env-var is the fallback.
+    sonar_qube_url = os.environ.get("EXECUTOR_CONFIG_SONAR_URL") or os.environ.get("SONAR_URL")
+    token = os.environ.get("EXECUTOR_CONFIG_TOKEN")
+    if not sonar_qube_url or not token:
+        print("SONAR_URL and TOKEN are required", file=sys.stderr)
+        sys.exit(1)
+    component_key = os.environ.get("EXECUTOR_CONFIG_COMPONENT_KEY", None)
+    get_hotspot = os.environ.get("EXECUTOR_CONFIG_GET_HOTSPOT", "false").lower() == "true"
+    # SonarCloud requires the `organization` query param on /api/issues/search and
+    # /api/hotspots/search. SonarQube (self-hosted) ignores it. The sonarcloud
+    # manifest surfaces it as a mandatory arg; sonarqube manifest leaves it unset.
+    organization = os.environ.get("EXECUTOR_CONFIG_SONAR_ORGANIZATION") or os.environ.get("SONAR_ORGANIZATION")
 
     session = requests.Session()
 
     # ATTENTION: SonarQube API requires an empty password when auth method is via token
     session.auth = (token, "")
-    print(token, file=sys.stderr)
 
     # Issues api config
     page = 1
@@ -101,6 +108,8 @@ def main():
         params = {"impactSoftwareQualities": ISSUE_IMPACT, "p": page, "ps": PAGE_SIZE}
         if component_key:
             params["componentKeys"] = component_key
+        if organization:
+            params["organization"] = organization
         try:
             response = session.get(url=f"{sonar_qube_url}/api/issues/search", params=params, timeout=30)
         except requests.RequestException as e:
@@ -117,10 +126,10 @@ def main():
             response_json = response.json()
         except ValueError:
             print(
-                f"Invalid JSON in response for issue search. " f"Component key {component_key}: {response.text}",
+                f"Invalid JSON in response for issue search. Component key {component_key}: {response.text}",
                 file=sys.stderr,
             )
-            continue
+            break
 
         issues = response_json.get("issues", [])
         vulnerabilities.extend(issues)
@@ -130,10 +139,17 @@ def main():
         page += 1
 
     response_json["issues"] = vulnerabilities
+    # The faraday_plugins parser dereferences json_data['components'] without
+    # a default and iterates it as a list of dicts; if the API call failed and
+    # we never populated it the parser raises KeyError. Make sure the key
+    # exists as an empty list before handing it off.
+    response_json.setdefault("components", [])
     if get_hotspot:
-        hotspots_ids = get_hotspots_ids(session, sonar_qube_url, component_key)
+        hotspots_ids = get_hotspots_ids(session, sonar_qube_url, component_key, organization=organization)
         if hotspots_ids:
-            response_json["hotspots"] = get_hotspots_info(session, sonar_qube_url, hotspots_ids)
+            response_json["hotspots"] = get_hotspots_info(
+                session, sonar_qube_url, hotspots_ids, organization=organization
+            )
 
     sonar = SonarQubeAPIPlugin(**agent_config.to_plugin_kwargs())
     sonar.parseOutputString(json.dumps(response_json))

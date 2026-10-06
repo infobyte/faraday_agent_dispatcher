@@ -1,0 +1,60 @@
+{
+    "arguments": {
+        "BANDIT_TARGET": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "BANDIT_CONFIDENCE": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "BANDIT_SEVERITY": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "BANDIT_SKIP": {
+            "mandatory": false,
+            "type": "list",
+            "base": "list"
+        },
+        "BANDIT_GIT_URL": {
+            "mandatory": false,
+            "type": "url",
+            "base": "string"
+        },
+        "BANDIT_GIT_REF": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "GIT_USERNAME": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "GIT_TOKEN": {
+            "mandatory": false,
+            "type": "password",
+            "base": "string"
+        }
+    },
+    "environment_variables": [
+        "GIT_USERNAME",
+        "GIT_TOKEN"
+    ],
+    "check_cmds": [
+        "bandit --version 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Source Code Analysis",
+    "name": "bandit",
+    "title": "Bandit",
+    "website": "https://bandit.readthedocs.io/",
+    "description": "Python source-code security scanner (SAST). Point BANDIT_TARGET at a file or directory (or a subpath inside a clone when using BANDIT_GIT_URL). BANDIT_CONFIDENCE filters by minimum confidence \u2014 valid values: LOW | MEDIUM | HIGH. BANDIT_SEVERITY filters by minimum severity \u2014 valid values: LOW | MEDIUM | HIGH. BANDIT_SKIP is a list of bandit test IDs to ignore (e.g. B101, B301, B608). Supports private-repo cloning at scan time via GIT_USERNAME / GIT_TOKEN in the agent config.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "bandit.py"
+}

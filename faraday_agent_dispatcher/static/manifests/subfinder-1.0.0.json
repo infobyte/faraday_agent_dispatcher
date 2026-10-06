@@ -1,0 +1,42 @@
+{
+    "arguments": {
+        "SUBFINDER_DOMAIN": {
+            "mandatory": false,
+            "type": "string",
+            "base": "string"
+        },
+        "SUBFINDER_DOMAIN_LIST": {
+            "mandatory": false,
+            "type": "list",
+            "base": "list"
+        },
+        "SUBFINDER_SOURCES": {
+            "mandatory": false,
+            "type": "list",
+            "base": "list"
+        },
+        "SUBFINDER_THREADS": {
+            "mandatory": false,
+            "type": "integer",
+            "base": "integer"
+        },
+        "SUBFINDER_RECURSIVE": {
+            "mandatory": false,
+            "type": "boolean",
+            "base": "boolean"
+        }
+    },
+    "environment_variables": [],
+    "check_cmds": [
+        "subfinder -version 2>&1"
+    ],
+    "cmd": "{EXECUTOR_FILE_PATH}",
+    "category": "Network Tools",
+    "name": "subfinder",
+    "title": "Subfinder",
+    "website": "https://github.com/projectdiscovery/subfinder",
+    "description": "Passive subdomain enumeration — queries dozens of public sources without touching the target itself. Set SUBFINDER_DOMAIN to an apex domain (no scheme, e.g. faradaysec.com) or use SUBFINDER_DOMAIN_LIST for several. SUBFINDER_SOURCES restricts which providers are used — list (e.g. crtsh, virustotal, alienvault, hackertarget, anubis, threatcrowd). SUBFINDER_RECURSIVE=true expands discovered subdomains.",
+    "image": null,
+    "manifest_version": "1.0.0",
+    "repo_executor": "subfinder.py"
+}
